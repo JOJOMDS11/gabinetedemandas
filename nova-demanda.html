@@ -15,7 +15,7 @@
         .navbar img { height: 80px; background: white; padding: 5px; border-radius: 4px; }
         .navbar a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
         .container { max-width: 600px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 4px solid #98ED34; position: relative;}
-        h2 { color: #185199; margin-bottom: 25px; text-align: center; }
+        h2 { color: #185199; margin-bottom: 20px; text-align: center; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #333; font-weight: bold; font-size: 13px; }
         input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
@@ -36,10 +36,13 @@
         .modal-overlay.ativo { display: flex; }
         .modal-overlay img, .modal-overlay video { max-width: 90%; max-height: 90vh; border-radius: 8px; }
 
-        /* Estilo Cheat Code */
-        .btn-magico { background: linear-gradient(45deg, #9b59b6, #8e44ad); color: white; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; margin-bottom: 20px; width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-magico:hover { background: linear-gradient(45deg, #8e44ad, #732d91); }
-        .modal-magico { background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 500px; }
+        /* Estilo Área de Cola Rápida */
+        .box-importacao { background: #fdfdfd; border: 2px dashed #9b59b6; padding: 15px; border-radius: 8px; margin-bottom: 25px; text-align: center; transition: all 0.3s;}
+        .box-importacao:focus-within { border-color: #8e44ad; background: #faf4ff; }
+        .box-importacao label { color: #8e44ad; font-size: 14px; margin-bottom: 10px; }
+        .box-importacao textarea { border: 1px solid #e0e0e0; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); resize: none; text-align: center; }
+        .badge-status { background: #9b59b6; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 10px; display: none;}
+        
         .secao-tecnica { background: #fdfdfd; padding: 15px; border: 1px dashed #ccc; border-radius: 8px; margin-top: 15px; }
     </style>
 </head>
@@ -51,14 +54,18 @@
     </div>
 
     <div class="container">
-        <!-- BOTÃO MÁGICO -->
-        <button class="btn-magico" onclick="document.getElementById('modalMagico').classList.add('ativo')">🪄 IMPORTAR DA PLANILHA (CRTL+V)</button>
+        
+        <!-- ÁREA DE COLA RÁPIDA (CHEAT CODE) -->
+        <div class="box-importacao">
+            <label>🪄 Preenchimento Automático (Planilha)</label>
+            <textarea id="textoMagico" rows="2" placeholder="Clique aqui e faça Ctrl+V da linha do Excel..." oninput="executarMagia()"></textarea>
+            <span id="badgeStatusForcado" class="badge-status"></span>
+        </div>
 
         <h2>Adicionar Registro</h2>
         <div id="mensagem" class="mensagem"></div>
         
         <input type="hidden" id="statusForcado" value="">
-        <span id="badgeStatusForcado" style="display:none; background:#9b59b6; color:white; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; margin-bottom:15px; display:inline-block;">Status Importado!</span>
 
         <div class="form-row">
             <div class="form-group" style="grid-column: 1 / -1;">
@@ -172,9 +179,9 @@
             <textarea id="descricao" rows="4"></textarea>
         </div>
 
-        <!-- SEÇÃO TÉCNICA (Oculta por padrão, abre se importar planilhas ou quiser preencher já na criação) -->
+        <!-- SEÇÃO TÉCNICA -->
         <div class="secao-tecnica">
-            <h4 style="color:#185199; margin-bottom:10px; font-size:13px;">⚙️ Acompanhamento Técnico (Opcional)</h4>
+            <h4 style="color:#185199; margin-bottom:10px; font-size:13px;">⚙️ Acompanhamento Técnico</h4>
             <div class="form-row">
                 <div class="form-group">
                     <label>Expediente</label>
@@ -209,19 +216,6 @@
         </div>
     </div>
 
-    <!-- Modal Mágico para Importar Planilha -->
-    <div class="modal-overlay" id="modalMagico">
-        <div class="modal-magico">
-            <h3 style="color:#8e44ad; margin-bottom:15px;">🪄 Cheat Code: Importar</h3>
-            <p style="font-size:13px; color:#555; margin-bottom:15px;">Vá na sua planilha, selecione a linha inteira da demanda que quer importar, faça <b>Ctrl+C</b> e depois clique na caixa abaixo e faça <b>Ctrl+V</b>.</p>
-            <textarea id="textoMagico" rows="4" style="width:100%; padding:10px; border:2px dashed #8e44ad; border-radius:4px; margin-bottom:15px;" placeholder="Cole a linha da planilha aqui..."></textarea>
-            <div style="display:flex; gap:10px;">
-                <button onclick="document.getElementById('modalMagico').classList.remove('ativo')" style="background:#ccc; flex:1;">Cancelar</button>
-                <button onclick="executarMagia()" style="background:#8e44ad; color:white; flex:2;">🪄 Extrair Dados</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Lightbox de Mídias -->
     <div id="lightbox" class="modal-overlay" onclick="fecharLightbox()">
         <img id="lightboxImg" style="display:none;">
@@ -234,7 +228,6 @@
         if (!usuarioLogado) window.location.href = 'index.html';
 
         const tiposAtualBloqueados = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
-        document.getElementById('badgeStatusForcado').style.display = 'none';
 
         async function inicializarSistema() {
             try {
@@ -254,14 +247,41 @@
             }
         }
 
-        // LÓGICA DO CHEAT CODE (ROBÔ EXTRATOR)
-        function executarMagia() {
-            const texto = document.getElementById('textoMagico').value;
-            if (!texto.trim()) return alert('Cole alguma coisa primeiro!');
+        // Função para apagar tudo antes de colar novos dados
+        function limparFormulario() {
+            document.getElementById('tipo_solicitacao').value = '';
+            document.getElementById('assunto').value = '';
+            document.getElementById('data_agendada').value = '';
+            document.getElementById('horario_agendado').value = '';
+            document.getElementById('secretaria').value = '';
+            document.getElementById('providencias').value = '';
+            document.getElementById('responsavel_ordem').value = '';
+            document.getElementById('numero_demanda').value = '';
+            document.getElementById('solicitante_nome').value = '';
+            document.getElementById('solicitante_tel').value = '';
+            document.getElementById('rua').value = '';
+            document.getElementById('numero').value = '';
+            document.getElementById('bairro').value = '';
+            document.getElementById('descricao').value = '';
+            document.getElementById('expediente').value = '';
+            document.getElementById('protocolo').value = '';
+            document.getElementById('link_legis').value = '';
+            document.getElementById('statusForcado').value = '';
+            document.getElementById('badgeStatusForcado').style.display = 'none';
+        }
 
-            // Divide pelas colunas (Tabs)
+        // LÓGICA DO CHEAT CODE APRIMORADA (Direto no Input)
+        function executarMagia() {
+            const textarea = document.getElementById('textoMagico');
+            const texto = textarea.value;
+            if (!texto.trim()) return;
+
+            // 1. Zera o formulário para evitar misturar dados antigos com novos
+            limparFormulario();
+
+            // 2. Extrai os dados da planilha
             const celulas = texto.split('\t');
-            let parsed = { numero: '', data: '', resp: '', status: '', tipo: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '' };
+            let parsed = { numero: '', data: '', resp: '', status: '', tipo: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '' };
 
             const nomesConhecidos = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
             const tiposConhecidos = ['Agenda VISITA AO GABINETE', 'AGENDA visita EXTERNA', 'GABINETE', 'REUNIÃO', 'visita ao Gabinete', 'DEMANDA', 'Demanda Externa', 'INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
@@ -297,26 +317,39 @@
                 else if (cell.toLowerCase().includes('exp.') || cell.toLowerCase().includes('expediente')) {
                     parsed.expediente = cell;
                 }
-                // Extrair Protocolo (PDP)
-                else if (cell.match(/^[A-Z]+\s\d+\/\d{4}$/)) {
+                // Extrair Protocolo (PDP ou 156)
+                else if (cell.match(/^[A-Z]+\s\d+\/\d{4}$/) || cell.includes('156 202')) {
                     parsed.protocolo = cell;
                 }
-                // Extrair Secretaria
-                else if (cell.match(/^[A-Z]{3,7}$/) && cell.toUpperCase() !== 'PENDENTE') {
+                // Extrair Secretaria (Começa com SEM ou é palavra conhecida)
+                else if (cell.match(/^SEM[A-Z]+$/i) || ['OBRAS', 'SAÚDE', 'GABINETE'].includes(cell.toUpperCase())) {
                     if (!parsed.secretaria) parsed.secretaria = cell;
                 }
-                // Ignorar link cru
-                else if (cell.toLowerCase() === 'ver detalhes' || cell.toLowerCase() === 'ver mais') {
-                    // ignore
+                // Extrair Nome (Se for palavra curta e não encaixou em nada)
+                else if (cell.length > 2 && cell.length < 25 && !cell.match(/\d/) && !parsed.nome && cell.toLowerCase() !== 'ver detalhes') {
+                    parsed.nome = cell; 
                 }
-                // Sobrou = Textão (Descrição e Assunto)
-                else if (cell.length > 5) {
+                // Sobrou = Textão (Descrição e Assunto) e possível telefone grudado
+                else if (cell.length > 5 && cell.toLowerCase() !== 'ver detalhes' && cell.toLowerCase() !== 'ver mais') {
                     if(parsed.desc) parsed.desc += '\n' + cell;
                     else parsed.desc = cell;
                 }
             });
 
-            // PREENCHE A TELA AUTOMATICAMENTE
+            // LIMPEZA DA DESCRIÇÃO (Para separar telefone do assunto)
+            if (parsed.desc) {
+                // Procura padrões de telefone (ex: (51.) 996.707.733 ou 51 9999-9999)
+                let matchTel = parsed.desc.match(/(?:\(?0?51\)?\.?\s*)?9?\d{3,4}[-.]?\d{3,4}/);
+                if (matchTel && !parsed.tel) {
+                    parsed.tel = matchTel[0].trim();
+                    // Tira o telefone do início do texto para não poluir o Assunto
+                    parsed.desc = parsed.desc.replace(matchTel[0], '').trim();
+                    // Limpa pontos ou hífens que sobram no começo da frase
+                    parsed.desc = parsed.desc.replace(/^[.-]\s*/, '').trim();
+                }
+            }
+
+            // 3. Preenche a Tela Automaticamente
             if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo;
             if(parsed.numero) document.getElementById('numero_demanda').value = parsed.numero;
             if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
@@ -324,18 +357,22 @@
             if(parsed.secretaria) document.getElementById('secretaria').value = parsed.secretaria;
             if(parsed.expediente) document.getElementById('expediente').value = parsed.expediente;
             if(parsed.protocolo) document.getElementById('protocolo').value = parsed.protocolo;
+            if(parsed.nome) document.getElementById('solicitante_nome').value = parsed.nome;
+            if(parsed.tel) document.getElementById('solicitante_tel').value = parsed.tel;
             
             if(parsed.status) {
                 document.getElementById('statusForcado').value = parsed.status;
                 const badge = document.getElementById('badgeStatusForcado');
-                badge.textContent = 'Status Importado: ' + parsed.status;
+                badge.textContent = '📌 Importado: ' + parsed.status;
                 badge.style.display = 'inline-block';
             }
 
             if(parsed.desc) {
                 document.getElementById('descricao').value = parsed.desc;
-                // Cria um assunto mais curto
-                document.getElementById('assunto').value = parsed.desc.substring(0, 70) + (parsed.desc.length > 70 ? '...' : '');
+                
+                // Assunto recebe apenas a primeira frase curta
+                let primeiraLinha = parsed.desc.split('\n')[0];
+                document.getElementById('assunto').value = primeiraLinha.substring(0, 60) + (primeiraLinha.length > 60 ? '...' : '');
 
                 // IA DE ENDEREÇOS (Extrai do texto)
                 let matchRua = parsed.desc.match(/(?:Rua|Av|Avenida|Travessa)\s([^,]+),\s*n[ºo]?\s*(\d+)/i);
@@ -350,9 +387,14 @@
             }
 
             adaptarFormulario();
-            document.getElementById('modalMagico').classList.remove('ativo');
-            document.getElementById('textoMagico').value = '';
-            alert('🪄 Mágica Aplicada!\n\nRevise os campos. Lembre-se que o Link do Legis tem de ser colado manualmente.');
+
+            // Pisca o campo de verde para dar feedback de sucesso e limpa o texto colado
+            textarea.style.backgroundColor = '#e2f8c5';
+            textarea.value = '✅ Dados importados com sucesso!';
+            setTimeout(() => { 
+                textarea.value = ''; 
+                textarea.style.backgroundColor = 'transparent'; 
+            }, 2000);
         }
 
         function adaptarFormulario() {
@@ -430,7 +472,7 @@
             const solicitante_tel = document.getElementById('solicitante_tel').value.trim();
             const arquivoPDF = document.getElementById('pdfFile').files[0];
 
-            // Campos técnicos da aba mágica
+            // Campos técnicos
             const expediente = document.getElementById('expediente').value.trim();
             const protocolo = document.getElementById('protocolo').value.trim();
             const link_legis = document.getElementById('link_legis').value.trim();
@@ -465,7 +507,7 @@
                 const statusForcado = document.getElementById('statusForcado').value;
 
                 if (statusForcado) {
-                    statusInicial = statusForcado; // Usa o status importado (ex: Concluída)
+                    statusInicial = statusForcado; // Usa o status importado (ex: Resolvido, Concluída)
                 } else {
                     if (tiposAtualBloqueados.includes(tipo_solicitacao)) {
                         statusInicial = usuarioLogado === 'Daniel' ? 'Aprovada' : 'Aguardando Aprovação';
