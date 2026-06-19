@@ -67,6 +67,14 @@
         .paginacao { display: flex; justify-content: center; gap: 8px; margin-top: 25px; flex-wrap: wrap; }
         .page-btn { padding: 7px 12px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .page-btn.ativo { background: #185199; color: white; }
+
+        /* Estilo dos Modais Padronizados */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-overlay.ativo { display: flex; flex-direction: column; }
+        .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #c0392b; text-align: center; }
+        .modal-box h3 { color: #333; margin-bottom: 15px; }
+        .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-size:16px;}
+        .modal-botoes { display: flex; gap: 10px; margin-top: 15px;}
     </style>
 </head>
 <body>
@@ -88,7 +96,7 @@
         </div>
 
         <div class="filtros-avancados">
-            <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº, data..." oninput="mudarPagina(1); renderDemandas()">
+            <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº, data...">
             
             <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()">
                 <option value="">📁 Filtro: Todas Categorias</option>
@@ -109,20 +117,33 @@
         </div>
 
         <div class="filtros">
-            <button class="filtro-btn ativo" onclick="filtrar('Todas')">Todas</button>
-            <button class="filtro-btn" onclick="filtrar('Aberta')">Abertas / Pendentes</button>
-            <button class="filtro-btn" onclick="filtrar('Em Andamento')">Andamento</button>
-            <button class="filtro-btn" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação</button>
-            <button class="filtro-btn" onclick="filtrar('Aprovada')">✅ Aprovadas</button>
-            <button class="filtro-btn" onclick="filtrar('156 Pedido')">156 Pedido</button>
-            <button class="filtro-btn" onclick="filtrar('Aguardando Exp')">Exp Legis</button>
-            <button class="filtro-btn" onclick="filtrar('Concluída')">Concluídas / Resolv.</button>
-            <button class="filtro-btn" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
-            <button class="filtro-btn" onclick="filtrar('Rejeitada')">❌ Rejeitadas</button>
+            <button class="filtro-btn ativo" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
+            <button class="filtro-btn" data-status="Aberta" onclick="filtrar('Aberta')">Abertas / Pendentes</button>
+            <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">Andamento</button>
+            <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação</button>
+            <button class="filtro-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas</button>
+            <button class="filtro-btn" data-status="156 Pedido" onclick="filtrar('156 Pedido')">156 Pedido</button>
+            <button class="filtro-btn" data-status="Aguardando Exp" onclick="filtrar('Aguardando Exp')">Exp Legis</button>
+            <button class="filtro-btn" data-status="Concluída" onclick="filtrar('Concluída')">Concluídas / Resolv.</button>
+            <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
+            <button class="filtro-btn" data-status="Rejeitada" onclick="filtrar('Rejeitada')">❌ Rejeitadas</button>
         </div>
 
         <div class="cards-grid" id="demandas">A carregar...</div>
         <div class="paginacao" id="paginacaoContainer"></div>
+    </div>
+
+    <div class="modal-overlay" id="modalSenhaSegura">
+        <div class="modal-box">
+            <h3>🔐 Exclusão de Registro</h3>
+            <p style="color:#555; margin-bottom:15px; font-size:13px;">Digite a senha master para autorizar a exclusão desta demanda.</p>
+            <input type="password" id="inputSenhaAcao" placeholder="Senha master">
+            <div id="erroSenhaAcao" style="color:#c0392b; font-size:13px; margin-bottom:10px; display:none;">Senha incorreta ou erro de servidor!</div>
+            <div class="modal-botoes">
+                <button style="background:#e0e0e0; color:#333; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalExclusao()">Cancelar</button>
+                <button id="btnConfirmarSenhaAcao" style="background:#c0392b; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="processarExclusao()">Confirmar</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -131,8 +152,10 @@
         let filtroAtual = 'Todas';
         let paginaAtual = 1;
         const itensPorPagina = 9;
+        
+        // Controle da Exclusão
+        let idParaExcluir = null;
 
-        // Categorias para o novo filtro
         const tiposAgendas = ['Agenda VISITA AO GABINETE', 'AGENDA visita EXTERNA', 'GABINETE', 'REUNIÃO', 'visita ao Gabinete'];
         const tiposDemandasLivre = ['DEMANDA', 'Demanda Externa'];
         const tiposLegis = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
@@ -144,6 +167,16 @@
         document.getElementById('btnLogout').addEventListener('click', () => {
             localStorage.removeItem('usuarioLogado');
             window.location.href = 'index.html';
+        });
+
+        // DEBOUNCE NA BUSCA (Impede recarregamento a cada letra digitada)
+        let debounceTimer;
+        document.getElementById('buscaGeral').addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                mudarPagina(1);
+                renderDemandas();
+            }, 350); 
         });
 
         async function inicializarSistema() {
@@ -167,15 +200,7 @@
             filtroAtual = status;
             paginaAtual = 1;
             document.querySelectorAll('.filtro-btn').forEach(btn => {
-                const txt = btn.textContent.trim();
-                let match = false;
-                if (status === 'Todas' && txt === 'Todas') match = true;
-                else if (status !== 'Todas') {
-                    if (status === 'Aberta' && txt.includes('Pendentes')) match = true;
-                    else if (status === 'Concluída' && txt.includes('Resolv.')) match = true;
-                    else if (txt.includes(status.replace('Aguardando Aprovação','Aprovação').replace('Aguardando Exp','Exp Legis'))) match = true;
-                }
-                btn.classList.toggle('ativo', match);
+                btn.classList.toggle('ativo', btn.getAttribute('data-status') === status);
             });
             renderDemandas();
         }
@@ -190,7 +215,6 @@
 
             let lista = todasDemandas;
             
-            // Filtro de Status
             if (filtroAtual === 'Todas') {
                 lista = lista.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada');
             } else if (filtroAtual === 'Aberta') {
@@ -201,12 +225,10 @@
                 lista = lista.filter(d => d.status === filtroAtual);
             }
 
-            // Filtro de Categoria
             if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
 
-            // Filtro de Executores (Cuidando)
             if (respSelecionado) {
                 lista = lista.filter(d => (d.responsaveis || []).includes(respSelecionado));
             }
@@ -267,7 +289,6 @@
                 if (demanda.status === 'Arquivada') badgeClass = 'badge-Arquivada';
                 if (demanda.status === 'Rejeitada') badgeClass = 'badge-Rejeitada';
 
-                // Lógica de "Dono da Ordem" e "Executores"
                 const donoOrdem = demanda.responsavel_ordem ? demanda.responsavel_ordem : 'Não definido';
                 const cuindoTxt = responsaveis.length > 0 ? responsaveis.join(', ') : 'Nenhum';
 
@@ -287,20 +308,26 @@
 
                 const infoSecretaria = demanda.secretaria ? `<div class="info">🏢 Sec: <b>${demanda.secretaria}</b></div>` : '';
 
+                // Correção do erro undefined na RUA e BAIRRO
+                const ruaCerta = demanda.rua ? demanda.rua : '';
+                const bairroCerto = demanda.bairro ? '- ' + demanda.bairro : '';
+                const numCerto = demanda.numero ? ', ' + demanda.numero : '';
+                const infoEndereco = ruaCerta ? `<div class="info">📍 ${ruaCerta}${numCerto} ${bairroCerto}</div>` : '';
+
                 let btnPrincipal = '';
                 if (aguardandoDaniel) {
                     btnPrincipal = `<button class="btn-acao verde" onclick="event.stopPropagation(); window.location.href='ver-demanda.html?id=${demanda.id}'">👁️ Ver & Aprovar</button>`;
                 } else if (demanda.status === 'Arquivada') {
                     btnPrincipal = `
                         <button class="btn-acao cinza" disabled>🔒 Arquivada</button>
-                        <button class="btn-acao" style="background:#c0392b; flex: 0.5;" onclick="event.stopPropagation(); excluirDemandaDashboard('${demanda.id}')">🗑️ Excluir</button>
+                        <button class="btn-acao" style="background:#c0392b; flex: 0.5;" onclick="event.stopPropagation(); solicitarExclusao('${demanda.id}')">🗑️ Excluir</button>
                     `;
                 } else if (encerrada) {
                     btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Encerrada</button>`;
                 } else if (euCuido) {
-                    btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}')">🚪 Deixar de Executar</button>`;
+                    btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}', this)">🚪 Deixar de Executar</button>`;
                 } else {
-                    btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}')">🙋 Assumir Execução</button>`;
+                    btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}', this)">🙋 Assumir Execução</button>`;
                 }
 
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${demanda.numero_demanda}</div>` : '';
@@ -314,7 +341,7 @@
                                 <div class="titulo">${demanda.assunto}</div>
                                 <div class="info">📌 ${demanda.tipo_solicitacao || 'Registro'}</div>
                                 ${infoAgenda}
-                                ${demanda.rua ? `<div class="info">📍 ${demanda.rua}, ${demanda.numero || 's/n'} ${demanda.bairro ? '- ' + demanda.bairro : ''}</div>` : ''}
+                                ${infoEndereco}
                                 ${infoSecretaria}
                                 ${demanda.solicitante_nome ? `<div class="info">👤 Solic: <b>${demanda.solicitante_nome}</b></div>` : ''}
                                 <div class="info" style="margin-top: 5px;">✍️ Resp. Ordem: <b>${donoOrdem}</b></div>
@@ -359,7 +386,9 @@
             if (!error) { todasDemandas = data || []; renderDemandas(); }
         }
 
-        window.assumirDemanda = async function(id) {
+        // Adicionado: Loading visual para as ações
+        window.assumirDemanda = async function(id, btnElement) {
+            btnElement.textContent = '⏳ ...'; btnElement.disabled = true;
             const demanda = todasDemandas.find(d => d.id === id);
             if (!demanda) return;
             const resp = (demanda.responsaveis || []).filter(r => r);
@@ -368,23 +397,53 @@
             await db.from('demandas').update(updates).eq('id', id);
         }
 
-        window.sairDemanda = async function(id) {
+        window.sairDemanda = async function(id, btnElement) {
+            btnElement.textContent = '⏳ ...'; btnElement.disabled = true;
             const demanda = todasDemandas.find(d => d.id === id);
             if (!demanda) return;
             const resp = (demanda.responsaveis || []).filter(r => r !== usuarioLogado);
             await db.from('demandas').update({ responsaveis: resp }).eq('id', id);
         }
 
-        window.excluirDemandaDashboard = async function(id) {
-            if (confirm('⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR DEFINITIVAMENTE esta demanda do banco de dados?\n\n(Se clicou sem querer, clique em Cancelar)')) {
-                const senha = prompt('🔐 Digite a senha master para confirmar a exclusão:');
-                // A senha master original criptografada em Base64 para proteção
-                if (senha && btoa(senha) === 'bWFzdGVyMjAyNQ==') {
-                    await db.from('demandas').delete().eq('id', id);
+        // Novo Modal de Exclusão (Validado na API)
+        window.solicitarExclusao = function(id) {
+            idParaExcluir = id;
+            document.getElementById('inputSenhaAcao').value = '';
+            document.getElementById('erroSenhaAcao').style.display = 'none';
+            document.getElementById('modalSenhaSegura').classList.add('ativo');
+        }
+
+        window.fecharModalExclusao = function() {
+            document.getElementById('modalSenhaSegura').classList.remove('ativo');
+            idParaExcluir = null;
+        }
+
+        window.processarExclusao = async function() {
+            const senha = document.getElementById('inputSenhaAcao').value.trim();
+            const btn = document.getElementById('btnConfirmarSenhaAcao');
+            if(!senha) return;
+            
+            btn.textContent = '⏳ Excluindo...'; btn.disabled = true;
+
+            try {
+                // CHAMA A SUA EDGE FUNCTION PARA VALIDAR A SENHA
+                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'validar_master', senha: senha })
+                });
+
+                if (res.ok) {
+                    await db.from('demandas').delete().eq('id', idParaExcluir);
+                    fecharModalExclusao();
                     carregarDemandas(); 
-                } else if (senha !== null && senha !== '') {
-                    alert('❌ Senha incorreta! Exclusão cancelada.');
+                } else {
+                    document.getElementById('erroSenhaAcao').style.display = 'block';
                 }
+            } catch (error) {
+                document.getElementById('erroSenhaAcao').style.display = 'block';
+            } finally {
+                btn.textContent = 'Confirmar'; btn.disabled = false;
             }
         }
 
