@@ -22,8 +22,9 @@
         input:focus, textarea:focus { outline: none; border-color: #185199; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 10px; }
-        .preview-item { border-radius: 4px; border: 1px solid #eee; overflow: hidden; height: 80px; }
+        .preview-item { border-radius: 4px; border: 1px solid #eee; overflow: hidden; height: 80px; position: relative; cursor: pointer; }
         .preview-item img, .preview-item video { width: 100%; height: 100%; object-fit: cover; }
+        .btn-remover-preview { position: absolute; top: 2px; right: 2px; background: rgba(231,76,60,0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .botoes { display: flex; gap: 10px; margin-top: 25px; }
         button { flex: 1; padding: 12px; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer; border: none;}
         .btn-cancelar { background: #e0e0e0; color: #333; flex: 0.4; }
@@ -31,6 +32,11 @@
         .sucesso { background: #e2f8c5; color: #185199; border: 1px solid #98ED34; }
         .erro { background: #ffe5e5; color: #c0392b; }
         #uploadProgress { font-size: 13px; color: #185199; font-weight: bold; margin-top: 5px; display: none; }
+        
+        /* Lightbox */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-overlay.ativo { display: flex; }
+        .modal-overlay img, .modal-overlay video { max-width: 90%; max-height: 90vh; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -48,6 +54,18 @@
             <label>Assunto *</label>
             <input type="text" id="assunto" placeholder="Ex: Limpeza de bueiro" required>
         </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Nome do Solicitante (Opcional)</label>
+                <input type="text" id="solicitante_nome" placeholder="Nome do morador">
+            </div>
+            <div class="form-group">
+                <label>Telefone / WhatsApp (Opcional)</label>
+                <input type="text" id="solicitante_tel" placeholder="(51) 99999-9999">
+            </div>
+        </div>
+
         <div class="form-row">
             <div class="form-group">
                 <label>Rua *</label>
@@ -86,9 +104,14 @@
         </div>
     </div>
 
+    <!-- Lightbox -->
+    <div id="lightbox" class="modal-overlay" onclick="fecharLightbox()">
+        <img id="lightboxImg" style="display:none;">
+        <video id="lightboxVid" controls style="display:none;"></video>
+    </div>
+
     <script>
         let db, cloudName, uploadPreset;
-
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         if (!usuarioLogado) window.location.href = 'index.html';
 
@@ -105,7 +128,7 @@
                 btn.textContent = 'Salvar Demanda';
             } catch (err) {
                 document.getElementById('mensagem').className = 'mensagem erro';
-                document.getElementById('mensagem').textContent = 'Erro de API Vercel.';
+                document.getElementById('mensagem').textContent = 'Erro de API.';
                 document.getElementById('mensagem').style.display = 'block';
             }
         }
@@ -118,18 +141,49 @@
             
             novos.forEach(file => {
                 arquivosSelecionados.push(file);
-                const reader = new FileReader();
-                reader.onload = ev => {
-                    const grid = document.getElementById('previewGrid');
-                    if (file.type.startsWith('video/')) {
-                        grid.innerHTML += `<div class="preview-item"><video src="${ev.target.result}" autoplay muted loop></video></div>`;
-                    } else {
-                        grid.innerHTML += `<div class="preview-item"><img src="${ev.target.result}"></div>`;
-                    }
-                };
-                reader.readAsDataURL(file);
+                renderizarPreviews();
             });
+            this.value = ''; // Limpa o input
         });
+
+        function renderizarPreviews() {
+            const grid = document.getElementById('previewGrid');
+            grid.innerHTML = '';
+            arquivosSelecionados.forEach((file, index) => {
+                const url = URL.createObjectURL(file);
+                const isVideo = file.type.startsWith('video/');
+                const mediaTag = isVideo 
+                    ? `<video src="${url}" muted loop onclick="abrirLightbox('${url}', true)"></video>` 
+                    : `<img src="${url}" onclick="abrirLightbox('${url}', false)">`;
+                
+                grid.innerHTML += `
+                    <div class="preview-item">
+                        ${mediaTag}
+                        <button class="btn-remover-preview" onclick="event.stopPropagation(); removerArquivo(${index})">✕</button>
+                    </div>`;
+            });
+        }
+
+        window.removerArquivo = function(index) {
+            arquivosSelecionados.splice(index, 1);
+            renderizarPreviews();
+        }
+
+        window.abrirLightbox = function(url, isVideo) {
+            document.getElementById('lightbox').classList.add('ativo');
+            const img = document.getElementById('lightboxImg');
+            const vid = document.getElementById('lightboxVid');
+            if (isVideo) {
+                vid.src = url; vid.style.display = 'block'; img.style.display = 'none'; vid.play();
+            } else {
+                img.src = url; img.style.display = 'block'; vid.style.display = 'none';
+            }
+        }
+
+        window.fecharLightbox = function() {
+            document.getElementById('lightbox').classList.remove('ativo');
+            document.getElementById('lightboxVid').pause();
+        }
 
         async function uploadCloudinary(file) {
             const formData = new FormData();
@@ -145,13 +199,15 @@
             const rua = document.getElementById('rua').value.trim();
             const numero = document.getElementById('numero').value.trim();
             const bairro = document.getElementById('bairro').value.trim();
+            const solicitante_nome = document.getElementById('solicitante_nome').value.trim();
+            const solicitante_tel = document.getElementById('solicitante_tel').value.trim();
             const arquivoPDF = document.getElementById('pdfFile').files[0];
             
             const msg = document.getElementById('mensagem');
             msg.style.display = 'none';
 
             if (!assunto || !rua || !numero || !bairro) {
-                msg.className = 'mensagem erro'; msg.textContent = '❌ Preencha os campos com asterisco!'; msg.style.display = 'block'; return;
+                msg.className = 'mensagem erro'; msg.textContent = '❌ Preencha os campos obrigatórios (*)!'; msg.style.display = 'block'; return;
             }
 
             const btn = document.getElementById('btnEnviar');
@@ -175,17 +231,21 @@
                 }
                 prog.style.display = 'none';
 
+                // Lógica de aprovação automática
+                const statusInicial = usuarioLogado === 'Daniel' ? 'Aprovada' : 'Aguardando Aprovação';
+
                 await db.from('demandas').insert([{
                     assunto, rua, numero, bairro, 
                     descricao: document.getElementById('descricao').value.trim(),
+                    solicitante_nome, solicitante_tel,
                     fotos_urls: fotosUrls, 
                     pdf_url: pdf_url,
-                    status: 'Aberta', 
+                    status: statusInicial, 
                     criador: usuarioLogado, 
-                    responsavel: ''         
+                    responsaveis: []         
                 }]);
 
-                msg.className = 'mensagem sucesso'; msg.textContent = 'Demanda criada! Voltando...'; msg.style.display = 'block';
+                msg.className = 'mensagem sucesso'; msg.textContent = 'Demanda criada com sucesso!'; msg.style.display = 'block';
                 setTimeout(() => window.location.href = 'dashboard.html', 1500);
             } catch (e) {
                 prog.style.display = 'none'; btn.disabled = false; btn.textContent = 'Salvar Demanda';
