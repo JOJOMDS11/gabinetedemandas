@@ -3,251 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gabinete Daniel Daudt - Nova Demanda</title>
+    <title>Detalhes da Demanda</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #f0f2f5; }
+        body { background: #f0f2f5; color: #333; }
         .bg-primary { background-color: #185199; }
-        .btn-primary { background-color: #185199; color: white; border: none; }
-        .btn-primary:hover { background-color: #123e75; }
         .navbar { padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; color: white; }
         .navbar img { height: 80px; background: white; padding: 5px; border-radius: 4px; }
         .navbar a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
-        .container { max-width: 600px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 4px solid #98ED34; position: relative;}
-        h2 { color: #185199; margin-bottom: 20px; text-align: center; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #333; font-weight: bold; font-size: 13px; }
-        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: #185199; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 10px; }
-        .preview-item { border-radius: 4px; border: 1px solid #eee; overflow: hidden; height: 80px; position: relative; cursor: pointer; }
-        .preview-item img, .preview-item video { width: 100%; height: 100%; object-fit: cover; }
-        .btn-remover-preview { position: absolute; top: 2px; right: 2px; background: rgba(231,76,60,0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .botoes { display: flex; gap: 10px; margin-top: 25px; }
-        button { flex: 1; padding: 12px; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer; border: none;}
-        .btn-cancelar { background: #e0e0e0; color: #333; flex: 0.4; }
-        .mensagem { padding: 12px; border-radius: 4px; margin-bottom: 15px; display: none; font-weight: bold; text-align: center; font-size: 14px; }
-        .sucesso { background: #e2f8c5; color: #185199; border: 1px solid #98ED34; }
-        .erro { background: #ffe5e5; color: #c0392b; }
-        #uploadProgress { font-size: 13px; color: #185199; font-weight: bold; margin-top: 5px; display: none; }
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; }
-        .modal-overlay.ativo { display: flex; }
-        .modal-overlay img, .modal-overlay video { max-width: 90%; max-height: 90vh; border-radius: 8px; }
 
-        .box-importacao { background: #fdfdfd; border: 2px dashed #9b59b6; padding: 15px; border-radius: 8px; margin-bottom: 25px; text-align: center; transition: all 0.3s;}
-        .box-importacao:focus-within { border-color: #8e44ad; background: #faf4ff; }
-        .box-importacao label { color: #8e44ad; font-size: 14px; margin-bottom: 10px; display: block; }
-        .box-importacao textarea { border: 1px solid #e0e0e0; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); resize: none; text-align: left; padding: 12px; line-height: 1.6; font-family: 'Courier New', monospace; font-size: 13px; }
-        .box-importacao-copy-btn { background: #9b59b6; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-top: 10px; }
-        .badge-status { background: #9b59b6; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 10px; display: none;}
+        .container { max-width: 1000px; margin: 30px auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 15px; }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+
+        .box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 4px solid #185199; }
+        h2 { color: #185199; margin-bottom: 20px; font-size: 20px; border-bottom: 2px solid #98ED34; padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+
+        .info-group { margin-bottom: 15px; }
+        .info-group label { display: block; font-size: 12px; color: #777; font-weight: bold; text-transform: uppercase; }
+        .info-group p { font-size: 15px; color: #333; margin-top: 3px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #185199; font-weight: bold; font-size: 13px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #185199; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .botoes { display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap; }
+        button { flex: 1; min-width: 120px; padding: 12px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; text-align: center; text-decoration: none; display: inline-block; transition: background-color 0.2s;}
+        button:disabled { opacity: 0.7; cursor: not-allowed; }
         
-        .secao-tecnica { background: #fdfdfd; padding: 15px; border: 1px dashed #ccc; border-radius: 8px; margin-top: 15px; }
+        .btn-salvar { background: #185199; color: white; }
+        .btn-assumir { background: #98ED34; color: #185199; }
+        .btn-retirar { background: #e67e22; color: white; }
+        .btn-whats { background: #25D366; color: white; }
+
+        .responsaveis-lista { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .responsavel-tag { background: #e8f0ff; border: 1px solid #185199; color: #185199; padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+        .responsavel-tag button { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 14px; padding: 0; min-width: unset; flex: none; line-height: 1; }
+
+        .galeria { display: flex; flex-direction: column; gap: 15px; }
+        .foto-container { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; cursor: pointer; }
+        .foto-container img, .foto-container video { width: 100%; height: auto; display: block; }
+        .acoes-foto { position: absolute; bottom: 10px; right: 10px; display: flex; gap: 8px; }
+        .btn-foto { background: rgba(24,81,153,0.9); color: white; padding: 8px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; border: none; font-weight: bold; text-decoration: none; flex: none; min-width: unset; }
+        .btn-foto:hover { background: #185199; }
+        .btn-excluir-foto { background: rgba(231,76,60,0.9); }
+        .upload-extra { margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px; background: #fdfdfd; border-radius: 8px; padding: 15px; border: 1px dashed #ccc; }
+
+        .badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+        .badge-Aberta, .badge-Pendente { background: #ffe5e5; color: #c0392b; }
+        .badge-Andamento { background: #fff3cd; color: #856404; }
+        .badge-Aguardando { background: #fff3cd; color: #e67e22; border: 1px solid #e67e22; }
+        .badge-Aprovada { background: #e2f8c5; color: #185199; }
+        .badge-156 { background: #d0e8ff; color: #0984e3; }
+        .badge-Exp { background: #f5cd79; color: #d35400; }
+        .badge-SemLegis { background: #e0e0e0; color: #333; }
+        .badge-Concluida, .badge-Atendido, .badge-Resolvido { background: #d4edda; color: #155724; }
+        .badge-Arquivada { background: #eee; color: #777; }
+        .badge-Rejeitada { background: #c0392b; color: white; }
+
+        .alerta-aprovacao { background: #fff8e1; border: 2px solid #f39c12; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; font-weight: bold; color: #856404; }
+        .aprovado-daniel { display: inline-block; margin-left: 10px; background: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+
+        .timeline { list-style: none; padding: 0; margin: 0; position: relative; }
+        .timeline::before { content:''; position:absolute; left:14px; top:0; bottom:0; width:2px; background:#e0e0e0; }
+        .timeline li { position: relative; padding: 0 0 18px 38px; }
+        .timeline li:last-child { padding-bottom: 0; }
+        .timeline-dot { position: absolute; left: 6px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #185199; border: 3px solid white; box-shadow: 0 0 0 2px #185199; }
+        .timeline-dot.verde { background: #27ae60; box-shadow: 0 0 0 2px #27ae60; }
+        .timeline-dot.laranja { background: #e67e22; box-shadow: 0 0 0 2px #e67e22; }
+        .timeline-dot.cinza { background: #95a5a6; box-shadow: 0 0 0 2px #95a5a6; }
+        .timeline-dot.vermelho { background: #c0392b; box-shadow: 0 0 0 2px #c0392b; }
+        .timeline-dot.azul { background: #3498db; box-shadow: 0 0 0 2px #3498db; }
+        .timeline-evento { font-size: 13px; font-weight: bold; color: #185199; }
+        .timeline-tempo { font-size: 11px; color: #999; font-style: italic; }
+
+        .progress-wrapper { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 4px solid #185199; grid-column: 1 / -1; margin-bottom: 5px; }
+        .progress-container { display: flex; justify-content: space-between; align-items: center; position: relative; margin-top: 15px; }
+        .progress-line { position: absolute; top: 15px; left: 0; width: 100%; height: 4px; background: #eee; z-index: 1; }
+        .progress-step { position: relative; z-index: 2; background: white; padding: 8px; border-radius: 20px; font-size: 11px; font-weight: bold; color: #999; border: 2px solid #eee; text-align: center; width: 18%; }
+        .progress-step.active { color: #185199; border-color: #185199; background: #e8f0ff; }
+        .progress-step.completed { color: white; background: #27ae60; border-color: #27ae60; }
+
+        .links-externos { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;}
+        .btn-link { background: #ecf0f1; color: #2c3e50; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; text-decoration: none; border: 1px solid #bdc3c7; flex: 1; text-align: center; min-width: 130px; }
+        .btn-link:hover { background: #bdc3c7; }
+
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-overlay.ativo { display: flex; flex-direction: column; }
+        .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #c0392b; text-align:center;}
+        .modal-box.master { border-top-color: #f39c12; }
+        .modal-box h3 { color: #333; margin-bottom: 15px; }
+        .modal-box p { font-size: 14px; margin-bottom: 20px; color: #555; }
+        .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; text-align:center; font-size:16px;}
+        .modal-botoes { display: flex; gap: 10px; }
+
+        #lightboxImg, #lightboxVid { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); object-fit: contain; }
+        #lightboxPdf { width: 90%; height: 75vh; border: none; border-radius: 8px; background: white; margin-bottom: 10px; }
+        .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; font-size: 30px; padding: 15px 20px; cursor: pointer; border-radius: 4px; z-index: 10000; }
+        .lightbox-nav:hover { background: rgba(0,0,0,0.9); }
+        #btnPrev { left: 10px; }
+        #btnNext { right: 10px; }
+        #btnFecharLightbox { position: absolute; top: 15px; right: 15px; background: rgba(231,76,60,0.9); color: white; border: none; padding: 10px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; z-index: 10000; }
+
+        @media (max-width: 600px) {
+            .lightbox-nav { padding: 10px; font-size: 20px; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+        
+        .bloco-edicao { background: #fdfdfd; border: 1px dashed #ccc; padding: 20px; border-radius: 8px; margin-top: 10px;}
+        .bloco-edicao h4 { color: #185199; margin-bottom: 15px; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px;}
     </style>
 </head>
 <body>
     <div class="navbar bg-primary">
         <a href="dashboard.html">← Voltar</a>
-        <a href="dashboard.html" style="font-size: 16px; text-decoration: none;" title="Página Inicial">INÍCIO</a>
+        <a href="dashboard.html" style="font-size: 16px;">INÍCIO</a>
         <img src="https://i.imgur.com/coryuD6.png" alt="Logo">
     </div>
 
-    <div class="container">
-        
-        <div class="box-importacao">
-            <label>🪄 Preenchimento Automático (Planilha)</label>
-            <textarea id="textoMagico" rows="2" placeholder="Clique aqui e faça Ctrl+V da linha do Excel..." oninput="executarMagia()"></textarea>
-            <button type="button" class="box-importacao-copy-btn" onclick="copiarTextoMagico()" title="Copia o resultado para a área de transferência">📋 Copiar Resultado</button>
-            <span id="badgeStatusForcado" class="badge-status"></span>
+    <div class="container" id="conteudo">
+        <h3 style="grid-column:1/-1; text-align:center; color:#777;">Carregando...</h3>
+    </div>
+
+    <div id="lightbox" class="modal-overlay" onclick="fecharLightbox(event)">
+        <button id="btnFecharLightbox" onclick="fecharLightbox(event)">✕ Fechar</button>
+        <button id="btnPrev" class="lightbox-nav" onclick="mudarMedia(-1, event)">❮</button>
+        <img id="lightboxImg" style="display:none;">
+        <video id="lightboxVid" controls style="display:none;"></video>
+        <iframe id="lightboxPdf" style="display:none;"></iframe>
+        <div id="lightboxPdfFallback" style="display:none; text-align:center;">
+            <p style="color:white; margin-bottom:10px; font-size:14px;">Não abriu no celular?</p>
+            <a id="lightboxPdfLink" href="#" target="_blank" style="background:#27ae60; color:white; padding:10px 20px; border-radius:4px; font-weight:bold; text-decoration:none;">📄 Baixar / Abrir Externo</a>
         </div>
+        <button id="btnNext" class="lightbox-nav" onclick="mudarMedia(1, event)">❯</button>
+    </div>
 
-        <h2>Adicionar Registro</h2>
-        <div id="mensagem" class="mensagem"></div>
-        
-        <input type="hidden" id="statusForcado" value="">
-
-        <div class="form-row">
-            <div class="form-group" style="grid-column: 1 / -1;">
-                <label>Solicitação (Tipo) *</label>
-                <select id="tipo_solicitacao" required onchange="adaptarFormulario()">
-                    <option value="">Selecione o tipo...</option>
-                    <optgroup label="Agendas e Internos (Livre)">
-                        <option value="Agenda VISITA AO GABINETE">Agenda VISITA AO GABINETE</option>
-                        <option value="AGENDA visita EXTERNA">AGENDA visita EXTERNA</option>
-                        <option value="GABINETE">GABINETE</option>
-                        <option value="REUNIÃO">REUNIÃO</option>
-                        <option value="visita ao Gabinete">visita ao Gabinete</option>
-                    </optgroup>
-                    <optgroup label="Demandas (Livre)">
-                        <option value="DEMANDA">DEMANDA (Geral)</option>
-                        <option value="Demanda Externa">Demanda Externa</option>
-                    </optgroup>
-                    <optgroup label="Legislativo e Projetos (Requer Aprovação)">
-                        <option value="INDICAÇÃO">INDICAÇÃO</option>
-                        <option value="Moção de Apoio">Moção de Apoio</option>
-                        <option value="PEDIDO DE PROVIDÊNCIAS">PEDIDO DE PROVIDÊNCIAS</option>
-                        <option value="PROJETO DE LEI">PROJETO DE LEI</option>
-                        <option value="projeto de Lei">projeto de Lei</option>
-                        <option value="Projeto de Lei de Vereador">Projeto de Lei de Vereador</option>
-                        <option value="Projeto de Resolução (PR)">Projeto de Resolução (PR)</option>
-                        <option value="REQUERIMENTO">REQUERIMENTO</option>
-                        <option value="SESSÃO SOLENE">SESSÃO SOLENE</option>
-                    </optgroup>
-                </select>
+    <div class="modal-overlay" id="modalAviso">
+        <div class="modal-box">
+            <h3 id="modalAvisoTitulo">Atenção</h3>
+            <p id="modalAvisoMensagem"></p>
+            <div class="modal-botoes">
+                <button style="background:#e0e0e0; color:#333; flex:1;" onclick="document.getElementById('modalAviso').classList.remove('ativo')">Cancelar</button>
+                <button id="btnConfirmaAviso" style="background:#c0392b; color:white; flex:1;">Confirmar</button>
             </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group" style="grid-column: 1 / -1;">
-                <label>Assunto *</label>
-                <input type="text" id="assunto" placeholder="Ex: Limpeza de bueiro, Visita..." required>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Data</label>
-                <input type="date" id="data_agendada">
-            </div>
-            <div class="form-group">
-                <label>Horário</label>
-                <input type="time" id="horario_agendado">
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Secretaria</label>
-                <select id="secretaria" onchange="alternarSecretariaOutra()">
-                    <option value="">Selecione...</option>
-                </select>
-                <input type="text" id="secretaria_outra" placeholder="Digite o nome da secretaria/órgão..." style="display:none; margin-top:8px;">
-            </div>
-            <div class="form-group">
-                <label>Providências / Ações</label>
-                <input type="text" id="providencias" placeholder="Ações a tomar...">
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Responsável (Dono da Ordem)</label>
-                <select id="responsavel_ordem">
-                    <option value="">Não definido</option>
-                    <option value="Daniel">Daniel</option>
-                    <option value="João Pedro">João Pedro</option>
-                    <option value="Alemão">Alemão</option>
-                    <option value="Antonio">Antonio</option>
-                    <option value="Luana">Luana</option>
-                    <option value="Débora">Débora</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Nº da Demanda (Auto)</label>
-                <input type="text" id="numero_demanda" readonly placeholder="Preenchido automaticamente">
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Solicitante (Nome) *</label>
-                <input type="text" id="solicitante_nome" placeholder="João Silva..." required>
-            </div>
-            <div class="form-group">
-                <label>Telefone / WhatsApp</label>
-                <input type="text" id="solicitante_tel" placeholder="(51) 99999-9999">
-            </div>
-        </div>
-
-        <div id="bloco_endereco">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Rua / Local</label>
-                    <input type="text" id="rua" placeholder="Ex: Rua Principal">
-                </div>
-                <div class="form-group">
-                    <label>Número</label>
-                    <input type="text" id="numero" placeholder="123">
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Bairro</label>
-                <input type="text" id="bairro" placeholder="Ex: Centro">
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>Descrição / Detalhes (Texto completo)</label>
-            <textarea id="descricao" rows="3" placeholder="Descreva a demanda com detalhes..."></textarea>
-        </div>
-
-        <div class="secao-tecnica">
-            <h3 style="color:#185199; font-size:14px; margin-bottom:10px;">⚙️ Campos Técnicos (Opcional)</h3>
-            
-            <div class="form-row" style="margin-bottom:15px;">
-                <div class="form-group" style="margin-bottom:0;">
-                    <label>Doc. Interno (Tipo)</label>
-                    <select id="doc_tipo">
-                        <option value="">Selecione...</option>
-                        <option value="Ofício">Ofício</option>
-                        <option value="Memorando">Memorando</option>
-                        <option value="Requerimento">Requerimento</option>
-                    </select>
-                </div>
-                <div class="form-group" style="margin-bottom:0;">
-                    <label>Doc. Interno (Número)</label>
-                    <input type="text" id="doc_numero" placeholder="Ex: 3900/2026">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Protocolo 156</label>
-                <input type="text" id="protocolo" placeholder="Ex: 156 2026/001234" onfocus="if(!this.value) this.value='156 2026/'">
-            </div>
-            <div class="form-group">
-                <label>Expediente (Legis)</label>
-                <input type="text" id="expediente" placeholder="Ex: Exp. 5149">
-            </div>
-            <div class="form-group">
-                <label>Link Direto do Legis</label>
-                <input type="url" id="link_legis" placeholder="Cole a URL inteira aqui: https://...">
-            </div>
-        </div>
-
-        <div class="form-group" style="background:#f9f9f9; padding: 10px; border-radius: 4px; margin-top: 15px;">
-            <label style="color:#c0392b;">Documento PDF (Opcional)</label>
-            <input type="file" id="pdfFile" accept="application/pdf">
-        </div>
-
-        <div class="form-group">
-            <label>Fotos/Vídeos (Máx 5)</label>
-            <input type="file" id="fotos" accept="image/*,video/*" multiple>
-            <div class="preview-grid" id="previewGrid"></div>
-            <div id="uploadProgress"></div>
-        </div>
-
-        <div class="botoes">
-            <button class="btn-cancelar" onclick="window.location.href='dashboard.html'">Cancelar</button>
-            <button class="btn-primary" id="btnEnviar" onclick="enviarDemanda()" disabled>Aguarde...</button>
         </div>
     </div>
 
-    <!-- Lightbox de Mídias -->
-    <div id="lightbox" class="modal-overlay" onclick="fecharLightbox()">
-        <img id="lightboxImg" style="display:none;">
-        <video id="lightboxVid" controls style="display:none;"></video>
+    <div class="modal-overlay" id="modalSenhaMaster" style="z-index: 10001;">
+        <div class="modal-box master">
+            <h3>🔐 Autenticação Master</h3>
+            <p id="modalSenhaTexto">Digite a senha master para confirmar a ação.</p>
+            <input type="password" id="inputSenhaMaster" placeholder="Senha secreta">
+            <div id="erroSenhaMaster" style="color:#c0392b; font-size:13px; margin-bottom:10px; display:none;">Senha incorreta!</div>
+            <div class="modal-botoes">
+                <button style="background:#e0e0e0; color:#333; flex:1;" onclick="fecharModalSenha()">Cancelar</button>
+                <button id="btnConfirmarSenha" style="background:#27ae60; color:white; flex:1;" onclick="confirmarAcaoMaster()">✅ Confirmar</button>
+            </div>
+        </div>
     </div>
 
     <script>
         let db, cloudName, uploadPreset;
-        let usuarioLogado = localStorage.getItem('usuarioLogado');
-        let formularioAlterado = false;
+        let demandaAtual = null;
+        let acaoMasterPendente = null; 
+        let temAlteracoesNaoSalvas = false;
 
+        const tiposProjetos = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+        
+        let mediaGlobal = [];
+        let indexLightboxAtual = 0;
+
+        let usuarioLogado = localStorage.getItem('usuarioLogado');
         if (!usuarioLogado) window.location.href = 'index.html';
 
-        const tiposAtualBloqueados = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
-        const nomesEquipe = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
+        const adminUsers = ['Daniel', 'João Pedro', 'Luana'];
+        const isAdmin = adminUsers.includes(usuarioLogado);
 
         const secretariasPadrao = [
             'GABINETE', 'SEMOB', 'SEMOV', 'SEMURB', 'SEMMAM', 'SEMAE',
@@ -257,25 +190,39 @@
             'Secretaria Geral de Governo - SGG',
             'PREFEITURA'
         ];
+        let listaSecretariasCarregada = secretariasPadrao;
 
-        async function carregarSecretarias() {
-            const select = document.getElementById('secretaria');
-            let lista = secretariasPadrao;
+        async function carregarListaSecretarias() {
             try {
                 const { data, error } = await db.from('secretarias').select('nome').order('nome');
                 if (!error && data && data.length > 0) {
-                    lista = data.map(r => r.nome);
+                    listaSecretariasCarregada = data.map(r => r.nome);
                 }
             } catch (e) { }
-
-            select.innerHTML = '<option value="">Selecione...</option>' +
-                lista.map(s => `<option value="${s}">${s}</option>`).join('') +
-                '<option value="__outra__">➕ Outra (digitar)</option>';
         }
 
-        window.alternarSecretariaOutra = function() {
-            const select = document.getElementById('secretaria');
-            const campoOutra = document.getElementById('secretaria_outra');
+        function popularSelectSecretaria(valorAtual) {
+            const select = document.getElementById('editSecretaria');
+            if (!select) return;
+            const opcoes = listaSecretariasCarregada.map(s => `<option value="${s}">${s}</option>`).join('');
+            select.innerHTML = '<option value="">Selecione...</option>' + opcoes + '<option value="__outra__">➕ Outra (digitar)</option>';
+
+            if (!valorAtual) { select.value = ''; return; }
+
+            const match = listaSecretariasCarregada.find(s => s.toLowerCase() === valorAtual.toLowerCase());
+            if (match) {
+                select.value = match;
+            } else {
+                select.value = '__outra__';
+                const campoOutra = document.getElementById('editSecretariaOutra');
+                campoOutra.style.display = 'block';
+                campoOutra.value = valorAtual;
+            }
+        }
+
+        window.alternarSecretariaOutraEdit = function() {
+            const select = document.getElementById('editSecretaria');
+            const campoOutra = document.getElementById('editSecretariaOutra');
             if (select.value === '__outra__') {
                 campoOutra.style.display = 'block';
                 campoOutra.focus();
@@ -285,33 +232,583 @@
             }
         }
 
-        function obterSecretariaSelecionada() {
-            const select = document.getElementById('secretaria');
+        function obterSecretariaEditSelecionada() {
+            const select = document.getElementById('editSecretaria');
+            if (!select) return '';
             if (select.value === '__outra__') {
-                return document.getElementById('secretaria_outra').value.trim();
+                return document.getElementById('editSecretariaOutra').value.trim();
             }
             return select.value;
         }
 
-        document.addEventListener('change', function() { formularioAlterado = true; });
-        document.addEventListener('input', function(e) { 
-            if (e.target.id !== 'textoMagico') formularioAlterado = true;
-        });
-
         window.addEventListener('beforeunload', function(e) {
-            if (formularioAlterado) { e.preventDefault(); e.returnValue = ''; return ''; }
+            if (temAlteracoesNaoSalvas) { e.preventDefault(); e.returnValue = ''; return ''; }
         });
 
-        window.copiarTextoMagico = function() {
-            const textarea = document.getElementById('textoMagico');
-            if (!textarea.value.trim()) { alert('Nada para copiar! Preencha a área primeiro.'); return; }
-            textarea.select();
-            document.execCommand('copy');
-            alert('✅ Texto copiado para a área de transferência!');
+        document.addEventListener('input', function(e) {
+            if (e.target.id && e.target.id.startsWith('edit')) temAlteracoesNaoSalvas = true;
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const demandaId = urlParams.get('id');
+        if (!demandaId) window.location.href = 'dashboard.html';
+
+        async function inicializarSistema() {
+            try {
+                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
+                const config = await res.json();
+                db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                cloudName = config.cloudinaryName;
+                uploadPreset = config.uploadPreset;
+                await carregarListaSecretarias();
+                carregarDemanda();
+            } catch (err) {
+                document.getElementById('conteudo').innerHTML = `<h3 style="color:red; grid-column:1/-1;">Erro de conexão.</h3>`;
+            }
         }
 
-        function montarNumeroDemanda() {
-            const dataCampo = document.getElementById('data_agendada').value;
+        async function carregarDemanda() {
+            const { data, error } = await db.from('demandas').select('*').eq('id', demandaId).single();
+            if (error) { document.getElementById('conteudo').innerHTML = `<h3 style="color:red; grid-column:1/-1;">Demanda não encontrada.</h3>`; return; }
+            
+            const isAtualBloqueado = tiposProjetos.includes(data.tipo_solicitacao);
+
+            if (isAtualBloqueado && (data.status === 'Aberta' || data.status === 'Em Andamento' || data.status === 'Pendente')) {
+                const hist = data.historico || [];
+                if (usuarioLogado === 'Daniel') {
+                    const resp = data.responsaveis || [];
+                    if (!resp.includes('Daniel')) resp.push('Daniel');
+                    hist.push({ status: 'Aprovada', autor: 'Daniel', data: new Date().toISOString() });
+                    await db.from('demandas').update({ status: 'Aprovada', responsaveis: resp, historico: hist }).eq('id', demandaId);
+                    data.status = 'Aprovada'; data.responsaveis = resp; data.historico = hist;
+                } else {
+                    hist.push({ status: 'Aguardando Aprovação', autor: usuarioLogado, data: new Date().toISOString() });
+                    await db.from('demandas').update({ status: 'Aguardando Aprovação', historico: hist }).eq('id', demandaId);
+                    data.status = 'Aguardando Aprovação'; data.historico = hist;
+                }
+            }
+            
+            demandaAtual = data;
+            
+            mediaGlobal = [];
+            if(data.pdf_url) mediaGlobal.push({ url: data.pdf_url, type: 'pdf' });
+            const fotos = (data.fotos_urls || []).filter(f => f);
+            fotos.forEach(f => { mediaGlobal.push({ url: f, type: isVideo(f) ? 'video' : 'image' }); });
+
+            renderizar(demandaAtual);
+        }
+
+        function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
+        function tempoRelativo(dataStr) {
+            if (!dataStr) return '';
+            const data = new Date(dataStr);
+            return data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+        }
+
+        function gerarTimeline(d) {
+            let html = '<ul class="timeline">';
+            html += `<li>
+                <div class="timeline-dot azul"></div>
+                <div class="timeline-evento">📋 Criada por <b>${d.criador || 'Desconhecido'}</b></div>
+                ${d.criado_em ? `<div class="timeline-tempo">${tempoRelativo(d.criado_em)}</div>` : ''}
+            </li>`;
+
+            const hist = d.historico || [];
+            hist.forEach(h => {
+                let cor = 'laranja';
+                if(h.status === 'Aprovada' || h.status === 'Concluída' || h.status === 'Atendido' || h.status === 'Resolvido' || h.status === '156 Pedido') cor = 'verde';
+                if(h.status === 'Rejeitada') cor = 'vermelho';
+                if(h.status === 'Arquivada' || h.status === 'Sem Legis') cor = 'cinza';
+                if(h.status === 'Visto' || h.status === 'Solicitado pela equipe') cor = 'azul'; 
+
+                let texto = `Status alterado para <b>${h.status}</b> por ${h.autor}`;
+                if (h.status === 'Visto') texto = `👀 Visualizado e Visto por <b>${h.autor}</b>`;
+                if (h.status === 'Solicitado pela equipe') texto = `🙋 Demanda solicitada por <b>${h.autor}</b> (equipe)`;
+
+                html += `<li>
+                    <div class="timeline-dot ${cor}"></div>
+                    <div class="timeline-evento">${texto}</div>
+                    <div class="timeline-tempo">${tempoRelativo(h.data)}</div>
+                </li>`;
+            });
+
+            html += '</ul>';
+            return html;
+        }
+
+        window.abrirMapa = function(rua, num, bairro) { 
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${rua}, ${num}, ${bairro}, São Leopoldo, RS`)}`, '_blank'); 
+        }
+
+        function pedirConfirmacao(titulo, mensagem, callbackCallback) {
+            document.getElementById('modalAvisoTitulo').textContent = titulo;
+            document.getElementById('modalAvisoMensagem').innerHTML = mensagem;
+            document.getElementById('modalAviso').classList.add('ativo');
+            
+            const btnConfirmar = document.getElementById('btnConfirmaAviso');
+            btnConfirmar.onclick = () => {
+                document.getElementById('modalAviso').classList.remove('ativo');
+                btnConfirmar.textContent = '⏳ ...';
+                callbackCallback();
+            };
+        }
+
+        window.copiarResumo = function() {
+            const d = demandaAtual;
+            let resumo = `*${d.tipo_solicitacao || 'Registro'}*\n${d.assunto}\n`;
+            
+            if (d.solicitante_nome) resumo += `\n*Solicitante:* ${d.solicitante_nome}`;
+            if (d.solicitante_tel)  resumo += `\n*Telefone:* ${d.solicitante_tel}`;
+            if (d.rua || d.bairro)  resumo += `\n*Endereço:* ${d.rua || ''}${d.numero ? ', ' + d.numero : ''} ${d.bairro ? '- ' + d.bairro : ''}`;
+            
+            resumo += `\n\n*Status:* ${d.status}`;
+            if (d.doc_tipo || d.doc_numero) resumo += `\n*Doc Interno:* ${d.doc_tipo || 'Doc'} ${d.doc_numero || ''}`;
+            if (d.protocolo) resumo += `\n*Protocolo 156:* ${d.protocolo}`;
+            if (d.expediente) resumo += `\n*Expediente:* ${d.expediente}`;
+            if (d.pdf_url) resumo += `\n\n*Para ver o PDF clique aqui:* ${d.pdf_url}`;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = resumo;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert('✅ Resumo inteligente copiado!');
+        }
+
+        window.abrirLightboxIndex = function(index) { indexLightboxAtual = index; atualizarLightbox(); }
+
+        function atualizarLightbox() {
+            document.getElementById('lightbox').classList.add('ativo');
+            const img = document.getElementById('lightboxImg'); const vid = document.getElementById('lightboxVid'); const pdf = document.getElementById('lightboxPdf'); const pdfFallback = document.getElementById('lightboxPdfFallback'); const pdfLink = document.getElementById('lightboxPdfLink');
+            img.style.display = 'none'; vid.style.display = 'none'; pdf.style.display = 'none'; pdfFallback.style.display = 'none'; vid.pause();
+            const item = mediaGlobal[indexLightboxAtual];
+            if(!item) return;
+            if(item.type === 'video') { vid.src = item.url; vid.style.display = 'block'; vid.play(); } 
+            else if(item.type === 'pdf') { pdf.src = item.url; pdf.style.display = 'block'; pdfLink.href = item.url; pdfFallback.style.display = 'block'; } 
+            else { img.src = item.url; img.style.display = 'block'; }
+            document.getElementById('btnPrev').style.display = mediaGlobal.length > 1 ? 'block' : 'none';
+            document.getElementById('btnNext').style.display = mediaGlobal.length > 1 ? 'block' : 'none';
+        }
+
+        window.mudarMedia = function(direcao, event) {
+            if(event) event.stopPropagation();
+            indexLightboxAtual += direcao;
+            if(indexLightboxAtual < 0) indexLightboxAtual = mediaGlobal.length - 1;
+            if(indexLightboxAtual >= mediaGlobal.length) indexLightboxAtual = 0;
+            atualizarLightbox();
+        }
+
+        window.fecharLightbox = function(e) {
+            if (e && e.target.id !== 'lightbox' && e.target.id !== 'btnFecharLightbox') return;
+            document.getElementById('lightbox').classList.remove('ativo'); document.getElementById('lightboxVid').pause();
+        }
+
+        function gerarBarraProgresso(status, tipo) {
+            let statusFake = status;
+            if (status === 'Atendido' || status === 'Resolvido') statusFake = 'Concluída';
+
+            let etapas = [];
+            if (tiposProjetos.includes(tipo)) {
+                etapas = ['Aprovada', 'Em Andamento', 'Aguardando Exp', 'Concluída'];
+                if(statusFake === '156 Pedido') statusFake = 'Aguardando Exp';
+            } else {
+                etapas = ['Pendente', 'Em Andamento', 'Atendido', 'Concluída'];
+                if (statusFake === 'Aberta' || statusFake === 'Aguardando') statusFake = 'Pendente';
+                if (statusFake === 'Aprovada') statusFake = 'Em Andamento';
+            }
+
+            let indexAtual = etapas.indexOf(statusFake);
+            if (['Concluída', 'Atendido', 'Resolvido'].includes(status)) indexAtual = etapas.length - 1;
+            if(status === 'Aguardando Aprovação' || status === 'Sem Legis') indexAtual = -1;
+            if(status === 'Rejeitada' || status === 'Arquivada') return ''; 
+            
+            let html = '';
+            etapas.forEach((etapa, index) => {
+                let classe = index <= indexAtual ? 'completed' : ''; 
+                if(index === indexAtual) classe = 'completed'; 
+                html += `<div class="progress-step ${classe}">${etapa}</div>`;
+            });
+            return `<div class="progress-wrapper"><h4 style="color:#185199; font-size:14px; text-align:center;">Progresso da Demanda</h4><div class="progress-container"><div class="progress-line"></div>${html}</div></div>`;
+        }
+
+        function renderizar(d) {
+            const responsaveis = (d.responsaveis || []).filter(r => r);
+            const donoOrdem = d.responsavel_ordem ? d.responsavel_ordem : 'Não definido';
+            
+            const euEstouCuidando = responsaveis.includes(usuarioLogado);
+            const encerrada = ['Concluída', 'Atendido', 'Resolvido', 'Arquivada', 'Rejeitada'].includes(d.status);
+            const isAtualBloqueado = tiposProjetos.includes(d.tipo_solicitacao);
+
+            let badgeClass = 'badge-Aberta';
+            if (d.status === 'Pendente') badgeClass = 'badge-Pendente';
+            if (d.status === 'Em Andamento') badgeClass = 'badge-Andamento';
+            if (d.status === 'Aguardando Aprovação' || d.status === 'Aguardando') badgeClass = 'badge-Aguardando';
+            if (d.status === 'Aprovada') badgeClass = 'badge-Aprovada';
+            if (d.status === '156 Pedido') badgeClass = 'badge-156';
+            if (d.status === 'Aguardando Exp') badgeClass = 'badge-Exp';
+            if (d.status === 'Sem Legis') badgeClass = 'badge-SemLegis';
+            if (d.status === 'Concluída' || d.status === 'Atendido' || d.status === 'Resolvido') badgeClass = 'badge-Concluida';
+            if (d.status === 'Arquivada') badgeClass = 'badge-Arquivada';
+            if (d.status === 'Rejeitada') badgeClass = 'badge-Rejeitada';
+
+            let alertaAprovacao = '';
+            let btnAprovacao = '';
+            let seloAprovado = '';
+            let bloqueado = '';
+
+            if (isAtualBloqueado) {
+                const estaAguardando = (d.status === 'Aguardando Aprovação' || d.status === 'Aberta' || d.status === 'Pendente');
+                bloqueado = estaAguardando ? 'disabled style="background:#eee; cursor:not-allowed;"' : '';
+
+                if (d.status === 'Aguardando Aprovação') {
+                    if (usuarioLogado === 'Daniel') {
+                        alertaAprovacao = `<div class="alerta-aprovacao" style="grid-column:1/-1;">⏳ Esta demanda está aguardando sua aprovação, Daniel!<br><br><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda(this)">✅ Aprovar Formalmente</button><button style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="rejeitarDemanda()">❌ Rejeitar</button></div></div>`;
+                        btnAprovacao = `<button style="background:#27ae60; color:white; flex:1;" onclick="aprovarDemanda(this)">✅ Aprovar Formal</button>`;
+                    } else {
+                        btnAprovacao = `<button style="background:#9b59b6; color:white; flex:1;" onclick="iniciarAcaoMaster('aprovar')">🔐 Aprovar c/ Senha</button>`;
+                    }
+                }
+
+                let nomeAprovador = 'Daniel'; 
+                if (d.historico) {
+                    const eventoAprovacao = d.historico.find(h => h.status === 'Aprovada');
+                    if (eventoAprovacao && eventoAprovacao.autor) { nomeAprovador = eventoAprovacao.autor; }
+                }
+                seloAprovado = (!['Aberta', 'Pendente', 'Aguardando', 'Aguardando Aprovação', 'Rejeitada'].includes(d.status)) ? `<span class="aprovado-daniel">Aprovada por ${nomeAprovador} ✓</span>` : '';
+
+            } else {
+                bloqueado = ''; 
+                let temVisto = false;
+                if (d.historico) { temVisto = d.historico.some(h => h.status === 'Visto'); }
+
+                if (!temVisto && usuarioLogado === 'Daniel') {
+                    btnAprovacao = `<button style="background:#3498db; color:white; flex:1;" onclick="darVisto(this)">👀 Dar Visto (Marcar Ciente)</button>`;
+                }
+
+                if (temVisto) {
+                    seloAprovado = `<span class="aprovado-daniel" style="background:#3498db;">Visto pelo Daniel 👀</span>`;
+                }
+            }
+
+            let htmlFotos = '';
+            let mediaIndex = d.pdf_url ? 1 : 0; 
+            
+            const fotosLimpo = (d.fotos_urls || []).filter(f => f);
+            if(fotosLimpo.length > 0) {
+                htmlFotos = fotosLimpo.map((f, i) => {
+                    const currentIndex = mediaIndex + i;
+                    const vid = isVideo(f);
+                    const mediaTag = vid ? `<video src="${f}" onclick="abrirLightboxIndex(${currentIndex})"></video>` : `<img src="${f}" onclick="abrirLightboxIndex(${currentIndex})">`;
+                    const ext = vid ? '.mp4' : '.jpg';
+                    return `<div class="foto-container">${mediaTag}<div class="acoes-foto"><button class="btn-foto btn-excluir-foto" onclick="event.stopPropagation(); apagarFotoUnica(${i})">🗑️</button><button class="btn-foto" onclick="event.stopPropagation(); forcarDownload('${f}', 'demanda_anexo${i}${ext}')">⬇️</button></div></div>`;
+                }).join('');
+            } else {
+                htmlFotos = '<p style="color:#999; text-align:center; padding:20px;">Nenhuma imagem ou vídeo.</p>';
+            }
+
+            const tagsResponsaveis = responsaveis.length > 0 ? `<div class="responsaveis-lista">${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}', this)">✕</button></div>`).join('')}</div>` : '<span style="color:#999;">Ninguém assumiu ainda</span>';
+
+            const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui(this)">🙋 Eu Assumo (Executar)</button>` : '';
+            const inputDemandaNum = isAdmin
+                ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" readonly style="max-width:160px; padding:5px; background:#eee; font-weight:bold;">
+                   <button type="button" class="btn-foto" style="background:#9b59b6; margin-left:8px;" onclick="regenerarNumeroDemanda()" title="Recalcula como Data + Hora atual">🔄 Atualizar p/ Data+Hora atual</button>`
+                : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
+
+            const ruaSegura = d.rua ? d.rua.replace(/'/g,"\\'") : '';
+            const bairroSeguro = d.bairro ? d.bairro.replace(/'/g,"\\'") : '';
+
+            let textoWhats = `*${d.tipo_solicitacao || 'Registro'}*\n${d.assunto}\n`;
+            if (d.solicitante_nome) textoWhats += `\n*Solicitante:* ${d.solicitante_nome}`;
+            if (d.solicitante_tel) textoWhats += `\n*Telefone:* ${d.solicitante_tel}`;
+            if (d.rua || d.bairro) textoWhats += `\n*Endereço:* ${d.rua || ''}${d.numero ? ', ' + d.numero : ''} ${d.bairro ? '- ' + d.bairro : ''}`;
+            textoWhats += `\n\n*Status:* ${d.status}`;
+            if (d.doc_tipo || d.doc_numero) textoWhats += `\n*Doc Interno:* ${d.doc_tipo || 'Doc'} ${d.doc_numero || ''}`;
+            if (d.protocolo) textoWhats += `\n*Protocolo 156:* ${d.protocolo}`;
+            if (d.expediente) textoWhats += `\n*Expediente:* ${d.expediente}`;
+            if (d.pdf_url) textoWhats += `\n\n*Para ver o PDF clique aqui:* ${d.pdf_url}`;
+            textoWhats += `\n\n🔗 Acesse: ${window.location.href}`;
+
+            const msgWhats = encodeURIComponent(textoWhats);
+            const btnWhats = `<a href="https://wa.me/?text=${msgWhats}" target="_blank" class="btn-whats">📱 WhatsApp</a>`;
+
+            let dataApresentacao = '';
+            let horaFormatada = '';
+            if (d.data_agendada) { const objData = new Date(d.data_agendada + 'T00:00:00'); dataApresentacao = objData.toLocaleDateString('pt-BR'); }
+            if (d.horario_agendado) { horaFormatada = d.horario_agendado.substring(0, 5); }
+
+            document.getElementById('conteudo').innerHTML = `
+                ${alertaAprovacao}
+                ${gerarBarraProgresso(d.status, d.tipo_solicitacao)}
+
+                <div class="box">
+                    <h2>Detalhes <span class="badge ${badgeClass}">${d.status}</span> ${seloAprovado}</h2>
+
+                    <div class="links-externos">
+                        <button class="btn-link" style="background:#9b59b6; color:white; border-color:#8e44ad;" onclick="copiarResumo()">📋 Copiar Resumo</button>
+                        ${d.link_legis ? `<a href="${d.link_legis}" target="_blank" class="btn-link" style="background:#f39c12; color:white; border-color:#e67e22;">🔗 Ver Legis Anexado</a>` : ''}
+                    </div>
+
+                    ${d.pdf_url ? `
+                    <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap: wrap;">
+                        <button onclick="abrirLightboxIndex(0)" class="btn-foto" style="background:#185199; font-size: 13px; padding: 10px 15px;">👁️ Ler Arquivo PDF</button>
+                        <button onclick="excluirPdf()" class="btn-foto" style="background:#c0392b; font-size: 13px; padding: 10px 15px;">🗑️ Excluir PDF</button>
+                    </div>` : ''}
+
+                    <div class="info-group"><label>Tipo de Solicitação</label><p>📌 <b>${d.tipo_solicitacao || 'Não classificado'}</b></p></div>
+                    <div class="info-group"><label>Assunto</label><p>${d.assunto}</p></div>
+                    
+                    ${(d.doc_tipo || d.doc_numero) ? `
+                    <div class="info-group" style="background:#e8f0ff; padding:10px; border-radius:4px;">
+                        <label>Documento Interno</label>
+                        <p>📄 <b>${d.doc_tipo || 'Doc'}: ${d.doc_numero || ''}</b></p>
+                    </div>` : ''}
+
+                    ${d.protocolo ? `
+                    <div class="info-group" style="background:#d0e8ff; padding:10px; border-radius:4px;">
+                        <label>Protocolo 156</label>
+                        <p>🔢 <b>${d.protocolo}</b></p>
+                    </div>` : ''}
+
+                    ${d.expediente ? `
+                    <div class="info-group" style="background:#f5cd79; padding:10px; border-radius:4px;">
+                        <label>Expediente (Legis)</label>
+                        <p>📄 <b>${d.expediente}</b></p>
+                    </div>` : ''}
+                    
+                    ${(d.data_agendada || d.horario_agendado) ? `
+                    <div class="info-group" style="background:#e8f0ff; padding:10px; border-radius:4px;">
+                        <label>Data e Horário</label>
+                        <p>📅 ${dataApresentacao}   ⏰ ${horaFormatada || '--:--'}</p>
+                    </div>` : ''}
+
+                    ${d.secretaria ? `
+                    <div class="info-group">
+                        <label>Secretaria</label>
+                        <p>🏢 ${d.secretaria}</p>
+                    </div>` : ''}
+
+                    ${(d.rua || d.bairro) ? `
+                    <div class="info-group">
+                        <label>Endereço</label>
+                        <p>${d.rua}, ${d.numero} - ${d.bairro} <button class="btn-foto" style="background:#3498db; margin-left:10px;" onclick="abrirMapa('${ruaSegura}','${d.numero}','${bairroSeguro}')">📍 Mapa</button></p>
+                    </div>` : ''}
+                    
+                    <div class="info-group"><label>Descrição</label><p>${d.descricao || 'Sem descrição.'}</p></div>
+
+                    <div class="info-group" style="background:#f0f7e6; padding:10px; border-left:4px solid #27ae60; border-radius:4px;">
+                        <label>Dados do Solicitante</label>
+                        <p>👤 ${d.solicitante_nome || 'Não informado'}</p>
+                        <p>📞 ${d.solicitante_tel || 'Não informado'}</p>
+                    </div>
+
+                    <div class="info-group" style="background:#f9f9f9; padding:10px; border-radius:4px; margin-top:10px;">
+                        <label>Aberto por</label>
+                        <p>✍️ <b>${d.criador || 'Desconhecido'}</b> em ${tempoRelativo(d.criado_em)}</p>
+                    </div>
+
+                    <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+
+                    <h2>Acompanhamento & Edição</h2>
+                    
+                    ${isAtualBloqueado && bloqueado !== '' ? `<div style="color:#c0392b; font-size:13px; font-weight:bold; margin-bottom:10px; background:#ffe5e5; padding:10px; border-radius:4px; border:1px solid #c0392b;">⚠️ Bloqueado: Este projeto requer aprovação para edição de andamento.</div>` : ''}
+
+                    <div class="bloco-edicao">
+                        <h4>✏️ Corrigir Dados Principais</h4>
+                        
+                        <div class="form-group">
+                            <label>Corrigir Tipo de Solicitação</label>
+                            <select id="editTipo" ${bloqueado}>
+                                <option value="" ${!d.tipo_solicitacao?'selected':''}>Não classificado (Selecione um)</option>
+                                <optgroup label="Agendas e Internos (Livre)">
+                                    <option value="Agenda VISITA AO GABINETE" ${d.tipo_solicitacao==='Agenda VISITA AO GABINETE'?'selected':''}>Agenda VISITA AO GABINETE</option>
+                                    <option value="AGENDA visita EXTERNA" ${d.tipo_solicitacao==='AGENDA visita EXTERNA'?'selected':''}>AGENDA visita EXTERNA</option>
+                                    <option value="GABINETE" ${d.tipo_solicitacao==='GABINETE'?'selected':''}>GABINETE</option>
+                                    <option value="REUNIÃO" ${d.tipo_solicitacao==='REUNIÃO'?'selected':''}>REUNIÃO</option>
+                                    <option value="visita ao Gabinete" ${d.tipo_solicitacao==='visita ao Gabinete'?'selected':''}>visita ao Gabinete</option>
+                                </optgroup>
+                                <optgroup label="Demandas (Livre)">
+                                    <option value="DEMANDA" ${d.tipo_solicitacao==='DEMANDA'?'selected':''}>DEMANDA (Geral)</option>
+                                    <option value="Demanda Externa" ${d.tipo_solicitacao==='Demanda Externa'?'selected':''}>Demanda Externa</option>
+                                </optgroup>
+                                <optgroup label="Legislativo e Projetos (Requer Aprovação)">
+                                    <option value="INDICAÇÃO" ${d.tipo_solicitacao==='INDICAÇÃO'?'selected':''}>INDICAÇÃO</option>
+                                    <option value="Moção de Apoio" ${d.tipo_solicitacao==='Moção de Apoio'?'selected':''}>Moção de Apoio</option>
+                                    <option value="PEDIDO DE PROVIDÊNCIAS" ${d.tipo_solicitacao==='PEDIDO DE PROVIDÊNCIAS'?'selected':''}>PEDIDO DE PROVIDÊNCIAS</option>
+                                    <option value="PROJETO DE LEI" ${d.tipo_solicitacao==='PROJETO DE LEI'?'selected':''}>PROJETO DE LEI</option>
+                                    <option value="projeto de Lei" ${d.tipo_solicitacao==='projeto de Lei'?'selected':''}>projeto de Lei</option>
+                                    <option value="Projeto de Lei de Vereador" ${d.tipo_solicitacao==='Projeto de Lei de Vereador'?'selected':''}>Projeto de Lei de Vereador</option>
+                                    <option value="Projeto de Resolução (PR)" ${d.tipo_solicitacao==='Projeto de Resolução (PR)'?'selected':''}>Projeto de Resolução (PR)</option>
+                                    <option value="REQUERIMENTO" ${d.tipo_solicitacao==='REQUERIMENTO'?'selected':''}>REQUERIMENTO</option>
+                                    <option value="SESSÃO SOLENE" ${d.tipo_solicitacao==='SESSÃO SOLENE'?'selected':''}>SESSÃO SOLENE</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Corrigir Assunto</label>
+                            <input type="text" id="editAssunto" value="${d.assunto || ''}" ${bloqueado}>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Corrigir Nome (Solicitante)</label>
+                                <input type="text" id="editNomeSol" value="${d.solicitante_nome || ''}" ${bloqueado}>
+                            </div>
+                            <div class="form-group">
+                                <label>Corrigir Telefone</label>
+                                <input type="text" id="editTelSol" value="${d.solicitante_tel || ''}" ${bloqueado}>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bloco-edicao" style="margin-top: 20px;">
+                        <h4>👥 Equipe (Ordem vs. Executores)</h4>
+                        
+                        <div class="form-group">
+                            <label style="color:#d35400;">Responsável (Quem deu a Ordem)</label>
+                            <select id="editResponsavelOrdem" ${bloqueado}>
+                                <option value="" ${!d.responsavel_ordem?'selected':''}>Não definido</option>
+                                <option value="Daniel" ${d.responsavel_ordem==='Daniel'?'selected':''}>Daniel</option>
+                                <option value="João Pedro" ${d.responsavel_ordem==='João Pedro'?'selected':''}>João Pedro</option>
+                                <option value="Alemão" ${d.responsavel_ordem==='Alemão'?'selected':''}>Alemão</option>
+                                <option value="Antonio" ${d.responsavel_ordem==='Antonio'?'selected':''}>Antonio</option>
+                                <option value="Luana" ${d.responsavel_ordem==='Luana'?'selected':''}>Luana</option>
+                                <option value="Débora" ${d.responsavel_ordem==='Débora'?'selected':''}>Débora</option>
+                            </select>
+                        </div>
+
+                        <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
+
+                        <div style="margin-bottom:15px;"><label>Atuais Cuidando (Executores):</label> ${tagsResponsaveis}</div>
+                        <div style="display:flex; gap:10px;">
+                            <select id="addResponsavelSelect" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                                <option value="">Atribuir executor manualmente...</option>
+                                <option value="Daniel">Daniel</option>
+                                <option value="João Pedro">João Pedro</option>
+                                <option value="Alemão">Alemão</option>
+                                <option value="Antonio">Antonio</option>
+                                <option value="Luana">Luana</option>
+                                <option value="Débora">Débora</option>
+                            </select>
+                            <button class="btn-foto" style="background:#27ae60; padding:8px 15px;" onclick="adicionarResponsavelManual(this)">➕ Adicionar Executor</button>
+                        </div>
+                    </div>
+
+                    <div class="bloco-edicao" style="margin-top: 20px;">
+                        <h4>⚙️ Status & Acompanhamento Técnico</h4>
+                        
+                        <div class="form-group"><label>Nº Visual da Demanda (Admin)</label>${inputDemandaNum}</div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Data Agendada</label>
+                                <input type="date" id="editDataAgendada" value="${d.data_agendada || ''}" ${bloqueado}>
+                            </div>
+                            <div class="form-group">
+                                <label>Horário</label>
+                                <input type="time" id="editHorarioAgendado" value="${horaFormatada || ''}" ${bloqueado}>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Secretaria</label>
+                            <select id="editSecretaria" ${bloqueado} onchange="alternarSecretariaOutraEdit()">
+                                <option value="">Selecione...</option>
+                            </select>
+                            <input type="text" id="editSecretariaOutra" placeholder="Digite o nome da secretaria/órgão..." style="display:none; margin-top:8px;" ${bloqueado}>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Providências / Ações Tomadas</label>
+                            <textarea id="editProvidencias" rows="2" placeholder="O que já foi feito?" ${bloqueado}>${d.providencias || ''}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Status Manual</label>
+                            <select id="editStatus" ${bloqueado}>
+                                <option value="Aberta" ${d.status==='Aberta'?'selected':''}>Aberta</option>
+                                <option value="Pendente" ${d.status==='Pendente'?'selected':''}>Pendente</option>
+                                <option value="Aguardando" ${d.status==='Aguardando'?'selected':''}>Aguardando</option>
+                                <option value="Aguardando Aprovação" ${d.status==='Aguardando Aprovação'?'selected':''}>Aguardando Aprovação</option>
+                                <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada</option>
+                                <option value="Em Andamento" ${d.status==='Em Andamento'?'selected':''}>Em Andamento</option>
+                                <option value="Sem Legis" ${d.status==='Sem Legis'?'selected':''}>Sem Legis</option>
+                                <option value="156 Pedido" ${d.status==='156 Pedido'?'selected':''}>156 Pedido</option>
+                                <option value="Aguardando Exp" ${d.status==='Aguardando Exp'?'selected':''}>Aguardando Exp (Legis)</option>
+                                <option value="Atendido" ${d.status==='Atendido'?'selected':''}>Atendido</option>
+                                <option value="Resolvido" ${d.status==='Resolvido'?'selected':''}>Resolvido</option>
+                                <option value="Concluída" ${d.status==='Concluída'?'selected':''}>Concluída</option>
+                                <option value="Arquivada" ${d.status==='Arquivada'?'selected':''}>Arquivada</option>
+                                <option value="Rejeitada" ${d.status==='Rejeitada'?'selected':''}>Rejeitada</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-row" style="margin-bottom:15px;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Doc. Interno (Tipo)</label>
+                                <select id="editDocTipo" ${bloqueado}>
+                                    <option value="" ${!d.doc_tipo?'selected':''}>Selecione...</option>
+                                    <option value="Ofício" ${d.doc_tipo==='Ofício'?'selected':''}>Ofício</option>
+                                    <option value="Memorando" ${d.doc_tipo==='Memorando'?'selected':''}>Memorando</option>
+                                    <option value="Requerimento" ${d.doc_tipo==='Requerimento'?'selected':''}>Requerimento</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Doc. Interno (Número)</label>
+                                <input type="text" id="editDocNumero" value="${d.doc_numero || ''}" placeholder="Ex: 3900/2026" ${bloqueado}>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Protocolo 156</label>
+                            <input type="text" id="editProtocolo" value="${d.protocolo || ''}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher" ${bloqueado}>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Expediente (Legis)</label>
+                            <input type="text" id="editExpediente" value="${d.expediente || ''}" placeholder="Ex: Exp. 5149" ${bloqueado}>
+                        </div>
+                        
+                        <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:4px;">
+                            <label>Link Direto do Legis 🔗</label>
+                            <input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo..." ${bloqueado}>
+                        </div>
+                    </div>
+
+                    <div class="botoes">
+                        ${btnAssumir}
+                        ${btnAprovacao}
+                        <button class="btn-salvar" onclick="salvarAlteracoes(this)">💾 Salvar Tudo</button>
+                        ${btnWhats}
+                    </div>
+
+                    ${!['Arquivada', 'Rejeitada'].includes(d.status) ? `<button class="btn-retirar" style="width:100%; margin-top:15px;" onclick="iniciarAcaoMaster('arquivar')">📦 Arquivar (Limpa Mídias)</button>` : ''}
+                </div>
+
+                <div class="box">
+                    <h2>Galeria de Mídias</h2>
+                    <div class="galeria">${htmlFotos}</div>
+
+                    <div class="upload-extra">
+                        <h4 style="color:#185199; margin-bottom:10px;">Adicionar Anexos</h4>
+                        <label style="font-size:12px; font-weight:bold;">Documento PDF (Substituir o atual)</label>
+                        <input type="file" id="extraPdf" accept="application/pdf" style="width:100%; margin-bottom:15px;">
+                        <label style="font-size:12px; font-weight:bold;">Fotos/Vídeos (Máx 15MB)</label>
+                        <input type="file" id="extraFotos" accept="image/*,video/*" multiple style="width:100%;">
+                        <button class="btn-salvar" style="width:100%; margin-top:10px;" id="btnUploadExtra" onclick="uploadNovosAnexos()">⬆️ Subir</button>
+                        <div id="progressoExtra" style="font-size:13px; color:#185199; font-weight:bold; display:none; margin-top:5px;"></div>
+                    </div>
+                </div>
+
+                <div class="box" style="grid-column:1/-1;">
+                    <h2>📅 Linha do Tempo</h2>
+                    ${gerarTimeline(d)}
+                </div>`;
+
+            popularSelectSecretaria(d.secretaria || '');
+        }
+
+        window.regenerarNumeroDemanda = function() {
+            const dataCampo = document.getElementById('editDataAgendada').value;
             const agora = new Date();
             let ano, mes, dia;
             if (dataCampo) {
@@ -324,289 +821,234 @@
             const horas = String(agora.getHours()).padStart(2, '0');
             const minutos = String(agora.getMinutes()).padStart(2, '0');
             const segundos = String(agora.getSeconds()).padStart(2, '0');
-            return `${ano.slice(-2)}${mes}${dia}${horas}${minutos}${segundos}`;
+
+            document.getElementById('editNumDemanda').value = `${ano.slice(-2)}${mes}${dia}${horas}${minutos}${segundos}`;
+            temAlteracoesNaoSalvas = true;
         }
 
-        document.getElementById('data_agendada').addEventListener('change', atualizarNumeroDemanda);
-
-        function atualizarNumeroDemanda() {
-            document.getElementById('numero_demanda').value = montarNumeroDemanda();
-        }
-
-        function inicializarNumeroDemanda() {
-            const numInput = document.getElementById('numero_demanda');
-            if (!numInput.value) { numInput.value = montarNumeroDemanda(); }
-        }
-
-        async function inicializarSistema() {
-            try {
-                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
-                const config = await res.json();
-                db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
-                cloudName = config.cloudinaryName;
-                uploadPreset = config.uploadPreset;
-
-                await carregarSecretarias();
-
-                const btn = document.getElementById('btnEnviar');
-                btn.disabled = false;
-                btn.textContent = 'Salvar Registro';
-            } catch (err) {
-                document.getElementById('mensagem').className = 'mensagem erro';
-                document.getElementById('mensagem').textContent = 'Erro de API.';
-                document.getElementById('mensagem').style.display = 'block';
-            }
-        }
-
-        function limparFormulario() {
-            document.getElementById('tipo_solicitacao').value = '';
-            document.getElementById('assunto').value = '';
-            document.getElementById('data_agendada').value = '';
-            document.getElementById('horario_agendado').value = '';
-            document.getElementById('secretaria').value = '';
-            document.getElementById('secretaria_outra').value = '';
-            document.getElementById('secretaria_outra').style.display = 'none';
-            document.getElementById('providencias').value = '';
-            document.getElementById('responsavel_ordem').value = '';
-            document.getElementById('solicitante_nome').value = '';
-            document.getElementById('solicitante_tel').value = '';
-            document.getElementById('rua').value = '';
-            document.getElementById('numero').value = '';
-            document.getElementById('bairro').value = '';
-            document.getElementById('descricao').value = '';
-            document.getElementById('doc_tipo').value = '';
-            document.getElementById('doc_numero').value = '';
-            document.getElementById('expediente').value = '';
-            document.getElementById('protocolo').value = '';
-            document.getElementById('link_legis').value = '';
-            document.getElementById('statusForcado').value = '';
-            document.getElementById('badgeStatusForcado').style.display = 'none';
-        }
-
-        function executarMagia() {
-            const textarea = document.getElementById('textoMagico');
-            const texto = textarea.value;
-            if (!texto.trim()) return;
-
-            limparFormulario();
-
-            let parsed = { data: '', resp: '', status: '', tipo: '', doc_tipo: '', doc_numero: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '' };
-
-            const nomesConhecidos = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
-            const tiposConhecidos = ['Agenda VISITA AO GABINETE', 'AGENDA visita EXTERNA', 'GABINETE', 'REUNIÃO', 'visita ao Gabinete', 'DEMANDA', 'Demanda Externa', 'INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
-            const statusConhecidos = ['Aberta', 'Pendente', 'Em Andamento', 'Aguardando', 'Aguardando Aprovação', 'Aprovada', '156 Pedido', 'Aguardando Exp', 'Atendido', 'Resolvido', 'Concluída', 'Arquivada', 'Rejeitada', 'Sem Legis'];
-
-            const regexTelefoneGlobal = /\(?0?51\)?[\s.]*\.?\d{3,5}[-.\s]?\d{3,4}[-.\s]?\d{0,3}/;
-            let textoSemTel = texto;
-            const matchTelGlobal = texto.match(regexTelefoneGlobal);
-            if (matchTelGlobal) {
-                let telBruto = matchTelGlobal[0].trim();
-                let somenteDigitos = telBruto.replace(/\D/g, '');
-                if (somenteDigitos.length >= 10) {
-                    let ddd = somenteDigitos.slice(0, 2);
-                    let resto = somenteDigitos.slice(2);
-                    if (resto.length === 9) {
-                        parsed.tel = `(${ddd}) ${resto.slice(0,5)}-${resto.slice(5)}`;
-                    } else if (resto.length === 8) {
-                        parsed.tel = `(${ddd}) ${resto.slice(0,4)}-${resto.slice(4)}`;
-                    } else {
-                        parsed.tel = `(${ddd}) ${resto}`;
-                    }
-                } else {
-                    parsed.tel = telBruto;
-                }
-                textoSemTel = texto.replace(matchTelGlobal[0], ' ');
-            }
-
-            const celulas = textoSemTel.split('\t');
-
-            celulas.forEach(c => {
-                let cell = c.trim();
-                if(!cell) return;
-
-                if (cell.match(/^\d{2}\/\d{2}\/\d{2,4}$/)) {
-                    let p = cell.split('/');
-                    let ano = p[2].length === 2 ? '20' + p[2] : p[2];
-                    parsed.data = `${ano}-${p[1]}-${p[0]}`;
-                }
-                else if (cell.match(/^[A-Za-z]+\s\d+\/\d{4}$/)) {
-                    let parts = cell.split(/\s+/);
-                    parsed.doc_numero = parts[1];
-                    let prefix = parts[0].toUpperCase();
-                    if(prefix === 'REQ') parsed.doc_tipo = 'Requerimento';
-                    else if(prefix === 'MEMO') parsed.doc_tipo = 'Memorando';
-                    else parsed.doc_tipo = 'Ofício'; 
-                }
-                else if (nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase())) {
-                    parsed.resp = nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase());
-                }
-                else if (tiposConhecidos.find(t => t.toLowerCase() === cell.toLowerCase())) {
-                    parsed.tipo = tiposConhecidos.find(t => t.toLowerCase() === cell.toLowerCase());
-                }
-                else if (statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase())) {
-                    parsed.status = statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase());
-                }
-                else if (cell.toLowerCase().includes('exp.') || cell.toLowerCase().includes('expediente')) {
-                    parsed.expediente = cell;
-                }
-                else if (cell.match(/^SEM[A-Z]+$/i) || ['OBRAS', 'SAÚDE', 'EDUCAÇÃO', 'FAZENDA', 'OUVIDORIA', 'CEPOM', 'GABINETE', 'PREFEITURA'].includes(cell.toUpperCase()) || cell.toUpperCase().includes('HABITAÇÃO') || cell.toUpperCase().includes('SEMHAB') || cell.toUpperCase().includes('SEMPA') || cell.toUpperCase().includes('PROTEÇÃO ANIMAL') || cell.toUpperCase().includes('SGG') || cell.toUpperCase().includes('GERAL DE GOVERNO')) {
-                    if (!parsed.secretaria) parsed.secretaria = cell;
-                }
-                else if (cell.length > 2 && cell.length < 30 && !cell.match(/\d/) && !parsed.nome && cell.toLowerCase() !== 'ver detalhes') {
-                    parsed.nome = cell; 
-                }
-                else if (cell.length > 5 && cell.toLowerCase() !== 'ver detalhes' && cell.toLowerCase() !== 'ver mais') {
-                    if(parsed.desc) parsed.desc += '\n' + cell;
-                    else parsed.desc = cell;
-                }
+        window.excluirPdf = function() {
+            pedirConfirmacao('🗑️ Excluir PDF', 'Tem a certeza que deseja excluir o PDF desta demanda?', async () => {
+                const { error } = await db.from('demandas').update({ pdf_url: null }).eq('id', demandaId);
+                if(!error) window.location.reload(); 
             });
-
-            if (!parsed.tel && parsed.desc) {
-                let matchTel = parsed.desc.match(regexTelefoneGlobal);
-                if (matchTel) {
-                    let telBruto = matchTel[0].trim();
-                    let somenteDigitos = telBruto.replace(/\D/g, '');
-                    if (somenteDigitos.length >= 10) {
-                        let ddd = somenteDigitos.slice(0, 2);
-                        let resto = somenteDigitos.slice(2);
-                        if (resto.length === 9) {
-                            parsed.tel = `(${ddd}) ${resto.slice(0,5)}-${resto.slice(5)}`;
-                        } else if (resto.length === 8) {
-                            parsed.tel = `(${ddd}) ${resto.slice(0,4)}-${resto.slice(4)}`;
-                        } else {
-                            parsed.tel = `(${ddd}) ${resto}`;
-                        }
-                    } else {
-                        parsed.tel = telBruto;
-                    }
-                    parsed.desc = parsed.desc.replace(matchTel[0], '').trim();
-                    parsed.desc = parsed.desc.replace(/^[.\-,]\s*/, '').trim();
-                }
-            }
-
-            if (parsed.desc) {
-                let match156 = parsed.desc.match(/(?:[,.-]?\s*)?(?:protocolo\s*)?(156\s*202\d\/\d+)/i);
-                if (match156) {
-                    parsed.protocolo = match156[1]; 
-                    parsed.desc = parsed.desc.replace(match156[0], '').trim();
-                    parsed.desc = parsed.desc.replace(/^[.,\s]+|[.,\s]+$/g, '').trim();
-                }
-            }
-
-            // REGRA DE OURO: Se tem Documento ou Expediente, já passou da fase de aprovação
-            if (parsed.doc_numero || parsed.expediente) {
-                if (!parsed.status || ['aberta', 'pendente', 'aguardando', 'aguardando aprovação'].includes(parsed.status.toLowerCase())) {
-                    parsed.status = 'Aprovada';
-                }
-            }
-
-            if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo;
-            if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
-            if(parsed.resp) document.getElementById('responsavel_ordem').value = parsed.resp;
-            
-            if(parsed.doc_tipo) document.getElementById('doc_tipo').value = parsed.doc_tipo;
-            if(parsed.doc_numero) document.getElementById('doc_numero').value = parsed.doc_numero;
-
-            if(parsed.secretaria) {
-                const select = document.getElementById('secretaria');
-                const opcoes = Array.from(select.options).map(o => o.value.toLowerCase());
-                const idx = opcoes.indexOf(parsed.secretaria.toLowerCase());
-                if (idx > -1) {
-                    select.selectedIndex = idx;
-                } else {
-                    select.value = '__outra__';
-                    document.getElementById('secretaria_outra').style.display = 'block';
-                    document.getElementById('secretaria_outra').value = parsed.secretaria;
-                }
-            }
-            if(parsed.expediente) document.getElementById('expediente').value = parsed.expediente;
-            if(parsed.protocolo) document.getElementById('protocolo').value = parsed.protocolo;
-            if(parsed.nome) document.getElementById('solicitante_nome').value = parsed.nome;
-            if(parsed.tel) document.getElementById('solicitante_tel').value = parsed.tel;
-            
-            if(parsed.status) {
-                document.getElementById('statusForcado').value = parsed.status;
-                const badge = document.getElementById('badgeStatusForcado');
-                badge.textContent = '📌 Importado: ' + parsed.status;
-                badge.style.display = 'inline-block';
-            }
-
-            if(parsed.desc) {
-                document.getElementById('descricao').value = parsed.desc;
-                let primeiraLinha = parsed.desc.split('\n')[0];
-                document.getElementById('assunto').value = primeiraLinha.substring(0, 60) + (primeiraLinha.length > 60 ? '...' : '');
-
-                let matchRua = parsed.desc.match(/(?:Rua|Av|Avenida|Travessa)\s([^,]+),\s*n[ºo]?\s*(\d+)/i);
-                if(matchRua) {
-                    document.getElementById('rua').value = matchRua[1].trim();
-                    document.getElementById('numero').value = matchRua[2].trim();
-                }
-                let matchBairro = parsed.desc.match(/bairro\s([^,.]+)/i);
-                if(matchBairro) {
-                    document.getElementById('bairro').value = matchBairro[1].trim();
-                }
-            }
-
-            adaptarFormulario();
-            atualizarNumeroDemanda(); 
-
-            textarea.style.backgroundColor = '#e2f8c5';
-            textarea.value = '✅ Dados importados com sucesso!';
-            setTimeout(() => { 
-                textarea.value = ''; 
-                textarea.style.backgroundColor = 'transparent'; 
-            }, 2000);
         }
 
-        function adaptarFormulario() {
-            const tipo = document.getElementById('tipo_solicitacao').value;
-            const blocoEndereco = document.getElementById('bloco_endereco');
-            
-            const tiposSemEndereco = [
-                'Agenda VISITA AO GABINETE', 'GABINETE', 'REUNIÃO', 'INDICAÇÃO', 
-                'Moção de Apoio', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 
-                'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE', 'visita ao Gabinete'
-            ];
+        window.assumirAqui = async function(btn) {
+            btn.textContent = '⏳ Assumindo...'; btn.disabled = true;
+            const responsaveis = demandaAtual.responsaveis || [];
+            if (!responsaveis.includes(usuarioLogado)) {
+                await db.from('demandas').update({ responsaveis: [...responsaveis, usuarioLogado] }).eq('id', demandaId);
+            }
+            window.location.reload();
+        }
 
-            if (tiposSemEndereco.includes(tipo)) {
-                blocoEndereco.style.display = 'none';
+        window.sairDaCuidado = async function(nome, btn) {
+            btn.disabled = true; btn.style.opacity = '0.5';
+            const responsaveis = (demandaAtual.responsaveis || []).filter(r => r !== nome);
+            await db.from('demandas').update({ responsaveis }).eq('id', demandaId);
+            window.location.reload();
+        }
+
+        window.adicionarResponsavelManual = async function(btn) {
+            const novoResp = document.getElementById('addResponsavelSelect').value;
+            if(!novoResp) return alert('Selecione alguém na lista!');
+            const responsaveis = demandaAtual.responsaveis || [];
+            if(responsaveis.includes(novoResp)) return alert('Esta pessoa já está como executor.');
+            
+            btn.textContent = '⏳'; btn.disabled = true;
+            await db.from('demandas').update({ responsaveis: [...responsaveis, novoResp] }).eq('id', demandaId);
+            window.location.reload();
+        }
+
+        window.aprovarDemanda = async function(btn) { 
+            btn.textContent = '⏳ Aprovando...'; btn.disabled = true;
+            const hist = demandaAtual.historico || [];
+            hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
+            await db.from('demandas').update({ status: 'Aprovada', historico: hist }).eq('id', demandaId); 
+            window.location.reload(); 
+        }
+
+        window.darVisto = async function(btn) { 
+            btn.textContent = '⏳ Visto...'; btn.disabled = true;
+            const hist = demandaAtual.historico || [];
+            hist.push({ status: 'Visto', autor: usuarioLogado, data: new Date().toISOString() });
+            await db.from('demandas').update({ historico: hist }).eq('id', demandaId); 
+            window.location.reload(); 
+        }
+
+        window.rejeitarDemanda = function() {
+            pedirConfirmacao('❌ Rejeitar Demanda', 'Atenção: Ao rejeitar, <b>todas as fotos serão apagadas</b> do sistema. O PDF será mantido.', async () => {
+                const hist = demandaAtual.historico || [];
+                hist.push({ status: 'Rejeitada', autor: usuarioLogado, data: new Date().toISOString() });
+                await db.from('demandas').update({ status: 'Rejeitada', fotos_urls: [], historico: hist }).eq('id', demandaId);
+                window.location.href = 'dashboard.html';
+            });
+        }
+
+        window.salvarAlteracoes = async function(btn) {
+            btn.textContent = '⏳ Salvando...'; btn.disabled = true;
+            
+            let statusEdit = document.getElementById('editStatus') ? document.getElementById('editStatus').value : demandaAtual.status;
+            let doc_tipo = document.getElementById('editDocTipo') ? document.getElementById('editDocTipo').value : (demandaAtual.doc_tipo || '');
+            let doc_numero = document.getElementById('editDocNumero') ? document.getElementById('editDocNumero').value.trim() : (demandaAtual.doc_numero || '');
+            let protocolo = document.getElementById('editProtocolo') ? document.getElementById('editProtocolo').value.trim() : (demandaAtual.protocolo || '');
+            let expediente = document.getElementById('editExpediente') ? document.getElementById('editExpediente').value.trim() : (demandaAtual.expediente || '');
+            let linkLegis = document.getElementById('editLinkLegis') ? document.getElementById('editLinkLegis').value.trim() : (demandaAtual.link_legis || '');
+            const data_agendada = document.getElementById('editDataAgendada') ? document.getElementById('editDataAgendada').value || null : demandaAtual.data_agendada;
+            const horario_agendado = document.getElementById('editHorarioAgendado') ? document.getElementById('editHorarioAgendado').value || null : demandaAtual.horario_agendado;
+            const secretaria = document.getElementById('editSecretaria') ? obterSecretariaEditSelecionada() : (demandaAtual.secretaria || '');
+            const providencias = document.getElementById('editProvidencias') ? document.getElementById('editProvidencias').value.trim() : (demandaAtual.providencias || '');
+            
+            const tipo_solicitacao = document.getElementById('editTipo') ? document.getElementById('editTipo').value : demandaAtual.tipo_solicitacao;
+            const assunto = document.getElementById('editAssunto') ? document.getElementById('editAssunto').value.trim() : demandaAtual.assunto;
+            const nomeSol = document.getElementById('editNomeSol') ? document.getElementById('editNomeSol').value.trim() : demandaAtual.solicitante_nome;
+            const telSol = document.getElementById('editTelSol') ? document.getElementById('editTelSol').value.trim() : demandaAtual.solicitante_tel;
+            const responsavel_ordem = document.getElementById('editResponsavelOrdem') ? document.getElementById('editResponsavelOrdem').value : demandaAtual.responsavel_ordem;
+
+            const isAtualBloqueado = tiposProjetos.includes(tipo_solicitacao || demandaAtual.tipo_solicitacao);
+            const estaAguardando = (demandaAtual.status === 'Aguardando Aprovação' || demandaAtual.status === 'Aberta' || demandaAtual.status === 'Pendente');
+            
+            if (isAtualBloqueado && estaAguardando) {
+                statusEdit = demandaAtual.status; 
+                protocolo = demandaAtual.protocolo || '';
+                expediente = demandaAtual.expediente || '';
+                linkLegis = demandaAtual.link_legis || '';
+                doc_tipo = demandaAtual.doc_tipo || '';
+                doc_numero = demandaAtual.doc_numero || '';
             } else {
-                blocoEndereco.style.display = 'block';
+                if (expediente && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
+                    statusEdit = 'Concluída'; 
+                } else if (protocolo && protocolo !== '156 2026/' && statusEdit !== 'Aguardando Exp' && statusEdit !== 'Concluída' && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada' && statusEdit !== 'Sem Legis') {
+                    statusEdit = '156 Pedido'; 
+                }
+            }
+
+            const updates = {
+                status: statusEdit, doc_tipo: doc_tipo, doc_numero: doc_numero, protocolo: protocolo, expediente: expediente, link_legis: linkLegis,
+                data_agendada: data_agendada, horario_agendado: horario_agendado, secretaria: secretaria, providencias: providencias,
+                tipo_solicitacao: tipo_solicitacao, assunto: assunto, solicitante_nome: nomeSol, solicitante_tel: telSol,
+                responsavel_ordem: responsavel_ordem
+            };
+            
+            if (statusEdit !== demandaAtual.status) {
+                const hist = demandaAtual.historico || [];
+                hist.push({ status: statusEdit, autor: usuarioLogado, data: new Date().toISOString() });
+                updates.historico = hist;
+            }
+
+            if(isAdmin && document.getElementById('editNumDemanda')) {
+                updates.numero_demanda = document.getElementById('editNumDemanda').value;
+            }
+
+            if(updates.status === 'Rejeitada' || updates.status === 'Arquivada') {
+                pedirConfirmacao('Atenção: Mudar Status', 'Mudar para este status apagará as fotos do servidor permanentemente. Continuar?', async () => {
+                    updates.fotos_urls = [];
+                    await executarSaveFinal(updates, btn);
+                });
+                return;
+            }
+            
+            await executarSaveFinal(updates, btn);
+        }
+
+        async function executarSaveFinal(updates, btn) {
+            const { error } = await db.from('demandas').update(updates).eq('id', demandaId);
+            if (!error) { 
+                temAlteracoesNaoSalvas = false;
+                if (updates.status === 'Arquivada' || updates.status === 'Rejeitada' || updates.status === 'Concluída' || updates.status === 'Atendido' || updates.status === 'Resolvido') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    window.location.reload(); 
+                }
+            } else {
+                btn.textContent = 'Erro ao salvar!'; btn.disabled = false;
             }
         }
 
-        let arquivosSelecionados = [];
+        window.iniciarAcaoMaster = function(acao) {
+            if (acao === 'excluir') {
+                pedirConfirmacao('🗑️ Excluir Definitivo', 'Certeza absoluta que quer EXCLUIR do banco de dados?', () => chamarAcaoMasterModal(acao));
+                return;
+            }
+            chamarAcaoMasterModal(acao);
+        }
 
-        document.getElementById('fotos').addEventListener('change', function(e) {
-            const novos = Array.from(e.target.files);
-            if (arquivosSelecionados.length + novos.length > 5) { alert('Máximo 5 arquivos!'); return; }
-            novos.forEach(file => { arquivosSelecionados.push(file); renderizarPreviews(); });
-            this.value = ''; 
-        });
+        function chamarAcaoMasterModal(acao) {
+            acaoMasterPendente = acao;
+            let msg = '';
+            if(acao === 'aprovar') msg = 'Aprovar demanda sem ser o Daniel.';
+            if(acao === 'arquivar') msg = 'Arquivar demanda (Apagará as fotos).';
+            if(acao === 'excluir') msg = 'Excluir definitivamente do sistema.';
+            document.getElementById('modalSenhaTexto').textContent = msg;
+            document.getElementById('inputSenhaMaster').value = '';
+            document.getElementById('erroSenhaMaster').style.display = 'none';
+            document.getElementById('modalSenhaMaster').classList.add('ativo');
+        }
 
-        function renderizarPreviews() {
-            const grid = document.getElementById('previewGrid');
-            grid.innerHTML = '';
-            arquivosSelecionados.forEach((file, index) => {
-                const url = URL.createObjectURL(file);
-                const isVideo = file.type.startsWith('video/');
-                const mediaTag = isVideo ? `<video src="${url}" muted loop onclick="abrirLightbox('${url}', true)"></video>` : `<img src="${url}" onclick="abrirLightbox('${url}', false)">`;
-                grid.innerHTML += `<div class="preview-item">${mediaTag}<button class="btn-remover-preview" onclick="event.stopPropagation(); removerArquivo(${index})">✕</button></div>`;
+        window.fecharModalSenha = function() { document.getElementById('modalSenhaMaster').classList.remove('ativo'); }
+
+        window.confirmarAcaoMaster = async function() {
+            const senhaDigitada = document.getElementById('inputSenhaMaster').value.trim();
+            const btn = document.getElementById('btnConfirmarSenha');
+            if(!senhaDigitada) return;
+            
+            btn.textContent = '⏳...'; btn.disabled = true;
+
+            try {
+                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'validar_master', senha: senhaDigitada })
+                });
+
+                if (res.ok) {
+                    document.getElementById('modalSenhaMaster').classList.remove('ativo'); 
+                    const hist = demandaAtual.historico || [];
+
+                    if (acaoMasterPendente === 'aprovar') {
+                        hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
+                        await db.from('demandas').update({ status: 'Aprovada', historico: hist }).eq('id', demandaId);
+                        window.location.reload();
+                    }
+                    else if (acaoMasterPendente === 'arquivar') {
+                        hist.push({ status: 'Arquivada', autor: usuarioLogado, data: new Date().toISOString() });
+                        await db.from('demandas').update({ status: 'Arquivada', fotos_urls: [], historico: hist }).eq('id', demandaId);
+                        window.location.href = 'dashboard.html';
+                    }
+                    else if (acaoMasterPendente === 'excluir') { 
+                        await db.from('demandas').delete().eq('id', demandaId); window.location.href = 'dashboard.html'; 
+                    }
+                    acaoMasterPendente = null; 
+                } else {
+                    document.getElementById('erroSenhaMaster').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('erroSenhaMaster').style.display = 'block';
+            } finally {
+                btn.textContent = '✅ Confirmar'; btn.disabled = false;
+            }
+        }
+
+        window.apagarFotoUnica = function(index) {
+            pedirConfirmacao('🗑️ Apagar Mídia', 'Certeza que deseja apagar este anexo?', async () => {
+                const fotos = [...(demandaAtual.fotos_urls || [])];
+                fotos.splice(index, 1);
+                await db.from('demandas').update({ fotos_urls: fotos }).eq('id', demandaId);
+                window.location.reload();
             });
         }
 
-        window.removerArquivo = function(index) { arquivosSelecionados.splice(index, 1); renderizarPreviews(); }
-
-        window.abrirLightbox = function(url, isVideo) {
-            document.getElementById('lightbox').classList.add('ativo');
-            const img = document.getElementById('lightboxImg'); const vid = document.getElementById('lightboxVid');
-            if (isVideo) { vid.src = url; vid.style.display = 'block'; img.style.display = 'none'; vid.play(); } 
-            else { img.src = url; img.style.display = 'block'; vid.style.display = 'none'; }
+        window.forcarDownload = async function(url, nome) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const a = document.createElement('a');
+                a.href = window.URL.createObjectURL(blob);
+                a.download = nome; a.click();
+            } catch { alert('Erro ao baixar.'); }
         }
 
-        window.fecharLightbox = function() { document.getElementById('lightbox').classList.remove('ativo'); document.getElementById('lightboxVid').pause(); }
-
-        async function uploadCloudinary(file) {
+        async function uploadCloudinaryDirect(file) {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('upload_preset', uploadPreset);
@@ -615,112 +1057,39 @@
             return data.secure_url;
         }
 
-        window.enviarDemanda = async function() {
-            const tipo_solicitacao = document.getElementById('tipo_solicitacao').value;
-            const assunto = document.getElementById('assunto').value.trim();
-            const responsavel_ordem = document.getElementById('responsavel_ordem').value; 
-            const numero_demanda = montarNumeroDemanda();
-            
-            const data_agendada = document.getElementById('data_agendada').value || null;
-            const horario_agendado = document.getElementById('horario_agendado').value || null;
-            const secretaria = obterSecretariaSelecionada();
-            const providencias = document.getElementById('providencias').value.trim();
+        window.uploadNovosAnexos = async function() {
+            const pdfFile = document.getElementById('extraPdf').files[0];
+            const mediaFiles = document.getElementById('extraFotos').files;
+            if (!pdfFile && mediaFiles.length === 0) return alert('Selecione algum arquivo!');
 
-            const rua = document.getElementById('rua').value.trim() || '';
-            const numero = document.getElementById('numero').value.trim() || '';
-            const bairro = document.getElementById('bairro').value.trim() || '';
-            const solicitante_nome = document.getElementById('solicitante_nome').value.trim();
-            const solicitante_tel = document.getElementById('solicitante_tel').value.trim();
-            const arquivoPDF = document.getElementById('pdfFile').files[0];
-
-            const doc_tipo = document.getElementById('doc_tipo').value;
-            const doc_numero = document.getElementById('doc_numero').value.trim();
-
-            const expediente = document.getElementById('expediente').value.trim();
-            const protocolo = document.getElementById('protocolo').value.trim();
-            const link_legis = document.getElementById('link_legis').value.trim();
-            
-            const msg = document.getElementById('mensagem');
-            msg.style.display = 'none';
-
-            if (!tipo_solicitacao || !assunto) {
-                msg.className = 'mensagem erro'; msg.textContent = '❌ Preencha o Tipo de Solicitação e o Assunto!'; msg.style.display = 'block'; window.scrollTo(0,0); return;
+            const MAX_MB = 15;
+            if (pdfFile && pdfFile.size > MAX_MB * 1024 * 1024) return alert(`PDF gigante! Máximo permitido: ${MAX_MB}MB`);
+            for(let f of mediaFiles) {
+                if (f.size > MAX_MB * 1024 * 1024) return alert(`A mídia ${f.name} é gigante! Máximo permitido: ${MAX_MB}MB por arquivo.`);
             }
 
-            const btn = document.getElementById('btnEnviar');
-            btn.disabled = true; btn.textContent = 'Salvando...';
-            const prog = document.getElementById('uploadProgress');
+            const btn = document.getElementById('btnUploadExtra');
+            const prog = document.getElementById('progressoExtra');
+            btn.disabled = true; prog.style.display = 'block';
 
             try {
-                prog.style.display = 'block';
-                let pdf_url = null;
-                if (arquivoPDF) { prog.textContent = `Enviando PDF...`; pdf_url = await uploadCloudinary(arquivoPDF); }
-
-                const fotosUrls = [];
-                if (arquivosSelecionados.length > 0) {
-                    for (let i = 0; i < arquivosSelecionados.length; i++) {
-                        prog.textContent = `Subindo mídia ${i+1}/${arquivosSelecionados.length}...`;
-                        fotosUrls.push(await uploadCloudinary(arquivosSelecionados[i]));
+                let updates = {};
+                if (pdfFile) { prog.textContent = 'Enviando Novo PDF...'; updates.pdf_url = await uploadCloudinaryDirect(pdfFile); }
+                if (mediaFiles.length > 0) {
+                    let novasFotos = [];
+                    for (let i = 0; i < mediaFiles.length; i++) {
+                        prog.textContent = `Enviando mídia ${i+1}/${mediaFiles.length}...`;
+                        novasFotos.push(await uploadCloudinaryDirect(mediaFiles[i]));
                     }
+                    updates.fotos_urls = [...(demandaAtual.fotos_urls || []).filter(f => f), ...novasFotos];
                 }
-                prog.style.display = 'none';
-
-                let statusInicial = 'Pendente'; 
-                const statusForcado = document.getElementById('statusForcado').value;
-
-                if (statusForcado) {
-                    statusInicial = statusForcado;
-                } else {
-                    if (tiposAtualBloqueados.includes(tipo_solicitacao)) {
-                        statusInicial = usuarioLogado === 'Daniel' ? 'Aprovada' : 'Aguardando Aprovação';
-                    } else {
-                        statusInicial = 'Pendente'; 
-                    }
-                }
-
-                // REGRA DE OURO NA HORA DE SALVAR (Segurança)
-                if (['Pendente', 'Aberta', 'Aguardando', 'Aguardando Aprovação'].includes(statusInicial)) {
-                    if (doc_numero || expediente) {
-                        statusInicial = 'Aprovada';
-                    }
-                }
-
-                let historicoInicial = [];
-                if (solicitante_nome && nomesEquipe.includes(solicitante_nome)) {
-                    historicoInicial.push({
-                        status: 'Solicitado pela equipe',
-                        autor: solicitante_nome,
-                        data: new Date().toISOString()
-                    });
-                }
-
-                await db.from('demandas').insert([{
-                    tipo_solicitacao, numero_demanda, assunto, rua, numero, bairro, 
-                    descricao: document.getElementById('descricao').value.trim(),
-                    solicitante_nome, solicitante_tel,
-                    data_agendada, horario_agendado, secretaria, providencias,
-                    doc_tipo, doc_numero, 
-                    expediente, protocolo, link_legis,
-                    fotos_urls: fotosUrls, 
-                    pdf_url: pdf_url,
-                    status: statusInicial, 
-                    criador: usuarioLogado, 
-                    responsavel_ordem: responsavel_ordem, 
-                    responsaveis: [],
-                    historico: historicoInicial
-                }]);
-
-                msg.className = 'mensagem sucesso'; msg.textContent = 'Registro salvo com sucesso!'; msg.style.display = 'block';
-                formularioAlterado = false;
-                setTimeout(() => window.location.href = 'dashboard.html', 1500);
-            } catch (e) {
-                prog.style.display = 'none'; btn.disabled = false; btn.textContent = 'Salvar Registro';
-                msg.className = 'mensagem erro'; msg.textContent = 'Erro: ' + e.message; msg.style.display = 'block';
-            }
-        };
+                await db.from('demandas').update(updates).eq('id', demandaId);
+                window.location.reload(); 
+            } catch (e) { alert('Erro: ' + e.message);
+            } finally { btn.disabled = false; setTimeout(() => { prog.style.display = 'none'; }, 3000); }
+        }
 
         inicializarSistema();
-        inicializarNumeroDemanda();
     </script>
 </body>
 </html>
