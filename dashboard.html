@@ -16,28 +16,44 @@
         .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; }
         .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        
+        .filtros-avancados { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; }
+        .filtros-avancados input:focus, .filtros-avancados select:focus { border-color: #185199; }
+        #buscaGeral { flex: 1; min-width: 200px; }
+        
         .filtros { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .filtro-btn { padding: 6px 14px; border: 1px solid #185199; background: white; color: #185199; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 13px; }
         .filtro-btn.ativo { background: #185199; color: white; }
+        
         .realtime-dot { display: inline-block; width: 8px; height: 8px; background: #98ED34; border-radius: 50%; margin-right: 6px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+        
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .demanda-card { background: white; border-radius: 8px; border: 1px solid #ddd; overflow: hidden; cursor: pointer; transition: transform 0.2s; border-top: 4px solid #185199; display: flex; flex-direction: column; }
+        .demanda-card { background: white; border-radius: 8px; border: 1px solid #ddd; overflow: hidden; cursor: pointer; transition: transform 0.2s; border-top: 4px solid #185199; display: flex; flex-direction: column; position: relative;}
         .demanda-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
         .demanda-card.aguardando-daniel { border-top-color: #f39c12; box-shadow: 0 0 0 2px #f39c12; }
+        .num-demanda { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 2; }
+        
         .demanda-media { height: 180px; background: #eee; position: relative; overflow: hidden; }
         .demanda-media img, .demanda-media video { width: 100%; height: 100%; object-fit: cover; }
         .demanda-conteudo { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        
         .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 10px; width: fit-content; }
         .badge-Aberta { background: #ffe5e5; color: #c0392b; }
         .badge-Andamento { background: #fff3cd; color: #856404; }
         .badge-Aguardando { background: #fff3cd; color: #e67e22; border: 1px solid #e67e22; }
         .badge-Aprovada { background: #e2f8c5; color: #185199; }
+        .badge-156 { background: #d0e8ff; color: #0984e3; }
+        .badge-Exp { background: #f5cd79; color: #d35400; }
         .badge-Concluida { background: #d4edda; color: #155724; }
         .badge-Arquivada { background: #eee; color: #777; }
+        .badge-Rejeitada { background: #c0392b; color: white; }
+
         .titulo { font-size: 15px; font-weight: bold; margin-bottom: 5px; color: #185199; }
         .info { font-size: 12px; color: #555; margin-bottom: 4px; }
         .info-tempo { font-size: 11px; color: #999; margin-bottom: 4px; font-style: italic; }
+        
         .acoes-card { margin-top: auto; padding-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
         .btn-acao { color: white; border: none; padding: 8px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; flex: 1; min-width: 80px; }
         .btn-acao:disabled { background: #ccc; cursor: not-allowed; }
@@ -45,7 +61,8 @@
         .btn-acao.azul { background: #185199; }
         .btn-acao.laranja { background: #e67e22; }
         .btn-acao.cinza { background: #95a5a6; }
-        .btn-pdf-card { background: #c0392b; color: white; padding: 3px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; position: absolute; bottom: 8px; right: 8px; }
+        
+        .btn-pdf-card { background: #c0392b; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; position: absolute; bottom: 8px; right: 8px; z-index: 2;}
         .paginacao { display: flex; justify-content: center; gap: 8px; margin-top: 25px; flex-wrap: wrap; }
         .page-btn { padding: 7px 12px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .page-btn.ativo { background: #185199; color: white; }
@@ -68,16 +85,33 @@
             <h2 class="text-primary">Painel de Demandas</h2>
             <button class="btn-nova" onclick="window.location.href='nova-demanda.html'">+ Nova Demanda</button>
         </div>
+
+        <div class="filtros-avancados">
+            <input type="text" id="buscaGeral" placeholder="🔍 Buscar por assunto, rua, bairro, Nº, 156..." oninput="mudarPagina(1); renderDemandas()">
+            <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()">
+                <option value="">👥 Filtro: Todos da Equipe</option>
+                <option value="Daniel">Daniel</option>
+                <option value="João Pedro">João Pedro</option>
+                <option value="Alemão">Alemão</option>
+                <option value="Antonio">Antonio</option>
+                <option value="Luana">Luana</option>
+                <option value="Débora">Débora</option>
+            </select>
+        </div>
+
         <div class="filtros">
             <button class="filtro-btn ativo" onclick="filtrar('Todas')">Todas</button>
             <button class="filtro-btn" onclick="filtrar('Aberta')">Abertas</button>
-            <button class="filtro-btn" onclick="filtrar('Em Andamento')">Em Andamento</button>
+            <button class="filtro-btn" onclick="filtrar('Em Andamento')">Andamento</button>
             <button class="filtro-btn" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação</button>
             <button class="filtro-btn" onclick="filtrar('Aprovada')">✅ Aprovadas</button>
+            <button class="filtro-btn" onclick="filtrar('156 Pedido')">156 Pedido</button>
+            <button class="filtro-btn" onclick="filtrar('Aguardando Exp')">Exp Legis</button>
             <button class="filtro-btn" onclick="filtrar('Concluída')">Concluídas</button>
-            <button class="filtro-btn" onclick="filtrar('Rejeitada')">❌ Rejeitadas</button>
             <button class="filtro-btn" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
+            <button class="filtro-btn" onclick="filtrar('Rejeitada')">❌ Rejeitadas</button>
         </div>
+
         <div class="cards-grid" id="demandas">A carregar...</div>
         <div class="paginacao" id="paginacaoContainer"></div>
     </div>
@@ -104,29 +138,23 @@
                 const config = await res.json();
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
                 carregarDemandas();
-                // Realtime — atualiza para todos quando qualquer dado muda
+                
                 db.channel('dashboard-live')
-                  .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, () => {
-                      carregarDemandas();
-                  })
+                  .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, () => { carregarDemandas(); })
                   .subscribe();
             } catch (err) {
                 document.getElementById('demandas').innerHTML = '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
             }
         }
 
-        function isVideo(url) {
-            if (!url) return false;
-            return /\.(mp4|webm|mov|ogg)$/i.test(url);
-        }
+        function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
         window.filtrar = function(status) {
             filtroAtual = status;
             paginaAtual = 1;
             document.querySelectorAll('.filtro-btn').forEach(btn => {
                 const txt = btn.textContent.trim();
-                const match = (status === 'Todas' && txt === 'Todas')
-                    || (status !== 'Todas' && txt.includes(status.replace('Aguardando Aprovação','Aprovação')));
+                const match = (status === 'Todas' && txt === 'Todas') || (status !== 'Todas' && txt.includes(status.replace('Aguardando Aprovação','Aprovação').replace('Aguardando Exp','Exp Legis')));
                 btn.classList.toggle('ativo', match);
             });
             renderDemandas();
@@ -136,12 +164,32 @@
             const container = document.getElementById('demandas');
             const pagContainer = document.getElementById('paginacaoContainer');
 
+            const termoBusca = document.getElementById('buscaGeral').value.toLowerCase();
+            const respSelecionado = document.getElementById('filtroResp').value;
+
+            // Filtro de Status
             let lista = filtroAtual === 'Todas'
-                ? todasDemandas.filter(d => d.status !== 'Arquivada')
+                ? todasDemandas.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada')
                 : todasDemandas.filter(d => d.status === filtroAtual);
 
+            // Filtro Responsável
+            if (respSelecionado) {
+                lista = lista.filter(d => (d.responsaveis || []).includes(respSelecionado));
+            }
+
+            // Filtro Barra de Busca Geral
+            if (termoBusca) {
+                lista = lista.filter(d => 
+                    (d.assunto || '').toLowerCase().includes(termoBusca) ||
+                    (d.rua || '').toLowerCase().includes(termoBusca) ||
+                    (d.bairro || '').toLowerCase().includes(termoBusca) ||
+                    (d.numero_demanda || '').toLowerCase().includes(termoBusca) ||
+                    (d.protocolo || '').toLowerCase().includes(termoBusca)
+                );
+            }
+
             if (lista.length === 0) {
-                container.innerHTML = '<p style="color:#777;grid-column:1/-1;text-align:center;padding:30px;">Nenhuma demanda encontrada.</p>';
+                container.innerHTML = '<p style="color:#777;grid-column:1/-1;text-align:center;padding:30px;">Nenhuma demanda encontrada com estes filtros.</p>';
                 pagContainer.innerHTML = '';
                 return;
             }
@@ -154,68 +202,58 @@
                 const fotos = (demanda.fotos_urls || []).filter(f => f);
                 const responsaveis = (demanda.responsaveis || []).filter(r => r);
                 const fotoPrincipal = fotos[0] || null;
-                const encerrada = ['Concluída', 'Arquivada'].includes(demanda.status);
+                const encerrada = ['Concluída', 'Arquivada', 'Rejeitada'].includes(demanda.status);
                 const euCuido = responsaveis.includes(usuarioLogado);
                 const aguardandoDaniel = demanda.status === 'Aguardando Aprovação' && usuarioLogado === 'Daniel';
 
                 let mediaTag = '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#999;background:#e0e0e0;">📸 Sem Mídia</div>';
                 if (fotoPrincipal) {
-                    mediaTag = isVideo(fotoPrincipal)
-                        ? '<video src="' + fotoPrincipal + '" muted loop></video>'
-                        : '<img src="' + fotoPrincipal + '">';
+                    mediaTag = isVideo(fotoPrincipal) ? `<video src="${fotoPrincipal}" muted loop></video>` : `<img src="${fotoPrincipal}">`;
                 }
                 if (demanda.pdf_url) {
-                    mediaTag += '<a href="' + demanda.pdf_url + '" target="_blank" class="btn-pdf-card" onclick="event.stopPropagation()">📄 PDF</a>';
+                    mediaTag += `<a href="ver-demanda.html?id=${demanda.id}" class="btn-pdf-card" onclick="event.stopPropagation()">📄 PDF Anexado</a>`;
                 }
 
                 let badgeClass = 'badge-Aberta';
                 if (demanda.status === 'Em Andamento') badgeClass = 'badge-Andamento';
                 if (demanda.status === 'Aguardando Aprovação') badgeClass = 'badge-Aguardando';
                 if (demanda.status === 'Aprovada') badgeClass = 'badge-Aprovada';
+                if (demanda.status === '156 Pedido') badgeClass = 'badge-156';
+                if (demanda.status === 'Aguardando Exp') badgeClass = 'badge-Exp';
                 if (demanda.status === 'Concluída') badgeClass = 'badge-Concluida';
                 if (demanda.status === 'Arquivada') badgeClass = 'badge-Arquivada';
+                if (demanda.status === 'Rejeitada') badgeClass = 'badge-Rejeitada';
 
                 const cuindoTxt = responsaveis.length > 0 ? responsaveis.join(', ') : 'Nenhum';
 
                 let btnPrincipal = '';
-                if (aguardandoDaniel) {
-                    // Daniel vê "Aguardando" — ao clicar no card abre direto, sem botão separado
-                    btnPrincipal = '<button class="btn-acao verde" onclick="event.stopPropagation(); window.location.href=\'ver-demanda.html?id=' + demanda.id + '\'">👁️ Ver & Aprovar</button>';
-                } else if (encerrada) {
-                    btnPrincipal = '<button class="btn-acao cinza" disabled>🔒 Encerrada</button>';
-                } else if (euCuido) {
-                    btnPrincipal = '<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda(\'' + demanda.id + '\')">🚪 Me Retirar</button>';
-                } else {
-                    btnPrincipal = '<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda(\'' + demanda.id + '\')">🙋 Assumir</button>';
-                }
+                if (aguardandoDaniel) btnPrincipal = `<button class="btn-acao verde" onclick="event.stopPropagation(); window.location.href='ver-demanda.html?id=${demanda.id}'">👁️ Ver & Aprovar</button>`;
+                else if (encerrada) btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Encerrada</button>`;
+                else if (euCuido) btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}')">🚪 Me Retirar</button>`;
+                else btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}')">🙋 Assumir</button>`;
 
-                // Arquivar só aparece em Concluída
-                const btnArquivar = demanda.status === 'Concluída'
-                    ? '<button class="btn-acao cinza" title="Arquivar" onclick="event.stopPropagation(); arquivarCard(\'' + demanda.id + '\')">📦</button>'
-                    : '';
+                const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${demanda.numero_demanda}</div>` : '';
+                const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 ${tempoRelativo(demanda.criado_em)}</div>` : '';
 
-                const tempoCard = demanda.criado_em
-                    ? '<div class="info-tempo" data-criado="' + demanda.criado_em + '">🕐 ' + tempoRelativo(demanda.criado_em) + '</div>'
-                    : '';
-
-                return '<div class="demanda-card ' + (aguardandoDaniel ? 'aguardando-daniel' : '') + '" onclick="window.location.href=\'ver-demanda.html?id=' + demanda.id + '\'">'
-                    + '<div class="demanda-media">' + mediaTag + '</div>'
-                    + '<div class="demanda-conteudo">'
-                    + '<span class="badge ' + badgeClass + '">' + demanda.status + '</span>'
-                    + '<div class="titulo">' + demanda.assunto + '</div>'
-                    + '<div class="info">📍 ' + demanda.rua + ', ' + demanda.numero + ' - ' + demanda.bairro + '</div>'
-                    + (demanda.protocolo ? '<div class="info">📄 Prot: <b>' + demanda.protocolo + '</b></div>' : '')
-                    + (demanda.expediente ? '<div class="info">📁 Exp: <b>' + demanda.expediente + '</b></div>' : '')
-                    + '<div class="info">✍️ <b>' + (demanda.criador || 'Desconhecido') + '</b></div>'
-                    + '<div class="info">👥 Cuidando: <b>' + cuindoTxt + '</b></div>'
-                    + tempoCard
-                    + '<div class="acoes-card">' + btnPrincipal + btnArquivar + '</div>'
-                    + '</div></div>';
+                return `<div class="demanda-card ${aguardandoDaniel ? 'aguardando-daniel' : ''}" onclick="window.location.href='ver-demanda.html?id=${demanda.id}'">
+                            ${numTag}
+                            <div class="demanda-media">${mediaTag}</div>
+                            <div class="demanda-conteudo">
+                                <span class="badge ${badgeClass}">${demanda.status}</span>
+                                <div class="titulo">${demanda.assunto}</div>
+                                <div class="info">📍 ${demanda.rua}, ${demanda.numero} - ${demanda.bairro}</div>
+                                ${demanda.protocolo ? `<div class="info">📄 Prot: <b>${demanda.protocolo}</b></div>` : ''}
+                                ${demanda.expediente ? `<div class="info">📁 Exp: <b>${demanda.expediente}</b></div>` : ''}
+                                <div class="info">👥 Cuidando: <b>${cuindoTxt}</b></div>
+                                ${tempoCard}
+                                <div class="acoes-card">${btnPrincipal}</div>
+                            </div>
+                        </div>`;
             }).join('');
 
             let pagHtml = '';
             for (let i = 1; i <= totalPaginas; i++) {
-                pagHtml += '<button class="page-btn ' + (i===paginaAtual?'ativo':'') + '" onclick="mudarPagina(' + i + ')">Pág ' + i + '</button>';
+                pagHtml += `<button class="page-btn ${i===paginaAtual?'ativo':''}" onclick="mudarPagina(${i})">Pág ${i}</button>`;
             }
             pagContainer.innerHTML = totalPaginas > 1 ? pagHtml : '';
         }
@@ -227,14 +265,13 @@
             const agora = new Date();
             const data = new Date(dataStr);
             const diff = Math.floor((agora - data) / 1000);
-            if (diff < 60) return 'há alguns segundos';
+            if (diff < 60) return 'agora mesmo';
             if (diff < 3600) return `há ${Math.floor(diff/60)} min`;
             if (diff < 86400) return `há ${Math.floor(diff/3600)}h`;
             if (diff < 2592000) return `há ${Math.floor(diff/86400)} dias`;
             return data.toLocaleDateString('pt-BR');
         }
 
-        // Atualiza tempos nos cards a cada 30s
         setInterval(() => {
             document.querySelectorAll('[data-criado]').forEach(el => {
                 el.textContent = '🕐 ' + tempoRelativo(el.getAttribute('data-criado'));
@@ -252,7 +289,6 @@
             const resp = (demanda.responsaveis || []).filter(r => r);
             if (resp.includes(usuarioLogado)) return;
             const updates = { responsaveis: [...resp, usuarioLogado] };
-            if (demanda.status === 'Aberta') updates.status = 'Em Andamento';
             await db.from('demandas').update(updates).eq('id', id);
         }
 
@@ -260,18 +296,7 @@
             const demanda = todasDemandas.find(d => d.id === id);
             if (!demanda) return;
             const resp = (demanda.responsaveis || []).filter(r => r !== usuarioLogado);
-            const updates = { responsaveis: resp };
-            if (resp.length === 0 && demanda.status === 'Em Andamento') updates.status = 'Aberta';
-            await db.from('demandas').update(updates).eq('id', id);
-        }
-
-        window.aprovarDireto = async function(id) {
-            await db.from('demandas').update({ status: 'Aprovada' }).eq('id', id);
-        }
-
-        window.arquivarCard = async function(id) {
-            if (!confirm('Arquivar esta demanda? As fotos serão limpas.')) return;
-            await db.from('demandas').update({ status: 'Arquivada', fotos_urls: [] }).eq('id', id);
+            await db.from('demandas').update({ responsaveis: resp }).eq('id', id);
         }
 
         inicializarSistema();
