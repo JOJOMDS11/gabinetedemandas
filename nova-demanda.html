@@ -50,11 +50,20 @@
         <h2>Adicionar Demanda</h2>
         <div id="mensagem" class="mensagem"></div>
 
-        <div class="form-group">
-            <label>Assunto *</label>
-            <input type="text" id="assunto" placeholder="Ex: Limpeza de bueiro" required>
+        <div class="form-row">
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label>Assunto *</label>
+                <input type="text" id="assunto" placeholder="Ex: Limpeza de bueiro" required>
+            </div>
         </div>
         
+        <div class="form-row">
+            <div class="form-group">
+                <label>Nº da Demanda (Opcional)</label>
+                <input type="text" id="numero_demanda" placeholder="Ex: 55">
+            </div>
+        </div>
+
         <div class="form-row">
             <div class="form-group">
                 <label>Nome do Solicitante (Opcional)</label>
@@ -143,7 +152,7 @@
                 arquivosSelecionados.push(file);
                 renderizarPreviews();
             });
-            this.value = ''; // Limpa o input
+            this.value = ''; 
         });
 
         function renderizarPreviews() {
@@ -196,6 +205,7 @@
 
         window.enviarDemanda = async function() {
             const assunto = document.getElementById('assunto').value.trim();
+            const numero_demanda = document.getElementById('numero_demanda').value.trim();
             const rua = document.getElementById('rua').value.trim();
             const numero = document.getElementById('numero').value.trim();
             const bairro = document.getElementById('bairro').value.trim();
@@ -231,11 +241,10 @@
                 }
                 prog.style.display = 'none';
 
-                // Lógica de aprovação automática
                 const statusInicial = usuarioLogado === 'Daniel' ? 'Aprovada' : 'Aguardando Aprovação';
 
                 await db.from('demandas').insert([{
-                    assunto, rua, numero, bairro, 
+                    numero_demanda, assunto, rua, numero, bairro, 
                     descricao: document.getElementById('descricao').value.trim(),
                     solicitante_nome, solicitante_tel,
                     fotos_urls: fotosUrls, 
