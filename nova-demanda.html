@@ -368,7 +368,6 @@
             document.getElementById('secretaria_outra').style.display = 'none';
             document.getElementById('providencias').value = '';
             document.getElementById('responsavel_ordem').value = '';
-            // NÃO LIMPAMOS MAIS O numero_demanda AQUI!
             document.getElementById('solicitante_nome').value = '';
             document.getElementById('solicitante_tel').value = '';
             document.getElementById('rua').value = '';
@@ -430,16 +429,13 @@
                     let ano = p[2].length === 2 ? '20' + p[2] : p[2];
                     parsed.data = `${ano}-${p[1]}-${p[0]}`;
                 }
-                // REMOVIDA A LÓGICA DO NÚMERO ANTIGO AQUI.
-                
-                // NOVO: Captura o Documento Interno (ex: PDP 3900/2026)
                 else if (cell.match(/^[A-Za-z]+\s\d+\/\d{4}$/)) {
                     let parts = cell.split(/\s+/);
-                    parsed.doc_numero = parts[1]; // Pega só o 3900/2026
+                    parsed.doc_numero = parts[1];
                     let prefix = parts[0].toUpperCase();
                     if(prefix === 'REQ') parsed.doc_tipo = 'Requerimento';
                     else if(prefix === 'MEMO') parsed.doc_tipo = 'Memorando';
-                    else parsed.doc_tipo = 'Ofício'; // Default para PDP e afins
+                    else parsed.doc_tipo = 'Ofício'; 
                 }
                 else if (nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase())) {
                     parsed.resp = nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase());
@@ -488,7 +484,6 @@
                 }
             }
 
-            // NOVO: Extrair o Protocolo 156 DE DENTRO da descrição, e limpá-la.
             if (parsed.desc) {
                 let match156 = parsed.desc.match(/(?:[,.-]?\s*)?(?:protocolo\s*)?(156\s*202\d\/\d+)/i);
                 if (match156) {
@@ -498,11 +493,17 @@
                 }
             }
 
+            // REGRA DE OURO: Se tem Documento ou Expediente, já passou da fase de aprovação
+            if (parsed.doc_numero || parsed.expediente) {
+                if (!parsed.status || ['aberta', 'pendente', 'aguardando', 'aguardando aprovação'].includes(parsed.status.toLowerCase())) {
+                    parsed.status = 'Aprovada';
+                }
+            }
+
             if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo;
             if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
             if(parsed.resp) document.getElementById('responsavel_ordem').value = parsed.resp;
             
-            // Novos campos:
             if(parsed.doc_tipo) document.getElementById('doc_tipo').value = parsed.doc_tipo;
             if(parsed.doc_numero) document.getElementById('doc_numero').value = parsed.doc_numero;
 
@@ -547,7 +548,7 @@
             }
 
             adaptarFormulario();
-            atualizarNumeroDemanda(); // Garante que o ID é gerado automaticamente!
+            atualizarNumeroDemanda(); 
 
             textarea.style.backgroundColor = '#e2f8c5';
             textarea.value = '✅ Dados importados com sucesso!';
@@ -672,8 +673,15 @@
                 } else {
                     if (tiposAtualBloqueados.includes(tipo_solicitacao)) {
                         statusInicial = usuarioLogado === 'Daniel' ? 'Aprovada' : 'Aguardando Aprovação';
-                    } else if (usuarioLogado === 'Daniel') {
+                    } else {
                         statusInicial = 'Pendente'; 
+                    }
+                }
+
+                // REGRA DE OURO NA HORA DE SALVAR (Segurança)
+                if (['Pendente', 'Aberta', 'Aguardando', 'Aguardando Aprovação'].includes(statusInicial)) {
+                    if (doc_numero || expediente) {
+                        statusInicial = 'Aprovada';
                     }
                 }
 
@@ -686,7 +694,6 @@
                     });
                 }
 
-                // INSERINDO NOVOS CAMPOS NO BANCO
                 await db.from('demandas').insert([{
                     tipo_solicitacao, numero_demanda, assunto, rua, numero, bairro, 
                     descricao: document.getElementById('descricao').value.trim(),
