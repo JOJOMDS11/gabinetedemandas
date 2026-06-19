@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gabinete Daniel Daudt - Demandas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#185199">
+    <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f2f5; color: #333; }
@@ -56,8 +62,8 @@
         .info-tempo { font-size: 11px; color: #999; margin-bottom: 4px; font-style: italic; margin-top: 5px; }
         
         .acoes-card { margin-top: auto; padding-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn-acao { color: white; border: none; padding: 8px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; flex: 1; min-width: 80px; text-align: center; }
-        .btn-acao:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-acao { color: white; border: none; padding: 8px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; flex: 1; min-width: 80px; text-align: center; transition: opacity 0.2s; }
+        .btn-acao:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-acao.verde { background: #27ae60; }
         .btn-acao.azul { background: #185199; }
         .btn-acao.laranja { background: #e67e22; }
@@ -133,6 +139,7 @@
         <div class="paginacao" id="paginacaoContainer"></div>
     </div>
 
+    <!-- Modal de Autenticação Segura -->
     <div class="modal-overlay" id="modalSenhaSegura">
         <div class="modal-box">
             <h3>🔐 Exclusão de Registro</h3>
@@ -152,8 +159,6 @@
         let filtroAtual = 'Todas';
         let paginaAtual = 1;
         const itensPorPagina = 9;
-        
-        // Controle da Exclusão
         let idParaExcluir = null;
 
         const tiposAgendas = ['Agenda VISITA AO GABINETE', 'AGENDA visita EXTERNA', 'GABINETE', 'REUNIÃO', 'visita ao Gabinete'];
@@ -161,15 +166,18 @@
         const tiposLegis = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
 
         let usuarioLogado = localStorage.getItem('usuarioLogado');
+        let authToken = localStorage.getItem('authToken'); // JWT da sua API
+
         if (!usuarioLogado) window.location.href = 'index.html';
         document.getElementById('nomeUsuario').textContent = usuarioLogado;
 
         document.getElementById('btnLogout').addEventListener('click', () => {
             localStorage.removeItem('usuarioLogado');
+            localStorage.removeItem('authToken');
             window.location.href = 'index.html';
         });
 
-        // DEBOUNCE NA BUSCA (Impede recarregamento a cada letra digitada)
+        // DEBOUNCE NA BUSCA
         let debounceTimer;
         document.getElementById('buscaGeral').addEventListener('input', function() {
             clearTimeout(debounceTimer);
@@ -183,12 +191,31 @@
             try {
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
-                db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
+
+                // Cria o cliente enviando o JWT na requisição, se ele existir (Prepara para o RLS)
+                db = supabase.createClient(config.supabaseUrl, config.supabaseKey, {
+                    global: { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} }
+                });
+
                 carregarDemandas();
                 
+                // REALTIME INCREMENTAL DE VERDADE (Performance Level Up)
                 db.channel('dashboard-live')
-                  .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, () => { carregarDemandas(); })
+                  .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, (payload) => {
+                      if (payload.eventType === 'INSERT') {
+                          todasDemandas.unshift(payload.new);
+                      } else if (payload.eventType === 'UPDATE') {
+                          const idx = todasDemandas.findIndex(d => d.id === payload.new.id);
+                          if (idx !== -1) todasDemandas[idx] = payload.new;
+                      } else if (payload.eventType === 'DELETE') {
+                          todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id);
+                      }
+                      // Re-ordena e manda renderizar apenas as alterações
+                      todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+                      renderDemandas();
+                  })
                   .subscribe();
+
             } catch (err) {
                 document.getElementById('demandas').innerHTML = '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
             }
@@ -308,7 +335,6 @@
 
                 const infoSecretaria = demanda.secretaria ? `<div class="info">🏢 Sec: <b>${demanda.secretaria}</b></div>` : '';
 
-                // Correção do erro undefined na RUA e BAIRRO
                 const ruaCerta = demanda.rua ? demanda.rua : '';
                 const bairroCerto = demanda.bairro ? '- ' + demanda.bairro : '';
                 const numCerto = demanda.numero ? ', ' + demanda.numero : '';
@@ -361,32 +387,11 @@
             pagContainer.innerHTML = totalPaginas > 1 ? pagHtml : '';
         }
 
-        window.mudarPagina = function(p) { paginaAtual = p; renderDemandas(); window.scrollTo(0,0); }
-
-        function tempoRelativo(dataStr) {
-            if (!dataStr) return '';
-            const agora = new Date();
-            const data = new Date(dataStr);
-            const diff = Math.floor((agora - data) / 1000);
-            if (diff < 60) return 'agora mesmo';
-            if (diff < 3600) return `há ${Math.floor(diff/60)} min`;
-            if (diff < 86400) return `há ${Math.floor(diff/3600)}h`;
-            if (diff < 2592000) return `há ${Math.floor(diff/86400)} dias`;
-            return data.toLocaleDateString('pt-BR');
-        }
-
-        setInterval(() => {
-            document.querySelectorAll('[data-criado]').forEach(el => {
-                el.textContent = '🕐 Aberto ' + tempoRelativo(el.getAttribute('data-criado'));
-            });
-        }, 30000);
-
         async function carregarDemandas() {
             const { data, error } = await db.from('demandas').select('*').order('criado_em', { ascending: false });
             if (!error) { todasDemandas = data || []; renderDemandas(); }
         }
 
-        // Adicionado: Loading visual para as ações
         window.assumirDemanda = async function(id, btnElement) {
             btnElement.textContent = '⏳ ...'; btnElement.disabled = true;
             const demanda = todasDemandas.find(d => d.id === id);
@@ -405,7 +410,6 @@
             await db.from('demandas').update({ responsaveis: resp }).eq('id', id);
         }
 
-        // Novo Modal de Exclusão (Validado na API)
         window.solicitarExclusao = function(id) {
             idParaExcluir = id;
             document.getElementById('inputSenhaAcao').value = '';
@@ -426,7 +430,6 @@
             btn.textContent = '⏳ Excluindo...'; btn.disabled = true;
 
             try {
-                // CHAMA A SUA EDGE FUNCTION PARA VALIDAR A SENHA
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
