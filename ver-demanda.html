@@ -25,8 +25,10 @@
 
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; color: #185199; font-weight: bold; font-size: 13px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-        input:focus, select:focus { outline: none; border-color: #185199; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #185199; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
         .botoes { display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap; }
         button { flex: 1; min-width: 120px; padding: 12px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; text-align: center; text-decoration: none; display: inline-block; }
@@ -103,6 +105,7 @@
         
         @media (max-width: 600px) {
             .lightbox-nav { padding: 10px; font-size: 20px; }
+            .form-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -401,6 +404,13 @@
             const estaAguardando = (d.status === 'Aguardando Aprovação' || d.status === 'Aberta' || d.status === 'Pendente');
             const bloqueado = estaAguardando ? 'disabled style="background:#eee; cursor:not-allowed;"' : '';
 
+            // FORMATAÇÃO DA DATA
+            let dataApresentacao = '';
+            if (d.data_agendada) {
+                const objData = new Date(d.data_agendada + 'T00:00:00');
+                dataApresentacao = objData.toLocaleDateString('pt-BR');
+            }
+
             document.getElementById('conteudo').innerHTML = `
                 ${alertaAprovacao}
                 ${gerarBarraProgresso(d.status)}
@@ -423,6 +433,18 @@
                     <div class="info-group"><label>Tipo de Solicitação</label><p>📌 <b>${d.tipo_solicitacao || 'Não classificado'}</b></p></div>
                     <div class="info-group"><label>Assunto</label><p>${d.assunto}</p></div>
                     
+                    ${(d.data_agendada || d.horario_agendado) ? `
+                    <div class="info-group" style="background:#e8f0ff; padding:10px; border-radius:4px;">
+                        <label>Data e Horário</label>
+                        <p>📅 ${dataApresentacao} &nbsp; ⏰ ${d.horario_agendado || '--:--'}</p>
+                    </div>` : ''}
+
+                    ${d.secretaria ? `
+                    <div class="info-group">
+                        <label>Secretaria</label>
+                        <p>🏢 ${d.secretaria}</p>
+                    </div>` : ''}
+
                     ${(d.rua || d.bairro) ? `
                     <div class="info-group">
                         <label>Endereço</label>
@@ -464,7 +486,28 @@
                     <h2>Acompanhamento Técnico</h2>
                     <div class="form-group"><label>Nº Visual da Demanda (Admin)</label>${inputDemandaNum}</div>
 
-                    ${estaAguardando ? `<div style="color:#c0392b; font-size:13px; font-weight:bold; margin-bottom:10px; background:#ffe5e5; padding:10px; border-radius:4px; border:1px solid #c0392b;">⚠️ Bloqueado: O Status precisa estar "Aprovado" para você poder editar o andamento.</div>` : ''}
+                    ${estaAguardando ? `<div style="color:#c0392b; font-size:13px; font-weight:bold; margin-bottom:10px; background:#ffe5e5; padding:10px; border-radius:4px; border:1px solid #c0392b;">⚠️ Bloqueado: O Status precisa estar "Aprovado/Visto" para você poder editar o andamento.</div>` : ''}
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Editar Data</label>
+                            <input type="date" id="editDataAgendada" value="${d.data_agendada || ''}" ${bloqueado}>
+                        </div>
+                        <div class="form-group">
+                            <label>Editar Horário</label>
+                            <input type="time" id="editHorarioAgendado" value="${d.horario_agendado || ''}" ${bloqueado}>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Secretaria</label>
+                        <input type="text" id="editSecretaria" value="${d.secretaria || ''}" placeholder="Ex: SEMOV..." ${bloqueado}>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Providências / Ações Tomadas</label>
+                        <textarea id="editProvidencias" rows="2" placeholder="O que já foi feito?" ${bloqueado}>${d.providencias || ''}</textarea>
+                    </div>
 
                     <div class="form-group">
                         <label>Status Manual</label>
@@ -503,7 +546,7 @@
                     <div class="botoes">
                         ${btnAssumir}
                         ${btnAprovacao}
-                        <button class="btn-salvar" onclick="salvarAlteracoes()">💾 Salvar Status/Protocolos</button>
+                        <button class="btn-salvar" onclick="salvarAlteracoes()">💾 Salvar Status/Edições</button>
                         ${btnWhats}
                     </div>
 
@@ -585,6 +628,11 @@
             let expediente = document.getElementById('editExpediente') ? document.getElementById('editExpediente').value.trim() : (demandaAtual.expediente || '');
             let linkLegis = document.getElementById('editLinkLegis') ? document.getElementById('editLinkLegis').value.trim() : (demandaAtual.link_legis || '');
 
+            const data_agendada = document.getElementById('editDataAgendada') ? document.getElementById('editDataAgendada').value || null : demandaAtual.data_agendada;
+            const horario_agendado = document.getElementById('editHorarioAgendado') ? document.getElementById('editHorarioAgendado').value || null : demandaAtual.horario_agendado;
+            const secretaria = document.getElementById('editSecretaria') ? document.getElementById('editSecretaria').value.trim() : (demandaAtual.secretaria || '');
+            const providencias = document.getElementById('editProvidencias') ? document.getElementById('editProvidencias').value.trim() : (demandaAtual.providencias || '');
+
             const estaAguardando = (demandaAtual.status === 'Aguardando Aprovação' || demandaAtual.status === 'Aberta' || demandaAtual.status === 'Pendente');
             
             if (estaAguardando) {
@@ -604,7 +652,11 @@
                 status: statusEdit,
                 protocolo: protocolo,
                 expediente: expediente,
-                link_legis: linkLegis
+                link_legis: linkLegis,
+                data_agendada: data_agendada,
+                horario_agendado: horario_agendado,
+                secretaria: secretaria,
+                providencias: providencias
             };
             
             if (statusEdit !== demandaAtual.status) {
