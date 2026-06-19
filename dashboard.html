@@ -212,12 +212,13 @@
                 }
 
                 let badgeClass = 'badge-Aberta';
+                if (demanda.status === 'Pendente') badgeClass = 'badge-Aberta';
                 if (demanda.status === 'Em Andamento') badgeClass = 'badge-Andamento';
-                if (demanda.status === 'Aguardando Aprovação') badgeClass = 'badge-Aguardando';
+                if (demanda.status === 'Aguardando Aprovação' || demanda.status === 'Aguardando') badgeClass = 'badge-Aguardando';
                 if (demanda.status === 'Aprovada') badgeClass = 'badge-Aprovada';
                 if (demanda.status === '156 Pedido') badgeClass = 'badge-156';
                 if (demanda.status === 'Aguardando Exp') badgeClass = 'badge-Exp';
-                if (demanda.status === 'Concluída') badgeClass = 'badge-Concluida';
+                if (demanda.status === 'Concluída' || demanda.status === 'Atendido' || demanda.status === 'Resolvido') badgeClass = 'badge-Concluida';
                 if (demanda.status === 'Arquivada') badgeClass = 'badge-Arquivada';
                 if (demanda.status === 'Rejeitada') badgeClass = 'badge-Rejeitada';
 
