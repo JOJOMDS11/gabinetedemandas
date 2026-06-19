@@ -89,13 +89,21 @@
         .btn-link:hover { background: #bdc3c7; }
 
         /* Modal Lightbox e Senha */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; }
-        .modal-overlay.ativo { display: flex; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-overlay.ativo { display: flex; flex-direction: column; }
         .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #98ED34; }
         .modal-box h3 { color: #185199; margin-bottom: 15px; }
         .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;}
         .modal-botoes { display: flex; gap: 10px; }
-        #lightboxImg, #lightboxVid { max-width: 90%; max-height: 90vh; border-radius: 8px; }
+        #lightboxImg, #lightboxVid { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        #lightboxPdf { width: 90%; height: 85vh; border: none; border-radius: 8px; background: white; }
+        
+        /* Setas Lightbox */
+        .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; font-size: 30px; padding: 15px 20px; cursor: pointer; border-radius: 4px; z-index: 10000; }
+        .lightbox-nav:hover { background: rgba(0,0,0,0.9); }
+        #btnPrev { left: 10px; }
+        #btnNext { right: 10px; }
+        #btnFecharLightbox { position: absolute; top: 15px; right: 15px; background: rgba(231,76,60,0.9); color: white; border: none; padding: 10px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; z-index: 10000; }
     </style>
 </head>
 <body>
@@ -109,10 +117,16 @@
         <h3 style="grid-column:1/-1; text-align:center; color:#777;">Carregando...</h3>
     </div>
 
-    <!-- Lightbox de Imagem/Vídeo -->
+    <!-- Lightbox Aprimorado (Fotos, Vídeos e PDF) -->
     <div id="lightbox" class="modal-overlay" onclick="fecharLightbox(event)">
+        <button id="btnFecharLightbox" onclick="fecharLightbox(event)">✕ Fechar</button>
+        <button id="btnPrev" class="lightbox-nav" onclick="mudarMedia(-1, event)">&#10094;</button>
+        
         <img id="lightboxImg" style="display:none;">
         <video id="lightboxVid" controls style="display:none;"></video>
+        <iframe id="lightboxPdf" style="display:none;"></iframe>
+        
+        <button id="btnNext" class="lightbox-nav" onclick="mudarMedia(1, event)">&#10095;</button>
     </div>
 
     <!-- Modal Senha Master -->
@@ -135,10 +149,13 @@
         let acaoMasterPendente = null; 
         const SENHA_MASTER = 'master2025';
 
+        // Lógica Global do Lightbox
+        let mediaGlobal = [];
+        let indexLightboxAtual = 0;
+
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         if (!usuarioLogado) window.location.href = 'index.html';
 
-        // Administradores que podem alterar o ID visual da demanda
         const adminUsers = ['Daniel', 'João Pedro', 'Luana'];
         const isAdmin = adminUsers.includes(usuarioLogado);
 
@@ -167,12 +184,8 @@
 
         async function carregarDemanda() {
             const { data, error } = await db.from('demandas').select('*').eq('id', demandaId).single();
-            if (error) {
-                document.getElementById('conteudo').innerHTML = `<h3 style="color:red; grid-column:1/-1;">Demanda não encontrada.</h3>`;
-                return;
-            }
+            if (error) { document.getElementById('conteudo').innerHTML = `<h3 style="color:red; grid-column:1/-1;">Demanda não encontrada.</h3>`; return; }
             
-            // Fluxo Automático de Aprovação apenas para 'Aberta' e 'Em Andamento'
             if (data.status === 'Aberta' || data.status === 'Em Andamento') {
                 if (usuarioLogado === 'Daniel') {
                     await db.from('demandas').update({ status: 'Aprovada' }).eq('id', demandaId);
@@ -183,18 +196,17 @@
                 }
             }
             demandaAtual = data;
+            
+            // Popula as mídias globais para o Lightbox
+            mediaGlobal = [];
+            if(data.pdf_url) mediaGlobal.push({ url: data.pdf_url, type: 'pdf' });
+            const fotos = (data.fotos_urls || []).filter(f => f);
+            fotos.forEach(f => { mediaGlobal.push({ url: f, type: isVideo(f) ? 'video' : 'image' }); });
+
             renderizar(demandaAtual);
         }
 
-        function isVideo(url) {
-            if (!url) return false;
-            return /\.(mp4|webm|mov|ogg)$/i.test(url);
-        }
-
-        function formataDataCompleta() {
-            const data = new Date();
-            return data.toISOString();
-        }
+        function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
         function tempoRelativo(dataStr) {
             if (!dataStr) return '';
@@ -205,7 +217,6 @@
         function gerarTimeline(d) {
             const eventos = [];
             if (d.criado_em) eventos.push({ dot: 'azul', texto: `📋 Criada por <b>${d.criador || 'Desconhecido'}</b>`, tempo: d.criado_em });
-
             const statusMap = {
                 'Aguardando Aprovação': { dot: 'laranja', texto: '⏳ Enviada para <b>Aprovação</b>' },
                 'Aprovada': { dot: 'verde', texto: '✅ <b>Aprovada</b> (Entrou em andamento)' },
@@ -215,68 +226,73 @@
                 'Arquivada': { dot: 'cinza', texto: '📦 Demanda <b>Arquivada</b>' },
                 'Rejeitada': { dot: 'vermelho', texto: '❌ Demanda <b>Rejeitada</b>' }
             };
-            
-            // Aqui poderíamos ter um log real, mas como usamos o status atual:
-            if (statusMap[d.status]) {
-                eventos.push({ ...statusMap[d.status], tempo: formataDataCompleta() }); // idealmente puxaria a data do log
-            }
-
-            if (eventos.length === 0) return '<p style="color:#999; font-size:13px;">Sem eventos.</p>';
-
+            if (statusMap[d.status]) eventos.push({ ...statusMap[d.status], tempo: new Date().toISOString() });
             return '<ul class="timeline">' + eventos.map(ev => `
-                <li>
-                    <div class="timeline-dot ${ev.dot || ''}"></div>
-                    <div class="timeline-evento">${ev.texto}</div>
-                    ${ev.tempo ? `<div class="timeline-tempo">${tempoRelativo(ev.tempo)}</div>` : ''}
-                </li>`).join('') + '</ul>';
+                <li><div class="timeline-dot ${ev.dot || ''}"></div><div class="timeline-evento">${ev.texto}</div>
+                ${ev.tempo ? `<div class="timeline-tempo">${tempoRelativo(ev.tempo)}</div>` : ''}</li>`).join('') + '</ul>';
         }
 
-        window.abrirMapa = function(rua, num, bairro) {
-            const q = encodeURIComponent(`${rua}, ${num}, ${bairro}, São Leopoldo, RS`);
-            window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank');
+        window.abrirMapa = function(rua, num, bairro) { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${rua}, ${num}, ${bairro}, São Leopoldo, RS`)}`, '_blank'); }
+
+        // MÁGICA DO LIGHTBOX C/ NAVEGAÇÃO E PDF
+        window.abrirLightboxIndex = function(index) {
+            indexLightboxAtual = index;
+            atualizarLightbox();
         }
 
-        window.abrirLightbox = function(url, isVid) {
+        function atualizarLightbox() {
             document.getElementById('lightbox').classList.add('ativo');
             const img = document.getElementById('lightboxImg');
             const vid = document.getElementById('lightboxVid');
-            if (isVid) {
-                vid.src = url; vid.style.display = 'block'; img.style.display = 'none'; vid.play();
+            const pdf = document.getElementById('lightboxPdf');
+            
+            img.style.display = 'none'; vid.style.display = 'none'; pdf.style.display = 'none';
+            vid.pause();
+
+            const item = mediaGlobal[indexLightboxAtual];
+            if(!item) return;
+
+            if(item.type === 'video') {
+                vid.src = item.url; vid.style.display = 'block'; vid.play();
+            } else if(item.type === 'pdf') {
+                // Embebendo com o visualizador do Google Docs para garantir leitura limpa em qualquer celular/PC
+                pdf.src = `https://docs.google.com/viewer?url=${encodeURIComponent(item.url)}&embedded=true`;
+                pdf.style.display = 'block';
             } else {
-                img.src = url; img.style.display = 'block'; vid.style.display = 'none';
+                img.src = item.url; img.style.display = 'block';
             }
+            
+            document.getElementById('btnPrev').style.display = mediaGlobal.length > 1 ? 'block' : 'none';
+            document.getElementById('btnNext').style.display = mediaGlobal.length > 1 ? 'block' : 'none';
+        }
+
+        window.mudarMedia = function(direcao, event) {
+            event.stopPropagation();
+            indexLightboxAtual += direcao;
+            if(indexLightboxAtual < 0) indexLightboxAtual = mediaGlobal.length - 1;
+            if(indexLightboxAtual >= mediaGlobal.length) indexLightboxAtual = 0;
+            atualizarLightbox();
         }
 
         window.fecharLightbox = function(e) {
-            if (e && e.target !== document.getElementById('lightbox')) return;
+            if (e && e.target.id !== 'lightbox' && e.target.id !== 'btnFecharLightbox') return;
             document.getElementById('lightbox').classList.remove('ativo');
             document.getElementById('lightboxVid').pause();
         }
 
         function gerarBarraProgresso(status) {
             const etapas = ['Aprovada', 'Em Andamento', '156 Pedido', 'Aguardando Exp', 'Concluída'];
-            let html = '';
-            let indexAtual = etapas.indexOf(status);
+            let html = '', indexAtual = etapas.indexOf(status);
             if(status === 'Aberta' || status === 'Aguardando Aprovação') indexAtual = -1;
-            if(status === 'Rejeitada' || status === 'Arquivada') return ''; // Não mostra progresso para estes
-
+            if(status === 'Rejeitada' || status === 'Arquivada') return ''; 
             etapas.forEach((etapa, index) => {
-                let classe = '';
-                if (index < indexAtual) classe = 'completed';
-                else if (index === indexAtual) classe = 'active';
+                let classe = index < indexAtual ? 'completed' : (index === indexAtual ? 'active' : '');
                 html += `<div class="progress-step ${classe}">${etapa}</div>`;
             });
-            return `<div class="progress-wrapper">
-                        <h4 style="color:#185199; font-size:14px; text-align:center;">Progresso da Demanda</h4>
-                        <div class="progress-container">
-                            <div class="progress-line"></div>
-                            ${html}
-                        </div>
-                    </div>`;
+            return `<div class="progress-wrapper"><h4 style="color:#185199; font-size:14px; text-align:center;">Progresso da Demanda</h4><div class="progress-container"><div class="progress-line"></div>${html}</div></div>`;
         }
 
         function renderizar(d) {
-            const fotos = (d.fotos_urls || []).filter(f => f);
             const responsaveis = (d.responsaveis || []).filter(r => r);
             const euEstouCuidando = responsaveis.includes(usuarioLogado);
             const encerrada = ['Concluída', 'Arquivada', 'Rejeitada'].includes(d.status);
@@ -293,56 +309,37 @@
 
             let alertaAprovacao = '';
             if (d.status === 'Aguardando Aprovação' && usuarioLogado === 'Daniel') {
-                alertaAprovacao = `
-                <div class="alerta-aprovacao" style="grid-column:1/-1;">
-                    ⏳ Esta demanda está aguardando sua aprovação, Daniel!
-                    <br><br>
-                    <div style="display:flex; gap:10px; justify-content:center; margin-top:10px;">
-                        <button style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda()">✅ Aprovar</button>
-                        <button style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="rejeitarDemanda()">❌ Rejeitar</button>
-                    </div>
-                </div>`;
+                alertaAprovacao = `<div class="alerta-aprovacao" style="grid-column:1/-1;">⏳ Esta demanda está aguardando sua aprovação, Daniel!<br><br><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda()">✅ Aprovar</button><button style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="rejeitarDemanda()">❌ Rejeitar</button></div></div>`;
             }
 
-            const seloAprovado = (!['Aberta', 'Aguardando Aprovação', 'Rejeitada'].includes(d.status)) 
-                ? `<span class="aprovado-daniel">Aprovada pelo Daniel ✓</span>` : '';
+            const seloAprovado = (!['Aberta', 'Aguardando Aprovação', 'Rejeitada'].includes(d.status)) ? `<span class="aprovado-daniel">Aprovada pelo Daniel ✓</span>` : '';
 
-            let htmlFotos = fotos.length > 0
-                ? fotos.map((f, i) => {
-                    if (!f) return '';
+            // Galeria puxando os índices corretos para o Lightbox
+            let htmlFotos = '';
+            let mediaIndex = d.pdf_url ? 1 : 0; // Se tem PDF, ele é o index 0
+            
+            const fotosLimpo = (d.fotos_urls || []).filter(f => f);
+            if(fotosLimpo.length > 0) {
+                htmlFotos = fotosLimpo.map((f, i) => {
+                    const currentIndex = mediaIndex + i;
                     const vid = isVideo(f);
-                    const mediaTag = vid ? `<video src="${f}" onclick="abrirLightbox('${f}', true)"></video>` : `<img src="${f}" onclick="abrirLightbox('${f}', false)">`;
+                    const mediaTag = vid ? `<video src="${f}" onclick="abrirLightboxIndex(${currentIndex})"></video>` : `<img src="${f}" onclick="abrirLightboxIndex(${currentIndex})">`;
                     const ext = vid ? '.mp4' : '.jpg';
-                    return `
-                    <div class="foto-container">
-                        ${mediaTag}
-                        <div class="acoes-foto">
-                            <button class="btn-foto btn-excluir-foto" onclick="event.stopPropagation(); apagarFotoUnica(${i})">🗑️</button>
-                            <button class="btn-foto" onclick="event.stopPropagation(); forcarDownload('${f}', 'demanda_anexo${i}${ext}')">⬇️</button>
-                        </div>
-                    </div>`;
-                }).join('')
-                : '<p style="color:#999; text-align:center; padding:20px;">Nenhuma mídia anexada.</p>';
-
-            const tagsResponsaveis = responsaveis.length > 0
-                ? `<div class="responsaveis-lista">${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}')">✕</button></div>`).join('')}</div>`
-                : '<span style="color:#999;">Nenhum</span>';
-
-            let btnAprovacao = '';
-            if (d.status === 'Aguardando Aprovação' && usuarioLogado !== 'Daniel') {
-                btnAprovacao = `<button style="background:#9b59b6; color:white; flex:1;" onclick="iniciarAcaoMaster('aprovar')">🔐 Aprovar c/ Senha</button>`;
+                    return `<div class="foto-container">${mediaTag}<div class="acoes-foto"><button class="btn-foto btn-excluir-foto" onclick="event.stopPropagation(); apagarFotoUnica(${i})">🗑️</button><button class="btn-foto" onclick="event.stopPropagation(); forcarDownload('${f}', 'demanda_anexo${i}${ext}')">⬇️</button></div></div>`;
+                }).join('');
+            } else {
+                htmlFotos = '<p style="color:#999; text-align:center; padding:20px;">Nenhuma imagem ou vídeo.</p>';
             }
 
+            const tagsResponsaveis = responsaveis.length > 0 ? `<div class="responsaveis-lista">${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}')">✕</button></div>`).join('')}</div>` : '<span style="color:#999;">Nenhum</span>';
+
+            let btnAprovacao = (d.status === 'Aguardando Aprovação' && usuarioLogado !== 'Daniel') ? `<button style="background:#9b59b6; color:white; flex:1;" onclick="iniciarAcaoMaster('aprovar')">🔐 Aprovar c/ Senha</button>` : '';
             const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui()">🙋 Eu Assumo</button>` : '';
 
-            // WhatsApp link
             const msgWhats = encodeURIComponent(`*Demanda do Gabinete:* ${d.assunto}\n*Endereço:* ${d.rua}, ${d.numero}\n*Status:* ${d.status}\n\nAcesse: ${window.location.href}`);
             const btnWhats = `<a href="https://wa.me/?text=${msgWhats}" target="_blank" class="btn-whats">📱 WhatsApp</a>`;
 
-            // Num Demanda visual
-            const inputDemandaNum = isAdmin 
-                ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" placeholder="Ex: DEM-001" style="max-width:150px; padding:5px;">`
-                : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
+            const inputDemandaNum = isAdmin ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" placeholder="Ex: 55" style="max-width:150px; padding:5px;">` : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
 
             document.getElementById('conteudo').innerHTML = `
                 ${alertaAprovacao}
@@ -356,7 +353,7 @@
                         <a href="https://admin.camarasaoleopoldo.rs.gov.br/admin/index.php?accesscheck=%2Fadmin.php" target="_blank" class="btn-link">🔗 Sistema Legis</a>
                     </div>
 
-                    ${d.pdf_url ? `<a href="${d.pdf_url}" target="_blank" class="btn-foto" style="background:#c0392b; margin-bottom:15px; display:inline-block;">📄 Ver PDF Anexado</a>` : ''}
+                    ${d.pdf_url ? `<button onclick="abrirLightboxIndex(0)" class="btn-foto" style="background:#c0392b; margin-bottom:15px; display:inline-block; font-size: 14px; padding: 10px 15px;">👁️ Ler Arquivo PDF</button>` : ''}
 
                     <div class="info-group"><label>Assunto</label><p>${d.assunto}</p></div>
                     <div class="info-group">
@@ -380,8 +377,7 @@
                     <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
 
                     <h2>Acompanhamento Técnico</h2>
-                    
-                    ${isAdmin ? `<div class="form-group"><label>Nº Visual da Demanda (Admin)</label>${inputDemandaNum}</div>` : ''}
+                    <div class="form-group"><label>Nº Visual da Demanda (Admin)</label>${inputDemandaNum}</div>
 
                     <div class="form-group">
                         <label>Status</label>
@@ -411,7 +407,7 @@
                 </div>
 
                 <div class="box">
-                    <h2>Mídias Anexadas</h2>
+                    <h2>Galeria de Mídias</h2>
                     <div class="galeria">${htmlFotos}</div>
 
                     <div class="upload-extra">
@@ -442,9 +438,7 @@
             await db.from('demandas').update({ responsaveis }).eq('id', demandaId);
         }
 
-        window.aprovarDemanda = async function() {
-            await db.from('demandas').update({ status: 'Aprovada' }).eq('id', demandaId);
-        }
+        window.aprovarDemanda = async function() { await db.from('demandas').update({ status: 'Aprovada' }).eq('id', demandaId); }
 
         window.rejeitarDemanda = async function() {
             if(!confirm('Rejeitar demanda? As fotos serão apagadas (PDF será mantido).')) return;
@@ -465,45 +459,30 @@
                 if(!confirm('Atenção: Mudar para este status apagará as mídias permanentemente. Continuar?')) return;
                 updates.fotos_urls = [];
             }
-
             const { error } = await db.from('demandas').update(updates).eq('id', demandaId);
             if (!error) alert('✓ Salvo com sucesso!');
         }
 
-        // --- SISTEMA DE SENHA MASTER PARA AÇÕES ---
         window.iniciarAcaoMaster = function(acao) {
             acaoMasterPendente = acao;
             let msg = '';
             if(acao === 'aprovar') msg = 'Aprovar demanda sem ser o Daniel.';
             if(acao === 'arquivar') msg = 'Arquivar demanda (Apagará as mídias).';
             if(acao === 'excluir') msg = 'Excluir definitivamente do sistema.';
-            
             document.getElementById('modalSenhaTexto').textContent = msg;
             document.getElementById('inputSenhaMaster').value = '';
             document.getElementById('erroSenhaMaster').style.display = 'none';
             document.getElementById('modalSenhaMaster').classList.add('ativo');
         }
 
-        window.fecharModalSenha = function() {
-            document.getElementById('modalSenhaMaster').classList.remove('ativo');
-            acaoMasterPendente = null;
-        }
+        window.fecharModalSenha = function() { document.getElementById('modalSenhaMaster').classList.remove('ativo'); acaoMasterPendente = null; }
 
         window.confirmarAcaoMaster = async function() {
-            if (document.getElementById('inputSenhaMaster').value !== SENHA_MASTER) {
-                document.getElementById('erroSenhaMaster').style.display = 'block'; return;
-            }
-            
+            if (document.getElementById('inputSenhaMaster').value !== SENHA_MASTER) { document.getElementById('erroSenhaMaster').style.display = 'block'; return; }
             fecharModalSenha();
-
-            if (acaoMasterPendente === 'aprovar') {
-                await db.from('demandas').update({ status: 'Aprovada' }).eq('id', demandaId);
-            } else if (acaoMasterPendente === 'arquivar') {
-                await db.from('demandas').update({ status: 'Arquivada', fotos_urls: [] }).eq('id', demandaId);
-            } else if (acaoMasterPendente === 'excluir') {
-                await db.from('demandas').delete().eq('id', demandaId);
-                window.location.href = 'dashboard.html';
-            }
+            if (acaoMasterPendente === 'aprovar') await db.from('demandas').update({ status: 'Aprovada' }).eq('id', demandaId);
+            else if (acaoMasterPendente === 'arquivar') await db.from('demandas').update({ status: 'Arquivada', fotos_urls: [] }).eq('id', demandaId);
+            else if (acaoMasterPendente === 'excluir') { await db.from('demandas').delete().eq('id', demandaId); window.location.href = 'dashboard.html'; }
         }
 
         window.apagarFotoUnica = async function(index) {
@@ -543,10 +522,7 @@
 
             try {
                 let updates = {};
-                if (pdfFile) {
-                    prog.textContent = 'Enviando PDF...';
-                    updates.pdf_url = await uploadCloudinaryDirect(pdfFile);
-                }
+                if (pdfFile) { prog.textContent = 'Enviando PDF...'; updates.pdf_url = await uploadCloudinaryDirect(pdfFile); }
                 if (mediaFiles.length > 0) {
                     let novasFotos = [];
                     for (let i = 0; i < mediaFiles.length; i++) {
@@ -557,12 +533,8 @@
                 }
                 await db.from('demandas').update(updates).eq('id', demandaId);
                 prog.textContent = '✓ Upload concluído!';
-            } catch (e) {
-                alert('Erro: ' + e.message);
-            } finally {
-                btn.disabled = false;
-                setTimeout(() => { prog.style.display = 'none'; document.getElementById('extraPdf').value = ''; document.getElementById('extraFotos').value = ''; }, 3000);
-            }
+            } catch (e) { alert('Erro: ' + e.message);
+            } finally { btn.disabled = false; setTimeout(() => { prog.style.display = 'none'; document.getElementById('extraPdf').value = ''; document.getElementById('extraFotos').value = ''; }, 3000); }
         }
 
         inicializarSistema();
