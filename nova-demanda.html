@@ -36,7 +36,6 @@
         .modal-overlay.ativo { display: flex; }
         .modal-overlay img, .modal-overlay video { max-width: 90%; max-height: 90vh; border-radius: 8px; }
 
-        /* Estilo Área de Cola Rápida */
         .box-importacao { background: #fdfdfd; border: 2px dashed #9b59b6; padding: 15px; border-radius: 8px; margin-bottom: 25px; text-align: center; transition: all 0.3s;}
         .box-importacao:focus-within { border-color: #8e44ad; background: #faf4ff; }
         .box-importacao label { color: #8e44ad; font-size: 14px; margin-bottom: 10px; display: block; }
@@ -56,7 +55,6 @@
 
     <div class="container">
         
-        <!-- ÁREA DE COLA RÁPIDA (CHEAT CODE) -->
         <div class="box-importacao">
             <label>🪄 Preenchimento Automático (Planilha)</label>
             <textarea id="textoMagico" rows="2" placeholder="Clique aqui e faça Ctrl+V da linha do Excel..." oninput="executarMagia()"></textarea>
@@ -186,6 +184,23 @@
 
         <div class="secao-tecnica">
             <h3 style="color:#185199; font-size:14px; margin-bottom:10px;">⚙️ Campos Técnicos (Opcional)</h3>
+            
+            <div class="form-row" style="margin-bottom:15px;">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Doc. Interno (Tipo)</label>
+                    <select id="doc_tipo">
+                        <option value="">Selecione...</option>
+                        <option value="Ofício">Ofício</option>
+                        <option value="Memorando">Memorando</option>
+                        <option value="Requerimento">Requerimento</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Doc. Interno (Número)</label>
+                    <input type="text" id="doc_numero" placeholder="Ex: 3900/2026">
+                </div>
+            </div>
+
             <div class="form-group">
                 <label>Protocolo 156</label>
                 <input type="text" id="protocolo" placeholder="Ex: 156 2026/001234" onfocus="if(!this.value) this.value='156 2026/'">
@@ -234,9 +249,6 @@
         const tiposAtualBloqueados = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
         const nomesEquipe = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
 
-        // Lista padrão de secretarias/órgãos (usada como fallback caso a tabela
-        // 'secretarias' não exista ainda no Supabase, e como base para popular
-        // a tabela na primeira vez que o gerenciador for usado).
         const secretariasPadrao = [
             'GABINETE', 'SEMOB', 'SEMOV', 'SEMURB', 'SEMMAM', 'SEMAE',
             'SAÚDE', 'EDUCAÇÃO', 'FAZENDA', 'OUVIDORIA', 'CEPOM',
@@ -246,9 +258,6 @@
             'PREFEITURA'
         ];
 
-        // Carrega as secretarias da tabela 'secretarias' no Supabase. Se a tabela
-        // ainda não existir (erro 42P01 / "relation does not exist") ou estiver
-        // vazia, usa a lista padrão acima como fallback automático.
         async function carregarSecretarias() {
             const select = document.getElementById('secretaria');
             let lista = secretariasPadrao;
@@ -257,7 +266,7 @@
                 if (!error && data && data.length > 0) {
                     lista = data.map(r => r.nome);
                 }
-            } catch (e) { /* mantém fallback */ }
+            } catch (e) { }
 
             select.innerHTML = '<option value="">Selecione...</option>' +
                 lista.map(s => `<option value="${s}">${s}</option>`).join('') +
@@ -276,7 +285,6 @@
             }
         }
 
-        // Retorna o valor final de secretaria a ser salvo (lida com a opção "Outra")
         function obterSecretariaSelecionada() {
             const select = document.getElementById('secretaria');
             if (select.value === '__outra__') {
@@ -285,19 +293,13 @@
             return select.value;
         }
 
-        // Monitorar alterações no formulário
         document.addEventListener('change', function() { formularioAlterado = true; });
         document.addEventListener('input', function(e) { 
             if (e.target.id !== 'textoMagico') formularioAlterado = true;
         });
 
-        // Aviso ao tentar sair com alterações não salvas
         window.addEventListener('beforeunload', function(e) {
-            if (formularioAlterado) {
-                e.preventDefault();
-                e.returnValue = '';
-                return '';
-            }
+            if (formularioAlterado) { e.preventDefault(); e.returnValue = ''; return ''; }
         });
 
         window.copiarTextoMagico = function() {
@@ -308,14 +310,9 @@
             alert('✅ Texto copiado para a área de transferência!');
         }
 
-        // Regra do Nº da Demanda (Auto): usa a DATA escolhida no campo "Data"
-        // (mesmo que seja uma data passada) combinada com a HORA ATUAL do
-        // momento em que o registro está sendo cadastrado (não a hora agendada).
-        // Se nenhuma data for escolhida, usa a data de hoje também.
         function montarNumeroDemanda() {
             const dataCampo = document.getElementById('data_agendada').value;
             const agora = new Date();
-
             let ano, mes, dia;
             if (dataCampo) {
                 [ano, mes, dia] = dataCampo.split('-');
@@ -324,27 +321,21 @@
                 mes = String(agora.getMonth() + 1).padStart(2, '0');
                 dia = String(agora.getDate()).padStart(2, '0');
             }
-
             const horas = String(agora.getHours()).padStart(2, '0');
             const minutos = String(agora.getMinutes()).padStart(2, '0');
             const segundos = String(agora.getSeconds()).padStart(2, '0');
-
             return `${ano.slice(-2)}${mes}${dia}${horas}${minutos}${segundos}`;
         }
 
-        // Atualizar número de demanda automaticamente quando a Data mudar
         document.getElementById('data_agendada').addEventListener('change', atualizarNumeroDemanda);
 
         function atualizarNumeroDemanda() {
             document.getElementById('numero_demanda').value = montarNumeroDemanda();
         }
 
-        // Inicializar com número automático ao carregar (data de hoje + hora atual)
         function inicializarNumeroDemanda() {
             const numInput = document.getElementById('numero_demanda');
-            if (!numInput.value) {
-                numInput.value = montarNumeroDemanda();
-            }
+            if (!numInput.value) { numInput.value = montarNumeroDemanda(); }
         }
 
         async function inicializarSistema() {
@@ -367,7 +358,6 @@
             }
         }
 
-        // Função para apagar tudo antes de colar novos dados
         function limparFormulario() {
             document.getElementById('tipo_solicitacao').value = '';
             document.getElementById('assunto').value = '';
@@ -378,13 +368,15 @@
             document.getElementById('secretaria_outra').style.display = 'none';
             document.getElementById('providencias').value = '';
             document.getElementById('responsavel_ordem').value = '';
-            document.getElementById('numero_demanda').value = '';
+            // NÃO LIMPAMOS MAIS O numero_demanda AQUI!
             document.getElementById('solicitante_nome').value = '';
             document.getElementById('solicitante_tel').value = '';
             document.getElementById('rua').value = '';
             document.getElementById('numero').value = '';
             document.getElementById('bairro').value = '';
             document.getElementById('descricao').value = '';
+            document.getElementById('doc_tipo').value = '';
+            document.getElementById('doc_numero').value = '';
             document.getElementById('expediente').value = '';
             document.getElementById('protocolo').value = '';
             document.getElementById('link_legis').value = '';
@@ -392,7 +384,6 @@
             document.getElementById('badgeStatusForcado').style.display = 'none';
         }
 
-        // LÓGICA DO CHEAT CODE APRIMORADA
         function executarMagia() {
             const textarea = document.getElementById('textoMagico');
             const texto = textarea.value;
@@ -400,25 +391,18 @@
 
             limparFormulario();
 
-            let parsed = { numero: '', data: '', resp: '', status: '', tipo: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '' };
+            let parsed = { data: '', resp: '', status: '', tipo: '', doc_tipo: '', doc_numero: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '' };
 
             const nomesConhecidos = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
             const tiposConhecidos = ['Agenda VISITA AO GABINETE', 'AGENDA visita EXTERNA', 'GABINETE', 'REUNIÃO', 'visita ao Gabinete', 'DEMANDA', 'Demanda Externa', 'INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
             const statusConhecidos = ['Aberta', 'Pendente', 'Em Andamento', 'Aguardando', 'Aguardando Aprovação', 'Aprovada', '156 Pedido', 'Aguardando Exp', 'Atendido', 'Resolvido', 'Concluída', 'Arquivada', 'Rejeitada', 'Sem Legis'];
 
-            // ===== CORREÇÃO 1: extrai e remove o telefone do texto colado ANTES de
-            // dividir por célula/processar a descrição. Isso evita que um telefone
-            // fragmentado (ex: "(51) .993.191.820", comum quando o Excel formata o
-            // campo como número/decimal) seja cortado pela metade ou contamine o
-            // Assunto/Descrição. Cobre formatos com pontos, traços, espaços ou nada.
             const regexTelefoneGlobal = /\(?0?51\)?[\s.]*\.?\d{3,5}[-.\s]?\d{3,4}[-.\s]?\d{0,3}/;
             let textoSemTel = texto;
             const matchTelGlobal = texto.match(regexTelefoneGlobal);
             if (matchTelGlobal) {
-                // Limpa o telefone encontrado: remove tudo que não é dígito, exceto o parêntese do DDD
                 let telBruto = matchTelGlobal[0].trim();
                 let somenteDigitos = telBruto.replace(/\D/g, '');
-                // Reformata para (51) 9XXXX-XXXX quando tiver DDD reconhecível
                 if (somenteDigitos.length >= 10) {
                     let ddd = somenteDigitos.slice(0, 2);
                     let resto = somenteDigitos.slice(2);
@@ -432,8 +416,6 @@
                 } else {
                     parsed.tel = telBruto;
                 }
-                // Remove o trecho do telefone do texto antes de continuar o parsing,
-                // assim ele não vira "lixo" dentro de Assunto/Descrição.
                 textoSemTel = texto.replace(matchTelGlobal[0], ' ');
             }
 
@@ -448,8 +430,16 @@
                     let ano = p[2].length === 2 ? '20' + p[2] : p[2];
                     parsed.data = `${ano}-${p[1]}-${p[0]}`;
                 }
-                else if (cell.match(/^\d{1,5}$/) && !parsed.numero) {
-                    parsed.numero = cell;
+                // REMOVIDA A LÓGICA DO NÚMERO ANTIGO AQUI.
+                
+                // NOVO: Captura o Documento Interno (ex: PDP 3900/2026)
+                else if (cell.match(/^[A-Za-z]+\s\d+\/\d{4}$/)) {
+                    let parts = cell.split(/\s+/);
+                    parsed.doc_numero = parts[1]; // Pega só o 3900/2026
+                    let prefix = parts[0].toUpperCase();
+                    if(prefix === 'REQ') parsed.doc_tipo = 'Requerimento';
+                    else if(prefix === 'MEMO') parsed.doc_tipo = 'Memorando';
+                    else parsed.doc_tipo = 'Ofício'; // Default para PDP e afins
                 }
                 else if (nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase())) {
                     parsed.resp = nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase());
@@ -463,16 +453,9 @@
                 else if (cell.toLowerCase().includes('exp.') || cell.toLowerCase().includes('expediente')) {
                     parsed.expediente = cell;
                 }
-                else if (cell.match(/^[A-Z]+\s\d+\/\d{4}$/) || cell.includes('156 202')) {
-                    parsed.protocolo = cell;
-                }
                 else if (cell.match(/^SEM[A-Z]+$/i) || ['OBRAS', 'SAÚDE', 'EDUCAÇÃO', 'FAZENDA', 'OUVIDORIA', 'CEPOM', 'GABINETE', 'PREFEITURA'].includes(cell.toUpperCase()) || cell.toUpperCase().includes('HABITAÇÃO') || cell.toUpperCase().includes('SEMHAB') || cell.toUpperCase().includes('SEMPA') || cell.toUpperCase().includes('PROTEÇÃO ANIMAL') || cell.toUpperCase().includes('SGG') || cell.toUpperCase().includes('GERAL DE GOVERNO')) {
                     if (!parsed.secretaria) parsed.secretaria = cell;
                 }
-                // ===== CORREÇÃO 2: célula de nome agora tolera espaços (nomes compostos)
-                // e remove pontuação residual de telefone que eventualmente sobre colada
-                // (ex: ".993" não deve mais ser confundido com nome porque o telefone já
-                // foi extraído e removido do texto antes deste loop rodar).
                 else if (cell.length > 2 && cell.length < 30 && !cell.match(/\d/) && !parsed.nome && cell.toLowerCase() !== 'ver detalhes') {
                     parsed.nome = cell; 
                 }
@@ -482,10 +465,6 @@
                 }
             });
 
-            // ===== CORREÇÃO 3: fallback — se por algum motivo o telefone não foi achado
-            // na extração global (ex: telefone veio dentro da célula de descrição em vez
-            // de célula própria), tenta de novo dentro do parsed.desc, mas usando a MESMA
-            // regex nova (cobre 2 ou 3 grupos de dígitos), e limpa o resíduo da descrição.
             if (!parsed.tel && parsed.desc) {
                 let matchTel = parsed.desc.match(regexTelefoneGlobal);
                 if (matchTel) {
@@ -509,10 +488,24 @@
                 }
             }
 
+            // NOVO: Extrair o Protocolo 156 DE DENTRO da descrição, e limpá-la.
+            if (parsed.desc) {
+                let match156 = parsed.desc.match(/(?:[,.-]?\s*)?(?:protocolo\s*)?(156\s*202\d\/\d+)/i);
+                if (match156) {
+                    parsed.protocolo = match156[1]; 
+                    parsed.desc = parsed.desc.replace(match156[0], '').trim();
+                    parsed.desc = parsed.desc.replace(/^[.,\s]+|[.,\s]+$/g, '').trim();
+                }
+            }
+
             if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo;
-            if(parsed.numero) document.getElementById('numero_demanda').value = parsed.numero;
             if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
             if(parsed.resp) document.getElementById('responsavel_ordem').value = parsed.resp;
+            
+            // Novos campos:
+            if(parsed.doc_tipo) document.getElementById('doc_tipo').value = parsed.doc_tipo;
+            if(parsed.doc_numero) document.getElementById('doc_numero').value = parsed.doc_numero;
+
             if(parsed.secretaria) {
                 const select = document.getElementById('secretaria');
                 const opcoes = Array.from(select.options).map(o => o.value.toLowerCase());
@@ -554,6 +547,7 @@
             }
 
             adaptarFormulario();
+            atualizarNumeroDemanda(); // Garante que o ID é gerado automaticamente!
 
             textarea.style.backgroundColor = '#e2f8c5';
             textarea.value = '✅ Dados importados com sucesso!';
@@ -624,7 +618,6 @@
             const tipo_solicitacao = document.getElementById('tipo_solicitacao').value;
             const assunto = document.getElementById('assunto').value.trim();
             const responsavel_ordem = document.getElementById('responsavel_ordem').value; 
-            // Recalcula no instante do envio: Data do campo (ou hoje, se vazio) + Hora ATUAL do cadastro.
             const numero_demanda = montarNumeroDemanda();
             
             const data_agendada = document.getElementById('data_agendada').value || null;
@@ -638,6 +631,9 @@
             const solicitante_nome = document.getElementById('solicitante_nome').value.trim();
             const solicitante_tel = document.getElementById('solicitante_tel').value.trim();
             const arquivoPDF = document.getElementById('pdfFile').files[0];
+
+            const doc_tipo = document.getElementById('doc_tipo').value;
+            const doc_numero = document.getElementById('doc_numero').value.trim();
 
             const expediente = document.getElementById('expediente').value.trim();
             const protocolo = document.getElementById('protocolo').value.trim();
@@ -681,8 +677,6 @@
                     }
                 }
 
-                // Se o Solicitante for um nome da equipe (e não apenas um morador/munícipe),
-                // isso fica registrado na timeline/histórico desde a criação.
                 let historicoInicial = [];
                 if (solicitante_nome && nomesEquipe.includes(solicitante_nome)) {
                     historicoInicial.push({
@@ -692,11 +686,13 @@
                     });
                 }
 
+                // INSERINDO NOVOS CAMPOS NO BANCO
                 await db.from('demandas').insert([{
                     tipo_solicitacao, numero_demanda, assunto, rua, numero, bairro, 
                     descricao: document.getElementById('descricao').value.trim(),
                     solicitante_nome, solicitante_tel,
                     data_agendada, horario_agendado, secretaria, providencias,
+                    doc_tipo, doc_numero, 
                     expediente, protocolo, link_legis,
                     fotos_urls: fotosUrls, 
                     pdf_url: pdf_url,
