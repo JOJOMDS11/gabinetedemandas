@@ -184,6 +184,70 @@
         const adminUsers = ['Daniel', 'João Pedro', 'Luana'];
         const isAdmin = adminUsers.includes(usuarioLogado);
 
+        // Lista padrão de secretarias/órgãos (fallback caso a tabela 'secretarias'
+        // ainda não exista no Supabase). Mesma lista usada em nova-demanda.html.
+        const secretariasPadrao = [
+            'GABINETE', 'SEMOB', 'SEMOV', 'SEMURB', 'SEMMAM', 'SEMAE',
+            'SAÚDE', 'EDUCAÇÃO', 'FAZENDA', 'OUVIDORIA', 'CEPOM',
+            'Secretaria Municipal de Habitação - SEMHAB',
+            'Secretaria Municipal de Proteção Animal - SEMPA',
+            'Secretaria Geral de Governo - SGG',
+            'PREFEITURA'
+        ];
+        let listaSecretariasCarregada = secretariasPadrao;
+
+        async function carregarListaSecretarias() {
+            try {
+                const { data, error } = await db.from('secretarias').select('nome').order('nome');
+                if (!error && data && data.length > 0) {
+                    listaSecretariasCarregada = data.map(r => r.nome);
+                }
+            } catch (e) { /* mantém fallback */ }
+        }
+
+        // Popula o <select id="editSecretaria"> com a lista carregada, marcando
+        // o valor salvo da demanda; se o valor salvo não estiver na lista,
+        // cai automaticamente em "Outra" e preenche o campo de texto livre.
+        function popularSelectSecretaria(valorAtual) {
+            const select = document.getElementById('editSecretaria');
+            if (!select) return;
+            const opcoes = listaSecretariasCarregada.map(s => `<option value="${s}">${s}</option>`).join('');
+            select.innerHTML = '<option value="">Selecione...</option>' + opcoes + '<option value="__outra__">➕ Outra (digitar)</option>';
+
+            if (!valorAtual) { select.value = ''; return; }
+
+            const match = listaSecretariasCarregada.find(s => s.toLowerCase() === valorAtual.toLowerCase());
+            if (match) {
+                select.value = match;
+            } else {
+                select.value = '__outra__';
+                const campoOutra = document.getElementById('editSecretariaOutra');
+                campoOutra.style.display = 'block';
+                campoOutra.value = valorAtual;
+            }
+        }
+
+        window.alternarSecretariaOutraEdit = function() {
+            const select = document.getElementById('editSecretaria');
+            const campoOutra = document.getElementById('editSecretariaOutra');
+            if (select.value === '__outra__') {
+                campoOutra.style.display = 'block';
+                campoOutra.focus();
+            } else {
+                campoOutra.style.display = 'none';
+                campoOutra.value = '';
+            }
+        }
+
+        function obterSecretariaEditSelecionada() {
+            const select = document.getElementById('editSecretaria');
+            if (!select) return '';
+            if (select.value === '__outra__') {
+                return document.getElementById('editSecretariaOutra').value.trim();
+            }
+            return select.value;
+        }
+
         window.addEventListener('beforeunload', function(e) {
             if (temAlteracoesNaoSalvas) { e.preventDefault(); e.returnValue = ''; return ''; }
         });
@@ -203,6 +267,7 @@
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
                 cloudName = config.cloudinaryName;
                 uploadPreset = config.uploadPreset;
+                await carregarListaSecretarias();
                 carregarDemanda();
 
                 db.channel('detalhes-' + demandaId).on('postgres_changes', { event: '*', schema: 'public', table: 'demandas', filter: `id=eq.${demandaId}` }, () => {}).subscribe();
@@ -263,11 +328,15 @@
                 if(h.status === 'Aprovada' || h.status === 'Concluída' || h.status === 'Atendido' || h.status === 'Resolvido' || h.status === '156 Pedido') cor = 'verde';
                 if(h.status === 'Rejeitada') cor = 'vermelho';
                 if(h.status === 'Arquivada' || h.status === 'Sem Legis') cor = 'cinza';
-                if(h.status === 'Visto') cor = 'azul'; 
+                if(h.status === 'Visto' || h.status === 'Solicitado pela equipe') cor = 'azul'; 
+
+                let texto = `Status alterado para <b>${h.status}</b> por ${h.autor}`;
+                if (h.status === 'Visto') texto = `👀 Visualizado e Visto por <b>${h.autor}</b>`;
+                if (h.status === 'Solicitado pela equipe') texto = `🙋 Demanda solicitada por <b>${h.autor}</b> (equipe)`;
 
                 html += `<li>
                     <div class="timeline-dot ${cor}"></div>
-                    <div class="timeline-evento">${h.status === 'Visto' ? `👀 Visualizado e Visto por <b>${h.autor}</b>` : `Status alterado para <b>${h.status}</b> por ${h.autor}`}</div>
+                    <div class="timeline-evento">${texto}</div>
                     <div class="timeline-tempo">${tempoRelativo(h.data)}</div>
                 </li>`;
             });
@@ -451,7 +520,10 @@
             const tagsResponsaveis = responsaveis.length > 0 ? `<div class="responsaveis-lista">${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}', this)">✕</button></div>`).join('')}</div>` : '<span style="color:#999;">Ninguém assumiu ainda</span>';
 
             const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui(this)">🙋 Eu Assumo (Executar)</button>` : '';
-            const inputDemandaNum = isAdmin ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" placeholder="Ex: 55" style="max-width:150px; padding:5px;">` : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
+            const inputDemandaNum = isAdmin
+                ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" readonly style="max-width:160px; padding:5px; background:#eee; font-weight:bold;">
+                   <button type="button" class="btn-foto" style="background:#9b59b6; margin-left:8px;" onclick="regenerarNumeroDemanda()" title="Recalcula como Data + Hora atual">🔄 Atualizar p/ Data+Hora atual</button>`
+                : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
 
             // Lógica do Mapa anti-crash (undefined protection)
             const ruaSegura = d.rua ? d.rua.replace(/'/g,"\\'") : '';
@@ -644,7 +716,10 @@
 
                         <div class="form-group">
                             <label>Secretaria</label>
-                            <input type="text" id="editSecretaria" value="${d.secretaria || ''}" placeholder="Ex: SEMOV..." ${bloqueado}>
+                            <select id="editSecretaria" ${bloqueado} onchange="alternarSecretariaOutraEdit()">
+                                <option value="">Selecione...</option>
+                            </select>
+                            <input type="text" id="editSecretariaOutra" placeholder="Digite o nome da secretaria/órgão..." style="display:none; margin-top:8px;" ${bloqueado}>
                         </div>
 
                         <div class="form-group">
@@ -717,6 +792,32 @@
                     <h2>📅 Linha do Tempo</h2>
                     ${gerarTimeline(d)}
                 </div>`;
+
+            popularSelectSecretaria(d.secretaria || '');
+        }
+
+        // Nº Visual da Demanda (Admin) sempre segue a regra: Data Agendada do
+        // formulário (ou hoje, se vazia) + HORA ATUAL do momento em que o botão
+        // é acionado — igual à regra usada em Nova Demanda.
+        window.regenerarNumeroDemanda = function() {
+            const dataCampo = document.getElementById('editDataAgendada').value;
+            const agora = new Date();
+
+            let ano, mes, dia;
+            if (dataCampo) {
+                [ano, mes, dia] = dataCampo.split('-');
+            } else {
+                ano = String(agora.getFullYear());
+                mes = String(agora.getMonth() + 1).padStart(2, '0');
+                dia = String(agora.getDate()).padStart(2, '0');
+            }
+
+            const horas = String(agora.getHours()).padStart(2, '0');
+            const minutos = String(agora.getMinutes()).padStart(2, '0');
+            const segundos = String(agora.getSeconds()).padStart(2, '0');
+
+            document.getElementById('editNumDemanda').value = `${ano.slice(-2)}${mes}${dia}${horas}${minutos}${segundos}`;
+            temAlteracoesNaoSalvas = true;
         }
 
         window.excluirPdf = function() {
@@ -787,7 +888,7 @@
             let linkLegis = document.getElementById('editLinkLegis') ? document.getElementById('editLinkLegis').value.trim() : (demandaAtual.link_legis || '');
             const data_agendada = document.getElementById('editDataAgendada') ? document.getElementById('editDataAgendada').value || null : demandaAtual.data_agendada;
             const horario_agendado = document.getElementById('editHorarioAgendado') ? document.getElementById('editHorarioAgendado').value || null : demandaAtual.horario_agendado;
-            const secretaria = document.getElementById('editSecretaria') ? document.getElementById('editSecretaria').value.trim() : (demandaAtual.secretaria || '');
+            const secretaria = document.getElementById('editSecretaria') ? obterSecretariaEditSelecionada() : (demandaAtual.secretaria || '');
             const providencias = document.getElementById('editProvidencias') ? document.getElementById('editProvidencias').value.trim() : (demandaAtual.providencias || '');
             
             const tipo_solicitacao = document.getElementById('editTipo') ? document.getElementById('editTipo').value : demandaAtual.tipo_solicitacao;
