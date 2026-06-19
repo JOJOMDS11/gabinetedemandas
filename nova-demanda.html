@@ -14,7 +14,7 @@
         .navbar { padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; color: white; }
         .navbar img { height: 80px; background: white; padding: 5px; border-radius: 4px; }
         .navbar a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
-        .container { max-width: 600px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 4px solid #98ED34; }
+        .container { max-width: 600px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 4px solid #98ED34; position: relative;}
         h2 { color: #185199; margin-bottom: 25px; text-align: center; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #333; font-weight: bold; font-size: 13px; }
@@ -35,6 +35,12 @@
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; }
         .modal-overlay.ativo { display: flex; }
         .modal-overlay img, .modal-overlay video { max-width: 90%; max-height: 90vh; border-radius: 8px; }
+
+        /* Estilo Cheat Code */
+        .btn-magico { background: linear-gradient(45deg, #9b59b6, #8e44ad); color: white; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; margin-bottom: 20px; width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-magico:hover { background: linear-gradient(45deg, #8e44ad, #732d91); }
+        .modal-magico { background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 500px; }
+        .secao-tecnica { background: #fdfdfd; padding: 15px; border: 1px dashed #ccc; border-radius: 8px; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -45,8 +51,14 @@
     </div>
 
     <div class="container">
+        <!-- BOTÃO MÁGICO -->
+        <button class="btn-magico" onclick="document.getElementById('modalMagico').classList.add('ativo')">🪄 IMPORTAR DA PLANILHA (Cheat Code)</button>
+
         <h2>Adicionar Registro</h2>
         <div id="mensagem" class="mensagem"></div>
+        
+        <input type="hidden" id="statusForcado" value="">
+        <span id="badgeStatusForcado" style="display:none; background:#9b59b6; color:white; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; margin-bottom:15px; display:inline-block;">Status Importado!</span>
 
         <div class="form-row">
             <div class="form-group" style="grid-column: 1 / -1;">
@@ -103,7 +115,7 @@
                 <input type="text" id="secretaria" placeholder="Ex: SEMOV, SEMMA...">
             </div>
             <div class="form-group">
-                <label>Providências</label>
+                <label>Providências / Ações</label>
                 <input type="text" id="providencias" placeholder="Ações a tomar...">
             </div>
         </div>
@@ -122,18 +134,18 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Nº da Demanda (Opcional)</label>
+                <label>Nº da Demanda</label>
                 <input type="text" id="numero_demanda" placeholder="Ex: 55">
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label>Nome do Solicitante (Opcional)</label>
+                <label>Nome do Solicitante</label>
                 <input type="text" id="solicitante_nome" placeholder="Nome da pessoa">
             </div>
             <div class="form-group">
-                <label>Telefone / WhatsApp (Opcional)</label>
+                <label>Telefone / WhatsApp</label>
                 <input type="text" id="solicitante_tel" placeholder="(51) 99999-9999">
             </div>
         </div>
@@ -156,11 +168,30 @@
         </div>
         
         <div class="form-group">
-            <label>Descrição / Detalhes Adicionais</label>
-            <textarea id="descricao" rows="3"></textarea>
+            <label>Descrição / Detalhes (Texto completo)</label>
+            <textarea id="descricao" rows="4"></textarea>
+        </div>
+
+        <!-- SEÇÃO TÉCNICA (Oculta por padrão, abre se importar planilhas ou quiser preencher já na criação) -->
+        <div class="secao-tecnica">
+            <h4 style="color:#185199; margin-bottom:10px; font-size:13px;">⚙️ Acompanhamento Técnico (Opcional)</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Expediente</label>
+                    <input type="text" id="expediente" placeholder="Ex: Exp. 5152">
+                </div>
+                <div class="form-group">
+                    <label>Protocolo 156 / PDP</label>
+                    <input type="text" id="protocolo" placeholder="Ex: PDP 4230">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Link Legis</label>
+                <input type="url" id="link_legis" placeholder="https://admin.camarasaoleopoldo...">
+            </div>
         </div>
         
-        <div class="form-group" style="background:#f9f9f9; padding: 10px; border-radius: 4px;">
+        <div class="form-group" style="background:#f9f9f9; padding: 10px; border-radius: 4px; margin-top: 15px;">
             <label style="color:#c0392b;">Documento PDF (Opcional)</label>
             <input type="file" id="pdfFile" accept="application/pdf">
         </div>
@@ -178,7 +209,20 @@
         </div>
     </div>
 
-    <!-- Lightbox -->
+    <!-- Modal Mágico para Importar Planilha -->
+    <div class="modal-overlay" id="modalMagico">
+        <div class="modal-magico">
+            <h3 style="color:#8e44ad; margin-bottom:15px;">🪄 Cheat Code: Importar</h3>
+            <p style="font-size:13px; color:#555; margin-bottom:15px;">Vá na sua planilha, selecione a linha inteira da demanda que quer importar, faça <b>Ctrl+C</b> e depois clique na caixa abaixo e faça <b>Ctrl+V</b>.</p>
+            <textarea id="textoMagico" rows="4" style="width:100%; padding:10px; border:2px dashed #8e44ad; border-radius:4px; margin-bottom:15px;" placeholder="Cole a linha da planilha aqui..."></textarea>
+            <div style="display:flex; gap:10px;">
+                <button onclick="document.getElementById('modalMagico').classList.remove('ativo')" style="background:#ccc; flex:1;">Cancelar</button>
+                <button onclick="executarMagia()" style="background:#8e44ad; color:white; flex:2;">🪄 Extrair Dados</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox de Mídias -->
     <div id="lightbox" class="modal-overlay" onclick="fecharLightbox()">
         <img id="lightboxImg" style="display:none;">
         <video id="lightboxVid" controls style="display:none;"></video>
@@ -189,12 +233,8 @@
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         if (!usuarioLogado) window.location.href = 'index.html';
 
-        // LISTA DE PROJETOS QUE EXIGEM APROVAÇÃO
-        const tiposAtualBloqueados = [
-            'INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 
-            'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 
-            'REQUERIMENTO', 'SESSÃO SOLENE'
-        ];
+        const tiposAtualBloqueados = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+        document.getElementById('badgeStatusForcado').style.display = 'none';
 
         async function inicializarSistema() {
             try {
@@ -212,6 +252,107 @@
                 document.getElementById('mensagem').textContent = 'Erro de API.';
                 document.getElementById('mensagem').style.display = 'block';
             }
+        }
+
+        // LÓGICA DO CHEAT CODE (ROBÔ EXTRATOR)
+        function executarMagia() {
+            const texto = document.getElementById('textoMagico').value;
+            if (!texto.trim()) return alert('Cole alguma coisa primeiro!');
+
+            // Divide pelas colunas (Tabs)
+            const celulas = texto.split('\t');
+            let parsed = { numero: '', data: '', resp: '', status: '', tipo: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '' };
+
+            const nomesConhecidos = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
+            const tiposConhecidos = ['Agenda VISITA AO GABINETE', 'AGENDA visita EXTERNA', 'GABINETE', 'REUNIÃO', 'visita ao Gabinete', 'DEMANDA', 'Demanda Externa', 'INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+            const statusConhecidos = ['Aberta', 'Pendente', 'Em Andamento', 'Aguardando', 'Aguardando Aprovação', 'Aprovada', '156 Pedido', 'Aguardando Exp', 'Atendido', 'Resolvido', 'Concluída', 'Arquivada', 'Rejeitada', 'Sem Legis'];
+
+            celulas.forEach(c => {
+                let cell = c.trim();
+                if(!cell) return;
+
+                // Extrair Data
+                if (cell.match(/^\d{2}\/\d{2}\/\d{2,4}$/)) {
+                    let p = cell.split('/');
+                    let ano = p[2].length === 2 ? '20' + p[2] : p[2];
+                    parsed.data = `${ano}-${p[1]}-${p[0]}`;
+                }
+                // Extrair Número 
+                else if (cell.match(/^\d{1,5}$/) && !parsed.numero) {
+                    parsed.numero = cell;
+                }
+                // Extrair Dono Ordem
+                else if (nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase())) {
+                    parsed.resp = nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase());
+                }
+                // Extrair Tipo
+                else if (tiposConhecidos.find(t => t.toLowerCase() === cell.toLowerCase())) {
+                    parsed.tipo = tiposConhecidos.find(t => t.toLowerCase() === cell.toLowerCase());
+                }
+                // Extrair Status da Planilha
+                else if (statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase())) {
+                    parsed.status = statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase());
+                }
+                // Extrair Expediente
+                else if (cell.toLowerCase().includes('exp.') || cell.toLowerCase().includes('expediente')) {
+                    parsed.expediente = cell;
+                }
+                // Extrair Protocolo (PDP)
+                else if (cell.match(/^[A-Z]+\s\d+\/\d{4}$/)) {
+                    parsed.protocolo = cell;
+                }
+                // Extrair Secretaria
+                else if (cell.match(/^[A-Z]{3,7}$/) && cell.toUpperCase() !== 'PENDENTE') {
+                    if (!parsed.secretaria) parsed.secretaria = cell;
+                }
+                // Ignorar link cru
+                else if (cell.toLowerCase() === 'ver detalhes' || cell.toLowerCase() === 'ver mais') {
+                    // ignore
+                }
+                // Sobrou = Textão (Descrição e Assunto)
+                else if (cell.length > 5) {
+                    if(parsed.desc) parsed.desc += '\n' + cell;
+                    else parsed.desc = cell;
+                }
+            });
+
+            // PREENCHE A TELA AUTOMATICAMENTE
+            if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo;
+            if(parsed.numero) document.getElementById('numero_demanda').value = parsed.numero;
+            if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
+            if(parsed.resp) document.getElementById('responsavel_ordem').value = parsed.resp;
+            if(parsed.secretaria) document.getElementById('secretaria').value = parsed.secretaria;
+            if(parsed.expediente) document.getElementById('expediente').value = parsed.expediente;
+            if(parsed.protocolo) document.getElementById('protocolo').value = parsed.protocolo;
+            
+            if(parsed.status) {
+                document.getElementById('statusForcado').value = parsed.status;
+                const badge = document.getElementById('badgeStatusForcado');
+                badge.textContent = 'Status Importado: ' + parsed.status;
+                badge.style.display = 'inline-block';
+            }
+
+            if(parsed.desc) {
+                document.getElementById('descricao').value = parsed.desc;
+                // Cria um assunto mais curto
+                document.getElementById('assunto').value = parsed.desc.substring(0, 70) + (parsed.desc.length > 70 ? '...' : '');
+
+                // IA DE ENDEREÇOS (Extrai do texto)
+                let matchRua = parsed.desc.match(/(?:Rua|Av|Avenida|Travessa)\s([^,]+),\s*n[ºo]?\s*(\d+)/i);
+                if(matchRua) {
+                    document.getElementById('rua').value = matchRua[1].trim();
+                    document.getElementById('numero').value = matchRua[2].trim();
+                }
+                let matchBairro = parsed.desc.match(/bairro\s([^,.]+)/i);
+                if(matchBairro) {
+                    document.getElementById('bairro').value = matchBairro[1].trim();
+                }
+            }
+
+            adaptarFormulario();
+            document.getElementById('modalMagico').classList.remove('ativo');
+            document.getElementById('textoMagico').value = '';
+            alert('🪄 Mágica Aplicada!\n\nRevise os campos. Lembre-se que o Link do Legis tem de ser colado manualmente.');
         }
 
         function adaptarFormulario() {
@@ -274,7 +415,7 @@
         window.enviarDemanda = async function() {
             const tipo_solicitacao = document.getElementById('tipo_solicitacao').value;
             const assunto = document.getElementById('assunto').value.trim();
-            const responsavel_ordem = document.getElementById('responsavel_ordem').value; // Novo Campo
+            const responsavel_ordem = document.getElementById('responsavel_ordem').value; 
             const numero_demanda = document.getElementById('numero_demanda').value.trim();
             
             const data_agendada = document.getElementById('data_agendada').value || null;
@@ -288,6 +429,11 @@
             const solicitante_nome = document.getElementById('solicitante_nome').value.trim();
             const solicitante_tel = document.getElementById('solicitante_tel').value.trim();
             const arquivoPDF = document.getElementById('pdfFile').files[0];
+
+            // Campos técnicos da aba mágica
+            const expediente = document.getElementById('expediente').value.trim();
+            const protocolo = document.getElementById('protocolo').value.trim();
+            const link_legis = document.getElementById('link_legis').value.trim();
             
             const msg = document.getElementById('mensagem');
             msg.style.display = 'none';
@@ -314,11 +460,18 @@
                 }
                 prog.style.display = 'none';
 
+                // DESCUBRE O STATUS (Lógica normal ou Status vindo do Cheat Code)
                 let statusInicial = 'Pendente'; 
-                if (tiposAtualBloqueados.includes(tipo_solicitacao)) {
-                    statusInicial = usuarioLogado === 'Daniel' ? 'Aprovada' : 'Aguardando Aprovação';
-                } else if (usuarioLogado === 'Daniel') {
-                    statusInicial = 'Pendente'; 
+                const statusForcado = document.getElementById('statusForcado').value;
+
+                if (statusForcado) {
+                    statusInicial = statusForcado; // Usa o status importado (ex: Concluída)
+                } else {
+                    if (tiposAtualBloqueados.includes(tipo_solicitacao)) {
+                        statusInicial = usuarioLogado === 'Daniel' ? 'Aprovada' : 'Aguardando Aprovação';
+                    } else if (usuarioLogado === 'Daniel') {
+                        statusInicial = 'Pendente'; 
+                    }
                 }
 
                 await db.from('demandas').insert([{
@@ -326,12 +479,13 @@
                     descricao: document.getElementById('descricao').value.trim(),
                     solicitante_nome, solicitante_tel,
                     data_agendada, horario_agendado, secretaria, providencias,
+                    expediente, protocolo, link_legis,
                     fotos_urls: fotosUrls, 
                     pdf_url: pdf_url,
                     status: statusInicial, 
                     criador: usuarioLogado, 
-                    responsavel_ordem: responsavel_ordem, // Salva na nova gaveta
-                    responsaveis: [] // Nasce sem ninguém executando, a não ser que assumam lá dentro
+                    responsavel_ordem: responsavel_ordem, 
+                    responsaveis: [] // Os executores assumem depois
                 }]);
 
                 msg.className = 'mensagem sucesso'; msg.textContent = 'Registro salvo com sucesso!'; msg.style.display = 'block';
