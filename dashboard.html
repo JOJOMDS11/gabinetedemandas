@@ -320,6 +320,8 @@
                                 ${infoSecretaria}
                                 <div class="info" style="margin-top: 5px;">✍️ Resp. Ordem: <b>${donoOrdem}</b></div>
                                 <div class="info">👥 Cuidando (Executores): <b>${cuindoTxt}</b></div>
+                                ${demanda.protocolo ? `<div class="info" style="color:#0984e3; font-weight:bold;">🔢 156: ${demanda.protocolo}</div>` : ''}
+                                ${demanda.expediente || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${demanda.expediente || 'Anexado'}</div>` : ''}
                                 ${tempoCard}
                                 <div class="acoes-card">${btnPrincipal}</div>
                             </div>
