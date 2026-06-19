@@ -302,7 +302,6 @@
 
             let indexAtual = etapas.indexOf(statusFake);
             
-            // SE O STATUS ATUAL ESTIVER ENTRE OS CONCLUÍDOS, FORÇA O INDEX PARA O FIM (TODOS VERDES)
             if (['Concluída', 'Atendido', 'Resolvido'].includes(status)) {
                 indexAtual = etapas.length - 1;
             }
@@ -312,8 +311,8 @@
             
             let html = '';
             etapas.forEach((etapa, index) => {
-                let classe = index <= indexAtual ? 'completed' : ''; // Modificado aqui
-                if(index === indexAtual) classe = 'completed'; // Força o último a ser verdinho
+                let classe = index <= indexAtual ? 'completed' : ''; 
+                if(index === indexAtual) classe = 'completed'; 
                 html += `<div class="progress-step ${classe}">${etapa}</div>`;
             });
             return `<div class="progress-wrapper"><h4 style="color:#185199; font-size:14px; text-align:center;">Progresso da Demanda</h4><div class="progress-container"><div class="progress-line"></div>${html}</div></div>`;
@@ -321,6 +320,8 @@
 
         function renderizar(d) {
             const responsaveis = (d.responsaveis || []).filter(r => r);
+            const donoOrdem = d.responsavel_ordem ? d.responsavel_ordem : 'Não definido';
+            
             const euEstouCuidando = responsaveis.includes(usuarioLogado);
             const encerrada = ['Concluída', 'Atendido', 'Resolvido', 'Arquivada', 'Rejeitada'].includes(d.status);
             const isAtualBloqueado = tiposProjetos.includes(d.tipo_solicitacao);
@@ -392,15 +393,17 @@
                 htmlFotos = '<p style="color:#999; text-align:center; padding:20px;">Nenhuma imagem ou vídeo.</p>';
             }
 
-            const tagsResponsaveis = responsaveis.length > 0 ? `<div class="responsaveis-lista">${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}')">✕</button></div>`).join('')}</div>` : '<span style="color:#999;">Nenhum</span>';
+            const tagsResponsaveis = responsaveis.length > 0 ? `<div class="responsaveis-lista">${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}')">✕</button></div>`).join('')}</div>` : '<span style="color:#999;">Ninguém assumiu ainda</span>';
 
-            const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui()">🙋 Eu Assumo</button>` : '';
+            const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui()">🙋 Eu Assumo (Vou Executar)</button>` : '';
             const msgWhats = encodeURIComponent(`*${d.tipo_solicitacao || 'Registro'}:* ${d.assunto}\n*Endereço:* ${d.rua}, ${d.numero}\n*Status:* ${d.status}\n\nAcesse: ${window.location.href}`);
             const btnWhats = `<a href="https://wa.me/?text=${msgWhats}" target="_blank" class="btn-whats">📱 WhatsApp</a>`;
             const inputDemandaNum = isAdmin ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" placeholder="Ex: 55" style="max-width:150px; padding:5px;">` : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
 
             let dataApresentacao = '';
+            let horaFormatada = '';
             if (d.data_agendada) { const objData = new Date(d.data_agendada + 'T00:00:00'); dataApresentacao = objData.toLocaleDateString('pt-BR'); }
+            if (d.horario_agendado) { horaFormatada = d.horario_agendado.substring(0, 5); }
 
             document.getElementById('conteudo').innerHTML = `
                 ${alertaAprovacao}
@@ -427,7 +430,7 @@
                     ${(d.data_agendada || d.horario_agendado) ? `
                     <div class="info-group" style="background:#e8f0ff; padding:10px; border-radius:4px;">
                         <label>Data e Horário</label>
-                        <p>📅 ${dataApresentacao} &nbsp; ⏰ ${d.horario_agendado || '--:--'}</p>
+                        <p>📅 ${dataApresentacao} &nbsp; ⏰ ${horaFormatada || '--:--'}</p>
                     </div>` : ''}
 
                     ${d.secretaria ? `
@@ -510,11 +513,28 @@
                     </div>
 
                     <div class="bloco-edicao" style="margin-top: 20px;">
-                        <h4>👥 Equipa Responsável</h4>
-                        <div style="margin-bottom:15px;">Atuais: ${tagsResponsaveis}</div>
+                        <h4>👥 Equipa (Ordem vs. Executores)</h4>
+                        
+                        <!-- Novo Dropdown de Dono da Ordem editável -->
+                        <div class="form-group">
+                            <label style="color:#d35400;">Responsável (Quem deu a Ordem)</label>
+                            <select id="editResponsavelOrdem" ${bloqueado}>
+                                <option value="" ${!d.responsavel_ordem?'selected':''}>Não definido</option>
+                                <option value="Daniel" ${d.responsavel_ordem==='Daniel'?'selected':''}>Daniel</option>
+                                <option value="João Pedro" ${d.responsavel_ordem==='João Pedro'?'selected':''}>João Pedro</option>
+                                <option value="Alemão" ${d.responsavel_ordem==='Alemão'?'selected':''}>Alemão</option>
+                                <option value="Antonio" ${d.responsavel_ordem==='Antonio'?'selected':''}>Antonio</option>
+                                <option value="Luana" ${d.responsavel_ordem==='Luana'?'selected':''}>Luana</option>
+                                <option value="Débora" ${d.responsavel_ordem==='Débora'?'selected':''}>Débora</option>
+                            </select>
+                        </div>
+
+                        <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
+
+                        <div style="margin-bottom:15px;"><label>Atuais Cuidando (Executores):</label> ${tagsResponsaveis}</div>
                         <div style="display:flex; gap:10px;">
                             <select id="addResponsavelSelect" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                                <option value="">Atribuir uma pessoa...</option>
+                                <option value="">Atribuir executor manualmente...</option>
                                 <option value="Daniel">Daniel</option>
                                 <option value="João Pedro">João Pedro</option>
                                 <option value="Alemão">Alemão</option>
@@ -522,7 +542,7 @@
                                 <option value="Luana">Luana</option>
                                 <option value="Débora">Débora</option>
                             </select>
-                            <button class="btn-foto" style="background:#27ae60; padding:8px 15px;" onclick="adicionarResponsavelManual()">➕ Adicionar</button>
+                            <button class="btn-foto" style="background:#27ae60; padding:8px 15px;" onclick="adicionarResponsavelManual()">➕ Adicionar Executor</button>
                         </div>
                     </div>
 
@@ -538,7 +558,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Horário</label>
-                                <input type="time" id="editHorarioAgendado" value="${d.horario_agendado || ''}" ${bloqueado}>
+                                <input type="time" id="editHorarioAgendado" value="${horaFormatada || ''}" ${bloqueado}>
                             </div>
                         </div>
 
@@ -559,7 +579,7 @@
                                 <option value="Pendente" ${d.status==='Pendente'?'selected':''}>Pendente</option>
                                 <option value="Aguardando" ${d.status==='Aguardando'?'selected':''}>Aguardando</option>
                                 <option value="Aguardando Aprovação" ${d.status==='Aguardando Aprovação'?'selected':''}>Aguardando Aprovação</option>
-                                <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada / Daniel Visto</option>
+                                <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada</option>
                                 <option value="Em Andamento" ${d.status==='Em Andamento'?'selected':''}>Em Andamento</option>
                                 <option value="Sem Legis" ${d.status==='Sem Legis'?'selected':''}>Sem Legis</option>
                                 <option value="156 Pedido" ${d.status==='156 Pedido'?'selected':''}>156 Pedido</option>
@@ -642,19 +662,15 @@
             const novoResp = document.getElementById('addResponsavelSelect').value;
             if(!novoResp) return alert('Selecione alguém na lista!');
             const responsaveis = demandaAtual.responsaveis || [];
-            if(responsaveis.includes(novoResp)) return alert('Esta pessoa já está como responsável.');
+            if(responsaveis.includes(novoResp)) return alert('Esta pessoa já está como executor.');
             await db.from('demandas').update({ responsaveis: [...responsaveis, novoResp] }).eq('id', demandaId);
             window.location.reload();
         }
 
         window.aprovarDemanda = async function() { 
-            const responsaveis = demandaAtual.responsaveis || [];
-            if (!responsaveis.includes(usuarioLogado)) responsaveis.push(usuarioLogado);
-            
             const hist = demandaAtual.historico || [];
             hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
-
-            await db.from('demandas').update({ status: 'Aprovada', responsaveis, historico: hist }).eq('id', demandaId); 
+            await db.from('demandas').update({ status: 'Aprovada', historico: hist }).eq('id', demandaId); 
             window.location.reload(); 
         }
 
@@ -688,6 +704,7 @@
             const assunto = document.getElementById('editAssunto') ? document.getElementById('editAssunto').value.trim() : demandaAtual.assunto;
             const nomeSol = document.getElementById('editNomeSol') ? document.getElementById('editNomeSol').value.trim() : demandaAtual.solicitante_nome;
             const telSol = document.getElementById('editTelSol') ? document.getElementById('editTelSol').value.trim() : demandaAtual.solicitante_tel;
+            const responsavel_ordem = document.getElementById('editResponsavelOrdem') ? document.getElementById('editResponsavelOrdem').value : demandaAtual.responsavel_ordem;
 
             const isAtualBloqueado = tiposProjetos.includes(tipo_solicitacao || demandaAtual.tipo_solicitacao);
             const estaAguardando = (demandaAtual.status === 'Aguardando Aprovação' || demandaAtual.status === 'Aberta' || demandaAtual.status === 'Pendente');
@@ -708,7 +725,8 @@
             const updates = {
                 status: statusEdit, protocolo: protocolo, expediente: expediente, link_legis: linkLegis,
                 data_agendada: data_agendada, horario_agendado: horario_agendado, secretaria: secretaria, providencias: providencias,
-                tipo_solicitacao: tipo_solicitacao, assunto: assunto, solicitante_nome: nomeSol, solicitante_tel: telSol
+                tipo_solicitacao: tipo_solicitacao, assunto: assunto, solicitante_nome: nomeSol, solicitante_tel: telSol,
+                responsavel_ordem: responsavel_ordem
             };
             
             if (statusEdit !== demandaAtual.status) {
@@ -758,10 +776,8 @@
             const hist = demandaAtual.historico || [];
 
             if (acaoMasterPendente === 'aprovar') {
-                const resp = demandaAtual.responsaveis || [];
-                if (!resp.includes(usuarioLogado)) resp.push(usuarioLogado);
                 hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
-                await db.from('demandas').update({ status: 'Aprovada', responsaveis: resp, historico: hist }).eq('id', demandaId);
+                await db.from('demandas').update({ status: 'Aprovada', historico: hist }).eq('id', demandaId);
                 window.location.reload();
             }
             else if (acaoMasterPendente === 'arquivar') {
