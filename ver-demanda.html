@@ -89,14 +89,15 @@
         .btn-link:hover { background: #bdc3c7; }
 
         /* Modal Lightbox e Senha */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; }
         .modal-overlay.ativo { display: flex; flex-direction: column; }
         .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #98ED34; }
         .modal-box h3 { color: #185199; margin-bottom: 15px; }
         .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;}
         .modal-botoes { display: flex; gap: 10px; }
-        #lightboxImg, #lightboxVid { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        #lightboxPdf { width: 90%; height: 85vh; border: none; border-radius: 8px; background: white; }
+        
+        #lightboxImg, #lightboxVid { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); object-fit: contain; }
+        #lightboxPdf { width: 90%; height: 75vh; border: none; border-radius: 8px; background: white; margin-bottom: 10px; }
         
         /* Setas Lightbox */
         .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; font-size: 30px; padding: 15px 20px; cursor: pointer; border-radius: 4px; z-index: 10000; }
@@ -104,6 +105,10 @@
         #btnPrev { left: 10px; }
         #btnNext { right: 10px; }
         #btnFecharLightbox { position: absolute; top: 15px; right: 15px; background: rgba(231,76,60,0.9); color: white; border: none; padding: 10px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; z-index: 10000; }
+        
+        @media (max-width: 600px) {
+            .lightbox-nav { padding: 10px; font-size: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -126,11 +131,17 @@
         <video id="lightboxVid" controls style="display:none;"></video>
         <iframe id="lightboxPdf" style="display:none;"></iframe>
         
+        <!-- Botão reserva caso o celular bloqueie o PDF -->
+        <div id="lightboxPdfFallback" style="display:none; text-align:center;">
+            <p style="color:white; margin-bottom:10px; font-size:14px;">Não abriu no celular?</p>
+            <a id="lightboxPdfLink" href="#" target="_blank" style="background:#27ae60; color:white; padding:10px 20px; border-radius:4px; font-weight:bold; text-decoration:none;">📄 Baixar / Abrir Externo</a>
+        </div>
+        
         <button id="btnNext" class="lightbox-nav" onclick="mudarMedia(1, event)">&#10095;</button>
     </div>
 
     <!-- Modal Senha Master -->
-    <div class="modal-overlay" id="modalSenhaMaster">
+    <div class="modal-overlay" id="modalSenhaMaster" style="z-index: 10001;">
         <div class="modal-box">
             <h3>🔐 Autenticação Master</h3>
             <p style="color:#555; margin-bottom:15px; font-size:13px;" id="modalSenhaTexto">Digite a senha master para confirmar.</p>
@@ -245,8 +256,10 @@
             const img = document.getElementById('lightboxImg');
             const vid = document.getElementById('lightboxVid');
             const pdf = document.getElementById('lightboxPdf');
+            const pdfFallback = document.getElementById('lightboxPdfFallback');
+            const pdfLink = document.getElementById('lightboxPdfLink');
             
-            img.style.display = 'none'; vid.style.display = 'none'; pdf.style.display = 'none';
+            img.style.display = 'none'; vid.style.display = 'none'; pdf.style.display = 'none'; pdfFallback.style.display = 'none';
             vid.pause();
 
             const item = mediaGlobal[indexLightboxAtual];
@@ -255,9 +268,10 @@
             if(item.type === 'video') {
                 vid.src = item.url; vid.style.display = 'block'; vid.play();
             } else if(item.type === 'pdf') {
-                // Embebendo com o visualizador do Google Docs para garantir leitura limpa em qualquer celular/PC
-                pdf.src = `https://docs.google.com/viewer?url=${encodeURIComponent(item.url)}&embedded=true`;
+                pdf.src = item.url;
                 pdf.style.display = 'block';
+                pdfLink.href = item.url;
+                pdfFallback.style.display = 'block';
             } else {
                 img.src = item.url; img.style.display = 'block';
             }
@@ -267,7 +281,7 @@
         }
 
         window.mudarMedia = function(direcao, event) {
-            event.stopPropagation();
+            if(event) event.stopPropagation();
             indexLightboxAtual += direcao;
             if(indexLightboxAtual < 0) indexLightboxAtual = mediaGlobal.length - 1;
             if(indexLightboxAtual >= mediaGlobal.length) indexLightboxAtual = 0;
@@ -279,6 +293,30 @@
             document.getElementById('lightbox').classList.remove('ativo');
             document.getElementById('lightboxVid').pause();
         }
+
+        // Eventos de Teclado para PC (Setas)
+        document.addEventListener('keydown', function(e) {
+            if(!document.getElementById('lightbox').classList.contains('ativo')) return;
+            if(e.key === 'ArrowRight') mudarMedia(1);
+            if(e.key === 'ArrowLeft') mudarMedia(-1);
+            if(e.key === 'Escape') fecharLightbox({target: document.getElementById('lightbox')});
+        });
+
+        // Eventos de Deslizar (Swipe) para Celular
+        let touchstartX = 0;
+        let touchendX = 0;
+        const lightboxElem = document.getElementById('lightbox');
+
+        lightboxElem.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+        });
+
+        lightboxElem.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            if(!document.getElementById('lightbox').classList.contains('ativo')) return;
+            if (touchendX < touchstartX - 40) mudarMedia(1); // Deslizou pra esquerda
+            if (touchendX > touchstartX + 40) mudarMedia(-1); // Deslizou pra direita
+        });
 
         function gerarBarraProgresso(status) {
             const etapas = ['Aprovada', 'Em Andamento', '156 Pedido', 'Aguardando Exp', 'Concluída'];
@@ -314,9 +352,8 @@
 
             const seloAprovado = (!['Aberta', 'Aguardando Aprovação', 'Rejeitada'].includes(d.status)) ? `<span class="aprovado-daniel">Aprovada pelo Daniel ✓</span>` : '';
 
-            // Galeria puxando os índices corretos para o Lightbox
             let htmlFotos = '';
-            let mediaIndex = d.pdf_url ? 1 : 0; // Se tem PDF, ele é o index 0
+            let mediaIndex = d.pdf_url ? 1 : 0; 
             
             const fotosLimpo = (d.fotos_urls || []).filter(f => f);
             if(fotosLimpo.length > 0) {
@@ -353,7 +390,11 @@
                         <a href="https://admin.camarasaoleopoldo.rs.gov.br/admin/index.php?accesscheck=%2Fadmin.php" target="_blank" class="btn-link">🔗 Sistema Legis</a>
                     </div>
 
-                    ${d.pdf_url ? `<button onclick="abrirLightboxIndex(0)" class="btn-foto" style="background:#c0392b; margin-bottom:15px; display:inline-block; font-size: 14px; padding: 10px 15px;">👁️ Ler Arquivo PDF</button>` : ''}
+                    ${d.pdf_url ? `
+                    <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap: wrap;">
+                        <button onclick="abrirLightboxIndex(0)" class="btn-foto" style="background:#185199; font-size: 13px; padding: 10px 15px;">👁️ Ler Arquivo PDF</button>
+                        <button onclick="excluirPdf()" class="btn-foto" style="background:#c0392b; font-size: 13px; padding: 10px 15px;">🗑️ Excluir PDF</button>
+                    </div>` : ''}
 
                     <div class="info-group"><label>Assunto</label><p>${d.assunto}</p></div>
                     <div class="info-group">
@@ -411,9 +452,9 @@
                     <div class="galeria">${htmlFotos}</div>
 
                     <div class="upload-extra">
-                        <h4 style="color:#185199; margin-bottom:10px;">Adicionar anexos</h4>
-                        <label style="font-size:12px; font-weight:bold;">Documento PDF</label>
-                        <input type="file" id="extraPdf" accept="application/pdf" style="width:100%; margin-bottom:10px;">
+                        <h4 style="color:#185199; margin-bottom:10px;">Adicionar Anexos</h4>
+                        <label style="font-size:12px; font-weight:bold;">Documento PDF (Adicionar ou Substituir o atual)</label>
+                        <input type="file" id="extraPdf" accept="application/pdf" style="width:100%; margin-bottom:15px;">
                         <label style="font-size:12px; font-weight:bold;">Fotos/Vídeos</label>
                         <input type="file" id="extraFotos" accept="image/*,video/*" multiple style="width:100%;">
                         <button class="btn-salvar" style="width:100%; margin-top:10px;" id="btnUploadExtra" onclick="uploadNovosAnexos()">⬆️ Subir</button>
@@ -425,6 +466,18 @@
                     <h2>📅 Linha do Tempo</h2>
                     ${gerarTimeline(d)}
                 </div>`;
+        }
+
+        window.excluirPdf = async function() {
+            if(!confirm('Certeza que quer excluir o pdf?')) return;
+            const { error } = await db.from('demandas').update({ pdf_url: null }).eq('id', demandaId);
+            if(!error) {
+                demandaAtual.pdf_url = null;
+                // Refaz a lista global de mídia tirando o PDF
+                mediaGlobal = mediaGlobal.filter(m => m.type !== 'pdf');
+                renderizar(demandaAtual);
+                alert('✓ PDF excluído com sucesso!');
+            }
         }
 
         window.assumirAqui = async function() {
@@ -522,7 +575,8 @@
 
             try {
                 let updates = {};
-                if (pdfFile) { prog.textContent = 'Enviando PDF...'; updates.pdf_url = await uploadCloudinaryDirect(pdfFile); }
+                // O Supabase vai substituir o PDF atual com esse novo!
+                if (pdfFile) { prog.textContent = 'Enviando Novo PDF...'; updates.pdf_url = await uploadCloudinaryDirect(pdfFile); }
                 if (mediaFiles.length > 0) {
                     let novasFotos = [];
                     for (let i = 0; i < mediaFiles.length; i++) {
