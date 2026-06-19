@@ -62,7 +62,7 @@
         .alerta-aprovacao { background: #fff8e1; border: 2px solid #f39c12; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; font-weight: bold; color: #856404; }
         .aprovado-daniel { display: inline-block; margin-left: 10px; background: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
 
-        /* Timeline */
+        /* Timeline Completa */
         .timeline { list-style: none; padding: 0; margin: 0; position: relative; }
         .timeline::before { content:''; position:absolute; left:14px; top:0; bottom:0; width:2px; background:#e0e0e0; }
         .timeline li { position: relative; padding: 0 0 18px 38px; }
@@ -84,8 +84,8 @@
         .progress-step.completed { color: white; background: #27ae60; border-color: #27ae60; }
 
         /* Links Externos */
-        .links-externos { display: flex; gap: 10px; margin-bottom: 15px; }
-        .btn-link { background: #ecf0f1; color: #2c3e50; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; text-decoration: none; border: 1px solid #bdc3c7; flex: 1; text-align: center; }
+        .links-externos { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;}
+        .btn-link { background: #ecf0f1; color: #2c3e50; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; text-decoration: none; border: 1px solid #bdc3c7; flex: 1; text-align: center; min-width: 130px; }
         .btn-link:hover { background: #bdc3c7; }
 
         /* Modal Lightbox e Senha */
@@ -184,7 +184,8 @@
 
                 db.channel('detalhes-' + demandaId)
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas', filter: `id=eq.${demandaId}` }, () => {
-                      carregarDemanda();
+                      // Se houver alteração de fora, só recarrega a parte visual
+                      // Mas se a gente acabou de dar reload, isso nem precisa rodar.
                   })
                   .subscribe();
             } catch (err) {
@@ -196,17 +197,24 @@
             const { data, error } = await db.from('demandas').select('*').eq('id', demandaId).single();
             if (error) { document.getElementById('conteudo').innerHTML = `<h3 style="color:red; grid-column:1/-1;">Demanda não encontrada.</h3>`; return; }
             
+            // Lógica de Histórico Automático de Abertura/Aprovação
             if (data.status === 'Aberta' || data.status === 'Em Andamento') {
+                const hist = data.historico || [];
+                
                 if (usuarioLogado === 'Daniel') {
-                    // Se Daniel abre, aprova e o inclui como responsável
                     const resp = data.responsaveis || [];
                     if (!resp.includes('Daniel')) resp.push('Daniel');
-                    await db.from('demandas').update({ status: 'Aprovada', responsaveis: resp }).eq('id', demandaId);
+                    hist.push({ status: 'Aprovada', autor: 'Daniel', data: new Date().toISOString() });
+                    
+                    await db.from('demandas').update({ status: 'Aprovada', responsaveis: resp, historico: hist }).eq('id', demandaId);
                     data.status = 'Aprovada';
                     data.responsaveis = resp;
+                    data.historico = hist;
                 } else {
-                    await db.from('demandas').update({ status: 'Aguardando Aprovação' }).eq('id', demandaId);
+                    hist.push({ status: 'Aguardando Aprovação', autor: usuarioLogado, data: new Date().toISOString() });
+                    await db.from('demandas').update({ status: 'Aguardando Aprovação', historico: hist }).eq('id', demandaId);
                     data.status = 'Aguardando Aprovação';
+                    data.historico = hist;
                 }
             }
             demandaAtual = data;
@@ -227,22 +235,34 @@
             return data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
         }
 
+        // GERADOR DA LINHA DO TEMPO COMPLETA (Baseada no Histórico do BD)
         function gerarTimeline(d) {
-            const eventos = [];
-            if (d.criado_em) eventos.push({ dot: 'azul', texto: `📋 Criada por <b>${d.criador || 'Desconhecido'}</b>`, tempo: d.criado_em });
-            const statusMap = {
-                'Aguardando Aprovação': { dot: 'laranja', texto: '⏳ Enviada para <b>Aprovação</b>' },
-                'Aprovada': { dot: 'verde', texto: '✅ <b>Aprovada</b> (Entrou em andamento)' },
-                '156 Pedido': { dot: 'verde', texto: '📞 Enviado para o <b>156</b>' },
-                'Aguardando Exp': { dot: 'laranja', texto: '📁 Aguardando <b>Expediente (Legis)</b>' },
-                'Concluída': { dot: 'verde', texto: '🎉 Demanda <b>Concluída</b>' },
-                'Arquivada': { dot: 'cinza', texto: '📦 Demanda <b>Arquivada</b>' },
-                'Rejeitada': { dot: 'vermelho', texto: '❌ Demanda <b>Rejeitada</b>' }
-            };
-            if (statusMap[d.status]) eventos.push({ ...statusMap[d.status], tempo: new Date().toISOString() });
-            return '<ul class="timeline">' + eventos.map(ev => `
-                <li><div class="timeline-dot ${ev.dot || ''}"></div><div class="timeline-evento">${ev.texto}</div>
-                ${ev.tempo ? `<div class="timeline-tempo">${tempoRelativo(ev.tempo)}</div>` : ''}</li>`).join('') + '</ul>';
+            let html = '<ul class="timeline">';
+            
+            // 1. Evento Fixo de Criação
+            html += `<li>
+                <div class="timeline-dot azul"></div>
+                <div class="timeline-evento">📋 Criada por <b>${d.criador || 'Desconhecido'}</b></div>
+                ${d.criado_em ? `<div class="timeline-tempo">${tempoRelativo(d.criado_em)}</div>` : ''}
+            </li>`;
+
+            // 2. Histórico contínuo de edições e aprovações
+            const hist = d.historico || [];
+            hist.forEach(h => {
+                let cor = 'laranja';
+                if(h.status === 'Aprovada' || h.status === 'Concluída' || h.status === '156 Pedido') cor = 'verde';
+                if(h.status === 'Rejeitada') cor = 'vermelho';
+                if(h.status === 'Arquivada') cor = 'cinza';
+
+                html += `<li>
+                    <div class="timeline-dot ${cor}"></div>
+                    <div class="timeline-evento">Status alterado para <b>${h.status}</b> por ${h.autor}</div>
+                    <div class="timeline-tempo">${tempoRelativo(h.data)}</div>
+                </li>`;
+            });
+
+            html += '</ul>';
+            return html;
         }
 
         window.abrirMapa = function(rua, num, bairro) { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${rua}, ${num}, ${bairro}, São Leopoldo, RS`)}`, '_blank'); }
@@ -341,9 +361,10 @@
             if (d.status === 'Arquivada') badgeClass = 'badge-Arquivada';
             if (d.status === 'Rejeitada') badgeClass = 'badge-Rejeitada';
 
+            // ALERTA DE APROVAÇÃO (Botão de cima)
             let alertaAprovacao = '';
             if (d.status === 'Aguardando Aprovação' && usuarioLogado === 'Daniel') {
-                alertaAprovacao = `<div class="alerta-aprovacao" style="grid-column:1/-1;">⏳ Esta demanda está aguardando sua aprovação, Daniel!<br><br><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda()">✅ Aprovar</button><button style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="rejeitarDemanda()">❌ Rejeitar</button></div></div>`;
+                alertaAprovacao = `<div class="alerta-aprovacao" style="grid-column:1/-1;">⏳ Esta demanda está aguardando sua aprovação, Daniel!<br><br><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda()">✅ Aprovar Demanda</button><button style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="rejeitarDemanda()">❌ Rejeitar</button></div></div>`;
             }
 
             const seloAprovado = (!['Aberta', 'Aguardando Aprovação', 'Rejeitada'].includes(d.status)) ? `<span class="aprovado-daniel">Aprovada pelo Daniel ✓</span>` : '';
@@ -366,7 +387,16 @@
 
             const tagsResponsaveis = responsaveis.length > 0 ? `<div class="responsaveis-lista">${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}')">✕</button></div>`).join('')}</div>` : '<span style="color:#999;">Nenhum</span>';
 
-            let btnAprovacao = (d.status === 'Aguardando Aprovação' && usuarioLogado !== 'Daniel') ? `<button style="background:#9b59b6; color:white; flex:1;" onclick="iniciarAcaoMaster('aprovar')">🔐 Aprovar c/ Senha</button>` : '';
+            // BOTÃO DE APROVAÇÃO (Botão de baixo/pequeno)
+            let btnAprovacao = '';
+            if (d.status === 'Aguardando Aprovação') {
+                if (usuarioLogado === 'Daniel') {
+                    btnAprovacao = `<button style="background:#27ae60; color:white; flex:1;" onclick="aprovarDemanda()">✅ Aprovar</button>`;
+                } else {
+                    btnAprovacao = `<button style="background:#9b59b6; color:white; flex:1;" onclick="iniciarAcaoMaster('aprovar')">🔐 Aprovar c/ Senha</button>`;
+                }
+            }
+            
             const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui()">🙋 Eu Assumo</button>` : '';
 
             const msgWhats = encodeURIComponent(`*Demanda do Gabinete:* ${d.assunto}\n*Endereço:* ${d.rua}, ${d.numero}\n*Status:* ${d.status}\n\nAcesse: ${window.location.href}`);
@@ -374,7 +404,7 @@
 
             const inputDemandaNum = isAdmin ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" placeholder="Ex: 55" style="max-width:150px; padding:5px;">` : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
 
-            // Repare no "onfocus" do campo Protocolo 156
+            // Renderiza os links
             document.getElementById('conteudo').innerHTML = `
                 ${alertaAprovacao}
                 ${gerarBarraProgresso(d.status)}
@@ -385,6 +415,7 @@
                     <div class="links-externos">
                         <a href="https://www.saoleopoldo.rs.gov.br/servico/685673/518?titulo=156+-+Abertura+de+Servi%C3%A7os" target="_blank" class="btn-link">🔗 Abrir 156</a>
                         <a href="https://admin.camarasaoleopoldo.rs.gov.br/admin/index.php?accesscheck=%2Fadmin.php" target="_blank" class="btn-link">🔗 Sistema Legis</a>
+                        ${d.link_legis ? `<a href="${d.link_legis}" target="_blank" class="btn-link" style="background:#f39c12; color:white; border-color:#e67e22;">🔗 Ver Legis Anexado</a>` : ''}
                     </div>
 
                     ${d.pdf_url ? `
@@ -431,14 +462,19 @@
                         </select>
                     </div>
                     
-                    <!-- Novo: onfocus para preencher automático -->
                     <div class="form-group">
                         <label>Protocolo 156</label>
                         <input type="text" id="editProtocolo" value="${d.protocolo || ''}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher">
                     </div>
+                    
                     <div class="form-group">
                         <label>Expediente (Legis)</label>
-                        <input type="text" id="editExpediente" value="${d.expediente || ''}">
+                        <input type="text" id="editExpediente" value="${d.expediente || ''}" placeholder="Ex: Exp. 5149">
+                    </div>
+                    
+                    <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:4px;">
+                        <label>Link Direto do Legis 🔗</label>
+                        <input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo...">
                     </div>
 
                     <div class="botoes">
@@ -498,33 +534,50 @@
         window.aprovarDemanda = async function() { 
             const responsaveis = demandaAtual.responsaveis || [];
             if (!responsaveis.includes(usuarioLogado)) responsaveis.push(usuarioLogado);
-            await db.from('demandas').update({ status: 'Aprovada', responsaveis }).eq('id', demandaId); 
-            carregarDemanda(); // Atualiza a tela
+            
+            const hist = demandaAtual.historico || [];
+            hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
+
+            await db.from('demandas').update({ status: 'Aprovada', responsaveis, historico: hist }).eq('id', demandaId); 
+            window.location.reload(); // Recarrega imediatamente como o F5
         }
 
         window.rejeitarDemanda = async function() {
             if(!confirm('Rejeitar demanda? As fotos serão apagadas (PDF será mantido).')) return;
-            await db.from('demandas').update({ status: 'Rejeitada', fotos_urls: [] }).eq('id', demandaId);
+            const hist = demandaAtual.historico || [];
+            hist.push({ status: 'Rejeitada', autor: usuarioLogado, data: new Date().toISOString() });
+            
+            await db.from('demandas').update({ status: 'Rejeitada', fotos_urls: [], historico: hist }).eq('id', demandaId);
+            window.location.reload();
         }
 
         window.salvarAlteracoes = async function() {
             let statusEdit = document.getElementById('editStatus').value;
             const protocolo = document.getElementById('editProtocolo').value.trim();
             const expediente = document.getElementById('editExpediente').value.trim();
+            const linkLegis = document.getElementById('editLinkLegis').value.trim();
 
-            // MÁGICA: Mudança automática de Status baseado no preenchimento
+            // Lógica inteligente de status
             if (expediente && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
-                statusEdit = 'Concluída'; // Se tem legis, tá concluída!
+                statusEdit = 'Concluída'; 
             } else if (protocolo && protocolo !== '156 2026/' && statusEdit !== 'Aguardando Exp' && statusEdit !== 'Concluída' && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
-                statusEdit = '156 Pedido'; // Se botou só o protocolo, vai para 156 Pedido
+                statusEdit = '156 Pedido'; 
             }
 
             const updates = {
                 status: statusEdit,
                 protocolo: protocolo,
-                expediente: expediente
+                expediente: expediente,
+                link_legis: linkLegis
             };
             
+            // Adiciona no histórico se o status mudou
+            if (statusEdit !== demandaAtual.status) {
+                const hist = demandaAtual.historico || [];
+                hist.push({ status: statusEdit, autor: usuarioLogado, data: new Date().toISOString() });
+                updates.historico = hist;
+            }
+
             if(isAdmin && document.getElementById('editNumDemanda')) {
                 updates.numero_demanda = document.getElementById('editNumDemanda').value;
             }
@@ -535,8 +588,7 @@
             }
             const { error } = await db.from('demandas').update(updates).eq('id', demandaId);
             if (!error) {
-                alert('✓ Salvo com sucesso!');
-                carregarDemanda(); // Atualiza toda a tela para as badges mudarem de cor
+                window.location.reload(); // F5 para atualizar a linha do tempo e badges
             }
         }
 
@@ -557,14 +609,25 @@
         window.confirmarAcaoMaster = async function() {
             if (document.getElementById('inputSenhaMaster').value !== SENHA_MASTER) { document.getElementById('erroSenhaMaster').style.display = 'block'; return; }
             fecharModalSenha();
+            
+            const hist = demandaAtual.historico || [];
+
             if (acaoMasterPendente === 'aprovar') {
                 const resp = demandaAtual.responsaveis || [];
                 if (!resp.includes(usuarioLogado)) resp.push(usuarioLogado);
-                await db.from('demandas').update({ status: 'Aprovada', responsaveis: resp }).eq('id', demandaId);
-                carregarDemanda();
+                hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
+                await db.from('demandas').update({ status: 'Aprovada', responsaveis: resp, historico: hist }).eq('id', demandaId);
+                window.location.reload();
             }
-            else if (acaoMasterPendente === 'arquivar') await db.from('demandas').update({ status: 'Arquivada', fotos_urls: [] }).eq('id', demandaId);
-            else if (acaoMasterPendente === 'excluir') { await db.from('demandas').delete().eq('id', demandaId); window.location.href = 'dashboard.html'; }
+            else if (acaoMasterPendente === 'arquivar') {
+                hist.push({ status: 'Arquivada', autor: usuarioLogado, data: new Date().toISOString() });
+                await db.from('demandas').update({ status: 'Arquivada', fotos_urls: [], historico: hist }).eq('id', demandaId);
+                window.location.reload();
+            }
+            else if (acaoMasterPendente === 'excluir') { 
+                await db.from('demandas').delete().eq('id', demandaId); 
+                window.location.href = 'dashboard.html'; 
+            }
         }
 
         window.apagarFotoUnica = async function(index) {
@@ -614,9 +677,9 @@
                     updates.fotos_urls = [...(demandaAtual.fotos_urls || []).filter(f => f), ...novasFotos];
                 }
                 await db.from('demandas').update(updates).eq('id', demandaId);
-                prog.textContent = '✓ Upload concluído!';
+                window.location.reload(); // F5 final para atualizar a galeria
             } catch (e) { alert('Erro: ' + e.message);
-            } finally { btn.disabled = false; setTimeout(() => { prog.style.display = 'none'; document.getElementById('extraPdf').value = ''; document.getElementById('extraFotos').value = ''; }, 3000); }
+            } finally { btn.disabled = false; setTimeout(() => { prog.style.display = 'none'; }, 3000); }
         }
 
         inicializarSistema();
