@@ -167,17 +167,14 @@
             const termoBusca = document.getElementById('buscaGeral').value.toLowerCase();
             const respSelecionado = document.getElementById('filtroResp').value;
 
-            // Filtro de Status
             let lista = filtroAtual === 'Todas'
                 ? todasDemandas.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada')
                 : todasDemandas.filter(d => d.status === filtroAtual);
 
-            // Filtro Responsável
             if (respSelecionado) {
                 lista = lista.filter(d => (d.responsaveis || []).includes(respSelecionado));
             }
 
-            // Filtro Barra de Busca Geral
             if (termoBusca) {
                 lista = lista.filter(d => 
                     (d.assunto || '').toLowerCase().includes(termoBusca) ||
@@ -244,6 +241,7 @@
                                 <div class="info">📍 ${demanda.rua}, ${demanda.numero} - ${demanda.bairro}</div>
                                 ${demanda.protocolo ? `<div class="info">📄 Prot: <b>${demanda.protocolo}</b></div>` : ''}
                                 ${demanda.expediente ? `<div class="info">📁 Exp: <b>${demanda.expediente}</b></div>` : ''}
+                                <div class="info">✍️ Aberto por: <b>${demanda.criador || 'Desconhecido'}</b></div>
                                 <div class="info">👥 Cuidando: <b>${cuindoTxt}</b></div>
                                 ${tempoCard}
                                 <div class="acoes-card">${btnPrincipal}</div>
