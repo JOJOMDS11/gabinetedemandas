@@ -159,7 +159,6 @@
         let acaoMasterPendente = null; 
         const SENHA_MASTER = 'master2025';
 
-        // Lógica Global do Lightbox
         let mediaGlobal = [];
         let indexLightboxAtual = 0;
 
@@ -184,7 +183,7 @@
 
                 db.channel('detalhes-' + demandaId)
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas', filter: `id=eq.${demandaId}` }, () => {
-                      // Se houver alteração de fora, o Realtime cuida (ideal não dar reload forçado pra não atrapalhar quem edita)
+                      // Realtime (silenciado para não forçar refresh durante a edição)
                   })
                   .subscribe();
             } catch (err) {
@@ -196,7 +195,6 @@
             const { data, error } = await db.from('demandas').select('*').eq('id', demandaId).single();
             if (error) { document.getElementById('conteudo').innerHTML = `<h3 style="color:red; grid-column:1/-1;">Demanda não encontrada.</h3>`; return; }
             
-            // Lógica de Histórico Automático de Abertura/Aprovação
             if (data.status === 'Aberta' || data.status === 'Em Andamento') {
                 const hist = data.historico || [];
                 
@@ -234,18 +232,14 @@
             return data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
         }
 
-        // GERADOR DA LINHA DO TEMPO COMPLETA (Baseada no Histórico do BD)
         function gerarTimeline(d) {
             let html = '<ul class="timeline">';
-            
-            // 1. Evento Fixo de Criação
             html += `<li>
                 <div class="timeline-dot azul"></div>
                 <div class="timeline-evento">📋 Criada por <b>${d.criador || 'Desconhecido'}</b></div>
                 ${d.criado_em ? `<div class="timeline-tempo">${tempoRelativo(d.criado_em)}</div>` : ''}
             </li>`;
 
-            // 2. Histórico contínuo de edições e aprovações
             const hist = d.historico || [];
             hist.forEach(h => {
                 let cor = 'laranja';
@@ -360,13 +354,21 @@
             if (d.status === 'Arquivada') badgeClass = 'badge-Arquivada';
             if (d.status === 'Rejeitada') badgeClass = 'badge-Rejeitada';
 
-            // ALERTA DE APROVAÇÃO (Botão de cima)
             let alertaAprovacao = '';
             if (d.status === 'Aguardando Aprovação' && usuarioLogado === 'Daniel') {
                 alertaAprovacao = `<div class="alerta-aprovacao" style="grid-column:1/-1;">⏳ Esta demanda está aguardando sua aprovação, Daniel!<br><br><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda()">✅ Aprovar Demanda</button><button style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="rejeitarDemanda()">❌ Rejeitar</button></div></div>`;
             }
 
-            const seloAprovado = (!['Aberta', 'Aguardando Aprovação', 'Rejeitada'].includes(d.status)) ? `<span class="aprovado-daniel">Aprovada pelo Daniel ✓</span>` : '';
+            // LEITURA INTELIGENTE DE QUEM APROVOU NO HISTÓRICO
+            let nomeAprovador = 'Daniel'; 
+            if (d.historico) {
+                const eventoAprovacao = d.historico.find(h => h.status === 'Aprovada');
+                if (eventoAprovacao && eventoAprovacao.autor) {
+                    nomeAprovador = eventoAprovacao.autor;
+                }
+            }
+
+            const seloAprovado = (!['Aberta', 'Aguardando Aprovação', 'Rejeitada'].includes(d.status)) ? `<span class="aprovado-daniel">Aprovada por ${nomeAprovador} ✓</span>` : '';
 
             let htmlFotos = '';
             let mediaIndex = d.pdf_url ? 1 : 0; 
@@ -386,7 +388,6 @@
 
             const tagsResponsaveis = responsaveis.length > 0 ? `<div class="responsaveis-lista">${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}')">✕</button></div>`).join('')}</div>` : '<span style="color:#999;">Nenhum</span>';
 
-            // BOTÃO DE APROVAÇÃO (Botão de baixo/pequeno)
             let btnAprovacao = '';
             if (d.status === 'Aguardando Aprovação') {
                 if (usuarioLogado === 'Daniel') {
@@ -402,6 +403,10 @@
             const btnWhats = `<a href="https://wa.me/?text=${msgWhats}" target="_blank" class="btn-whats">📱 WhatsApp</a>`;
 
             const inputDemandaNum = isAdmin ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" placeholder="Ex: 55" style="max-width:150px; padding:5px;">` : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
+
+            // LÓGICA DE BLOQUEIO DE CAMPOS SE NÃO ESTIVER APROVADO
+            const estaAguardando = (d.status === 'Aguardando Aprovação' || d.status === 'Aberta');
+            const bloqueado = estaAguardando ? 'disabled style="background:#eee; cursor:not-allowed;"' : '';
 
             document.getElementById('conteudo').innerHTML = `
                 ${alertaAprovacao}
@@ -446,9 +451,11 @@
                     <h2>Acompanhamento Técnico</h2>
                     <div class="form-group"><label>Nº Visual da Demanda (Admin)</label>${inputDemandaNum}</div>
 
+                    ${estaAguardando ? `<div style="color:#c0392b; font-size:13px; font-weight:bold; margin-bottom:10px; background:#ffe5e5; padding:10px; border-radius:4px; border:1px solid #c0392b;">⚠️ Bloqueado: Aprove a demanda primeiro para alterar status e protocolos.</div>` : ''}
+
                     <div class="form-group">
                         <label>Status Manual</label>
-                        <select id="editStatus">
+                        <select id="editStatus" ${bloqueado}>
                             <option value="Aguardando Aprovação" ${d.status==='Aguardando Aprovação'?'selected':''}>Aguardando Aprovação</option>
                             <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada</option>
                             <option value="Em Andamento" ${d.status==='Em Andamento'?'selected':''}>Em Andamento</option>
@@ -462,17 +469,17 @@
                     
                     <div class="form-group">
                         <label>Protocolo 156</label>
-                        <input type="text" id="editProtocolo" value="${d.protocolo || ''}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher">
+                        <input type="text" id="editProtocolo" value="${d.protocolo || ''}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher" ${bloqueado}>
                     </div>
                     
                     <div class="form-group">
                         <label>Expediente (Legis)</label>
-                        <input type="text" id="editExpediente" value="${d.expediente || ''}" placeholder="Ex: Exp. 5149">
+                        <input type="text" id="editExpediente" value="${d.expediente || ''}" placeholder="Ex: Exp. 5149" ${bloqueado}>
                     </div>
                     
                     <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:4px;">
                         <label>Link Direto do Legis 🔗</label>
-                        <input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo...">
+                        <input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo..." ${bloqueado}>
                     </div>
 
                     <div class="botoes">
@@ -550,15 +557,23 @@
         }
 
         window.salvarAlteracoes = async function() {
-            let statusEdit = document.getElementById('editStatus').value;
-            const protocolo = document.getElementById('editProtocolo').value.trim();
-            const expediente = document.getElementById('editExpediente').value.trim();
-            const linkLegis = document.getElementById('editLinkLegis').value.trim();
+            // Se está aguardando aprovação, força a não mudar status e zera protocolos
+            let statusEdit = document.getElementById('editStatus') ? document.getElementById('editStatus').value : demandaAtual.status;
+            let protocolo = document.getElementById('editProtocolo') ? document.getElementById('editProtocolo').value.trim() : (demandaAtual.protocolo || '');
+            let expediente = document.getElementById('editExpediente') ? document.getElementById('editExpediente').value.trim() : (demandaAtual.expediente || '');
+            let linkLegis = document.getElementById('editLinkLegis') ? document.getElementById('editLinkLegis').value.trim() : (demandaAtual.link_legis || '');
 
-            if (expediente && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
-                statusEdit = 'Concluída'; 
-            } else if (protocolo && protocolo !== '156 2026/' && statusEdit !== 'Aguardando Exp' && statusEdit !== 'Concluída' && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
-                statusEdit = '156 Pedido'; 
+            if (demandaAtual.status === 'Aguardando Aprovação' || demandaAtual.status === 'Aberta') {
+                statusEdit = demandaAtual.status; 
+                protocolo = demandaAtual.protocolo || '';
+                expediente = demandaAtual.expediente || '';
+                linkLegis = demandaAtual.link_legis || '';
+            } else {
+                if (expediente && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
+                    statusEdit = 'Concluída'; 
+                } else if (protocolo && protocolo !== '156 2026/' && statusEdit !== 'Aguardando Exp' && statusEdit !== 'Concluída' && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
+                    statusEdit = '156 Pedido'; 
+                }
             }
 
             const updates = {
