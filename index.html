@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gabinete Daniel Daudt - Login</title>
+    
+    <!-- Tags PWA para App de Celular -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#185199">
+    <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f0f2f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
@@ -64,7 +70,6 @@
             btn.disabled = true;
 
             try {
-                // Aqui está a mudança para a sua nova função no Supabase
                 const response = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -72,7 +77,12 @@
                 });
 
                 if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Salva o nome E o Token seguro retornado pela API
                     localStorage.setItem('usuarioLogado', usuario);
+                    if (data.token) localStorage.setItem('authToken', data.token); 
+
                     sucessoEl.textContent = 'Acesso liberado!'; sucessoEl.style.display = 'block';
                     setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
                 } else {
