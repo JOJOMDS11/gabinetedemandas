@@ -194,7 +194,6 @@
             
             const isAtualBloqueado = tiposProjetos.includes(data.tipo_solicitacao);
 
-            // AUTO-Ajuste de Status Inicial SÓ PARA OS ITENS DO "ATUAL"
             if (isAtualBloqueado && (data.status === 'Aberta' || data.status === 'Em Andamento' || data.status === 'Pendente')) {
                 const hist = data.historico || [];
                 if (usuarioLogado === 'Daniel') {
@@ -284,7 +283,6 @@
             document.getElementById('lightbox').classList.remove('ativo'); document.getElementById('lightboxVid').pause();
         }
 
-        // BARRA DE PROGRESSO INTELIGENTE ADAPTÁVEL
         function gerarBarraProgresso(status, tipo) {
             let statusFake = status;
             if (status === 'Atendido' || status === 'Resolvido') statusFake = 'Concluída';
@@ -303,12 +301,19 @@
             }
 
             let indexAtual = etapas.indexOf(statusFake);
+            
+            // SE O STATUS ATUAL ESTIVER ENTRE OS CONCLUÍDOS, FORÇA O INDEX PARA O FIM (TODOS VERDES)
+            if (['Concluída', 'Atendido', 'Resolvido'].includes(status)) {
+                indexAtual = etapas.length - 1;
+            }
+
             if(status === 'Aguardando Aprovação' || status === 'Sem Legis') indexAtual = -1;
             if(status === 'Rejeitada' || status === 'Arquivada') return ''; 
             
             let html = '';
             etapas.forEach((etapa, index) => {
-                let classe = index < indexAtual ? 'completed' : (index === indexAtual ? 'active' : '');
+                let classe = index <= indexAtual ? 'completed' : ''; // Modificado aqui
+                if(index === indexAtual) classe = 'completed'; // Força o último a ser verdinho
                 html += `<div class="progress-step ${classe}">${etapa}</div>`;
             });
             return `<div class="progress-wrapper"><h4 style="color:#185199; font-size:14px; text-align:center;">Progresso da Demanda</h4><div class="progress-container"><div class="progress-line"></div>${html}</div></div>`;
@@ -337,7 +342,6 @@
             let seloAprovado = '';
             let bloqueado = '';
 
-            // DIVISÃO DE LÓGICA: PROJETOS vs ROTINAS LIVRES
             if (isAtualBloqueado) {
                 const estaAguardando = (d.status === 'Aguardando Aprovação' || d.status === 'Aberta' || d.status === 'Pendente');
                 bloqueado = estaAguardando ? 'disabled style="background:#eee; cursor:not-allowed;"' : '';
@@ -555,7 +559,7 @@
                                 <option value="Pendente" ${d.status==='Pendente'?'selected':''}>Pendente</option>
                                 <option value="Aguardando" ${d.status==='Aguardando'?'selected':''}>Aguardando</option>
                                 <option value="Aguardando Aprovação" ${d.status==='Aguardando Aprovação'?'selected':''}>Aguardando Aprovação</option>
-                                <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada</option>
+                                <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada / Daniel Visto</option>
                                 <option value="Em Andamento" ${d.status==='Em Andamento'?'selected':''}>Em Andamento</option>
                                 <option value="Sem Legis" ${d.status==='Sem Legis'?'selected':''}>Sem Legis</option>
                                 <option value="156 Pedido" ${d.status==='156 Pedido'?'selected':''}>156 Pedido</option>
