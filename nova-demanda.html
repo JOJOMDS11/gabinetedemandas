@@ -121,7 +121,10 @@
         <div class="form-row">
             <div class="form-group">
                 <label>Secretaria</label>
-                <input type="text" id="secretaria" placeholder="Ex: SEMOV, SEMMA...">
+                <select id="secretaria" onchange="alternarSecretariaOutra()">
+                    <option value="">Selecione...</option>
+                </select>
+                <input type="text" id="secretaria_outra" placeholder="Digite o nome da secretaria/órgão..." style="display:none; margin-top:8px;">
             </div>
             <div class="form-group">
                 <label>Providências / Ações</label>
@@ -229,6 +232,58 @@
         if (!usuarioLogado) window.location.href = 'index.html';
 
         const tiposAtualBloqueados = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+        const nomesEquipe = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
+
+        // Lista padrão de secretarias/órgãos (usada como fallback caso a tabela
+        // 'secretarias' não exista ainda no Supabase, e como base para popular
+        // a tabela na primeira vez que o gerenciador for usado).
+        const secretariasPadrao = [
+            'GABINETE', 'SEMOB', 'SEMOV', 'SEMURB', 'SEMMAM', 'SEMAE',
+            'SAÚDE', 'EDUCAÇÃO', 'FAZENDA', 'OUVIDORIA', 'CEPOM',
+            'Secretaria Municipal de Habitação - SEMHAB',
+            'Secretaria Municipal de Proteção Animal - SEMPA',
+            'Secretaria Geral de Governo - SGG',
+            'PREFEITURA'
+        ];
+
+        // Carrega as secretarias da tabela 'secretarias' no Supabase. Se a tabela
+        // ainda não existir (erro 42P01 / "relation does not exist") ou estiver
+        // vazia, usa a lista padrão acima como fallback automático.
+        async function carregarSecretarias() {
+            const select = document.getElementById('secretaria');
+            let lista = secretariasPadrao;
+            try {
+                const { data, error } = await db.from('secretarias').select('nome').order('nome');
+                if (!error && data && data.length > 0) {
+                    lista = data.map(r => r.nome);
+                }
+            } catch (e) { /* mantém fallback */ }
+
+            select.innerHTML = '<option value="">Selecione...</option>' +
+                lista.map(s => `<option value="${s}">${s}</option>`).join('') +
+                '<option value="__outra__">➕ Outra (digitar)</option>';
+        }
+
+        window.alternarSecretariaOutra = function() {
+            const select = document.getElementById('secretaria');
+            const campoOutra = document.getElementById('secretaria_outra');
+            if (select.value === '__outra__') {
+                campoOutra.style.display = 'block';
+                campoOutra.focus();
+            } else {
+                campoOutra.style.display = 'none';
+                campoOutra.value = '';
+            }
+        }
+
+        // Retorna o valor final de secretaria a ser salvo (lida com a opção "Outra")
+        function obterSecretariaSelecionada() {
+            const select = document.getElementById('secretaria');
+            if (select.value === '__outra__') {
+                return document.getElementById('secretaria_outra').value.trim();
+            }
+            return select.value;
+        }
 
         // Monitorar alterações no formulário
         document.addEventListener('change', function() { formularioAlterado = true; });
@@ -253,41 +308,42 @@
             alert('✅ Texto copiado para a área de transferência!');
         }
 
-        function gerarNumeroDemanda() {
+        // Regra do Nº da Demanda (Auto): usa a DATA escolhida no campo "Data"
+        // (mesmo que seja uma data passada) combinada com a HORA ATUAL do
+        // momento em que o registro está sendo cadastrado (não a hora agendada).
+        // Se nenhuma data for escolhida, usa a data de hoje também.
+        function montarNumeroDemanda() {
+            const dataCampo = document.getElementById('data_agendada').value;
             const agora = new Date();
-            const ano = agora.getFullYear().toString().slice(-2);
-            const mes = String(agora.getMonth() + 1).padStart(2, '0');
-            const dia = String(agora.getDate()).padStart(2, '0');
+
+            let ano, mes, dia;
+            if (dataCampo) {
+                [ano, mes, dia] = dataCampo.split('-');
+            } else {
+                ano = String(agora.getFullYear());
+                mes = String(agora.getMonth() + 1).padStart(2, '0');
+                dia = String(agora.getDate()).padStart(2, '0');
+            }
+
             const horas = String(agora.getHours()).padStart(2, '0');
             const minutos = String(agora.getMinutes()).padStart(2, '0');
             const segundos = String(agora.getSeconds()).padStart(2, '0');
-            return `${ano}${mes}${dia}${horas}${minutos}${segundos}`;
+
+            return `${ano.slice(-2)}${mes}${dia}${horas}${minutos}${segundos}`;
         }
 
-        // Atualizar número de demanda automaticamente
+        // Atualizar número de demanda automaticamente quando a Data mudar
         document.getElementById('data_agendada').addEventListener('change', atualizarNumeroDemanda);
-        document.getElementById('horario_agendado').addEventListener('change', atualizarNumeroDemanda);
 
         function atualizarNumeroDemanda() {
-            const data = document.getElementById('data_agendada').value;
-            const hora = document.getElementById('horario_agendado').value;
-            const numInput = document.getElementById('numero_demanda');
-
-            if (data && hora) {
-                const [ano, mes, dia] = data.split('-');
-                const [horas, minutos] = hora.split(':');
-                const numeroDemanda = `${ano.slice(-2)}${mes}${dia}${horas}${minutos}00`;
-                numInput.value = numeroDemanda;
-            } else if (!data && !hora) {
-                numInput.value = gerarNumeroDemanda();
-            }
+            document.getElementById('numero_demanda').value = montarNumeroDemanda();
         }
 
-        // Inicializar com número automático ao carregar
+        // Inicializar com número automático ao carregar (data de hoje + hora atual)
         function inicializarNumeroDemanda() {
             const numInput = document.getElementById('numero_demanda');
             if (!numInput.value) {
-                numInput.value = gerarNumeroDemanda();
+                numInput.value = montarNumeroDemanda();
             }
         }
 
@@ -298,6 +354,8 @@
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
                 cloudName = config.cloudinaryName;
                 uploadPreset = config.uploadPreset;
+
+                await carregarSecretarias();
 
                 const btn = document.getElementById('btnEnviar');
                 btn.disabled = false;
@@ -316,6 +374,8 @@
             document.getElementById('data_agendada').value = '';
             document.getElementById('horario_agendado').value = '';
             document.getElementById('secretaria').value = '';
+            document.getElementById('secretaria_outra').value = '';
+            document.getElementById('secretaria_outra').style.display = 'none';
             document.getElementById('providencias').value = '';
             document.getElementById('responsavel_ordem').value = '';
             document.getElementById('numero_demanda').value = '';
@@ -406,7 +466,7 @@
                 else if (cell.match(/^[A-Z]+\s\d+\/\d{4}$/) || cell.includes('156 202')) {
                     parsed.protocolo = cell;
                 }
-                else if (cell.match(/^SEM[A-Z]+$/i) || ['OBRAS', 'SAÚDE', 'GABINETE'].includes(cell.toUpperCase())) {
+                else if (cell.match(/^SEM[A-Z]+$/i) || ['OBRAS', 'SAÚDE', 'EDUCAÇÃO', 'FAZENDA', 'OUVIDORIA', 'CEPOM', 'GABINETE', 'PREFEITURA'].includes(cell.toUpperCase()) || cell.toUpperCase().includes('HABITAÇÃO') || cell.toUpperCase().includes('SEMHAB') || cell.toUpperCase().includes('SEMPA') || cell.toUpperCase().includes('PROTEÇÃO ANIMAL') || cell.toUpperCase().includes('SGG') || cell.toUpperCase().includes('GERAL DE GOVERNO')) {
                     if (!parsed.secretaria) parsed.secretaria = cell;
                 }
                 // ===== CORREÇÃO 2: célula de nome agora tolera espaços (nomes compostos)
@@ -453,7 +513,18 @@
             if(parsed.numero) document.getElementById('numero_demanda').value = parsed.numero;
             if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
             if(parsed.resp) document.getElementById('responsavel_ordem').value = parsed.resp;
-            if(parsed.secretaria) document.getElementById('secretaria').value = parsed.secretaria;
+            if(parsed.secretaria) {
+                const select = document.getElementById('secretaria');
+                const opcoes = Array.from(select.options).map(o => o.value.toLowerCase());
+                const idx = opcoes.indexOf(parsed.secretaria.toLowerCase());
+                if (idx > -1) {
+                    select.selectedIndex = idx;
+                } else {
+                    select.value = '__outra__';
+                    document.getElementById('secretaria_outra').style.display = 'block';
+                    document.getElementById('secretaria_outra').value = parsed.secretaria;
+                }
+            }
             if(parsed.expediente) document.getElementById('expediente').value = parsed.expediente;
             if(parsed.protocolo) document.getElementById('protocolo').value = parsed.protocolo;
             if(parsed.nome) document.getElementById('solicitante_nome').value = parsed.nome;
@@ -553,11 +624,12 @@
             const tipo_solicitacao = document.getElementById('tipo_solicitacao').value;
             const assunto = document.getElementById('assunto').value.trim();
             const responsavel_ordem = document.getElementById('responsavel_ordem').value; 
-            const numero_demanda = document.getElementById('numero_demanda').value.trim();
+            // Recalcula no instante do envio: Data do campo (ou hoje, se vazio) + Hora ATUAL do cadastro.
+            const numero_demanda = montarNumeroDemanda();
             
             const data_agendada = document.getElementById('data_agendada').value || null;
             const horario_agendado = document.getElementById('horario_agendado').value || null;
-            const secretaria = document.getElementById('secretaria').value.trim();
+            const secretaria = obterSecretariaSelecionada();
             const providencias = document.getElementById('providencias').value.trim();
 
             const rua = document.getElementById('rua').value.trim() || '';
@@ -609,6 +681,17 @@
                     }
                 }
 
+                // Se o Solicitante for um nome da equipe (e não apenas um morador/munícipe),
+                // isso fica registrado na timeline/histórico desde a criação.
+                let historicoInicial = [];
+                if (solicitante_nome && nomesEquipe.includes(solicitante_nome)) {
+                    historicoInicial.push({
+                        status: 'Solicitado pela equipe',
+                        autor: solicitante_nome,
+                        data: new Date().toISOString()
+                    });
+                }
+
                 await db.from('demandas').insert([{
                     tipo_solicitacao, numero_demanda, assunto, rua, numero, bairro, 
                     descricao: document.getElementById('descricao').value.trim(),
@@ -620,7 +703,8 @@
                     status: statusInicial, 
                     criador: usuarioLogado, 
                     responsavel_ordem: responsavel_ordem, 
-                    responsaveis: []
+                    responsaveis: [],
+                    historico: historicoInicial
                 }]);
 
                 msg.className = 'mensagem sucesso'; msg.textContent = 'Registro salvo com sucesso!'; msg.style.display = 'block';
