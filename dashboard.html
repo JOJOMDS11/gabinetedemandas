@@ -40,13 +40,13 @@
         .demanda-conteudo { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
         
         .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 10px; width: fit-content; }
-        .badge-Aberta { background: #ffe5e5; color: #c0392b; }
+        .badge-Aberta, .badge-Pendente { background: #ffe5e5; color: #c0392b; }
         .badge-Andamento { background: #fff3cd; color: #856404; }
         .badge-Aguardando { background: #fff3cd; color: #e67e22; border: 1px solid #e67e22; }
         .badge-Aprovada { background: #e2f8c5; color: #185199; }
         .badge-156 { background: #d0e8ff; color: #0984e3; }
         .badge-Exp { background: #f5cd79; color: #d35400; }
-        .badge-Concluida { background: #d4edda; color: #155724; }
+        .badge-Concluida, .badge-Atendido, .badge-Resolvido { background: #d4edda; color: #155724; }
         .badge-Arquivada { background: #eee; color: #777; }
         .badge-Rejeitada { background: #c0392b; color: white; }
 
@@ -55,7 +55,7 @@
         .info-tempo { font-size: 11px; color: #999; margin-bottom: 4px; font-style: italic; }
         
         .acoes-card { margin-top: auto; padding-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn-acao { color: white; border: none; padding: 8px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; flex: 1; min-width: 80px; }
+        .btn-acao { color: white; border: none; padding: 8px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; flex: 1; min-width: 80px; text-align: center; }
         .btn-acao:disabled { background: #ccc; cursor: not-allowed; }
         .btn-acao.verde { background: #27ae60; }
         .btn-acao.azul { background: #185199; }
@@ -101,13 +101,13 @@
 
         <div class="filtros">
             <button class="filtro-btn ativo" onclick="filtrar('Todas')">Todas</button>
-            <button class="filtro-btn" onclick="filtrar('Aberta')">Abertas</button>
+            <button class="filtro-btn" onclick="filtrar('Aberta')">Abertas / Pendentes</button>
             <button class="filtro-btn" onclick="filtrar('Em Andamento')">Andamento</button>
             <button class="filtro-btn" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação</button>
             <button class="filtro-btn" onclick="filtrar('Aprovada')">✅ Aprovadas</button>
             <button class="filtro-btn" onclick="filtrar('156 Pedido')">156 Pedido</button>
             <button class="filtro-btn" onclick="filtrar('Aguardando Exp')">Exp Legis</button>
-            <button class="filtro-btn" onclick="filtrar('Concluída')">Concluídas</button>
+            <button class="filtro-btn" onclick="filtrar('Concluída')">Concluídas / Resolv.</button>
             <button class="filtro-btn" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
             <button class="filtro-btn" onclick="filtrar('Rejeitada')">❌ Rejeitadas</button>
         </div>
@@ -154,7 +154,13 @@
             paginaAtual = 1;
             document.querySelectorAll('.filtro-btn').forEach(btn => {
                 const txt = btn.textContent.trim();
-                const match = (status === 'Todas' && txt === 'Todas') || (status !== 'Todas' && txt.includes(status.replace('Aguardando Aprovação','Aprovação').replace('Aguardando Exp','Exp Legis')));
+                let match = false;
+                if (status === 'Todas' && txt === 'Todas') match = true;
+                else if (status !== 'Todas') {
+                    if (status === 'Aberta' && txt.includes('Pendentes')) match = true;
+                    else if (status === 'Concluída' && txt.includes('Resolv.')) match = true;
+                    else if (txt.includes(status.replace('Aguardando Aprovação','Aprovação').replace('Aguardando Exp','Exp Legis'))) match = true;
+                }
                 btn.classList.toggle('ativo', match);
             });
             renderDemandas();
@@ -167,9 +173,17 @@
             const termoBusca = document.getElementById('buscaGeral').value.toLowerCase();
             const respSelecionado = document.getElementById('filtroResp').value;
 
-            let lista = filtroAtual === 'Todas'
-                ? todasDemandas.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada')
-                : todasDemandas.filter(d => d.status === filtroAtual);
+            let lista = todasDemandas;
+            
+            if (filtroAtual === 'Todas') {
+                lista = lista.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada');
+            } else if (filtroAtual === 'Aberta') {
+                lista = lista.filter(d => d.status === 'Aberta' || d.status === 'Pendente');
+            } else if (filtroAtual === 'Concluída') {
+                lista = lista.filter(d => d.status === 'Concluída' || d.status === 'Atendido' || d.status === 'Resolvido');
+            } else {
+                lista = lista.filter(d => d.status === filtroAtual);
+            }
 
             if (respSelecionado) {
                 lista = lista.filter(d => (d.responsaveis || []).includes(respSelecionado));
@@ -199,9 +213,9 @@
                 const fotos = (demanda.fotos_urls || []).filter(f => f);
                 const responsaveis = (demanda.responsaveis || []).filter(r => r);
                 const fotoPrincipal = fotos[0] || null;
-                const encerrada = ['Concluída', 'Arquivada', 'Rejeitada'].includes(demanda.status);
+                const encerrada = ['Concluída', 'Atendido', 'Resolvido', 'Arquivada', 'Rejeitada'].includes(demanda.status);
                 const euCuido = responsaveis.includes(usuarioLogado);
-                const aguardandoDaniel = demanda.status === 'Aguardando Aprovação' && usuarioLogado === 'Daniel';
+                const aguardandoDaniel = (demanda.status === 'Aguardando Aprovação' || demanda.status === 'Aguardando') && usuarioLogado === 'Daniel';
 
                 let mediaTag = '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#999;background:#e0e0e0;">📸 Sem Mídia</div>';
                 if (fotoPrincipal) {
@@ -212,7 +226,7 @@
                 }
 
                 let badgeClass = 'badge-Aberta';
-                if (demanda.status === 'Pendente') badgeClass = 'badge-Aberta';
+                if (demanda.status === 'Pendente') badgeClass = 'badge-Pendente';
                 if (demanda.status === 'Em Andamento') badgeClass = 'badge-Andamento';
                 if (demanda.status === 'Aguardando Aprovação' || demanda.status === 'Aguardando') badgeClass = 'badge-Aguardando';
                 if (demanda.status === 'Aprovada') badgeClass = 'badge-Aprovada';
@@ -224,11 +238,22 @@
 
                 const cuindoTxt = responsaveis.length > 0 ? responsaveis.join(', ') : 'Nenhum';
 
+                // BOTÕES DO CARTÃO: Adicionado o botão "Excluir" rápido nas Arquivadas
                 let btnPrincipal = '';
-                if (aguardandoDaniel) btnPrincipal = `<button class="btn-acao verde" onclick="event.stopPropagation(); window.location.href='ver-demanda.html?id=${demanda.id}'">👁️ Ver & Aprovar</button>`;
-                else if (encerrada) btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Encerrada</button>`;
-                else if (euCuido) btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}')">🚪 Me Retirar</button>`;
-                else btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}')">🙋 Assumir</button>`;
+                if (aguardandoDaniel) {
+                    btnPrincipal = `<button class="btn-acao verde" onclick="event.stopPropagation(); window.location.href='ver-demanda.html?id=${demanda.id}'">👁️ Ver & Aprovar</button>`;
+                } else if (demanda.status === 'Arquivada') {
+                    btnPrincipal = `
+                        <button class="btn-acao cinza" disabled>🔒 Arquivada</button>
+                        <button class="btn-acao" style="background:#c0392b; flex: 0.5;" onclick="event.stopPropagation(); excluirDemandaDashboard('${demanda.id}')">🗑️ Excluir</button>
+                    `;
+                } else if (encerrada) {
+                    btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Encerrada</button>`;
+                } else if (euCuido) {
+                    btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}')">🚪 Me Retirar</button>`;
+                } else {
+                    btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}')">🙋 Assumir</button>`;
+                }
 
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${demanda.numero_demanda}</div>` : '';
                 const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 ${tempoRelativo(demanda.criado_em)}</div>` : '';
@@ -239,9 +264,9 @@
                             <div class="demanda-conteudo">
                                 <span class="badge ${badgeClass}">${demanda.status}</span>
                                 <div class="titulo">${demanda.assunto}</div>
-                                <div class="info">📍 ${demanda.rua}, ${demanda.numero} - ${demanda.bairro}</div>
+                                <div class="info">📌 ${demanda.tipo_solicitacao || 'Registro'}</div>
+                                ${demanda.rua ? `<div class="info">📍 ${demanda.rua}, ${demanda.numero} - ${demanda.bairro}</div>` : ''}
                                 ${demanda.protocolo ? `<div class="info">📄 Prot: <b>${demanda.protocolo}</b></div>` : ''}
-                                ${demanda.expediente ? `<div class="info">📁 Exp: <b>${demanda.expediente}</b></div>` : ''}
                                 <div class="info">✍️ Aberto por: <b>${demanda.criador || 'Desconhecido'}</b></div>
                                 <div class="info">👥 Cuidando: <b>${cuindoTxt}</b></div>
                                 ${tempoCard}
@@ -296,6 +321,19 @@
             if (!demanda) return;
             const resp = (demanda.responsaveis || []).filter(r => r !== usuarioLogado);
             await db.from('demandas').update({ responsaveis: resp }).eq('id', id);
+        }
+
+        // Função do Botão de Excluir Rápido (com alerta de erro acidental)
+        window.excluirDemandaDashboard = async function(id) {
+            if (confirm('⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR DEFINITIVAMENTE esta demanda do banco de dados?\n\n(Se clicou sem querer, clique em Cancelar)')) {
+                const senha = prompt('🔐 Digite a senha master para confirmar a exclusão:');
+                if (senha === 'master2025') {
+                    await db.from('demandas').delete().eq('id', id);
+                    carregarDemandas(); // Atualiza a tela
+                } else if (senha !== null && senha !== '') {
+                    alert('❌ Senha incorreta! Exclusão cancelada.');
+                }
+            }
         }
 
         inicializarSistema();
