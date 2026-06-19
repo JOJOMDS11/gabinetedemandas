@@ -184,8 +184,7 @@
 
                 db.channel('detalhes-' + demandaId)
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas', filter: `id=eq.${demandaId}` }, () => {
-                      // Se houver alteração de fora, só recarrega a parte visual
-                      // Mas se a gente acabou de dar reload, isso nem precisa rodar.
+                      // Se houver alteração de fora, o Realtime cuida (ideal não dar reload forçado pra não atrapalhar quem edita)
                   })
                   .subscribe();
             } catch (err) {
@@ -404,7 +403,6 @@
 
             const inputDemandaNum = isAdmin ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" placeholder="Ex: 55" style="max-width:150px; padding:5px;">` : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
 
-            // Renderiza os links
             document.getElementById('conteudo').innerHTML = `
                 ${alertaAprovacao}
                 ${gerarBarraProgresso(d.status)}
@@ -539,7 +537,7 @@
             hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
 
             await db.from('demandas').update({ status: 'Aprovada', responsaveis, historico: hist }).eq('id', demandaId); 
-            window.location.reload(); // Recarrega imediatamente como o F5
+            window.location.reload(); 
         }
 
         window.rejeitarDemanda = async function() {
@@ -557,7 +555,6 @@
             const expediente = document.getElementById('editExpediente').value.trim();
             const linkLegis = document.getElementById('editLinkLegis').value.trim();
 
-            // Lógica inteligente de status
             if (expediente && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
                 statusEdit = 'Concluída'; 
             } else if (protocolo && protocolo !== '156 2026/' && statusEdit !== 'Aguardando Exp' && statusEdit !== 'Concluída' && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
@@ -571,7 +568,6 @@
                 link_legis: linkLegis
             };
             
-            // Adiciona no histórico se o status mudou
             if (statusEdit !== demandaAtual.status) {
                 const hist = demandaAtual.historico || [];
                 hist.push({ status: statusEdit, autor: usuarioLogado, data: new Date().toISOString() });
@@ -588,7 +584,7 @@
             }
             const { error } = await db.from('demandas').update(updates).eq('id', demandaId);
             if (!error) {
-                window.location.reload(); // F5 para atualizar a linha do tempo e badges
+                window.location.reload(); 
             }
         }
 
@@ -604,12 +600,12 @@
             document.getElementById('modalSenhaMaster').classList.add('ativo');
         }
 
-        window.fecharModalSenha = function() { document.getElementById('modalSenhaMaster').classList.remove('ativo'); acaoMasterPendente = null; }
+        window.fecharModalSenha = function() { document.getElementById('modalSenhaMaster').classList.remove('ativo'); }
 
         window.confirmarAcaoMaster = async function() {
-            if (document.getElementById('inputSenhaMaster').value !== SENHA_MASTER) { document.getElementById('erroSenhaMaster').style.display = 'block'; return; }
-            fecharModalSenha();
+            if (document.getElementById('inputSenhaMaster').value.trim() !== SENHA_MASTER) { document.getElementById('erroSenhaMaster').style.display = 'block'; return; }
             
+            document.getElementById('modalSenhaMaster').classList.remove('ativo'); 
             const hist = demandaAtual.historico || [];
 
             if (acaoMasterPendente === 'aprovar') {
@@ -628,6 +624,7 @@
                 await db.from('demandas').delete().eq('id', demandaId); 
                 window.location.href = 'dashboard.html'; 
             }
+            acaoMasterPendente = null; 
         }
 
         window.apagarFotoUnica = async function(index) {
@@ -635,6 +632,7 @@
             const fotos = [...(demandaAtual.fotos_urls || [])];
             fotos.splice(index, 1);
             await db.from('demandas').update({ fotos_urls: fotos }).eq('id', demandaId);
+            window.location.reload();
         }
 
         window.forcarDownload = async function(url, nome) {
@@ -677,7 +675,7 @@
                     updates.fotos_urls = [...(demandaAtual.fotos_urls || []).filter(f => f), ...novasFotos];
                 }
                 await db.from('demandas').update(updates).eq('id', demandaId);
-                window.location.reload(); // F5 final para atualizar a galeria
+                window.location.reload(); 
             } catch (e) { alert('Erro: ' + e.message);
             } finally { btn.disabled = false; setTimeout(() => { prog.style.display = 'none'; }, 3000); }
         }
