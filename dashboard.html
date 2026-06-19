@@ -46,13 +46,14 @@
         .badge-Aprovada { background: #e2f8c5; color: #185199; }
         .badge-156 { background: #d0e8ff; color: #0984e3; }
         .badge-Exp { background: #f5cd79; color: #d35400; }
+        .badge-SemLegis { background: #e0e0e0; color: #333; }
         .badge-Concluida, .badge-Atendido, .badge-Resolvido { background: #d4edda; color: #155724; }
         .badge-Arquivada { background: #eee; color: #777; }
         .badge-Rejeitada { background: #c0392b; color: white; }
 
         .titulo { font-size: 15px; font-weight: bold; margin-bottom: 5px; color: #185199; }
         .info { font-size: 12px; color: #555; margin-bottom: 4px; }
-        .info-tempo { font-size: 11px; color: #999; margin-bottom: 4px; font-style: italic; }
+        .info-tempo { font-size: 11px; color: #999; margin-bottom: 4px; font-style: italic; margin-top: 5px; }
         
         .acoes-card { margin-top: auto; padding-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
         .btn-acao { color: white; border: none; padding: 8px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; flex: 1; min-width: 80px; text-align: center; }
@@ -87,7 +88,7 @@
         </div>
 
         <div class="filtros-avancados">
-            <input type="text" id="buscaGeral" placeholder="🔍 Buscar por assunto, rua, bairro, Nº, 156..." oninput="mudarPagina(1); renderDemandas()">
+            <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, rua, Nº, 156, data..." oninput="mudarPagina(1); renderDemandas()">
             <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()">
                 <option value="">👥 Filtro: Todos da Equipe</option>
                 <option value="Daniel">Daniel</option>
@@ -121,7 +122,7 @@
         let todasDemandas = [];
         let filtroAtual = 'Todas';
         let paginaAtual = 1;
-        const itensPorPagina = 6;
+        const itensPorPagina = 9; // Aumentei um pouquinho para mostrar mais de uma vez
 
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         if (!usuarioLogado) window.location.href = 'index.html';
@@ -190,13 +191,21 @@
             }
 
             if (termoBusca) {
-                lista = lista.filter(d => 
-                    (d.assunto || '').toLowerCase().includes(termoBusca) ||
-                    (d.rua || '').toLowerCase().includes(termoBusca) ||
-                    (d.bairro || '').toLowerCase().includes(termoBusca) ||
-                    (d.numero_demanda || '').toLowerCase().includes(termoBusca) ||
-                    (d.protocolo || '').toLowerCase().includes(termoBusca)
-                );
+                lista = lista.filter(d => {
+                    // Formata a data para a busca funcionar tbm se ele digitar "15/08"
+                    let dFormat = '';
+                    if(d.data_agendada) {
+                        const oData = new Date(d.data_agendada + 'T00:00:00');
+                        dFormat = oData.toLocaleDateString('pt-BR');
+                    }
+                    return (d.assunto || '').toLowerCase().includes(termoBusca) ||
+                           (d.rua || '').toLowerCase().includes(termoBusca) ||
+                           (d.bairro || '').toLowerCase().includes(termoBusca) ||
+                           (d.numero_demanda || '').toLowerCase().includes(termoBusca) ||
+                           (d.protocolo || '').toLowerCase().includes(termoBusca) ||
+                           (d.secretaria || '').toLowerCase().includes(termoBusca) ||
+                           (dFormat).includes(termoBusca);
+                });
             }
 
             if (lista.length === 0) {
@@ -232,13 +241,27 @@
                 if (demanda.status === 'Aprovada') badgeClass = 'badge-Aprovada';
                 if (demanda.status === '156 Pedido') badgeClass = 'badge-156';
                 if (demanda.status === 'Aguardando Exp') badgeClass = 'badge-Exp';
+                if (demanda.status === 'Sem Legis') badgeClass = 'badge-SemLegis';
                 if (demanda.status === 'Concluída' || demanda.status === 'Atendido' || demanda.status === 'Resolvido') badgeClass = 'badge-Concluida';
                 if (demanda.status === 'Arquivada') badgeClass = 'badge-Arquivada';
                 if (demanda.status === 'Rejeitada') badgeClass = 'badge-Rejeitada';
 
+                // Lógica de Responsáveis (Nome ajustado para "Responsáveis")
                 const cuindoTxt = responsaveis.length > 0 ? responsaveis.join(', ') : 'Nenhum';
 
-                // BOTÕES DO CARTÃO: Adicionado o botão "Excluir" rápido nas Arquivadas
+                // Formatação de Data / Horário para o Dashboard
+                let infoAgenda = '';
+                if (demanda.data_agendada || demanda.horario_agendado) {
+                    let dataAgendadaFormatada = '';
+                    if (demanda.data_agendada) {
+                        const objData = new Date(demanda.data_agendada + 'T00:00:00');
+                        dataAgendadaFormatada = objData.toLocaleDateString('pt-BR');
+                    }
+                    infoAgenda = `<div class="info" style="color:#d35400; font-weight:bold;">📅 Data/Hora: ${dataAgendadaFormatada} ${demanda.horario_agendado ? 'às ' + demanda.horario_agendado : ''}</div>`;
+                }
+
+                const infoSecretaria = demanda.secretaria ? `<div class="info">🏢 Sec: <b>${demanda.secretaria}</b></div>` : '';
+
                 let btnPrincipal = '';
                 if (aguardandoDaniel) {
                     btnPrincipal = `<button class="btn-acao verde" onclick="event.stopPropagation(); window.location.href='ver-demanda.html?id=${demanda.id}'">👁️ Ver & Aprovar</button>`;
@@ -250,13 +273,13 @@
                 } else if (encerrada) {
                     btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Encerrada</button>`;
                 } else if (euCuido) {
-                    btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}')">🚪 Me Retirar</button>`;
+                    btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}')">🚪 Deixar de Cuidar</button>`;
                 } else {
-                    btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}')">🙋 Assumir</button>`;
+                    btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}')">🙋 Assumir Demanda</button>`;
                 }
 
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${demanda.numero_demanda}</div>` : '';
-                const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 ${tempoRelativo(demanda.criado_em)}</div>` : '';
+                const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 Aberto ${tempoRelativo(demanda.criado_em)}</div>` : '';
 
                 return `<div class="demanda-card ${aguardandoDaniel ? 'aguardando-daniel' : ''}" onclick="window.location.href='ver-demanda.html?id=${demanda.id}'">
                             ${numTag}
@@ -265,10 +288,12 @@
                                 <span class="badge ${badgeClass}">${demanda.status}</span>
                                 <div class="titulo">${demanda.assunto}</div>
                                 <div class="info">📌 ${demanda.tipo_solicitacao || 'Registro'}</div>
+                                ${infoAgenda}
                                 ${demanda.rua ? `<div class="info">📍 ${demanda.rua}, ${demanda.numero} - ${demanda.bairro}</div>` : ''}
+                                ${infoSecretaria}
                                 ${demanda.protocolo ? `<div class="info">📄 Prot: <b>${demanda.protocolo}</b></div>` : ''}
-                                <div class="info">✍️ Aberto por: <b>${demanda.criador || 'Desconhecido'}</b></div>
-                                <div class="info">👥 Cuidando: <b>${cuindoTxt}</b></div>
+                                <div class="info">✍️ Por: <b>${demanda.criador || 'Desconhecido'}</b></div>
+                                <div class="info">👥 Responsáveis: <b>${cuindoTxt}</b></div>
                                 ${tempoCard}
                                 <div class="acoes-card">${btnPrincipal}</div>
                             </div>
@@ -298,7 +323,7 @@
 
         setInterval(() => {
             document.querySelectorAll('[data-criado]').forEach(el => {
-                el.textContent = '🕐 ' + tempoRelativo(el.getAttribute('data-criado'));
+                el.textContent = '🕐 Aberto ' + tempoRelativo(el.getAttribute('data-criado'));
             });
         }, 30000);
 
@@ -323,13 +348,12 @@
             await db.from('demandas').update({ responsaveis: resp }).eq('id', id);
         }
 
-        // Função do Botão de Excluir Rápido (com alerta de erro acidental)
         window.excluirDemandaDashboard = async function(id) {
             if (confirm('⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR DEFINITIVAMENTE esta demanda do banco de dados?\n\n(Se clicou sem querer, clique em Cancelar)')) {
                 const senha = prompt('🔐 Digite a senha master para confirmar a exclusão:');
                 if (senha === 'master2025') {
                     await db.from('demandas').delete().eq('id', id);
-                    carregarDemandas(); // Atualiza a tela
+                    carregarDemandas(); 
                 } else if (senha !== null && senha !== '') {
                     alert('❌ Senha incorreta! Exclusão cancelada.');
                 }
