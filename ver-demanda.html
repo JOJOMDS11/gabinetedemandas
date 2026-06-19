@@ -57,6 +57,7 @@
         .badge-Aprovada { background: #e2f8c5; color: #185199; }
         .badge-156 { background: #d0e8ff; color: #0984e3; }
         .badge-Exp { background: #f5cd79; color: #d35400; }
+        .badge-SemLegis { background: #e0e0e0; color: #333; }
         .badge-Concluida, .badge-Atendido, .badge-Resolvido { background: #d4edda; color: #155724; }
         .badge-Arquivada { background: #eee; color: #777; }
         .badge-Rejeitada { background: #c0392b; color: white; }
@@ -73,6 +74,7 @@
         .timeline-dot.laranja { background: #e67e22; box-shadow: 0 0 0 2px #e67e22; }
         .timeline-dot.cinza { background: #95a5a6; box-shadow: 0 0 0 2px #95a5a6; }
         .timeline-dot.vermelho { background: #c0392b; box-shadow: 0 0 0 2px #c0392b; }
+        .timeline-dot.azul { background: #3498db; box-shadow: 0 0 0 2px #3498db; }
         .timeline-evento { font-size: 13px; font-weight: bold; color: #185199; }
         .timeline-tempo { font-size: 11px; color: #999; font-style: italic; }
 
@@ -120,24 +122,19 @@
         <h3 style="grid-column:1/-1; text-align:center; color:#777;">Carregando...</h3>
     </div>
 
-    <!-- Lightbox Aprimorado -->
     <div id="lightbox" class="modal-overlay" onclick="fecharLightbox(event)">
         <button id="btnFecharLightbox" onclick="fecharLightbox(event)">✕ Fechar</button>
         <button id="btnPrev" class="lightbox-nav" onclick="mudarMedia(-1, event)">&#10094;</button>
-        
         <img id="lightboxImg" style="display:none;">
         <video id="lightboxVid" controls style="display:none;"></video>
         <iframe id="lightboxPdf" style="display:none;"></iframe>
-        
         <div id="lightboxPdfFallback" style="display:none; text-align:center;">
             <p style="color:white; margin-bottom:10px; font-size:14px;">Não abriu no celular?</p>
             <a id="lightboxPdfLink" href="#" target="_blank" style="background:#27ae60; color:white; padding:10px 20px; border-radius:4px; font-weight:bold; text-decoration:none;">📄 Baixar / Abrir Externo</a>
         </div>
-        
         <button id="btnNext" class="lightbox-nav" onclick="mudarMedia(1, event)">&#10095;</button>
     </div>
 
-    <!-- Modal Senha Master -->
     <div class="modal-overlay" id="modalSenhaMaster" style="z-index: 10001;">
         <div class="modal-box">
             <h3>🔐 Autenticação Master</h3>
@@ -156,6 +153,13 @@
         let demandaAtual = null;
         let acaoMasterPendente = null; 
         const SENHA_MASTER = 'master2025';
+
+        // LISTA DE PROJETOS QUE EXIGEM APROVAÇÃO RÍGIDA
+        const tiposAtualBloqueados = [
+            'INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 
+            'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 
+            'REQUERIMENTO', 'SESSÃO SOLENE'
+        ];
 
         let mediaGlobal = [];
         let indexLightboxAtual = 0;
@@ -179,9 +183,7 @@
                 uploadPreset = config.uploadPreset;
                 carregarDemanda();
 
-                db.channel('detalhes-' + demandaId)
-                  .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas', filter: `id=eq.${demandaId}` }, () => {})
-                  .subscribe();
+                db.channel('detalhes-' + demandaId).on('postgres_changes', { event: '*', schema: 'public', table: 'demandas', filter: `id=eq.${demandaId}` }, () => {}).subscribe();
             } catch (err) {
                 document.getElementById('conteudo').innerHTML = `<h3 style="color:red; grid-column:1/-1;">Erro de conexão.</h3>`;
             }
@@ -191,25 +193,25 @@
             const { data, error } = await db.from('demandas').select('*').eq('id', demandaId).single();
             if (error) { document.getElementById('conteudo').innerHTML = `<h3 style="color:red; grid-column:1/-1;">Demanda não encontrada.</h3>`; return; }
             
-            if (data.status === 'Aberta' || data.status === 'Em Andamento') {
+            const isAtualBloqueado = tiposAtualBloqueados.includes(data.tipo_solicitacao);
+
+            // AUTO-Ajuste de Status Inicial SÓ PARA OS ITENS DO "ATUAL"
+            if (isAtualBloqueado && (data.status === 'Aberta' || data.status === 'Em Andamento' || data.status === 'Pendente')) {
                 const hist = data.historico || [];
                 
                 if (usuarioLogado === 'Daniel') {
                     const resp = data.responsaveis || [];
                     if (!resp.includes('Daniel')) resp.push('Daniel');
                     hist.push({ status: 'Aprovada', autor: 'Daniel', data: new Date().toISOString() });
-                    
                     await db.from('demandas').update({ status: 'Aprovada', responsaveis: resp, historico: hist }).eq('id', demandaId);
-                    data.status = 'Aprovada';
-                    data.responsaveis = resp;
-                    data.historico = hist;
+                    data.status = 'Aprovada'; data.responsaveis = resp; data.historico = hist;
                 } else {
                     hist.push({ status: 'Aguardando Aprovação', autor: usuarioLogado, data: new Date().toISOString() });
                     await db.from('demandas').update({ status: 'Aguardando Aprovação', historico: hist }).eq('id', demandaId);
-                    data.status = 'Aguardando Aprovação';
-                    data.historico = hist;
+                    data.status = 'Aguardando Aprovação'; data.historico = hist;
                 }
             }
+            
             demandaAtual = data;
             
             mediaGlobal = [];
@@ -241,11 +243,12 @@
                 let cor = 'laranja';
                 if(h.status === 'Aprovada' || h.status === 'Concluída' || h.status === 'Atendido' || h.status === 'Resolvido' || h.status === '156 Pedido') cor = 'verde';
                 if(h.status === 'Rejeitada') cor = 'vermelho';
-                if(h.status === 'Arquivada') cor = 'cinza';
+                if(h.status === 'Arquivada' || h.status === 'Sem Legis') cor = 'cinza';
+                if(h.status === 'Visto') cor = 'azul'; // Visto do Daniel
 
                 html += `<li>
                     <div class="timeline-dot ${cor}"></div>
-                    <div class="timeline-evento">Status alterado para <b>${h.status}</b> por ${h.autor}</div>
+                    <div class="timeline-evento">${h.status === 'Visto' ? `👀 Visualizado e Visto por <b>${h.autor}</b>` : `Status alterado para <b>${h.status}</b> por ${h.autor}`}</div>
                     <div class="timeline-tempo">${tempoRelativo(h.data)}</div>
                 </li>`;
             });
@@ -256,36 +259,17 @@
 
         window.abrirMapa = function(rua, num, bairro) { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${rua}, ${num}, ${bairro}, São Leopoldo, RS`)}`, '_blank'); }
 
-        window.abrirLightboxIndex = function(index) {
-            indexLightboxAtual = index;
-            atualizarLightbox();
-        }
+        window.abrirLightboxIndex = function(index) { indexLightboxAtual = index; atualizarLightbox(); }
 
         function atualizarLightbox() {
             document.getElementById('lightbox').classList.add('ativo');
-            const img = document.getElementById('lightboxImg');
-            const vid = document.getElementById('lightboxVid');
-            const pdf = document.getElementById('lightboxPdf');
-            const pdfFallback = document.getElementById('lightboxPdfFallback');
-            const pdfLink = document.getElementById('lightboxPdfLink');
-            
-            img.style.display = 'none'; vid.style.display = 'none'; pdf.style.display = 'none'; pdfFallback.style.display = 'none';
-            vid.pause();
-
+            const img = document.getElementById('lightboxImg'); const vid = document.getElementById('lightboxVid'); const pdf = document.getElementById('lightboxPdf'); const pdfFallback = document.getElementById('lightboxPdfFallback'); const pdfLink = document.getElementById('lightboxPdfLink');
+            img.style.display = 'none'; vid.style.display = 'none'; pdf.style.display = 'none'; pdfFallback.style.display = 'none'; vid.pause();
             const item = mediaGlobal[indexLightboxAtual];
             if(!item) return;
-
-            if(item.type === 'video') {
-                vid.src = item.url; vid.style.display = 'block'; vid.play();
-            } else if(item.type === 'pdf') {
-                pdf.src = item.url;
-                pdf.style.display = 'block';
-                pdfLink.href = item.url;
-                pdfFallback.style.display = 'block';
-            } else {
-                img.src = item.url; img.style.display = 'block';
-            }
-            
+            if(item.type === 'video') { vid.src = item.url; vid.style.display = 'block'; vid.play(); } 
+            else if(item.type === 'pdf') { pdf.src = item.url; pdf.style.display = 'block'; pdfLink.href = item.url; pdfFallback.style.display = 'block'; } 
+            else { img.src = item.url; img.style.display = 'block'; }
             document.getElementById('btnPrev').style.display = mediaGlobal.length > 1 ? 'block' : 'none';
             document.getElementById('btnNext').style.display = mediaGlobal.length > 1 ? 'block' : 'none';
         }
@@ -300,27 +284,8 @@
 
         window.fecharLightbox = function(e) {
             if (e && e.target.id !== 'lightbox' && e.target.id !== 'btnFecharLightbox') return;
-            document.getElementById('lightbox').classList.remove('ativo');
-            document.getElementById('lightboxVid').pause();
+            document.getElementById('lightbox').classList.remove('ativo'); document.getElementById('lightboxVid').pause();
         }
-
-        document.addEventListener('keydown', function(e) {
-            if(!document.getElementById('lightbox').classList.contains('ativo')) return;
-            if(e.key === 'ArrowRight') mudarMedia(1);
-            if(e.key === 'ArrowLeft') mudarMedia(-1);
-            if(e.key === 'Escape') fecharLightbox({target: document.getElementById('lightbox')});
-        });
-
-        let touchstartX = 0; let touchendX = 0;
-        const lightboxElem = document.getElementById('lightbox');
-
-        lightboxElem.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; });
-        lightboxElem.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            if(!document.getElementById('lightbox').classList.contains('ativo')) return;
-            if (touchendX < touchstartX - 40) mudarMedia(1);
-            if (touchendX > touchstartX + 40) mudarMedia(-1);
-        });
 
         function gerarBarraProgresso(status) {
             let statusFake = status;
@@ -328,7 +293,7 @@
 
             const etapas = ['Aprovada', 'Em Andamento', '156 Pedido', 'Aguardando Exp', 'Concluída'];
             let html = '', indexAtual = etapas.indexOf(statusFake);
-            if(statusFake === 'Aberta' || statusFake === 'Aguardando Aprovação' || statusFake === 'Pendente' || statusFake === 'Aguardando') indexAtual = -1;
+            if(statusFake === 'Aberta' || statusFake === 'Aguardando Aprovação' || statusFake === 'Pendente' || statusFake === 'Aguardando' || statusFake === 'Sem Legis') indexAtual = -1;
             if(statusFake === 'Rejeitada' || statusFake === 'Arquivada') return ''; 
             
             etapas.forEach((etapa, index) => {
@@ -342,6 +307,7 @@
             const responsaveis = (d.responsaveis || []).filter(r => r);
             const euEstouCuidando = responsaveis.includes(usuarioLogado);
             const encerrada = ['Concluída', 'Atendido', 'Resolvido', 'Arquivada', 'Rejeitada'].includes(d.status);
+            const isAtualBloqueado = tiposAtualBloqueados.includes(d.tipo_solicitacao);
 
             let badgeClass = 'badge-Aberta';
             if (d.status === 'Pendente') badgeClass = 'badge-Pendente';
@@ -350,22 +316,53 @@
             if (d.status === 'Aprovada') badgeClass = 'badge-Aprovada';
             if (d.status === '156 Pedido') badgeClass = 'badge-156';
             if (d.status === 'Aguardando Exp') badgeClass = 'badge-Exp';
+            if (d.status === 'Sem Legis') badgeClass = 'badge-SemLegis';
             if (d.status === 'Concluída' || d.status === 'Atendido' || d.status === 'Resolvido') badgeClass = 'badge-Concluida';
             if (d.status === 'Arquivada') badgeClass = 'badge-Arquivada';
             if (d.status === 'Rejeitada') badgeClass = 'badge-Rejeitada';
 
             let alertaAprovacao = '';
-            if (d.status === 'Aguardando Aprovação' && usuarioLogado === 'Daniel') {
-                alertaAprovacao = `<div class="alerta-aprovacao" style="grid-column:1/-1;">⏳ Esta demanda está aguardando sua aprovação, Daniel!<br><br><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda()">✅ Daniel Visto / OK</button><button style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="rejeitarDemanda()">❌ Rejeitar</button></div></div>`;
-            }
+            let btnAprovacao = '';
+            let seloAprovado = '';
+            let bloqueado = '';
 
-            let nomeAprovador = 'Daniel'; 
-            if (d.historico) {
-                const eventoAprovacao = d.historico.find(h => h.status === 'Aprovada');
-                if (eventoAprovacao && eventoAprovacao.autor) { nomeAprovador = eventoAprovacao.autor; }
-            }
+            // DIVISÃO DE LÓGICA: PROJETOS (ATUAL) vs ROTINAS LIVRES
+            if (isAtualBloqueado) {
+                // TRAVADO
+                const estaAguardando = (d.status === 'Aguardando Aprovação' || d.status === 'Aberta' || d.status === 'Pendente');
+                bloqueado = estaAguardando ? 'disabled style="background:#eee; cursor:not-allowed;"' : '';
 
-            const seloAprovado = (!['Aberta', 'Pendente', 'Aguardando', 'Aguardando Aprovação', 'Rejeitada'].includes(d.status)) ? `<span class="aprovado-daniel">Visto por ${nomeAprovador} ✓</span>` : '';
+                if (d.status === 'Aguardando Aprovação') {
+                    if (usuarioLogado === 'Daniel') {
+                        alertaAprovacao = `<div class="alerta-aprovacao" style="grid-column:1/-1;">⏳ Esta demanda está aguardando sua aprovação, Daniel!<br><br><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda()">✅ Aprovar Formalmente</button><button style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="rejeitarDemanda()">❌ Rejeitar</button></div></div>`;
+                        btnAprovacao = `<button style="background:#27ae60; color:white; flex:1;" onclick="aprovarDemanda()">✅ Aprovar Formal</button>`;
+                    } else {
+                        btnAprovacao = `<button style="background:#9b59b6; color:white; flex:1;" onclick="iniciarAcaoMaster('aprovar')">🔐 Aprovar c/ Senha</button>`;
+                    }
+                }
+
+                let nomeAprovador = 'Daniel'; 
+                if (d.historico) {
+                    const eventoAprovacao = d.historico.find(h => h.status === 'Aprovada');
+                    if (eventoAprovacao && eventoAprovacao.autor) { nomeAprovador = eventoAprovacao.autor; }
+                }
+                seloAprovado = (!['Aberta', 'Pendente', 'Aguardando', 'Aguardando Aprovação', 'Rejeitada'].includes(d.status)) ? `<span class="aprovado-daniel">Aprovada por ${nomeAprovador} ✓</span>` : '';
+
+            } else {
+                // LIVRE PARA EDIÇÃO SEMPRE
+                bloqueado = ''; 
+
+                let temVisto = false;
+                if (d.historico) { temVisto = d.historico.some(h => h.status === 'Visto'); }
+
+                if (!temVisto && usuarioLogado === 'Daniel') {
+                    btnAprovacao = `<button style="background:#3498db; color:white; flex:1;" onclick="darVisto()">👀 Dar Visto (Marcar como Visto)</button>`;
+                }
+
+                if (temVisto) {
+                    seloAprovado = `<span class="aprovado-daniel" style="background:#3498db;">Visto pelo Daniel 👀</span>`;
+                }
+            }
 
             let htmlFotos = '';
             let mediaIndex = d.pdf_url ? 1 : 0; 
@@ -385,31 +382,13 @@
 
             const tagsResponsaveis = responsaveis.length > 0 ? `<div class="responsaveis-lista">${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}')">✕</button></div>`).join('')}</div>` : '<span style="color:#999;">Nenhum</span>';
 
-            let btnAprovacao = '';
-            if (d.status === 'Aguardando Aprovação') {
-                if (usuarioLogado === 'Daniel') {
-                    btnAprovacao = `<button style="background:#27ae60; color:white; flex:1;" onclick="aprovarDemanda()">✅ Daniel Visto / OK</button>`;
-                } else {
-                    btnAprovacao = `<button style="background:#9b59b6; color:white; flex:1;" onclick="iniciarAcaoMaster('aprovar')">🔐 Aprovar c/ Senha</button>`;
-                }
-            }
-            
             const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui()">🙋 Eu Assumo</button>` : '';
-
             const msgWhats = encodeURIComponent(`*${d.tipo_solicitacao || 'Registro'}:* ${d.assunto}\n*Endereço:* ${d.rua}, ${d.numero}\n*Status:* ${d.status}\n\nAcesse: ${window.location.href}`);
             const btnWhats = `<a href="https://wa.me/?text=${msgWhats}" target="_blank" class="btn-whats">📱 WhatsApp</a>`;
-
             const inputDemandaNum = isAdmin ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" placeholder="Ex: 55" style="max-width:150px; padding:5px;">` : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
 
-            const estaAguardando = (d.status === 'Aguardando Aprovação' || d.status === 'Aberta' || d.status === 'Pendente');
-            const bloqueado = estaAguardando ? 'disabled style="background:#eee; cursor:not-allowed;"' : '';
-
-            // FORMATAÇÃO DA DATA
             let dataApresentacao = '';
-            if (d.data_agendada) {
-                const objData = new Date(d.data_agendada + 'T00:00:00');
-                dataApresentacao = objData.toLocaleDateString('pt-BR');
-            }
+            if (d.data_agendada) { const objData = new Date(d.data_agendada + 'T00:00:00'); dataApresentacao = objData.toLocaleDateString('pt-BR'); }
 
             document.getElementById('conteudo').innerHTML = `
                 ${alertaAprovacao}
@@ -486,7 +465,7 @@
                     <h2>Acompanhamento Técnico</h2>
                     <div class="form-group"><label>Nº Visual da Demanda (Admin)</label>${inputDemandaNum}</div>
 
-                    ${estaAguardando ? `<div style="color:#c0392b; font-size:13px; font-weight:bold; margin-bottom:10px; background:#ffe5e5; padding:10px; border-radius:4px; border:1px solid #c0392b;">⚠️ Bloqueado: O Status precisa estar "Aprovado/Visto" para você poder editar o andamento.</div>` : ''}
+                    ${bloqueado !== '' ? `<div style="color:#c0392b; font-size:13px; font-weight:bold; margin-bottom:10px; background:#ffe5e5; padding:10px; border-radius:4px; border:1px solid #c0392b;">⚠️ Bloqueado: Este projeto requer aprovação para edição de andamento.</div>` : ''}
 
                     <div class="form-row">
                         <div class="form-group">
@@ -516,8 +495,9 @@
                             <option value="Pendente" ${d.status==='Pendente'?'selected':''}>Pendente</option>
                             <option value="Aguardando" ${d.status==='Aguardando'?'selected':''}>Aguardando</option>
                             <option value="Aguardando Aprovação" ${d.status==='Aguardando Aprovação'?'selected':''}>Aguardando Aprovação</option>
-                            <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada / Daniel Visto</option>
+                            <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada</option>
                             <option value="Em Andamento" ${d.status==='Em Andamento'?'selected':''}>Em Andamento</option>
+                            <option value="Sem Legis" ${d.status==='Sem Legis'?'selected':''}>Sem Legis</option>
                             <option value="156 Pedido" ${d.status==='156 Pedido'?'selected':''}>156 Pedido</option>
                             <option value="Aguardando Exp" ${d.status==='Aguardando Exp'?'selected':''}>Aguardando Exp (Legis)</option>
                             <option value="Atendido" ${d.status==='Atendido'?'selected':''}>Atendido</option>
@@ -540,7 +520,7 @@
                     
                     <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:4px;">
                         <label>Link Direto do Legis 🔗</label>
-                        <input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo..." ${bloqueado}>
+                        <input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui..." ${bloqueado}>
                     </div>
 
                     <div class="botoes">
@@ -605,11 +585,16 @@
         window.aprovarDemanda = async function() { 
             const responsaveis = demandaAtual.responsaveis || [];
             if (!responsaveis.includes(usuarioLogado)) responsaveis.push(usuarioLogado);
-            
             const hist = demandaAtual.historico || [];
             hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
-
             await db.from('demandas').update({ status: 'Aprovada', responsaveis, historico: hist }).eq('id', demandaId); 
+            window.location.reload(); 
+        }
+
+        window.darVisto = async function() { 
+            const hist = demandaAtual.historico || [];
+            hist.push({ status: 'Visto', autor: usuarioLogado, data: new Date().toISOString() });
+            await db.from('demandas').update({ historico: hist }).eq('id', demandaId); 
             window.location.reload(); 
         }
 
@@ -617,7 +602,6 @@
             if(!confirm('Rejeitar demanda? As fotos serão apagadas (PDF será mantido).')) return;
             const hist = demandaAtual.historico || [];
             hist.push({ status: 'Rejeitada', autor: usuarioLogado, data: new Date().toISOString() });
-            
             await db.from('demandas').update({ status: 'Rejeitada', fotos_urls: [], historico: hist }).eq('id', demandaId);
             window.location.href = 'dashboard.html';
         }
@@ -627,15 +611,15 @@
             let protocolo = document.getElementById('editProtocolo') ? document.getElementById('editProtocolo').value.trim() : (demandaAtual.protocolo || '');
             let expediente = document.getElementById('editExpediente') ? document.getElementById('editExpediente').value.trim() : (demandaAtual.expediente || '');
             let linkLegis = document.getElementById('editLinkLegis') ? document.getElementById('editLinkLegis').value.trim() : (demandaAtual.link_legis || '');
-
             const data_agendada = document.getElementById('editDataAgendada') ? document.getElementById('editDataAgendada').value || null : demandaAtual.data_agendada;
             const horario_agendado = document.getElementById('editHorarioAgendado') ? document.getElementById('editHorarioAgendado').value || null : demandaAtual.horario_agendado;
             const secretaria = document.getElementById('editSecretaria') ? document.getElementById('editSecretaria').value.trim() : (demandaAtual.secretaria || '');
             const providencias = document.getElementById('editProvidencias') ? document.getElementById('editProvidencias').value.trim() : (demandaAtual.providencias || '');
 
+            const isAtualBloqueado = tiposAtualBloqueados.includes(demandaAtual.tipo_solicitacao);
             const estaAguardando = (demandaAtual.status === 'Aguardando Aprovação' || demandaAtual.status === 'Aberta' || demandaAtual.status === 'Pendente');
             
-            if (estaAguardando) {
+            if (isAtualBloqueado && estaAguardando) {
                 statusEdit = demandaAtual.status; 
                 protocolo = demandaAtual.protocolo || '';
                 expediente = demandaAtual.expediente || '';
@@ -643,20 +627,14 @@
             } else {
                 if (expediente && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
                     statusEdit = 'Concluída'; 
-                } else if (protocolo && protocolo !== '156 2026/' && statusEdit !== 'Aguardando Exp' && statusEdit !== 'Concluída' && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
+                } else if (protocolo && protocolo !== '156 2026/' && statusEdit !== 'Aguardando Exp' && statusEdit !== 'Concluída' && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada' && statusEdit !== 'Sem Legis') {
                     statusEdit = '156 Pedido'; 
                 }
             }
 
             const updates = {
-                status: statusEdit,
-                protocolo: protocolo,
-                expediente: expediente,
-                link_legis: linkLegis,
-                data_agendada: data_agendada,
-                horario_agendado: horario_agendado,
-                secretaria: secretaria,
-                providencias: providencias
+                status: statusEdit, protocolo: protocolo, expediente: expediente, link_legis: linkLegis,
+                data_agendada: data_agendada, horario_agendado: horario_agendado, secretaria: secretaria, providencias: providencias
             };
             
             if (statusEdit !== demandaAtual.status) {
@@ -675,7 +653,7 @@
             }
             const { error } = await db.from('demandas').update(updates).eq('id', demandaId);
             if (!error) { 
-                if (updates.status === 'Arquivada' || updates.status === 'Rejeitada' || updates.status === 'Concluída') {
+                if (updates.status === 'Arquivada' || updates.status === 'Rejeitada' || updates.status === 'Concluída' || updates.status === 'Atendido' || updates.status === 'Resolvido') {
                     window.location.href = 'dashboard.html';
                 } else {
                     window.location.reload(); 
@@ -702,7 +680,6 @@
 
         window.confirmarAcaoMaster = async function() {
             if (document.getElementById('inputSenhaMaster').value.trim() !== SENHA_MASTER) { document.getElementById('erroSenhaMaster').style.display = 'block'; return; }
-            
             document.getElementById('modalSenhaMaster').classList.remove('ativo'); 
             const hist = demandaAtual.historico || [];
 
@@ -719,8 +696,7 @@
                 window.location.href = 'dashboard.html';
             }
             else if (acaoMasterPendente === 'excluir') { 
-                await db.from('demandas').delete().eq('id', demandaId); 
-                window.location.href = 'dashboard.html'; 
+                await db.from('demandas').delete().eq('id', demandaId); window.location.href = 'dashboard.html'; 
             }
             acaoMasterPendente = null; 
         }
