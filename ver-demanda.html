@@ -29,75 +29,38 @@
         input:focus, select:focus { outline: none; border-color: #185199; }
 
         .botoes { display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap; }
-        button { flex: 1; min-width: 120px; padding: 12px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; }
+        button { flex: 1; min-width: 120px; padding: 12px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; text-align: center; text-decoration: none; display: inline-block; }
         .btn-salvar { background: #185199; color: white; }
         .btn-assumir { background: #98ED34; color: #185199; }
         .btn-retirar { background: #e67e22; color: white; }
+        .btn-whats { background: #25D366; color: white; }
 
-        /* Responsáveis múltiplos */
         .responsaveis-lista { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-        .responsavel-tag {
-            background: #e8f0ff;
-            border: 1px solid #185199;
-            color: #185199;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .responsavel-tag button {
-            background: none;
-            border: none;
-            color: #c0392b;
-            cursor: pointer;
-            font-size: 14px;
-            padding: 0;
-            min-width: unset;
-            flex: none;
-            line-height: 1;
-        }
+        .responsavel-tag { background: #e8f0ff; border: 1px solid #185199; color: #185199; padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+        .responsavel-tag button { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 14px; padding: 0; min-width: unset; flex: none; line-height: 1; }
 
-        /* Galeria */
         .galeria { display: flex; flex-direction: column; gap: 15px; }
-        .foto-container { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
+        .foto-container { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; cursor: pointer; }
         .foto-container img, .foto-container video { width: 100%; height: auto; display: block; }
         .acoes-foto { position: absolute; bottom: 10px; right: 10px; display: flex; gap: 8px; }
         .btn-foto { background: rgba(24,81,153,0.9); color: white; padding: 8px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; border: none; font-weight: bold; text-decoration: none; flex: none; min-width: unset; }
         .btn-foto:hover { background: #185199; }
         .btn-excluir-foto { background: rgba(231,76,60,0.9); }
-        .btn-excluir-foto:hover { background: #c0392b; }
-
         .upload-extra { margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px; background: #fdfdfd; border-radius: 8px; padding: 15px; border: 1px dashed #ccc; }
-
-        /* Modal senha master */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center; }
-        .modal-overlay.ativo { display: flex; }
-        .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #98ED34; }
-        .modal-box h3 { color: #185199; margin-bottom: 15px; }
-        .modal-box input { margin-bottom: 15px; }
-        .modal-botoes { display: flex; gap: 10px; }
 
         .badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
         .badge-Aberta { background: #ffe5e5; color: #c0392b; }
         .badge-Andamento { background: #fff3cd; color: #856404; }
         .badge-Aguardando { background: #fff3cd; color: #e67e22; border: 1px solid #e67e22; }
         .badge-Aprovada { background: #e2f8c5; color: #185199; }
+        .badge-156 { background: #d0e8ff; color: #0984e3; }
+        .badge-Exp { background: #f5cd79; color: #d35400; }
         .badge-Concluida { background: #d4edda; color: #155724; }
         .badge-Arquivada { background: #eee; color: #777; }
+        .badge-Rejeitada { background: #c0392b; color: white; }
 
-        .alerta-aprovacao {
-            background: #fff8e1;
-            border: 2px solid #f39c12;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: bold;
-            color: #856404;
-        }
+        .alerta-aprovacao { background: #fff8e1; border: 2px solid #f39c12; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; font-weight: bold; color: #856404; }
+        .aprovado-daniel { display: inline-block; margin-left: 10px; background: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
 
         /* Timeline */
         .timeline { list-style: none; padding: 0; margin: 0; position: relative; }
@@ -108,8 +71,31 @@
         .timeline-dot.verde { background: #27ae60; box-shadow: 0 0 0 2px #27ae60; }
         .timeline-dot.laranja { background: #e67e22; box-shadow: 0 0 0 2px #e67e22; }
         .timeline-dot.cinza { background: #95a5a6; box-shadow: 0 0 0 2px #95a5a6; }
+        .timeline-dot.vermelho { background: #c0392b; box-shadow: 0 0 0 2px #c0392b; }
         .timeline-evento { font-size: 13px; font-weight: bold; color: #185199; }
         .timeline-tempo { font-size: 11px; color: #999; font-style: italic; }
+
+        /* Progress Bar Manual */
+        .progress-wrapper { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 4px solid #185199; grid-column: 1 / -1; margin-bottom: 5px; }
+        .progress-container { display: flex; justify-content: space-between; align-items: center; position: relative; margin-top: 15px; }
+        .progress-line { position: absolute; top: 15px; left: 0; width: 100%; height: 4px; background: #eee; z-index: 1; }
+        .progress-step { position: relative; z-index: 2; background: white; padding: 8px; border-radius: 20px; font-size: 11px; font-weight: bold; color: #999; border: 2px solid #eee; text-align: center; width: 18%; }
+        .progress-step.active { color: #185199; border-color: #185199; background: #e8f0ff; }
+        .progress-step.completed { color: white; background: #27ae60; border-color: #27ae60; }
+
+        /* Links Externos */
+        .links-externos { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn-link { background: #ecf0f1; color: #2c3e50; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; text-decoration: none; border: 1px solid #bdc3c7; flex: 1; text-align: center; }
+        .btn-link:hover { background: #bdc3c7; }
+
+        /* Modal Lightbox e Senha */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-overlay.ativo { display: flex; }
+        .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #98ED34; }
+        .modal-box h3 { color: #185199; margin-bottom: 15px; }
+        .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;}
+        .modal-botoes { display: flex; gap: 10px; }
+        #lightboxImg, #lightboxVid { max-width: 90%; max-height: 90vh; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -123,16 +109,22 @@
         <h3 style="grid-column:1/-1; text-align:center; color:#777;">Carregando...</h3>
     </div>
 
+    <!-- Lightbox de Imagem/Vídeo -->
+    <div id="lightbox" class="modal-overlay" onclick="fecharLightbox(event)">
+        <img id="lightboxImg" style="display:none;">
+        <video id="lightboxVid" controls style="display:none;"></video>
+    </div>
+
     <!-- Modal Senha Master -->
     <div class="modal-overlay" id="modalSenhaMaster">
         <div class="modal-box">
-            <h3>🔐 Aprovação por Senha Master</h3>
-            <p style="color:#555; margin-bottom:15px; font-size:13px;">Digite a senha master para aprovar esta demanda sem ser o Daniel.</p>
+            <h3>🔐 Autenticação Master</h3>
+            <p style="color:#555; margin-bottom:15px; font-size:13px;" id="modalSenhaTexto">Digite a senha master para confirmar.</p>
             <input type="password" id="inputSenhaMaster" placeholder="Senha master">
             <div id="erroSenhaMaster" style="color:#c0392b; font-size:13px; margin-bottom:10px; display:none;">Senha incorreta!</div>
             <div class="modal-botoes">
-                <button style="background:#e0e0e0; color:#333;" onclick="fecharModalSenha()">Cancelar</button>
-                <button style="background:#27ae60; color:white;" onclick="confirmarAprovacaoMaster()">✅ Confirmar</button>
+                <button style="background:#e0e0e0; color:#333; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalSenha()">Cancelar</button>
+                <button style="background:#27ae60; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="confirmarAcaoMaster()">✅ Confirmar</button>
             </div>
         </div>
     </div>
@@ -140,16 +132,20 @@
     <script>
         let db, cloudName, uploadPreset;
         let demandaAtual = null;
-        const SENHA_MASTER = 'master2025'; // ← Troque aqui pela senha master desejada
+        let acaoMasterPendente = null; 
+        const SENHA_MASTER = 'master2025';
 
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         if (!usuarioLogado) window.location.href = 'index.html';
+
+        // Administradores que podem alterar o ID visual da demanda
+        const adminUsers = ['Daniel', 'João Pedro', 'Luana'];
+        const isAdmin = adminUsers.includes(usuarioLogado);
 
         const urlParams = new URLSearchParams(window.location.search);
         const demandaId = urlParams.get('id');
         if (!demandaId) window.location.href = 'dashboard.html';
 
-        // ── Inicializar ──────────────────────────────────────────────
         async function inicializarSistema() {
             try {
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
@@ -159,7 +155,6 @@
                 uploadPreset = config.uploadPreset;
                 carregarDemanda();
 
-                // Atualização em tempo real via Realtime
                 db.channel('detalhes-' + demandaId)
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas', filter: `id=eq.${demandaId}` }, () => {
                       carregarDemanda();
@@ -176,81 +171,63 @@
                 document.getElementById('conteudo').innerHTML = `<h3 style="color:red; grid-column:1/-1;">Demanda não encontrada.</h3>`;
                 return;
             }
-            demandaAtual = data;
-
-            // Se Daniel abriu uma demanda Aberta ou Em Andamento, aprova direto
-            // Se outro usuário abriu, vai automaticamente para Aguardando Aprovação
+            
+            // Fluxo Automático de Aprovação apenas para 'Aberta' e 'Em Andamento'
             if (data.status === 'Aberta' || data.status === 'Em Andamento') {
                 if (usuarioLogado === 'Daniel') {
-                    // Daniel não precisa aprovar — apenas visualiza
+                    await db.from('demandas').update({ status: 'Aprovada' }).eq('id', demandaId);
+                    data.status = 'Aprovada';
                 } else {
-                    // Manda direto pra aprovação ao abrir
                     await db.from('demandas').update({ status: 'Aguardando Aprovação' }).eq('id', demandaId);
                     data.status = 'Aguardando Aprovação';
-                    demandaAtual = { ...data };
                 }
             }
-
+            demandaAtual = data;
             renderizar(demandaAtual);
         }
 
-        // ── Helpers ──────────────────────────────────────────────────
-        // FIX: checa null antes de fazer .match
         function isVideo(url) {
             if (!url) return false;
             return /\.(mp4|webm|mov|ogg)$/i.test(url);
         }
 
+        function formataDataCompleta() {
+            const data = new Date();
+            return data.toISOString();
+        }
+
         function tempoRelativo(dataStr) {
             if (!dataStr) return '';
-            const agora = new Date();
             const data = new Date(dataStr);
-            const diff = Math.floor((agora - data) / 1000);
-            if (diff < 60) return 'há alguns segundos';
-            if (diff < 3600) return `há ${Math.floor(diff/60)} min`;
-            if (diff < 86400) return `há ${Math.floor(diff/3600)}h`;
-            if (diff < 2592000) return `há ${Math.floor(diff/86400)} dias`;
-            return data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+            return data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
         }
 
         function gerarTimeline(d) {
             const eventos = [];
-
-            if (d.criado_em) {
-                eventos.push({ dot: 'azul', texto: `📋 Demanda criada por <b>${d.criador || 'Desconhecido'}</b>`, tempo: d.criado_em });
-            }
-
-            const responsaveis = (d.responsaveis || []).filter(r => r);
-            if (responsaveis.length > 0) {
-                eventos.push({ dot: 'laranja', texto: `👥 Responsáveis: <b>${responsaveis.join(', ')}</b>`, tempo: null });
-            }
-
-            if (d.protocolo) {
-                eventos.push({ dot: 'verde', texto: `📄 Protocolo 156 registrado: <b>${d.protocolo}</b>`, tempo: null });
-            }
-
-            if (d.expediente) {
-                eventos.push({ dot: 'verde', texto: `📁 Expediente: <b>${d.expediente}</b>`, tempo: null });
-            }
+            if (d.criado_em) eventos.push({ dot: 'azul', texto: `📋 Criada por <b>${d.criador || 'Desconhecido'}</b>`, tempo: d.criado_em });
 
             const statusMap = {
-                'Em Andamento': { dot: 'laranja', texto: '🔄 Status: <b>Em Andamento</b>' },
-                'Aguardando Aprovação': { dot: 'laranja', texto: '⏳ Enviado para <b>Aprovação do Daniel</b>' },
-                'Aprovada': { dot: 'verde', texto: '✅ <b>Aprovada</b> pelo Daniel' },
+                'Aguardando Aprovação': { dot: 'laranja', texto: '⏳ Enviada para <b>Aprovação</b>' },
+                'Aprovada': { dot: 'verde', texto: '✅ <b>Aprovada</b> (Entrou em andamento)' },
+                '156 Pedido': { dot: 'verde', texto: '📞 Enviado para o <b>156</b>' },
+                'Aguardando Exp': { dot: 'laranja', texto: '📁 Aguardando <b>Expediente (Legis)</b>' },
                 'Concluída': { dot: 'verde', texto: '🎉 Demanda <b>Concluída</b>' },
                 'Arquivada': { dot: 'cinza', texto: '📦 Demanda <b>Arquivada</b>' },
+                'Rejeitada': { dot: 'vermelho', texto: '❌ Demanda <b>Rejeitada</b>' }
             };
+            
+            // Aqui poderíamos ter um log real, mas como usamos o status atual:
             if (statusMap[d.status]) {
-                eventos.push({ ...statusMap[d.status], tempo: null });
+                eventos.push({ ...statusMap[d.status], tempo: formataDataCompleta() }); // idealmente puxaria a data do log
             }
 
-            if (eventos.length === 0) return '<p style="color:#999; font-size:13px;">Sem eventos registrados.</p>';
+            if (eventos.length === 0) return '<p style="color:#999; font-size:13px;">Sem eventos.</p>';
 
             return '<ul class="timeline">' + eventos.map(ev => `
                 <li>
                     <div class="timeline-dot ${ev.dot || ''}"></div>
                     <div class="timeline-evento">${ev.texto}</div>
-                    ${ev.tempo ? `<div class="timeline-tempo">${tempoRelativo(ev.tempo)} · ${new Date(ev.tempo).toLocaleDateString('pt-BR')} ${new Date(ev.tempo).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div>` : ''}
+                    ${ev.tempo ? `<div class="timeline-tempo">${tempoRelativo(ev.tempo)}</div>` : ''}
                 </li>`).join('') + '</ul>';
         }
 
@@ -259,146 +236,178 @@
             window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank');
         }
 
-        // ── Render principal ─────────────────────────────────────────
-        function renderizar(d) {
-            const fotos = (d.fotos_urls || []).filter(f => f); // remove nulls
-            const responsaveis = (d.responsaveis || []).filter(r => r); // array de múltiplos
-            const euEstouCuidando = responsaveis.includes(usuarioLogado);
-            const encerrada = ['Concluída', 'Arquivada'].includes(d.status);
+        window.abrirLightbox = function(url, isVid) {
+            document.getElementById('lightbox').classList.add('ativo');
+            const img = document.getElementById('lightboxImg');
+            const vid = document.getElementById('lightboxVid');
+            if (isVid) {
+                vid.src = url; vid.style.display = 'block'; img.style.display = 'none'; vid.play();
+            } else {
+                img.src = url; img.style.display = 'block'; vid.style.display = 'none';
+            }
+        }
 
-            // Badge de status
+        window.fecharLightbox = function(e) {
+            if (e && e.target !== document.getElementById('lightbox')) return;
+            document.getElementById('lightbox').classList.remove('ativo');
+            document.getElementById('lightboxVid').pause();
+        }
+
+        function gerarBarraProgresso(status) {
+            const etapas = ['Aprovada', 'Em Andamento', '156 Pedido', 'Aguardando Exp', 'Concluída'];
+            let html = '';
+            let indexAtual = etapas.indexOf(status);
+            if(status === 'Aberta' || status === 'Aguardando Aprovação') indexAtual = -1;
+            if(status === 'Rejeitada' || status === 'Arquivada') return ''; // Não mostra progresso para estes
+
+            etapas.forEach((etapa, index) => {
+                let classe = '';
+                if (index < indexAtual) classe = 'completed';
+                else if (index === indexAtual) classe = 'active';
+                html += `<div class="progress-step ${classe}">${etapa}</div>`;
+            });
+            return `<div class="progress-wrapper">
+                        <h4 style="color:#185199; font-size:14px; text-align:center;">Progresso da Demanda</h4>
+                        <div class="progress-container">
+                            <div class="progress-line"></div>
+                            ${html}
+                        </div>
+                    </div>`;
+        }
+
+        function renderizar(d) {
+            const fotos = (d.fotos_urls || []).filter(f => f);
+            const responsaveis = (d.responsaveis || []).filter(r => r);
+            const euEstouCuidando = responsaveis.includes(usuarioLogado);
+            const encerrada = ['Concluída', 'Arquivada', 'Rejeitada'].includes(d.status);
+
             let badgeClass = 'badge-Aberta';
             if (d.status === 'Em Andamento') badgeClass = 'badge-Andamento';
             if (d.status === 'Aguardando Aprovação') badgeClass = 'badge-Aguardando';
             if (d.status === 'Aprovada') badgeClass = 'badge-Aprovada';
+            if (d.status === '156 Pedido') badgeClass = 'badge-156';
+            if (d.status === 'Aguardando Exp') badgeClass = 'badge-Exp';
             if (d.status === 'Concluída') badgeClass = 'badge-Concluida';
             if (d.status === 'Arquivada') badgeClass = 'badge-Arquivada';
+            if (d.status === 'Rejeitada') badgeClass = 'badge-Rejeitada';
 
-            // Alerta de aprovação para Daniel
             let alertaAprovacao = '';
             if (d.status === 'Aguardando Aprovação' && usuarioLogado === 'Daniel') {
                 alertaAprovacao = `
                 <div class="alerta-aprovacao" style="grid-column:1/-1;">
                     ⏳ Esta demanda está aguardando sua aprovação, Daniel!
                     <br><br>
-                    <button style="background:#27ae60; color:white; border:none; padding:12px 25px; border-radius:4px; font-size:15px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda()">✅ Aprovar Demanda</button>
+                    <div style="display:flex; gap:10px; justify-content:center; margin-top:10px;">
+                        <button style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda()">✅ Aprovar</button>
+                        <button style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="rejeitarDemanda()">❌ Rejeitar</button>
+                    </div>
                 </div>`;
             }
 
-            // Galeria de mídias
+            const seloAprovado = (!['Aberta', 'Aguardando Aprovação', 'Rejeitada'].includes(d.status)) 
+                ? `<span class="aprovado-daniel">Aprovada pelo Daniel ✓</span>` : '';
+
             let htmlFotos = fotos.length > 0
                 ? fotos.map((f, i) => {
                     if (!f) return '';
                     const vid = isVideo(f);
-                    const mediaTag = vid ? `<video src="${f}" controls></video>` : `<img src="${f}">`;
+                    const mediaTag = vid ? `<video src="${f}" onclick="abrirLightbox('${f}', true)"></video>` : `<img src="${f}" onclick="abrirLightbox('${f}', false)">`;
                     const ext = vid ? '.mp4' : '.jpg';
                     return `
                     <div class="foto-container">
                         ${mediaTag}
                         <div class="acoes-foto">
-                            <button class="btn-foto btn-excluir-foto" onclick="apagarFotoUnica(${i})">🗑️</button>
-                            <button class="btn-foto" onclick="forcarDownload('${f}', 'demanda_anexo${i}${ext}')">⬇️ Baixar</button>
+                            <button class="btn-foto btn-excluir-foto" onclick="event.stopPropagation(); apagarFotoUnica(${i})">🗑️</button>
+                            <button class="btn-foto" onclick="event.stopPropagation(); forcarDownload('${f}', 'demanda_anexo${i}${ext}')">⬇️</button>
                         </div>
                     </div>`;
                 }).join('')
                 : '<p style="color:#999; text-align:center; padding:20px;">Nenhuma mídia anexada.</p>';
 
-            // Link PDF
-            const btnPdf = d.pdf_url
-                ? `<a href="${d.pdf_url}" target="_blank" class="btn-foto" style="background:#c0392b; font-size:13px; padding:5px 10px;">📄 Ver PDF</a>`
-                : '';
-
-            // Tags de responsáveis
             const tagsResponsaveis = responsaveis.length > 0
-                ? `<div class="responsaveis-lista">
-                    ${responsaveis.map(r => `
-                        <div class="responsavel-tag">
-                            👤 ${r}
-                            <button onclick="sairDaCuidado('${r}')" title="Remover ${r}">✕</button>
-                        </div>`).join('')}
-                   </div>`
+                ? `<div class="responsaveis-lista">${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}')">✕</button></div>`).join('')}</div>`
                 : '<span style="color:#999;">Nenhum</span>';
 
-            // Botões de ação
             let btnAprovacao = '';
-            if (d.status === 'Aguardando Aprovação') {
-                if (usuarioLogado === 'Daniel') {
-                    btnAprovacao = `<button style="background:#27ae60; color:white; flex:1;" onclick="aprovarDemanda()">✅ Aprovar</button>`;
-                } else {
-                    btnAprovacao = `<button style="background:#9b59b6; color:white; flex:1;" onclick="abrirModalSenha()">🔐 Aprovar c/ Senha Master</button>`;
-                }
-            } else if (!encerrada) {
-                btnAprovacao = `<button style="background:#f39c12; color:white; flex:1;" onclick="pedirAprovacao()">⏳ Pedir Aprovação</button>`;
+            if (d.status === 'Aguardando Aprovação' && usuarioLogado !== 'Daniel') {
+                btnAprovacao = `<button style="background:#9b59b6; color:white; flex:1;" onclick="iniciarAcaoMaster('aprovar')">🔐 Aprovar c/ Senha</button>`;
             }
 
-            const btnAssumirOuSair = euEstouCuidando
-                ? `<button class="btn-retirar" onclick="sairDaCuidado('${usuarioLogado}')">🚪 Me Retirar</button>`
-                : (!encerrada ? `<button class="btn-assumir" onclick="assumirAqui()">🙋 Eu Assumo</button>` : '');
+            const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui()">🙋 Eu Assumo</button>` : '';
+
+            // WhatsApp link
+            const msgWhats = encodeURIComponent(`*Demanda do Gabinete:* ${d.assunto}\n*Endereço:* ${d.rua}, ${d.numero}\n*Status:* ${d.status}\n\nAcesse: ${window.location.href}`);
+            const btnWhats = `<a href="https://wa.me/?text=${msgWhats}" target="_blank" class="btn-whats">📱 WhatsApp</a>`;
+
+            // Num Demanda visual
+            const inputDemandaNum = isAdmin 
+                ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" placeholder="Ex: DEM-001" style="max-width:150px; padding:5px;">`
+                : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
 
             document.getElementById('conteudo').innerHTML = `
                 ${alertaAprovacao}
+                ${gerarBarraProgresso(d.status)}
 
                 <div class="box">
-                    <h2>
-                        Detalhes do Chamado
-                        <span class="badge ${badgeClass}">${d.status}</span>
-                    </h2>
+                    <h2>Detalhes <span class="badge ${badgeClass}">${d.status}</span> ${seloAprovado}</h2>
 
-                    ${btnPdf ? `<div style="margin-bottom:15px;">${btnPdf}</div>` : ''}
+                    <div class="links-externos">
+                        <a href="https://www.saoleopoldo.rs.gov.br/servico/685673/518?titulo=156+-+Abertura+de+Servi%C3%A7os" target="_blank" class="btn-link">🔗 Abrir 156</a>
+                        <a href="https://admin.camarasaoleopoldo.rs.gov.br/admin/index.php?accesscheck=%2Fadmin.php" target="_blank" class="btn-link">🔗 Sistema Legis</a>
+                    </div>
+
+                    ${d.pdf_url ? `<a href="${d.pdf_url}" target="_blank" class="btn-foto" style="background:#c0392b; margin-bottom:15px; display:inline-block;">📄 Ver PDF Anexado</a>` : ''}
 
                     <div class="info-group"><label>Assunto</label><p>${d.assunto}</p></div>
                     <div class="info-group">
                         <label>Endereço</label>
-                        <p>
-                            ${d.rua}, ${d.numero} - ${d.bairro}
-                            <button class="btn-foto" style="background:#3498db;" onclick="abrirMapa('${d.rua.replace(/'/g,"\\'")}','${d.numero}','${d.bairro.replace(/'/g,"\\'")}')">📍 Mapa</button>
-                        </p>
+                        <p>${d.rua}, ${d.numero} - ${d.bairro} <button class="btn-foto" style="background:#3498db; margin-left:10px;" onclick="abrirMapa('${d.rua.replace(/'/g,"\\'")}','${d.numero}','${d.bairro.replace(/'/g,"\\'")}')">📍 Mapa</button></p>
                     </div>
                     <div class="info-group"><label>Descrição</label><p>${d.descricao || 'Sem descrição.'}</p></div>
 
-                    <div class="info-group" style="background:#f9f9f9; padding:10px; border-radius:4px;">
-                        <label>Aberto por</label>
-                        <p>✍️ <b>${d.criador || 'Desconhecido'}</b>${d.criado_em ? ` &nbsp;·&nbsp; <span style="color:#999;font-size:12px;">🕐 ${tempoRelativo(d.criado_em)} (${new Date(d.criado_em).toLocaleDateString('pt-BR')} ${new Date(d.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})})</span>` : ''}</p>
+                    <div class="info-group" style="background:#f0f7e6; padding:10px; border-left:4px solid #27ae60; border-radius:4px;">
+                        <label>Dados do Solicitante</label>
+                        <p>👤 ${d.solicitante_nome || 'Não informado'}</p>
+                        <p>📞 ${d.solicitante_tel || 'Não informado'}</p>
                     </div>
 
-                    <div class="info-group">
-                        <label>Quem está cuidando</label>
-                        ${tagsResponsaveis}
+                    <div class="info-group" style="background:#f9f9f9; padding:10px; border-radius:4px; margin-top:10px;">
+                        <label>Aberto por</label>
+                        <p>✍️ <b>${d.criador || 'Desconhecido'}</b> em ${tempoRelativo(d.criado_em)}</p>
                     </div>
+                    <div class="info-group"><label>Quem está cuidando</label>${tagsResponsaveis}</div>
 
                     <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
 
-                    <h2>Acompanhamento</h2>
+                    <h2>Acompanhamento Técnico</h2>
+                    
+                    ${isAdmin ? `<div class="form-group"><label>Nº Visual da Demanda (Admin)</label>${inputDemandaNum}</div>` : ''}
 
                     <div class="form-group">
                         <label>Status</label>
                         <select id="editStatus">
-                            <option value="Aberta" ${d.status==='Aberta'?'selected':''}>Aberta</option>
-                            <option value="Em Andamento" ${d.status==='Em Andamento'?'selected':''}>Em Andamento</option>
                             <option value="Aguardando Aprovação" ${d.status==='Aguardando Aprovação'?'selected':''}>Aguardando Aprovação</option>
                             <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada</option>
+                            <option value="Em Andamento" ${d.status==='Em Andamento'?'selected':''}>Em Andamento</option>
+                            <option value="156 Pedido" ${d.status==='156 Pedido'?'selected':''}>156 Pedido</option>
+                            <option value="Aguardando Exp" ${d.status==='Aguardando Exp'?'selected':''}>Aguardando Exp (Legis)</option>
                             <option value="Concluída" ${d.status==='Concluída'?'selected':''}>Concluída</option>
                             <option value="Arquivada" ${d.status==='Arquivada'?'selected':''}>Arquivada</option>
+                            <option value="Rejeitada" ${d.status==='Rejeitada'?'selected':''}>Rejeitada</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>Protocolo 156</label>
-                        <input type="text" id="editProtocolo" value="${d.protocolo || ''}"
-                               onfocus="if(!this.value) this.value='156 (2026/'"
-                               placeholder="Clique para auto-preencher">
-                    </div>
-                    <div class="form-group">
-                        <label>Expediente</label>
-                        <input type="text" id="editExpediente" value="${d.expediente || ''}" placeholder="Ex: Exp. 5149">
-                    </div>
+                    <div class="form-group"><label>Protocolo 156</label><input type="text" id="editProtocolo" value="${d.protocolo || ''}"></div>
+                    <div class="form-group"><label>Expediente (Legis)</label><input type="text" id="editExpediente" value="${d.expediente || ''}"></div>
 
                     <div class="botoes">
-                        ${btnAssumirOuSair}
+                        ${btnAssumir}
                         ${btnAprovacao}
                         <button class="btn-salvar" onclick="salvarAlteracoes()">💾 Salvar</button>
+                        ${btnWhats}
                     </div>
 
-                    <button class="btn-retirar" style="width:100%; margin-top:15px;" onclick="arquivarDemanda()">📦 Arquivar (limpa fotos)</button>
+                    ${!['Arquivada', 'Rejeitada'].includes(d.status) ? `<button class="btn-retirar" style="width:100%; margin-top:15px;" onclick="iniciarAcaoMaster('arquivar')">📦 Arquivar (Limpa Mídias)</button>` : ''}
+                    ${d.status === 'Arquivada' ? `<button style="background:#c0392b; color:white; width:100%; margin-top:15px;" onclick="iniciarAcaoMaster('excluir')">🗑️ Excluir Definitivo do Banco</button>` : ''}
                 </div>
 
                 <div class="box">
@@ -407,11 +416,11 @@
 
                     <div class="upload-extra">
                         <h4 style="color:#185199; margin-bottom:10px;">Adicionar anexos</h4>
-                        <label style="font-size:12px; font-weight:bold;">Documento PDF (Opcional)</label>
+                        <label style="font-size:12px; font-weight:bold;">Documento PDF</label>
                         <input type="file" id="extraPdf" accept="application/pdf" style="width:100%; margin-bottom:10px;">
-                        <label style="font-size:12px; font-weight:bold;">Fotos / Vídeos</label>
+                        <label style="font-size:12px; font-weight:bold;">Fotos/Vídeos</label>
                         <input type="file" id="extraFotos" accept="image/*,video/*" multiple style="width:100%;">
-                        <button class="btn-salvar" style="width:100%; margin-top:10px;" id="btnUploadExtra" onclick="uploadNovosAnexos()">⬆️ Subir Arquivos</button>
+                        <button class="btn-salvar" style="width:100%; margin-top:10px;" id="btnUploadExtra" onclick="uploadNovosAnexos()">⬆️ Subir</button>
                         <div id="progressoExtra" style="font-size:13px; color:#185199; font-weight:bold; display:none; margin-top:5px;"></div>
                     </div>
                 </div>
@@ -419,48 +428,57 @@
                 <div class="box" style="grid-column:1/-1;">
                     <h2>📅 Linha do Tempo</h2>
                     ${gerarTimeline(d)}
-                </div>`;        }
+                </div>`;
+        }
 
-        // ── Ações de responsável ─────────────────────────────────────
         window.assumirAqui = async function() {
             const responsaveis = demandaAtual.responsaveis || [];
             if (responsaveis.includes(usuarioLogado)) return;
-            const novosResp = [...responsaveis, usuarioLogado];
-            const updates = { responsaveis: novosResp };
-            // Muda status para "Em Andamento" se estava Aberta ou Aguardando
-            if (demandaAtual.status === 'Aberta') {
-                updates.status = 'Em Andamento';
-            }
-            await db.from('demandas').update(updates).eq('id', demandaId);
+            await db.from('demandas').update({ responsaveis: [...responsaveis, usuarioLogado] }).eq('id', demandaId);
         }
 
         window.sairDaCuidado = async function(nome) {
             const responsaveis = (demandaAtual.responsaveis || []).filter(r => r !== nome);
-            const updates = { responsaveis };
-            // Se ficou vazio, volta para Aberta
-            if (responsaveis.length === 0 && demandaAtual.status === 'Em Andamento') {
-                updates.status = 'Aberta';
-            }
-            await db.from('demandas').update(updates).eq('id', demandaId);
-        }
-
-        // ── Aprovação ────────────────────────────────────────────────
-        window.pedirAprovacao = async function() {
-            // Se o próprio Daniel pediu, aprova instantaneamente
-            if (usuarioLogado === 'Daniel') {
-                await db.from('demandas').update({ status: 'Aprovada' }).eq('id', demandaId);
-            } else {
-                await db.from('demandas').update({ status: 'Aguardando Aprovação' }).eq('id', demandaId);
-                alert('✓ Pedido de aprovação enviado para o Daniel!');
-            }
+            await db.from('demandas').update({ responsaveis }).eq('id', demandaId);
         }
 
         window.aprovarDemanda = async function() {
             await db.from('demandas').update({ status: 'Aprovada' }).eq('id', demandaId);
         }
 
-        // Modal senha master
-        window.abrirModalSenha = function() {
+        window.rejeitarDemanda = async function() {
+            if(!confirm('Rejeitar demanda? As fotos serão apagadas (PDF será mantido).')) return;
+            await db.from('demandas').update({ status: 'Rejeitada', fotos_urls: [] }).eq('id', demandaId);
+        }
+
+        window.salvarAlteracoes = async function() {
+            const updates = {
+                status: document.getElementById('editStatus').value,
+                protocolo: document.getElementById('editProtocolo').value,
+                expediente: document.getElementById('editExpediente').value
+            };
+            if(isAdmin && document.getElementById('editNumDemanda')) {
+                updates.numero_demanda = document.getElementById('editNumDemanda').value;
+            }
+
+            if(updates.status === 'Rejeitada' || updates.status === 'Arquivada') {
+                if(!confirm('Atenção: Mudar para este status apagará as mídias permanentemente. Continuar?')) return;
+                updates.fotos_urls = [];
+            }
+
+            const { error } = await db.from('demandas').update(updates).eq('id', demandaId);
+            if (!error) alert('✓ Salvo com sucesso!');
+        }
+
+        // --- SISTEMA DE SENHA MASTER PARA AÇÕES ---
+        window.iniciarAcaoMaster = function(acao) {
+            acaoMasterPendente = acao;
+            let msg = '';
+            if(acao === 'aprovar') msg = 'Aprovar demanda sem ser o Daniel.';
+            if(acao === 'arquivar') msg = 'Arquivar demanda (Apagará as mídias).';
+            if(acao === 'excluir') msg = 'Excluir definitivamente do sistema.';
+            
+            document.getElementById('modalSenhaTexto').textContent = msg;
             document.getElementById('inputSenhaMaster').value = '';
             document.getElementById('erroSenhaMaster').style.display = 'none';
             document.getElementById('modalSenhaMaster').classList.add('ativo');
@@ -468,47 +486,26 @@
 
         window.fecharModalSenha = function() {
             document.getElementById('modalSenhaMaster').classList.remove('ativo');
+            acaoMasterPendente = null;
         }
 
-        window.confirmarAprovacaoMaster = async function() {
-            const senha = document.getElementById('inputSenhaMaster').value;
-            if (senha !== SENHA_MASTER) {
-                document.getElementById('erroSenhaMaster').style.display = 'block';
-                return;
+        window.confirmarAcaoMaster = async function() {
+            if (document.getElementById('inputSenhaMaster').value !== SENHA_MASTER) {
+                document.getElementById('erroSenhaMaster').style.display = 'block'; return;
             }
+            
             fecharModalSenha();
-            await db.from('demandas').update({ status: 'Aprovada' }).eq('id', demandaId);
-        }
 
-        // ── Salvar alterações ────────────────────────────────────────
-        window.salvarAlteracoes = async function() {
-            const status = document.getElementById('editStatus').value;
-            const protocolo = document.getElementById('editProtocolo').value;
-            const expediente = document.getElementById('editExpediente').value;
-
-            const { error } = await db.from('demandas').update({
-                status, protocolo, expediente
-            }).eq('id', demandaId);
-
-            if (!error) {
-                const msg = document.createElement('div');
-                msg.textContent = '✓ Salvo!';
-                msg.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#185199;color:white;padding:10px 20px;border-radius:6px;font-weight:bold;z-index:9999;';
-                document.body.appendChild(msg);
-                setTimeout(() => msg.remove(), 2000);
+            if (acaoMasterPendente === 'aprovar') {
+                await db.from('demandas').update({ status: 'Aprovada' }).eq('id', demandaId);
+            } else if (acaoMasterPendente === 'arquivar') {
+                await db.from('demandas').update({ status: 'Arquivada', fotos_urls: [] }).eq('id', demandaId);
+            } else if (acaoMasterPendente === 'excluir') {
+                await db.from('demandas').delete().eq('id', demandaId);
+                window.location.href = 'dashboard.html';
             }
         }
 
-        // ── Arquivar ─────────────────────────────────────────────────
-        window.arquivarDemanda = async function() {
-            if (!confirm('ARQUIVAR? Limpará todas as fotos. O PDF será mantido.')) return;
-            const { error } = await db.from('demandas').update({
-                status: 'Arquivada', fotos_urls: []
-            }).eq('id', demandaId);
-            if (!error) window.location.href = 'dashboard.html';
-        }
-
-        // ── Apagar foto ──────────────────────────────────────────────
         window.apagarFotoUnica = async function(index) {
             if (!confirm('Apagar este anexo?')) return;
             const fotos = [...(demandaAtual.fotos_urls || [])];
@@ -516,26 +513,22 @@
             await db.from('demandas').update({ fotos_urls: fotos }).eq('id', demandaId);
         }
 
-        // ── Download forçado ─────────────────────────────────────────
         window.forcarDownload = async function(url, nome) {
             try {
                 const response = await fetch(url);
                 const blob = await response.blob();
                 const a = document.createElement('a');
                 a.href = window.URL.createObjectURL(blob);
-                a.download = nome;
-                a.click();
+                a.download = nome; a.click();
             } catch { alert('Erro ao baixar.'); }
         }
 
-        // ── Upload de novos anexos ───────────────────────────────────
         async function uploadCloudinaryDirect(file) {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('upload_preset', uploadPreset);
             const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, { method: 'POST', body: formData });
             const data = await res.json();
-            if (!data.secure_url) throw new Error(data.error?.message || 'Falha no upload');
             return data.secure_url;
         }
 
@@ -546,38 +539,29 @@
 
             const btn = document.getElementById('btnUploadExtra');
             const prog = document.getElementById('progressoExtra');
-            btn.disabled = true;
-            prog.style.display = 'block';
+            btn.disabled = true; prog.style.display = 'block';
 
             try {
                 let updates = {};
-
                 if (pdfFile) {
                     prog.textContent = 'Enviando PDF...';
                     updates.pdf_url = await uploadCloudinaryDirect(pdfFile);
                 }
-
                 if (mediaFiles.length > 0) {
                     let novasFotos = [];
                     for (let i = 0; i < mediaFiles.length; i++) {
                         prog.textContent = `Enviando mídia ${i+1}/${mediaFiles.length}...`;
                         novasFotos.push(await uploadCloudinaryDirect(mediaFiles[i]));
                     }
-                    const fotosAtuais = (demandaAtual.fotos_urls || []).filter(f => f);
-                    updates.fotos_urls = [...fotosAtuais, ...novasFotos];
+                    updates.fotos_urls = [...(demandaAtual.fotos_urls || []).filter(f => f), ...novasFotos];
                 }
-
                 await db.from('demandas').update(updates).eq('id', demandaId);
                 prog.textContent = '✓ Upload concluído!';
             } catch (e) {
                 alert('Erro: ' + e.message);
             } finally {
                 btn.disabled = false;
-                setTimeout(() => {
-                    prog.style.display = 'none';
-                    document.getElementById('extraPdf').value = '';
-                    document.getElementById('extraFotos').value = '';
-                }, 3000);
+                setTimeout(() => { prog.style.display = 'none'; document.getElementById('extraPdf').value = ''; document.getElementById('extraFotos').value = ''; }, 3000);
             }
         }
 
