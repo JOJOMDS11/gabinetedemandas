@@ -109,6 +109,9 @@
             .lightbox-nav { padding: 10px; font-size: 20px; }
             .form-row { grid-template-columns: 1fr; }
         }
+        
+        .bloco-edicao { background: #fdfdfd; border: 1px dashed #ccc; padding: 20px; border-radius: 8px; margin-top: 10px;}
+        .bloco-edicao h4 { color: #185199; margin-bottom: 15px; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px;}
     </style>
 </head>
 <body>
@@ -154,12 +157,8 @@
         let acaoMasterPendente = null; 
         const SENHA_MASTER = 'master2025';
 
-        // LISTA DE PROJETOS QUE EXIGEM APROVAÇÃO RÍGIDA
-        const tiposAtualBloqueados = [
-            'INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 
-            'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 
-            'REQUERIMENTO', 'SESSÃO SOLENE'
-        ];
+        const tiposProjetos = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+        const tiposDemandas156 = ['DEMANDA', 'Demanda Externa'];
 
         let mediaGlobal = [];
         let indexLightboxAtual = 0;
@@ -193,12 +192,11 @@
             const { data, error } = await db.from('demandas').select('*').eq('id', demandaId).single();
             if (error) { document.getElementById('conteudo').innerHTML = `<h3 style="color:red; grid-column:1/-1;">Demanda não encontrada.</h3>`; return; }
             
-            const isAtualBloqueado = tiposAtualBloqueados.includes(data.tipo_solicitacao);
+            const isAtualBloqueado = tiposProjetos.includes(data.tipo_solicitacao);
 
             // AUTO-Ajuste de Status Inicial SÓ PARA OS ITENS DO "ATUAL"
             if (isAtualBloqueado && (data.status === 'Aberta' || data.status === 'Em Andamento' || data.status === 'Pendente')) {
                 const hist = data.historico || [];
-                
                 if (usuarioLogado === 'Daniel') {
                     const resp = data.responsaveis || [];
                     if (!resp.includes('Daniel')) resp.push('Daniel');
@@ -223,7 +221,6 @@
         }
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
-
         function tempoRelativo(dataStr) {
             if (!dataStr) return '';
             const data = new Date(dataStr);
@@ -244,7 +241,7 @@
                 if(h.status === 'Aprovada' || h.status === 'Concluída' || h.status === 'Atendido' || h.status === 'Resolvido' || h.status === '156 Pedido') cor = 'verde';
                 if(h.status === 'Rejeitada') cor = 'vermelho';
                 if(h.status === 'Arquivada' || h.status === 'Sem Legis') cor = 'cinza';
-                if(h.status === 'Visto') cor = 'azul'; // Visto do Daniel
+                if(h.status === 'Visto') cor = 'azul'; 
 
                 html += `<li>
                     <div class="timeline-dot ${cor}"></div>
@@ -287,15 +284,29 @@
             document.getElementById('lightbox').classList.remove('ativo'); document.getElementById('lightboxVid').pause();
         }
 
-        function gerarBarraProgresso(status) {
+        // BARRA DE PROGRESSO INTELIGENTE ADAPTÁVEL
+        function gerarBarraProgresso(status, tipo) {
             let statusFake = status;
             if (status === 'Atendido' || status === 'Resolvido') statusFake = 'Concluída';
 
-            const etapas = ['Aprovada', 'Em Andamento', '156 Pedido', 'Aguardando Exp', 'Concluída'];
-            let html = '', indexAtual = etapas.indexOf(statusFake);
-            if(statusFake === 'Aberta' || statusFake === 'Aguardando Aprovação' || statusFake === 'Pendente' || statusFake === 'Aguardando' || statusFake === 'Sem Legis') indexAtual = -1;
-            if(statusFake === 'Rejeitada' || statusFake === 'Arquivada') return ''; 
+            let etapas = [];
+            if (tiposProjetos.includes(tipo)) {
+                etapas = ['Aprovada', 'Em Andamento', 'Aguardando Exp', 'Concluída'];
+                if(statusFake === '156 Pedido') statusFake = 'Aguardando Exp';
+            } else if (tiposDemandas156.includes(tipo)) {
+                etapas = ['Aberta', 'Em Andamento', '156 Pedido', 'Concluída'];
+                if (statusFake === 'Pendente') statusFake = 'Aberta';
+            } else {
+                etapas = ['Pendente', 'Em Andamento', 'Atendido', 'Concluída'];
+                if (statusFake === 'Aberta' || statusFake === 'Aguardando') statusFake = 'Pendente';
+                if (statusFake === 'Aprovada') statusFake = 'Em Andamento';
+            }
+
+            let indexAtual = etapas.indexOf(statusFake);
+            if(status === 'Aguardando Aprovação' || status === 'Sem Legis') indexAtual = -1;
+            if(status === 'Rejeitada' || status === 'Arquivada') return ''; 
             
+            let html = '';
             etapas.forEach((etapa, index) => {
                 let classe = index < indexAtual ? 'completed' : (index === indexAtual ? 'active' : '');
                 html += `<div class="progress-step ${classe}">${etapa}</div>`;
@@ -307,7 +318,7 @@
             const responsaveis = (d.responsaveis || []).filter(r => r);
             const euEstouCuidando = responsaveis.includes(usuarioLogado);
             const encerrada = ['Concluída', 'Atendido', 'Resolvido', 'Arquivada', 'Rejeitada'].includes(d.status);
-            const isAtualBloqueado = tiposAtualBloqueados.includes(d.tipo_solicitacao);
+            const isAtualBloqueado = tiposProjetos.includes(d.tipo_solicitacao);
 
             let badgeClass = 'badge-Aberta';
             if (d.status === 'Pendente') badgeClass = 'badge-Pendente';
@@ -326,9 +337,8 @@
             let seloAprovado = '';
             let bloqueado = '';
 
-            // DIVISÃO DE LÓGICA: PROJETOS (ATUAL) vs ROTINAS LIVRES
+            // DIVISÃO DE LÓGICA: PROJETOS vs ROTINAS LIVRES
             if (isAtualBloqueado) {
-                // TRAVADO
                 const estaAguardando = (d.status === 'Aguardando Aprovação' || d.status === 'Aberta' || d.status === 'Pendente');
                 bloqueado = estaAguardando ? 'disabled style="background:#eee; cursor:not-allowed;"' : '';
 
@@ -349,14 +359,12 @@
                 seloAprovado = (!['Aberta', 'Pendente', 'Aguardando', 'Aguardando Aprovação', 'Rejeitada'].includes(d.status)) ? `<span class="aprovado-daniel">Aprovada por ${nomeAprovador} ✓</span>` : '';
 
             } else {
-                // LIVRE PARA EDIÇÃO SEMPRE
                 bloqueado = ''; 
-
                 let temVisto = false;
                 if (d.historico) { temVisto = d.historico.some(h => h.status === 'Visto'); }
 
                 if (!temVisto && usuarioLogado === 'Daniel') {
-                    btnAprovacao = `<button style="background:#3498db; color:white; flex:1;" onclick="darVisto()">👀 Dar Visto (Marcar como Visto)</button>`;
+                    btnAprovacao = `<button style="background:#3498db; color:white; flex:1;" onclick="darVisto()">👀 Dar Visto (Marcar como Ciente)</button>`;
                 }
 
                 if (temVisto) {
@@ -392,7 +400,7 @@
 
             document.getElementById('conteudo').innerHTML = `
                 ${alertaAprovacao}
-                ${gerarBarraProgresso(d.status)}
+                ${gerarBarraProgresso(d.status, d.tipo_solicitacao)}
 
                 <div class="box">
                     <h2>Detalhes <span class="badge ${badgeClass}">${d.status}</span> ${seloAprovado}</h2>
@@ -442,13 +450,67 @@
                         <label>Aberto por</label>
                         <p>✍️ <b>${d.criador || 'Desconhecido'}</b> em ${tempoRelativo(d.criado_em)}</p>
                     </div>
+
+                    <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+
+                    <!-- ÁREA DE EDIÇÃO GERAL -->
+                    <h2>Acompanhamento & Edição</h2>
                     
-                    <div class="info-group">
-                        <label>Quem está cuidando</label>${tagsResponsaveis}
+                    ${isAtualBloqueado && bloqueado !== '' ? `<div style="color:#c0392b; font-size:13px; font-weight:bold; margin-bottom:10px; background:#ffe5e5; padding:10px; border-radius:4px; border:1px solid #c0392b;">⚠️ Bloqueado: Este projeto requer aprovação para edição de andamento.</div>` : ''}
+
+                    <div class="bloco-edicao">
+                        <h4>✏️ Corrigir Dados Principais</h4>
                         
-                        <div style="display:flex; gap:10px; margin-top:10px;">
+                        <div class="form-group">
+                            <label>Corrigir Tipo de Solicitação</label>
+                            <select id="editTipo" ${bloqueado}>
+                                <option value="" ${!d.tipo_solicitacao?'selected':''}>Não classificado (Selecione um)</option>
+                                <optgroup label="Agendas e Internos (Livre)">
+                                    <option value="Agenda VISITA AO GABINETE" ${d.tipo_solicitacao==='Agenda VISITA AO GABINETE'?'selected':''}>Agenda VISITA AO GABINETE</option>
+                                    <option value="AGENDA visita EXTERNA" ${d.tipo_solicitacao==='AGENDA visita EXTERNA'?'selected':''}>AGENDA visita EXTERNA</option>
+                                    <option value="GABINETE" ${d.tipo_solicitacao==='GABINETE'?'selected':''}>GABINETE</option>
+                                    <option value="REUNIÃO" ${d.tipo_solicitacao==='REUNIÃO'?'selected':''}>REUNIÃO</option>
+                                    <option value="visita ao Gabinete" ${d.tipo_solicitacao==='visita ao Gabinete'?'selected':''}>visita ao Gabinete</option>
+                                </optgroup>
+                                <optgroup label="Demandas (Livre)">
+                                    <option value="DEMANDA" ${d.tipo_solicitacao==='DEMANDA'?'selected':''}>DEMANDA (Geral)</option>
+                                    <option value="Demanda Externa" ${d.tipo_solicitacao==='Demanda Externa'?'selected':''}>Demanda Externa</option>
+                                </optgroup>
+                                <optgroup label="Legislativo e Projetos (Requer Aprovação)">
+                                    <option value="INDICAÇÃO" ${d.tipo_solicitacao==='INDICAÇÃO'?'selected':''}>INDICAÇÃO</option>
+                                    <option value="Moção de Apoio" ${d.tipo_solicitacao==='Moção de Apoio'?'selected':''}>Moção de Apoio</option>
+                                    <option value="PEDIDO DE PROVIDÊNCIAS" ${d.tipo_solicitacao==='PEDIDO DE PROVIDÊNCIAS'?'selected':''}>PEDIDO DE PROVIDÊNCIAS</option>
+                                    <option value="PROJETO DE LEI" ${d.tipo_solicitacao==='PROJETO DE LEI'?'selected':''}>PROJETO DE LEI</option>
+                                    <option value="projeto de Lei" ${d.tipo_solicitacao==='projeto de Lei'?'selected':''}>projeto de Lei</option>
+                                    <option value="Projeto de Lei de Vereador" ${d.tipo_solicitacao==='Projeto de Lei de Vereador'?'selected':''}>Projeto de Lei de Vereador</option>
+                                    <option value="Projeto de Resolução (PR)" ${d.tipo_solicitacao==='Projeto de Resolução (PR)'?'selected':''}>Projeto de Resolução (PR)</option>
+                                    <option value="REQUERIMENTO" ${d.tipo_solicitacao==='REQUERIMENTO'?'selected':''}>REQUERIMENTO</option>
+                                    <option value="SESSÃO SOLENE" ${d.tipo_solicitacao==='SESSÃO SOLENE'?'selected':''}>SESSÃO SOLENE</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Corrigir Assunto</label>
+                            <input type="text" id="editAssunto" value="${d.assunto || ''}" ${bloqueado}>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Corrigir Nome (Solicitante)</label>
+                                <input type="text" id="editNomeSol" value="${d.solicitante_nome || ''}" ${bloqueado}>
+                            </div>
+                            <div class="form-group">
+                                <label>Corrigir Telefone</label>
+                                <input type="text" id="editTelSol" value="${d.solicitante_tel || ''}" ${bloqueado}>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bloco-edicao" style="margin-top: 20px;">
+                        <h4>👥 Equipa Responsável</h4>
+                        <div style="margin-bottom:15px;">Atuais: ${tagsResponsaveis}</div>
+                        <div style="display:flex; gap:10px;">
                             <select id="addResponsavelSelect" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                                <option value="">Atribuir outra pessoa...</option>
+                                <option value="">Atribuir uma pessoa...</option>
                                 <option value="Daniel">Daniel</option>
                                 <option value="João Pedro">João Pedro</option>
                                 <option value="Alemão">Alemão</option>
@@ -456,77 +518,76 @@
                                 <option value="Luana">Luana</option>
                                 <option value="Débora">Débora</option>
                             </select>
-                            <button class="btn-foto" style="background:#27ae60; padding:8px 15px;" onclick="adicionarResponsavelManual()">➕</button>
+                            <button class="btn-foto" style="background:#27ae60; padding:8px 15px;" onclick="adicionarResponsavelManual()">➕ Adicionar</button>
                         </div>
                     </div>
 
-                    <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+                    <div class="bloco-edicao" style="margin-top: 20px;">
+                        <h4>⚙️ Status & Acompanhamento Técnico</h4>
+                        
+                        <div class="form-group"><label>Nº Visual da Demanda (Admin)</label>${inputDemandaNum}</div>
 
-                    <h2>Acompanhamento Técnico</h2>
-                    <div class="form-group"><label>Nº Visual da Demanda (Admin)</label>${inputDemandaNum}</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Data Agendada</label>
+                                <input type="date" id="editDataAgendada" value="${d.data_agendada || ''}" ${bloqueado}>
+                            </div>
+                            <div class="form-group">
+                                <label>Horário</label>
+                                <input type="time" id="editHorarioAgendado" value="${d.horario_agendado || ''}" ${bloqueado}>
+                            </div>
+                        </div>
 
-                    ${bloqueado !== '' ? `<div style="color:#c0392b; font-size:13px; font-weight:bold; margin-bottom:10px; background:#ffe5e5; padding:10px; border-radius:4px; border:1px solid #c0392b;">⚠️ Bloqueado: Este projeto requer aprovação para edição de andamento.</div>` : ''}
-
-                    <div class="form-row">
                         <div class="form-group">
-                            <label>Editar Data</label>
-                            <input type="date" id="editDataAgendada" value="${d.data_agendada || ''}" ${bloqueado}>
+                            <label>Secretaria</label>
+                            <input type="text" id="editSecretaria" value="${d.secretaria || ''}" placeholder="Ex: SEMOV..." ${bloqueado}>
                         </div>
+
                         <div class="form-group">
-                            <label>Editar Horário</label>
-                            <input type="time" id="editHorarioAgendado" value="${d.horario_agendado || ''}" ${bloqueado}>
+                            <label>Providências / Ações Tomadas</label>
+                            <textarea id="editProvidencias" rows="2" placeholder="O que já foi feito?" ${bloqueado}>${d.providencias || ''}</textarea>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label>Secretaria</label>
-                        <input type="text" id="editSecretaria" value="${d.secretaria || ''}" placeholder="Ex: SEMOV..." ${bloqueado}>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Providências / Ações Tomadas</label>
-                        <textarea id="editProvidencias" rows="2" placeholder="O que já foi feito?" ${bloqueado}>${d.providencias || ''}</textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Status Manual</label>
-                        <select id="editStatus" ${bloqueado}>
-                            <option value="Aberta" ${d.status==='Aberta'?'selected':''}>Aberta</option>
-                            <option value="Pendente" ${d.status==='Pendente'?'selected':''}>Pendente</option>
-                            <option value="Aguardando" ${d.status==='Aguardando'?'selected':''}>Aguardando</option>
-                            <option value="Aguardando Aprovação" ${d.status==='Aguardando Aprovação'?'selected':''}>Aguardando Aprovação</option>
-                            <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada</option>
-                            <option value="Em Andamento" ${d.status==='Em Andamento'?'selected':''}>Em Andamento</option>
-                            <option value="Sem Legis" ${d.status==='Sem Legis'?'selected':''}>Sem Legis</option>
-                            <option value="156 Pedido" ${d.status==='156 Pedido'?'selected':''}>156 Pedido</option>
-                            <option value="Aguardando Exp" ${d.status==='Aguardando Exp'?'selected':''}>Aguardando Exp (Legis)</option>
-                            <option value="Atendido" ${d.status==='Atendido'?'selected':''}>Atendido</option>
-                            <option value="Resolvido" ${d.status==='Resolvido'?'selected':''}>Resolvido</option>
-                            <option value="Concluída" ${d.status==='Concluída'?'selected':''}>Concluída</option>
-                            <option value="Arquivada" ${d.status==='Arquivada'?'selected':''}>Arquivada</option>
-                            <option value="Rejeitada" ${d.status==='Rejeitada'?'selected':''}>Rejeitada</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Protocolo 156</label>
-                        <input type="text" id="editProtocolo" value="${d.protocolo || ''}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher" ${bloqueado}>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Expediente (Legis)</label>
-                        <input type="text" id="editExpediente" value="${d.expediente || ''}" placeholder="Ex: Exp. 5149" ${bloqueado}>
-                    </div>
-                    
-                    <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:4px;">
-                        <label>Link Direto do Legis 🔗</label>
-                        <input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui..." ${bloqueado}>
+                        <div class="form-group">
+                            <label>Status Manual</label>
+                            <select id="editStatus" ${bloqueado}>
+                                <option value="Aberta" ${d.status==='Aberta'?'selected':''}>Aberta</option>
+                                <option value="Pendente" ${d.status==='Pendente'?'selected':''}>Pendente</option>
+                                <option value="Aguardando" ${d.status==='Aguardando'?'selected':''}>Aguardando</option>
+                                <option value="Aguardando Aprovação" ${d.status==='Aguardando Aprovação'?'selected':''}>Aguardando Aprovação</option>
+                                <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada</option>
+                                <option value="Em Andamento" ${d.status==='Em Andamento'?'selected':''}>Em Andamento</option>
+                                <option value="Sem Legis" ${d.status==='Sem Legis'?'selected':''}>Sem Legis</option>
+                                <option value="156 Pedido" ${d.status==='156 Pedido'?'selected':''}>156 Pedido</option>
+                                <option value="Aguardando Exp" ${d.status==='Aguardando Exp'?'selected':''}>Aguardando Exp (Legis)</option>
+                                <option value="Atendido" ${d.status==='Atendido'?'selected':''}>Atendido</option>
+                                <option value="Resolvido" ${d.status==='Resolvido'?'selected':''}>Resolvido</option>
+                                <option value="Concluída" ${d.status==='Concluída'?'selected':''}>Concluída</option>
+                                <option value="Arquivada" ${d.status==='Arquivada'?'selected':''}>Arquivada</option>
+                                <option value="Rejeitada" ${d.status==='Rejeitada'?'selected':''}>Rejeitada</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Protocolo 156</label>
+                            <input type="text" id="editProtocolo" value="${d.protocolo || ''}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher" ${bloqueado}>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Expediente (Legis)</label>
+                            <input type="text" id="editExpediente" value="${d.expediente || ''}" placeholder="Ex: Exp. 5149" ${bloqueado}>
+                        </div>
+                        
+                        <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:4px;">
+                            <label>Link Direto do Legis 🔗</label>
+                            <input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo..." ${bloqueado}>
+                        </div>
                     </div>
 
                     <div class="botoes">
                         ${btnAssumir}
                         ${btnAprovacao}
-                        <button class="btn-salvar" onclick="salvarAlteracoes()">💾 Salvar Status/Edições</button>
+                        <button class="btn-salvar" onclick="salvarAlteracoes()">💾 Salvar Tudo</button>
                         ${btnWhats}
                     </div>
 
@@ -585,8 +646,10 @@
         window.aprovarDemanda = async function() { 
             const responsaveis = demandaAtual.responsaveis || [];
             if (!responsaveis.includes(usuarioLogado)) responsaveis.push(usuarioLogado);
+            
             const hist = demandaAtual.historico || [];
             hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
+
             await db.from('demandas').update({ status: 'Aprovada', responsaveis, historico: hist }).eq('id', demandaId); 
             window.location.reload(); 
         }
@@ -602,6 +665,7 @@
             if(!confirm('Rejeitar demanda? As fotos serão apagadas (PDF será mantido).')) return;
             const hist = demandaAtual.historico || [];
             hist.push({ status: 'Rejeitada', autor: usuarioLogado, data: new Date().toISOString() });
+            
             await db.from('demandas').update({ status: 'Rejeitada', fotos_urls: [], historico: hist }).eq('id', demandaId);
             window.location.href = 'dashboard.html';
         }
@@ -615,8 +679,13 @@
             const horario_agendado = document.getElementById('editHorarioAgendado') ? document.getElementById('editHorarioAgendado').value || null : demandaAtual.horario_agendado;
             const secretaria = document.getElementById('editSecretaria') ? document.getElementById('editSecretaria').value.trim() : (demandaAtual.secretaria || '');
             const providencias = document.getElementById('editProvidencias') ? document.getElementById('editProvidencias').value.trim() : (demandaAtual.providencias || '');
+            
+            const tipo_solicitacao = document.getElementById('editTipo') ? document.getElementById('editTipo').value : demandaAtual.tipo_solicitacao;
+            const assunto = document.getElementById('editAssunto') ? document.getElementById('editAssunto').value.trim() : demandaAtual.assunto;
+            const nomeSol = document.getElementById('editNomeSol') ? document.getElementById('editNomeSol').value.trim() : demandaAtual.solicitante_nome;
+            const telSol = document.getElementById('editTelSol') ? document.getElementById('editTelSol').value.trim() : demandaAtual.solicitante_tel;
 
-            const isAtualBloqueado = tiposAtualBloqueados.includes(demandaAtual.tipo_solicitacao);
+            const isAtualBloqueado = tiposProjetos.includes(tipo_solicitacao || demandaAtual.tipo_solicitacao);
             const estaAguardando = (demandaAtual.status === 'Aguardando Aprovação' || demandaAtual.status === 'Aberta' || demandaAtual.status === 'Pendente');
             
             if (isAtualBloqueado && estaAguardando) {
@@ -634,7 +703,8 @@
 
             const updates = {
                 status: statusEdit, protocolo: protocolo, expediente: expediente, link_legis: linkLegis,
-                data_agendada: data_agendada, horario_agendado: horario_agendado, secretaria: secretaria, providencias: providencias
+                data_agendada: data_agendada, horario_agendado: horario_agendado, secretaria: secretaria, providencias: providencias,
+                tipo_solicitacao: tipo_solicitacao, assunto: assunto, solicitante_nome: nomeSol, solicitante_tel: telSol
             };
             
             if (statusEdit !== demandaAtual.status) {
