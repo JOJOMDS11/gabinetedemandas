@@ -122,7 +122,7 @@
         <h3 style="grid-column:1/-1; text-align:center; color:#777;">Carregando...</h3>
     </div>
 
-    <!-- Lightbox Aprimorado (Fotos, Vídeos e PDF) -->
+    <!-- Lightbox Aprimorado -->
     <div id="lightbox" class="modal-overlay" onclick="fecharLightbox(event)">
         <button id="btnFecharLightbox" onclick="fecharLightbox(event)">✕ Fechar</button>
         <button id="btnPrev" class="lightbox-nav" onclick="mudarMedia(-1, event)">&#10094;</button>
@@ -131,7 +131,6 @@
         <video id="lightboxVid" controls style="display:none;"></video>
         <iframe id="lightboxPdf" style="display:none;"></iframe>
         
-        <!-- Botão reserva caso o celular bloqueie o PDF -->
         <div id="lightboxPdfFallback" style="display:none; text-align:center;">
             <p style="color:white; margin-bottom:10px; font-size:14px;">Não abriu no celular?</p>
             <a id="lightboxPdfLink" href="#" target="_blank" style="background:#27ae60; color:white; padding:10px 20px; border-radius:4px; font-weight:bold; text-decoration:none;">📄 Baixar / Abrir Externo</a>
@@ -199,8 +198,12 @@
             
             if (data.status === 'Aberta' || data.status === 'Em Andamento') {
                 if (usuarioLogado === 'Daniel') {
-                    await db.from('demandas').update({ status: 'Aprovada' }).eq('id', demandaId);
+                    // Se Daniel abre, aprova e o inclui como responsável
+                    const resp = data.responsaveis || [];
+                    if (!resp.includes('Daniel')) resp.push('Daniel');
+                    await db.from('demandas').update({ status: 'Aprovada', responsaveis: resp }).eq('id', demandaId);
                     data.status = 'Aprovada';
+                    data.responsaveis = resp;
                 } else {
                     await db.from('demandas').update({ status: 'Aguardando Aprovação' }).eq('id', demandaId);
                     data.status = 'Aguardando Aprovação';
@@ -208,7 +211,6 @@
             }
             demandaAtual = data;
             
-            // Popula as mídias globais para o Lightbox
             mediaGlobal = [];
             if(data.pdf_url) mediaGlobal.push({ url: data.pdf_url, type: 'pdf' });
             const fotos = (data.fotos_urls || []).filter(f => f);
@@ -245,7 +247,6 @@
 
         window.abrirMapa = function(rua, num, bairro) { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${rua}, ${num}, ${bairro}, São Leopoldo, RS`)}`, '_blank'); }
 
-        // MÁGICA DO LIGHTBOX C/ NAVEGAÇÃO E PDF
         window.abrirLightboxIndex = function(index) {
             indexLightboxAtual = index;
             atualizarLightbox();
@@ -294,7 +295,6 @@
             document.getElementById('lightboxVid').pause();
         }
 
-        // Eventos de Teclado para PC (Setas)
         document.addEventListener('keydown', function(e) {
             if(!document.getElementById('lightbox').classList.contains('ativo')) return;
             if(e.key === 'ArrowRight') mudarMedia(1);
@@ -302,20 +302,16 @@
             if(e.key === 'Escape') fecharLightbox({target: document.getElementById('lightbox')});
         });
 
-        // Eventos de Deslizar (Swipe) para Celular
         let touchstartX = 0;
         let touchendX = 0;
         const lightboxElem = document.getElementById('lightbox');
 
-        lightboxElem.addEventListener('touchstart', e => {
-            touchstartX = e.changedTouches[0].screenX;
-        });
-
+        lightboxElem.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; });
         lightboxElem.addEventListener('touchend', e => {
             touchendX = e.changedTouches[0].screenX;
             if(!document.getElementById('lightbox').classList.contains('ativo')) return;
-            if (touchendX < touchstartX - 40) mudarMedia(1); // Deslizou pra esquerda
-            if (touchendX > touchstartX + 40) mudarMedia(-1); // Deslizou pra direita
+            if (touchendX < touchstartX - 40) mudarMedia(1);
+            if (touchendX > touchstartX + 40) mudarMedia(-1);
         });
 
         function gerarBarraProgresso(status) {
@@ -378,6 +374,7 @@
 
             const inputDemandaNum = isAdmin ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" placeholder="Ex: 55" style="max-width:150px; padding:5px;">` : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
 
+            // Repare no "onfocus" do campo Protocolo 156
             document.getElementById('conteudo').innerHTML = `
                 ${alertaAprovacao}
                 ${gerarBarraProgresso(d.status)}
@@ -421,7 +418,7 @@
                     <div class="form-group"><label>Nº Visual da Demanda (Admin)</label>${inputDemandaNum}</div>
 
                     <div class="form-group">
-                        <label>Status</label>
+                        <label>Status Manual</label>
                         <select id="editStatus">
                             <option value="Aguardando Aprovação" ${d.status==='Aguardando Aprovação'?'selected':''}>Aguardando Aprovação</option>
                             <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada</option>
@@ -433,8 +430,16 @@
                             <option value="Rejeitada" ${d.status==='Rejeitada'?'selected':''}>Rejeitada</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>Protocolo 156</label><input type="text" id="editProtocolo" value="${d.protocolo || ''}"></div>
-                    <div class="form-group"><label>Expediente (Legis)</label><input type="text" id="editExpediente" value="${d.expediente || ''}"></div>
+                    
+                    <!-- Novo: onfocus para preencher automático -->
+                    <div class="form-group">
+                        <label>Protocolo 156</label>
+                        <input type="text" id="editProtocolo" value="${d.protocolo || ''}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher">
+                    </div>
+                    <div class="form-group">
+                        <label>Expediente (Legis)</label>
+                        <input type="text" id="editExpediente" value="${d.expediente || ''}">
+                    </div>
 
                     <div class="botoes">
                         ${btnAssumir}
@@ -473,7 +478,6 @@
             const { error } = await db.from('demandas').update({ pdf_url: null }).eq('id', demandaId);
             if(!error) {
                 demandaAtual.pdf_url = null;
-                // Refaz a lista global de mídia tirando o PDF
                 mediaGlobal = mediaGlobal.filter(m => m.type !== 'pdf');
                 renderizar(demandaAtual);
                 alert('✓ PDF excluído com sucesso!');
@@ -491,7 +495,12 @@
             await db.from('demandas').update({ responsaveis }).eq('id', demandaId);
         }
 
-        window.aprovarDemanda = async function() { await db.from('demandas').update({ status: 'Aprovada' }).eq('id', demandaId); }
+        window.aprovarDemanda = async function() { 
+            const responsaveis = demandaAtual.responsaveis || [];
+            if (!responsaveis.includes(usuarioLogado)) responsaveis.push(usuarioLogado);
+            await db.from('demandas').update({ status: 'Aprovada', responsaveis }).eq('id', demandaId); 
+            carregarDemanda(); // Atualiza a tela
+        }
 
         window.rejeitarDemanda = async function() {
             if(!confirm('Rejeitar demanda? As fotos serão apagadas (PDF será mantido).')) return;
@@ -499,11 +508,23 @@
         }
 
         window.salvarAlteracoes = async function() {
+            let statusEdit = document.getElementById('editStatus').value;
+            const protocolo = document.getElementById('editProtocolo').value.trim();
+            const expediente = document.getElementById('editExpediente').value.trim();
+
+            // MÁGICA: Mudança automática de Status baseado no preenchimento
+            if (expediente && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
+                statusEdit = 'Concluída'; // Se tem legis, tá concluída!
+            } else if (protocolo && protocolo !== '156 2026/' && statusEdit !== 'Aguardando Exp' && statusEdit !== 'Concluída' && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
+                statusEdit = '156 Pedido'; // Se botou só o protocolo, vai para 156 Pedido
+            }
+
             const updates = {
-                status: document.getElementById('editStatus').value,
-                protocolo: document.getElementById('editProtocolo').value,
-                expediente: document.getElementById('editExpediente').value
+                status: statusEdit,
+                protocolo: protocolo,
+                expediente: expediente
             };
+            
             if(isAdmin && document.getElementById('editNumDemanda')) {
                 updates.numero_demanda = document.getElementById('editNumDemanda').value;
             }
@@ -513,7 +534,10 @@
                 updates.fotos_urls = [];
             }
             const { error } = await db.from('demandas').update(updates).eq('id', demandaId);
-            if (!error) alert('✓ Salvo com sucesso!');
+            if (!error) {
+                alert('✓ Salvo com sucesso!');
+                carregarDemanda(); // Atualiza toda a tela para as badges mudarem de cor
+            }
         }
 
         window.iniciarAcaoMaster = function(acao) {
@@ -533,7 +557,12 @@
         window.confirmarAcaoMaster = async function() {
             if (document.getElementById('inputSenhaMaster').value !== SENHA_MASTER) { document.getElementById('erroSenhaMaster').style.display = 'block'; return; }
             fecharModalSenha();
-            if (acaoMasterPendente === 'aprovar') await db.from('demandas').update({ status: 'Aprovada' }).eq('id', demandaId);
+            if (acaoMasterPendente === 'aprovar') {
+                const resp = demandaAtual.responsaveis || [];
+                if (!resp.includes(usuarioLogado)) resp.push(usuarioLogado);
+                await db.from('demandas').update({ status: 'Aprovada', responsaveis: resp }).eq('id', demandaId);
+                carregarDemanda();
+            }
             else if (acaoMasterPendente === 'arquivar') await db.from('demandas').update({ status: 'Arquivada', fotos_urls: [] }).eq('id', demandaId);
             else if (acaoMasterPendente === 'excluir') { await db.from('demandas').delete().eq('id', demandaId); window.location.href = 'dashboard.html'; }
         }
@@ -575,7 +604,6 @@
 
             try {
                 let updates = {};
-                // O Supabase vai substituir o PDF atual com esse novo!
                 if (pdfFile) { prog.textContent = 'Enviando Novo PDF...'; updates.pdf_url = await uploadCloudinaryDirect(pdfFile); }
                 if (mediaFiles.length > 0) {
                     let novasFotos = [];
