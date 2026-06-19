@@ -39,8 +39,9 @@
         /* Estilo Área de Cola Rápida */
         .box-importacao { background: #fdfdfd; border: 2px dashed #9b59b6; padding: 15px; border-radius: 8px; margin-bottom: 25px; text-align: center; transition: all 0.3s;}
         .box-importacao:focus-within { border-color: #8e44ad; background: #faf4ff; }
-        .box-importacao label { color: #8e44ad; font-size: 14px; margin-bottom: 10px; }
-        .box-importacao textarea { border: 1px solid #e0e0e0; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); resize: none; text-align: center; }
+        .box-importacao label { color: #8e44ad; font-size: 14px; margin-bottom: 10px; display: block; }
+        .box-importacao textarea { border: 1px solid #e0e0e0; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); resize: none; text-align: left; padding: 12px; line-height: 1.6; font-family: 'Courier New', monospace; font-size: 13px; }
+        .box-importacao-copy-btn { background: #9b59b6; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-top: 10px; }
         .badge-status { background: #9b59b6; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 10px; display: none;}
         
         .secao-tecnica { background: #fdfdfd; padding: 15px; border: 1px dashed #ccc; border-radius: 8px; margin-top: 15px; }
@@ -59,6 +60,7 @@
         <div class="box-importacao">
             <label>🪄 Preenchimento Automático (Planilha)</label>
             <textarea id="textoMagico" rows="2" placeholder="Clique aqui e faça Ctrl+V da linha do Excel..." oninput="executarMagia()"></textarea>
+            <button type="button" class="box-importacao-copy-btn" onclick="copiarTextoMagico()" title="Copia o texto para a área de transferência">📋 Copiar Resultado</button>
             <span id="badgeStatusForcado" class="badge-status"></span>
         </div>
 
@@ -415,6 +417,70 @@
         }
 
         let arquivosSelecionados = [];
+        let formularioAlterado = false;
+
+        // Monitorar alterações no formulário
+        document.addEventListener('change', function() { formularioAlterado = true; });
+        document.addEventListener('input', function(e) { 
+            if (e.target.id !== 'textoMagico') formularioAlterado = true;
+        });
+
+        // Aviso ao tentar sair com alterações não salvas
+        window.addEventListener('beforeunload', function(e) {
+            if (formularioAlterado) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        });
+
+        window.copiarTextoMagico = function() {
+            const textarea = document.getElementById('textoMagico');
+            if (!textarea.value.trim()) { alert('Nada para copiar! Preencha a área primeiro.'); return; }
+            textarea.select();
+            document.execCommand('copy');
+            alert('✅ Texto copiado para a área de transferência!');
+        }
+
+        function gerarNumeroDemanda() {
+            const agora = new Date();
+            const ano = agora.getFullYear().toString().slice(-2);
+            const mes = String(agora.getMonth() + 1).padStart(2, '0');
+            const dia = String(agora.getDate()).padStart(2, '0');
+            const horas = String(agora.getHours()).padStart(2, '0');
+            const minutos = String(agora.getMinutes()).padStart(2, '0');
+            const segundos = String(agora.getSeconds()).padStart(2, '0');
+            return `${ano}${mes}${dia}${horas}${minutos}${segundos}`;
+        }
+
+        // Atualizar número de demanda automaticamente
+        document.getElementById('data_agendada').addEventListener('change', atualizarNumeroDemanda);
+        document.getElementById('horario_agendado').addEventListener('change', atualizarNumeroDemanda);
+
+        function atualizarNumeroDemanda() {
+            const data = document.getElementById('data_agendada').value;
+            const hora = document.getElementById('horario_agendado').value;
+            const numInput = document.getElementById('numero_demanda');
+
+            if (data && hora) {
+                const [ano, mes, dia] = data.split('-');
+                const [horas, minutos] = hora.split(':');
+                const numeroDemanda = `${ano.slice(-2)}${mes}${dia}${horas}${minutos}00`;
+                numInput.value = numeroDemanda;
+            } else if (!data && !hora) {
+                numInput.value = gerarNumeroDemanda();
+            }
+        }
+
+        // Inicializar com número automático ao carregar
+        function inicializarNumeroDemanda() {
+            const numInput = document.getElementById('numero_demanda');
+            if (!numInput.value) {
+                numInput.value = gerarNumeroDemanda();
+            }
+        }
+
+        let arquivosSelecionados = [];
 
         document.getElementById('fotos').addEventListener('change', function(e) {
             const novos = Array.from(e.target.files);
@@ -537,8 +603,3 @@
                 msg.className = 'mensagem erro'; msg.textContent = 'Erro: ' + e.message; msg.style.display = 'block';
             }
         };
-
-        inicializarSistema();
-    </script>
-</body>
-</html>
