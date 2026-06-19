@@ -320,7 +320,6 @@
         });
 
         function gerarBarraProgresso(status) {
-            // Se for resolvido/atendido atua como concluída para a barra
             let statusFake = status;
             if (status === 'Atendido' || status === 'Resolvido') statusFake = 'Concluída';
 
@@ -509,7 +508,6 @@
                     </div>
 
                     ${!['Arquivada', 'Rejeitada'].includes(d.status) ? `<button class="btn-retirar" style="width:100%; margin-top:15px;" onclick="iniciarAcaoMaster('arquivar')">📦 Arquivar (Limpa Mídias)</button>` : ''}
-                    ${d.status === 'Arquivada' ? `<button style="background:#c0392b; color:white; width:100%; margin-top:15px;" onclick="iniciarAcaoMaster('excluir')">🗑️ Excluir Definitivo do Banco</button>` : ''}
                 </div>
 
                 <div class="box">
@@ -578,7 +576,7 @@
             hist.push({ status: 'Rejeitada', autor: usuarioLogado, data: new Date().toISOString() });
             
             await db.from('demandas').update({ status: 'Rejeitada', fotos_urls: [], historico: hist }).eq('id', demandaId);
-            window.location.reload();
+            window.location.href = 'dashboard.html';
         }
 
         window.salvarAlteracoes = async function() {
@@ -624,10 +622,19 @@
                 updates.fotos_urls = [];
             }
             const { error } = await db.from('demandas').update(updates).eq('id', demandaId);
-            if (!error) { window.location.reload(); }
+            if (!error) { 
+                if (updates.status === 'Arquivada' || updates.status === 'Rejeitada' || updates.status === 'Concluída') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    window.location.reload(); 
+                }
+            }
         }
 
         window.iniciarAcaoMaster = function(acao) {
+            if (acao === 'excluir') {
+                if(!confirm('⚠️ Certeza absoluta que quer EXCLUIR do banco de dados?\n(Se clicou sem querer, clique em Cancelar)')) return;
+            }
             acaoMasterPendente = acao;
             let msg = '';
             if(acao === 'aprovar') msg = 'Aprovar demanda sem ser o Daniel.';
@@ -657,7 +664,7 @@
             else if (acaoMasterPendente === 'arquivar') {
                 hist.push({ status: 'Arquivada', autor: usuarioLogado, data: new Date().toISOString() });
                 await db.from('demandas').update({ status: 'Arquivada', fotos_urls: [], historico: hist }).eq('id', demandaId);
-                window.location.reload();
+                window.location.href = 'dashboard.html';
             }
             else if (acaoMasterPendente === 'excluir') { 
                 await db.from('demandas').delete().eq('id', demandaId); 
