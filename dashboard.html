@@ -102,7 +102,6 @@
         </div>
 
         <div class="filtros-avancados">
-            <!-- Removido o oninput nativo para usar o EventListener com Debounce abaixo -->
             <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº, data...">
             
             <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()">
@@ -123,7 +122,6 @@
             </select>
         </div>
 
-        <!-- Filtros blindados usando data-status -->
         <div class="filtros">
             <button class="filtro-btn ativo" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
             <button class="filtro-btn" data-status="Aberta" onclick="filtrar('Aberta')">Abertas / Pendentes</button>
@@ -168,7 +166,7 @@
         const tiposLegis = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
 
         let usuarioLogado = localStorage.getItem('usuarioLogado');
-        let authToken = localStorage.getItem('authToken'); // JWT da sua API
+        let authToken = localStorage.getItem('authToken'); 
 
         if (!usuarioLogado) window.location.href = 'index.html';
         document.getElementById('nomeUsuario').textContent = usuarioLogado;
@@ -179,7 +177,6 @@
             window.location.href = 'index.html';
         });
 
-        // DEBOUNCE NA BUSCA
         let debounceTimer;
         document.getElementById('buscaGeral').addEventListener('input', function() {
             clearTimeout(debounceTimer);
@@ -193,15 +190,10 @@
             try {
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
-
-                // Cria o cliente enviando o JWT na requisição, se ele existir (Prepara para o RLS)
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey, {
                     global: { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} }
                 });
-
                 carregarDemandas();
-                
-                // REALTIME INCREMENTAL DE VERDADE (Performance Level Up)
                 db.channel('dashboard-live')
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, (payload) => {
                       if (payload.eventType === 'INSERT') {
@@ -212,12 +204,10 @@
                       } else if (payload.eventType === 'DELETE') {
                           todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id);
                       }
-                      // Re-ordena e manda renderizar apenas as alterações
                       todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
                       renderDemandas();
                   })
                   .subscribe();
-
             } catch (err) {
                 document.getElementById('demandas').innerHTML = '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
             }
@@ -244,7 +234,6 @@
 
             let lista = todasDemandas;
             
-            // Filtro de Status
             if (filtroAtual === 'Todas') {
                 lista = lista.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada');
             } else if (filtroAtual === 'Aberta') {
@@ -255,38 +244,41 @@
                 lista = lista.filter(d => d.status === filtroAtual);
             }
 
-            // Filtro de Categoria
             if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
 
-          // Filtro de Responsáveis (Agora inteligente: aceita "Daniel" ou "Daniel Daudt")
-if (respSelecionado) {
-    lista = lista.filter(d => {
-        const reps = (d.responsaveis || []);
-        // Verifica se qualquer um dos responsáveis contém o nome selecionado
-        return reps.some(r => r.toLowerCase().includes(respSelecionado.toLowerCase()));
-    });
-}
+            // Filtro de Responsáveis APRIMORADO
+            if (respSelecionado) {
+                const nomeBusca = respSelecionado.toLowerCase().trim();
+                lista = lista.filter(d => {
+                    const estaNosExecutores = (d.responsaveis || []).some(r => 
+                        r.toLowerCase().includes(nomeBusca)
+                    );
+                    const respOrdem = (d.responsavel_ordem || '').toLowerCase();
+                    const ehRespOrdem = respOrdem.includes(nomeBusca);
+                    return estaNosExecutores || ehRespOrdem;
+                });
+            }
 
-     if (termoBusca) {
-    lista = lista.filter(d => {
-        let dFormat = '';
-        if(d.data_agendada) {
-            const oData = new Date(d.data_agendada + 'T00:00:00');
-            dFormat = oData.toLocaleDateString('pt-BR');
-        }
-        return (d.assunto || '').toLowerCase().includes(termoBusca) ||
-               (d.rua || '').toLowerCase().includes(termoBusca) ||
-               (d.bairro || '').toLowerCase().includes(termoBusca) ||
-               (d.numero_demanda || '').toLowerCase().includes(termoBusca) ||
-               (d.protocolo || '').toLowerCase().includes(termoBusca) ||
-               (d.secretaria || '').toLowerCase().includes(termoBusca) ||
-               (d.solicitante_nome || '').toLowerCase().includes(termoBusca) || // Incluído solicitante
-               (d.responsavel_ordem || '').toLowerCase().includes(termoBusca) || // Incluído resp. ordem
-               (dFormat).includes(termoBusca);
-    });
-}
+            if (termoBusca) {
+                lista = lista.filter(d => {
+                    let dFormat = '';
+                    if(d.data_agendada) {
+                        const oData = new Date(d.data_agendada + 'T00:00:00');
+                        dFormat = oData.toLocaleDateString('pt-BR');
+                    }
+                    return (d.assunto || '').toLowerCase().includes(termoBusca) ||
+                           (d.rua || '').toLowerCase().includes(termoBusca) ||
+                           (d.bairro || '').toLowerCase().includes(termoBusca) ||
+                           (d.numero_demanda || '').toLowerCase().includes(termoBusca) ||
+                           (d.protocolo || '').toLowerCase().includes(termoBusca) ||
+                           (d.secretaria || '').toLowerCase().includes(termoBusca) ||
+                           (d.solicitante_nome || '').toLowerCase().includes(termoBusca) ||
+                           (d.responsavel_ordem || '').toLowerCase().includes(termoBusca) ||
+                           (dFormat).includes(termoBusca);
+                });
+            }
 
             if (lista.length === 0) {
                 container.innerHTML = '<p style="color:#777;grid-column:1/-1;text-align:center;padding:30px;">Nenhuma demanda encontrada com estes filtros.</p>';
@@ -344,7 +336,6 @@ if (respSelecionado) {
                 }
 
                 const infoSecretaria = demanda.secretaria ? `<div class="info">🏢 Sec: <b>${demanda.secretaria}</b></div>` : '';
-
                 const ruaCerta = demanda.rua ? demanda.rua : '';
                 const bairroCerto = demanda.bairro ? '- ' + demanda.bairro : '';
                 const numCerto = demanda.numero ? ', ' + demanda.numero : '';
