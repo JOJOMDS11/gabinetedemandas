@@ -260,28 +260,33 @@
             if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
 
-            // Filtro de Executores (Cuidando)
-            if (respSelecionado) {
-                lista = lista.filter(d => (d.responsaveis || []).includes(respSelecionado));
-            }
+          // Filtro de Responsáveis (Agora inteligente: aceita "Daniel" ou "Daniel Daudt")
+if (respSelecionado) {
+    lista = lista.filter(d => {
+        const reps = (d.responsaveis || []);
+        // Verifica se qualquer um dos responsáveis contém o nome selecionado
+        return reps.some(r => r.toLowerCase().includes(respSelecionado.toLowerCase()));
+    });
+}
 
-            if (termoBusca) {
-                lista = lista.filter(d => {
-                    let dFormat = '';
-                    if(d.data_agendada) {
-                        const oData = new Date(d.data_agendada + 'T00:00:00');
-                        dFormat = oData.toLocaleDateString('pt-BR');
-                    }
-                    return (d.assunto || '').toLowerCase().includes(termoBusca) ||
-                           (d.rua || '').toLowerCase().includes(termoBusca) ||
-                           (d.bairro || '').toLowerCase().includes(termoBusca) ||
-                           (d.numero_demanda || '').toLowerCase().includes(termoBusca) ||
-                           (d.protocolo || '').toLowerCase().includes(termoBusca) ||
-                           (d.secretaria || '').toLowerCase().includes(termoBusca) ||
-                           (d.solicitante_nome || '').toLowerCase().includes(termoBusca) ||
-                           (dFormat).includes(termoBusca);
-                });
-            }
+     if (termoBusca) {
+    lista = lista.filter(d => {
+        let dFormat = '';
+        if(d.data_agendada) {
+            const oData = new Date(d.data_agendada + 'T00:00:00');
+            dFormat = oData.toLocaleDateString('pt-BR');
+        }
+        return (d.assunto || '').toLowerCase().includes(termoBusca) ||
+               (d.rua || '').toLowerCase().includes(termoBusca) ||
+               (d.bairro || '').toLowerCase().includes(termoBusca) ||
+               (d.numero_demanda || '').toLowerCase().includes(termoBusca) ||
+               (d.protocolo || '').toLowerCase().includes(termoBusca) ||
+               (d.secretaria || '').toLowerCase().includes(termoBusca) ||
+               (d.solicitante_nome || '').toLowerCase().includes(termoBusca) || // Incluído solicitante
+               (d.responsavel_ordem || '').toLowerCase().includes(termoBusca) || // Incluído resp. ordem
+               (dFormat).includes(termoBusca);
+    });
+}
 
             if (lista.length === 0) {
                 container.innerHTML = '<p style="color:#777;grid-column:1/-1;text-align:center;padding:30px;">Nenhuma demanda encontrada com estes filtros.</p>';
