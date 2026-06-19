@@ -340,12 +340,44 @@
 
             limparFormulario();
 
-            const celulas = texto.split('\t');
             let parsed = { numero: '', data: '', resp: '', status: '', tipo: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '' };
 
             const nomesConhecidos = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
             const tiposConhecidos = ['Agenda VISITA AO GABINETE', 'AGENDA visita EXTERNA', 'GABINETE', 'REUNIÃO', 'visita ao Gabinete', 'DEMANDA', 'Demanda Externa', 'INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
             const statusConhecidos = ['Aberta', 'Pendente', 'Em Andamento', 'Aguardando', 'Aguardando Aprovação', 'Aprovada', '156 Pedido', 'Aguardando Exp', 'Atendido', 'Resolvido', 'Concluída', 'Arquivada', 'Rejeitada', 'Sem Legis'];
+
+            // ===== CORREÇÃO 1: extrai e remove o telefone do texto colado ANTES de
+            // dividir por célula/processar a descrição. Isso evita que um telefone
+            // fragmentado (ex: "(51) .993.191.820", comum quando o Excel formata o
+            // campo como número/decimal) seja cortado pela metade ou contamine o
+            // Assunto/Descrição. Cobre formatos com pontos, traços, espaços ou nada.
+            const regexTelefoneGlobal = /\(?0?51\)?[\s.]*\.?\d{3,5}[-.\s]?\d{3,4}[-.\s]?\d{0,3}/;
+            let textoSemTel = texto;
+            const matchTelGlobal = texto.match(regexTelefoneGlobal);
+            if (matchTelGlobal) {
+                // Limpa o telefone encontrado: remove tudo que não é dígito, exceto o parêntese do DDD
+                let telBruto = matchTelGlobal[0].trim();
+                let somenteDigitos = telBruto.replace(/\D/g, '');
+                // Reformata para (51) 9XXXX-XXXX quando tiver DDD reconhecível
+                if (somenteDigitos.length >= 10) {
+                    let ddd = somenteDigitos.slice(0, 2);
+                    let resto = somenteDigitos.slice(2);
+                    if (resto.length === 9) {
+                        parsed.tel = `(${ddd}) ${resto.slice(0,5)}-${resto.slice(5)}`;
+                    } else if (resto.length === 8) {
+                        parsed.tel = `(${ddd}) ${resto.slice(0,4)}-${resto.slice(4)}`;
+                    } else {
+                        parsed.tel = `(${ddd}) ${resto}`;
+                    }
+                } else {
+                    parsed.tel = telBruto;
+                }
+                // Remove o trecho do telefone do texto antes de continuar o parsing,
+                // assim ele não vira "lixo" dentro de Assunto/Descrição.
+                textoSemTel = texto.replace(matchTelGlobal[0], ' ');
+            }
+
+            const celulas = textoSemTel.split('\t');
 
             celulas.forEach(c => {
                 let cell = c.trim();
@@ -377,7 +409,11 @@
                 else if (cell.match(/^SEM[A-Z]+$/i) || ['OBRAS', 'SAÚDE', 'GABINETE'].includes(cell.toUpperCase())) {
                     if (!parsed.secretaria) parsed.secretaria = cell;
                 }
-                else if (cell.length > 2 && cell.length < 25 && !cell.match(/\d/) && !parsed.nome && cell.toLowerCase() !== 'ver detalhes') {
+                // ===== CORREÇÃO 2: célula de nome agora tolera espaços (nomes compostos)
+                // e remove pontuação residual de telefone que eventualmente sobre colada
+                // (ex: ".993" não deve mais ser confundido com nome porque o telefone já
+                // foi extraído e removido do texto antes deste loop rodar).
+                else if (cell.length > 2 && cell.length < 30 && !cell.match(/\d/) && !parsed.nome && cell.toLowerCase() !== 'ver detalhes') {
                     parsed.nome = cell; 
                 }
                 else if (cell.length > 5 && cell.toLowerCase() !== 'ver detalhes' && cell.toLowerCase() !== 'ver mais') {
@@ -386,12 +422,30 @@
                 }
             });
 
-            if (parsed.desc) {
-                let matchTel = parsed.desc.match(/(?:\(?0?51\)?\.?\s*)?9?\d{3,4}[-.]?\d{3,4}/);
-                if (matchTel && !parsed.tel) {
-                    parsed.tel = matchTel[0].trim();
+            // ===== CORREÇÃO 3: fallback — se por algum motivo o telefone não foi achado
+            // na extração global (ex: telefone veio dentro da célula de descrição em vez
+            // de célula própria), tenta de novo dentro do parsed.desc, mas usando a MESMA
+            // regex nova (cobre 2 ou 3 grupos de dígitos), e limpa o resíduo da descrição.
+            if (!parsed.tel && parsed.desc) {
+                let matchTel = parsed.desc.match(regexTelefoneGlobal);
+                if (matchTel) {
+                    let telBruto = matchTel[0].trim();
+                    let somenteDigitos = telBruto.replace(/\D/g, '');
+                    if (somenteDigitos.length >= 10) {
+                        let ddd = somenteDigitos.slice(0, 2);
+                        let resto = somenteDigitos.slice(2);
+                        if (resto.length === 9) {
+                            parsed.tel = `(${ddd}) ${resto.slice(0,5)}-${resto.slice(5)}`;
+                        } else if (resto.length === 8) {
+                            parsed.tel = `(${ddd}) ${resto.slice(0,4)}-${resto.slice(4)}`;
+                        } else {
+                            parsed.tel = `(${ddd}) ${resto}`;
+                        }
+                    } else {
+                        parsed.tel = telBruto;
+                    }
                     parsed.desc = parsed.desc.replace(matchTel[0], '').trim();
-                    parsed.desc = parsed.desc.replace(/^[.-]\s*/, '').trim();
+                    parsed.desc = parsed.desc.replace(/^[.\-,]\s*/, '').trim();
                 }
             }
 
