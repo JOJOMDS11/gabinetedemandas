@@ -224,62 +224,74 @@
             renderDemandas();
         }
 
-        function renderDemandas() {
-            const container = document.getElementById('demandas');
-            const pagContainer = document.getElementById('paginacaoContainer');
+  // Adicione esta lista antes da função renderDemandas, lá em cima no script
+const apelidos = {
+    'daniel': ['daniel', 'daniel daudt']
+};
 
-            const termoBusca = document.getElementById('buscaGeral').value.toLowerCase();
-            const respSelecionado = document.getElementById('filtroResp').value;
-            const catSelecionada = document.getElementById('filtroCategoria').value;
+function renderDemandas() {
+    const container = document.getElementById('demandas');
+    const pagContainer = document.getElementById('paginacaoContainer');
 
-            let lista = todasDemandas;
-            
-            if (filtroAtual === 'Todas') {
-                lista = lista.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada');
-            } else if (filtroAtual === 'Aberta') {
-                lista = lista.filter(d => d.status === 'Aberta' || d.status === 'Pendente');
-            } else if (filtroAtual === 'Concluída') {
-                lista = lista.filter(d => d.status === 'Concluída' || d.status === 'Atendido' || d.status === 'Resolvido');
-            } else {
-                lista = lista.filter(d => d.status === filtroAtual);
+    const termoBusca = document.getElementById('buscaGeral').value.toLowerCase();
+    const respSelecionado = document.getElementById('filtroResp').value;
+    const catSelecionada = document.getElementById('filtroCategoria').value;
+
+    let lista = todasDemandas;
+    
+    // Filtro de Status
+    if (filtroAtual === 'Todas') {
+        lista = lista.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada');
+    } else if (filtroAtual === 'Aberta') {
+        lista = lista.filter(d => d.status === 'Aberta' || d.status === 'Pendente');
+    } else if (filtroAtual === 'Concluída') {
+        lista = lista.filter(d => d.status === 'Concluída' || d.status === 'Atendido' || d.status === 'Resolvido');
+    } else {
+        lista = lista.filter(d => d.status === filtroAtual);
+    }
+
+    // Filtro de Categoria
+    if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
+    if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
+    if (catSelecionada === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
+
+    // FILTRO DE RESPONSÁVEIS APRIMORADO (Com Sinónimos)
+    if (respSelecionado) {
+        const buscaOriginal = respSelecionado.toLowerCase().trim();
+        // Se existir na tabela de apelidos, pega todos, senão usa só o que foi digitado
+        const termosBusca = apelidos[buscaOriginal] || [buscaOriginal]; 
+        
+        lista = lista.filter(d => {
+            const reps = (d.responsaveis || []);
+            const respOrdem = (d.responsavel_ordem || '');
+
+            // Verifica se QUALQUER UM dos termos de busca aparece no nome
+            return termosBusca.some(termo => 
+                reps.some(r => r.toLowerCase().includes(termo)) || 
+                respOrdem.toLowerCase().includes(termo)
+            );
+        });
+    }
+
+    // Busca Geral
+    if (termoBusca) {
+        lista = lista.filter(d => {
+            let dFormat = '';
+            if(d.data_agendada) {
+                const oData = new Date(d.data_agendada + 'T00:00:00');
+                dFormat = oData.toLocaleDateString('pt-BR');
             }
-
-            if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
-            if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
-            if (catSelecionada === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
-
-            // Filtro de Responsáveis APRIMORADO
-            if (respSelecionado) {
-                const nomeBusca = respSelecionado.toLowerCase().trim();
-                lista = lista.filter(d => {
-                    const estaNosExecutores = (d.responsaveis || []).some(r => 
-                        r.toLowerCase().includes(nomeBusca)
-                    );
-                    const respOrdem = (d.responsavel_ordem || '').toLowerCase();
-                    const ehRespOrdem = respOrdem.includes(nomeBusca);
-                    return estaNosExecutores || ehRespOrdem;
-                });
-            }
-
-            if (termoBusca) {
-                lista = lista.filter(d => {
-                    let dFormat = '';
-                    if(d.data_agendada) {
-                        const oData = new Date(d.data_agendada + 'T00:00:00');
-                        dFormat = oData.toLocaleDateString('pt-BR');
-                    }
-                    return (d.assunto || '').toLowerCase().includes(termoBusca) ||
-                           (d.rua || '').toLowerCase().includes(termoBusca) ||
-                           (d.bairro || '').toLowerCase().includes(termoBusca) ||
-                           (d.numero_demanda || '').toLowerCase().includes(termoBusca) ||
-                           (d.protocolo || '').toLowerCase().includes(termoBusca) ||
-                           (d.secretaria || '').toLowerCase().includes(termoBusca) ||
-                           (d.solicitante_nome || '').toLowerCase().includes(termoBusca) ||
-                           (d.responsavel_ordem || '').toLowerCase().includes(termoBusca) ||
-                           (dFormat).includes(termoBusca);
-                });
-            }
-
+            return (d.assunto || '').toLowerCase().includes(termoBusca) ||
+                   (d.rua || '').toLowerCase().includes(termoBusca) ||
+                   (d.bairro || '').toLowerCase().includes(termoBusca) ||
+                   (d.numero_demanda || '').toLowerCase().includes(termoBusca) ||
+                   (d.protocolo || '').toLowerCase().includes(termoBusca) ||
+                   (d.secretaria || '').toLowerCase().includes(termoBusca) ||
+                   (d.solicitante_nome || '').toLowerCase().includes(termoBusca) ||
+                   (d.responsavel_ordem || '').toLowerCase().includes(termoBusca) ||
+                   (dFormat).includes(termoBusca);
+        });
+    }
             if (lista.length === 0) {
                 container.innerHTML = '<p style="color:#777;grid-column:1/-1;text-align:center;padding:30px;">Nenhuma demanda encontrada com estes filtros.</p>';
                 pagContainer.innerHTML = '';
