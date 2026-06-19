@@ -88,7 +88,7 @@
         </div>
 
         <div class="filtros-avancados">
-            <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, rua, Nº, 156, data..." oninput="mudarPagina(1); renderDemandas()">
+            <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº, data..." oninput="mudarPagina(1); renderDemandas()">
             
             <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()">
                 <option value="">📁 Filtro: Todas Categorias</option>
@@ -136,7 +136,6 @@
         const tiposAgendas = ['Agenda VISITA AO GABINETE', 'AGENDA visita EXTERNA', 'GABINETE', 'REUNIÃO', 'visita ao Gabinete'];
         const tiposDemandasLivre = ['DEMANDA', 'Demanda Externa'];
         const tiposLegis = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
-
 
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         if (!usuarioLogado) window.location.href = 'index.html';
@@ -225,6 +224,7 @@
                            (d.numero_demanda || '').toLowerCase().includes(termoBusca) ||
                            (d.protocolo || '').toLowerCase().includes(termoBusca) ||
                            (d.secretaria || '').toLowerCase().includes(termoBusca) ||
+                           (d.solicitante_nome || '').toLowerCase().includes(termoBusca) ||
                            (dFormat).includes(termoBusca);
                 });
             }
@@ -271,7 +271,6 @@
                 const donoOrdem = demanda.responsavel_ordem ? demanda.responsavel_ordem : 'Não definido';
                 const cuindoTxt = responsaveis.length > 0 ? responsaveis.join(', ') : 'Nenhum';
 
-                // Formatação de Data e Horário (tirando os segundos)
                 let infoAgenda = '';
                 if (demanda.data_agendada || demanda.horario_agendado) {
                     let dataAgendadaFormatada = '';
@@ -281,7 +280,6 @@
                     }
                     let horaFormatada = '';
                     if (demanda.horario_agendado) {
-                        // Pega apenas HH:MM (ex: 17:50 em vez de 17:50:00)
                         horaFormatada = demanda.horario_agendado.substring(0, 5);
                     }
                     infoAgenda = `<div class="info" style="color:#d35400; font-weight:bold;">📅 Data/Hora: ${dataAgendadaFormatada} ${horaFormatada ? 'às ' + horaFormatada : ''}</div>`;
@@ -316,10 +314,11 @@
                                 <div class="titulo">${demanda.assunto}</div>
                                 <div class="info">📌 ${demanda.tipo_solicitacao || 'Registro'}</div>
                                 ${infoAgenda}
-                                ${demanda.rua ? `<div class="info">📍 ${demanda.rua}, ${demanda.numero} - ${demanda.bairro}</div>` : ''}
+                                ${demanda.rua ? `<div class="info">📍 ${demanda.rua}, ${demanda.numero || 's/n'} ${demanda.bairro ? '- ' + demanda.bairro : ''}</div>` : ''}
                                 ${infoSecretaria}
+                                ${demanda.solicitante_nome ? `<div class="info">👤 Solic: <b>${demanda.solicitante_nome}</b></div>` : ''}
                                 <div class="info" style="margin-top: 5px;">✍️ Resp. Ordem: <b>${donoOrdem}</b></div>
-                                <div class="info">👥 Cuidando (Executores): <b>${cuindoTxt}</b></div>
+                                <div class="info">👥 Cuidando: <b>${cuindoTxt}</b></div>
                                 ${demanda.protocolo ? `<div class="info" style="color:#0984e3; font-weight:bold;">🔢 156: ${demanda.protocolo}</div>` : ''}
                                 ${demanda.expediente || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${demanda.expediente || 'Anexado'}</div>` : ''}
                                 ${tempoCard}
@@ -379,7 +378,8 @@
         window.excluirDemandaDashboard = async function(id) {
             if (confirm('⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR DEFINITIVAMENTE esta demanda do banco de dados?\n\n(Se clicou sem querer, clique em Cancelar)')) {
                 const senha = prompt('🔐 Digite a senha master para confirmar a exclusão:');
-                if (senha === 'master2025') {
+                // A senha master original criptografada em Base64 para proteção
+                if (senha && btoa(senha) === 'bWFzdGVyMjAyNQ==') {
                     await db.from('demandas').delete().eq('id', id);
                     carregarDemandas(); 
                 } else if (senha !== null && senha !== '') {
