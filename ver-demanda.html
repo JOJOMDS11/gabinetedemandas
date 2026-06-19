@@ -642,4 +642,281 @@
                         <div class="form-group">
                             <label>Status Manual</label>
                             <select id="editStatus" ${bloqueado}>
-                                <option value="Aberta" ${d.status==='Aberta'?'selected':''}>Aberta</option
+                                <option value="Aberta" ${d.status==='Aberta'?'selected':''}>Aberta</option>
+                                <option value="Pendente" ${d.status==='Pendente'?'selected':''}>Pendente</option>
+                                <option value="Aguardando" ${d.status==='Aguardando'?'selected':''}>Aguardando</option>
+                                <option value="Aguardando Aprovação" ${d.status==='Aguardando Aprovação'?'selected':''}>Aguardando Aprovação</option>
+                                <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada</option>
+                                <option value="Em Andamento" ${d.status==='Em Andamento'?'selected':''}>Em Andamento</option>
+                                <option value="Sem Legis" ${d.status==='Sem Legis'?'selected':''}>Sem Legis</option>
+                                <option value="156 Pedido" ${d.status==='156 Pedido'?'selected':''}>156 Pedido</option>
+                                <option value="Aguardando Exp" ${d.status==='Aguardando Exp'?'selected':''}>Aguardando Exp (Legis)</option>
+                                <option value="Atendido" ${d.status==='Atendido'?'selected':''}>Atendido</option>
+                                <option value="Resolvido" ${d.status==='Resolvido'?'selected':''}>Resolvido</option>
+                                <option value="Concluída" ${d.status==='Concluída'?'selected':''}>Concluída</option>
+                                <option value="Arquivada" ${d.status==='Arquivada'?'selected':''}>Arquivada</option>
+                                <option value="Rejeitada" ${d.status==='Rejeitada'?'selected':''}>Rejeitada</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Protocolo 156</label>
+                            <input type="text" id="editProtocolo" value="${d.protocolo || ''}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher" ${bloqueado}>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Expediente (Legis)</label>
+                            <input type="text" id="editExpediente" value="${d.expediente || ''}" placeholder="Ex: Exp. 5149" ${bloqueado}>
+                        </div>
+                        
+                        <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:4px;">
+                            <label>Link Direto do Legis 🔗</label>
+                            <input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo..." ${bloqueado}>
+                        </div>
+                    </div>
+
+                    <div class="botoes">
+                        ${btnAssumir}
+                        ${btnAprovacao}
+                        <button class="btn-salvar" onclick="salvarAlteracoes()">💾 Salvar Tudo</button>
+                        ${btnWhats}
+                    </div>
+
+                    ${!['Arquivada', 'Rejeitada'].includes(d.status) ? `<button class="btn-retirar" style="width:100%; margin-top:15px;" onclick="iniciarAcaoMaster('arquivar')">📦 Arquivar (Limpa Mídias)</button>` : ''}
+                </div>
+
+                <div class="box">
+                    <h2>Galeria de Mídias</h2>
+                    <div class="galeria">${htmlFotos}</div>
+
+                    <div class="upload-extra">
+                        <h4 style="color:#185199; margin-bottom:10px;">Adicionar Anexos</h4>
+                        <label style="font-size:12px; font-weight:bold;">Documento PDF (Adicionar ou Substituir o atual)</label>
+                        <input type="file" id="extraPdf" accept="application/pdf" style="width:100%; margin-bottom:15px;">
+                        <label style="font-size:12px; font-weight:bold;">Fotos/Vídeos</label>
+                        <input type="file" id="extraFotos" accept="image/*,video/*" multiple style="width:100%;">
+                        <button class="btn-salvar" style="width:100%; margin-top:10px;" id="btnUploadExtra" onclick="uploadNovosAnexos()">⬆️ Subir</button>
+                        <div id="progressoExtra" style="font-size:13px; color:#185199; font-weight:bold; display:none; margin-top:5px;"></div>
+                    </div>
+                </div>
+
+                <div class="box" style="grid-column:1/-1;">
+                    <h2>📅 Linha do Tempo</h2>
+                    ${gerarTimeline(d)}
+                </div>`;
+        }
+
+        window.excluirPdf = async function() {
+            if(!confirm('Certeza que quer excluir o pdf?')) return;
+            const { error } = await db.from('demandas').update({ pdf_url: null }).eq('id', demandaId);
+            if(!error) { window.location.reload(); }
+        }
+
+        window.assumirAqui = async function() {
+            const responsaveis = demandaAtual.responsaveis || [];
+            if (responsaveis.includes(usuarioLogado)) return;
+            await db.from('demandas').update({ responsaveis: [...responsaveis, usuarioLogado] }).eq('id', demandaId);
+            window.location.reload();
+        }
+
+        window.sairDaCuidado = async function(nome) {
+            const responsaveis = (demandaAtual.responsaveis || []).filter(r => r !== nome);
+            await db.from('demandas').update({ responsaveis }).eq('id', demandaId);
+            window.location.reload();
+        }
+
+        window.adicionarResponsavelManual = async function() {
+            const novoResp = document.getElementById('addResponsavelSelect').value;
+            if(!novoResp) return alert('Selecione alguém na lista!');
+            const responsaveis = demandaAtual.responsaveis || [];
+            if(responsaveis.includes(novoResp)) return alert('Esta pessoa já está como executor.');
+            await db.from('demandas').update({ responsaveis: [...responsaveis, novoResp] }).eq('id', demandaId);
+            window.location.reload();
+        }
+
+        window.aprovarDemanda = async function() { 
+            const hist = demandaAtual.historico || [];
+            hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
+            await db.from('demandas').update({ status: 'Aprovada', historico: hist }).eq('id', demandaId); 
+            window.location.reload(); 
+        }
+
+        window.darVisto = async function() { 
+            const hist = demandaAtual.historico || [];
+            hist.push({ status: 'Visto', autor: usuarioLogado, data: new Date().toISOString() });
+            await db.from('demandas').update({ historico: hist }).eq('id', demandaId); 
+            window.location.reload(); 
+        }
+
+        window.rejeitarDemanda = async function() {
+            if(!confirm('Rejeitar demanda? As fotos serão apagadas (PDF será mantido).')) return;
+            const hist = demandaAtual.historico || [];
+            hist.push({ status: 'Rejeitada', autor: usuarioLogado, data: new Date().toISOString() });
+            
+            await db.from('demandas').update({ status: 'Rejeitada', fotos_urls: [], historico: hist }).eq('id', demandaId);
+            window.location.href = 'dashboard.html';
+        }
+
+        window.salvarAlteracoes = async function() {
+            let statusEdit = document.getElementById('editStatus') ? document.getElementById('editStatus').value : demandaAtual.status;
+            let protocolo = document.getElementById('editProtocolo') ? document.getElementById('editProtocolo').value.trim() : (demandaAtual.protocolo || '');
+            let expediente = document.getElementById('editExpediente') ? document.getElementById('editExpediente').value.trim() : (demandaAtual.expediente || '');
+            let linkLegis = document.getElementById('editLinkLegis') ? document.getElementById('editLinkLegis').value.trim() : (demandaAtual.link_legis || '');
+            const data_agendada = document.getElementById('editDataAgendada') ? document.getElementById('editDataAgendada').value || null : demandaAtual.data_agendada;
+            const horario_agendado = document.getElementById('editHorarioAgendado') ? document.getElementById('editHorarioAgendado').value || null : demandaAtual.horario_agendado;
+            const secretaria = document.getElementById('editSecretaria') ? document.getElementById('editSecretaria').value.trim() : (demandaAtual.secretaria || '');
+            const providencias = document.getElementById('editProvidencias') ? document.getElementById('editProvidencias').value.trim() : (demandaAtual.providencias || '');
+            
+            const tipo_solicitacao = document.getElementById('editTipo') ? document.getElementById('editTipo').value : demandaAtual.tipo_solicitacao;
+            const assunto = document.getElementById('editAssunto') ? document.getElementById('editAssunto').value.trim() : demandaAtual.assunto;
+            const nomeSol = document.getElementById('editNomeSol') ? document.getElementById('editNomeSol').value.trim() : demandaAtual.solicitante_nome;
+            const telSol = document.getElementById('editTelSol') ? document.getElementById('editTelSol').value.trim() : demandaAtual.solicitante_tel;
+            const responsavel_ordem = document.getElementById('editResponsavelOrdem') ? document.getElementById('editResponsavelOrdem').value : demandaAtual.responsavel_ordem;
+
+            const isAtualBloqueado = tiposProjetos.includes(tipo_solicitacao || demandaAtual.tipo_solicitacao);
+            const estaAguardando = (demandaAtual.status === 'Aguardando Aprovação' || demandaAtual.status === 'Aberta' || demandaAtual.status === 'Pendente');
+            
+            if (isAtualBloqueado && estaAguardando) {
+                statusEdit = demandaAtual.status; 
+                protocolo = demandaAtual.protocolo || '';
+                expediente = demandaAtual.expediente || '';
+                linkLegis = demandaAtual.link_legis || '';
+            } else {
+                if (expediente && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') {
+                    statusEdit = 'Concluída'; 
+                } else if (protocolo && protocolo !== '156 2026/' && statusEdit !== 'Aguardando Exp' && statusEdit !== 'Concluída' && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada' && statusEdit !== 'Sem Legis') {
+                    statusEdit = '156 Pedido'; 
+                }
+            }
+
+            const updates = {
+                status: statusEdit, protocolo: protocolo, expediente: expediente, link_legis: linkLegis,
+                data_agendada: data_agendada, horario_agendado: horario_agendado, secretaria: secretaria, providencias: providencias,
+                tipo_solicitacao: tipo_solicitacao, assunto: assunto, solicitante_nome: nomeSol, solicitante_tel: telSol,
+                responsavel_ordem: responsavel_ordem
+            };
+            
+            if (statusEdit !== demandaAtual.status) {
+                const hist = demandaAtual.historico || [];
+                hist.push({ status: statusEdit, autor: usuarioLogado, data: new Date().toISOString() });
+                updates.historico = hist;
+            }
+
+            if(isAdmin && document.getElementById('editNumDemanda')) {
+                updates.numero_demanda = document.getElementById('editNumDemanda').value;
+            }
+
+            if(updates.status === 'Rejeitada' || updates.status === 'Arquivada') {
+                if(!confirm('Atenção: Mudar para este status apagará as mídias permanentemente. Continuar?')) return;
+                updates.fotos_urls = [];
+            }
+            const { error } = await db.from('demandas').update(updates).eq('id', demandaId);
+            if (!error) { 
+                temAlteracoesNaoSalvas = false;
+                if (updates.status === 'Arquivada' || updates.status === 'Rejeitada' || updates.status === 'Concluída' || updates.status === 'Atendido' || updates.status === 'Resolvido') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    window.location.reload(); 
+                }
+            }
+        }
+
+        window.iniciarAcaoMaster = function(acao) {
+            if (acao === 'excluir') {
+                if(!confirm('⚠️ Certeza absoluta que quer EXCLUIR do banco de dados?\n(Se clicou sem querer, clique em Cancelar)')) return;
+            }
+            acaoMasterPendente = acao;
+            let msg = '';
+            if(acao === 'aprovar') msg = 'Aprovar demanda sem ser o Daniel.';
+            if(acao === 'arquivar') msg = 'Arquivar demanda (Apagará as mídias).';
+            if(acao === 'excluir') msg = 'Excluir definitivamente do sistema.';
+            document.getElementById('modalSenhaTexto').textContent = msg;
+            document.getElementById('inputSenhaMaster').value = '';
+            document.getElementById('erroSenhaMaster').style.display = 'none';
+            document.getElementById('modalSenhaMaster').classList.add('ativo');
+        }
+
+        window.fecharModalSenha = function() { document.getElementById('modalSenhaMaster').classList.remove('ativo'); }
+
+        window.confirmarAcaoMaster = async function() {
+            // A senha é avaliada via Base64 (btoa) para não ficar legível no código fonte
+            if (btoa(document.getElementById('inputSenhaMaster').value.trim()) !== HASH_MASTER) { 
+                document.getElementById('erroSenhaMaster').style.display = 'block'; 
+                return; 
+            }
+            document.getElementById('modalSenhaMaster').classList.remove('ativo'); 
+            const hist = demandaAtual.historico || [];
+
+            if (acaoMasterPendente === 'aprovar') {
+                hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
+                await db.from('demandas').update({ status: 'Aprovada', historico: hist }).eq('id', demandaId);
+                window.location.reload();
+            }
+            else if (acaoMasterPendente === 'arquivar') {
+                hist.push({ status: 'Arquivada', autor: usuarioLogado, data: new Date().toISOString() });
+                await db.from('demandas').update({ status: 'Arquivada', fotos_urls: [], historico: hist }).eq('id', demandaId);
+                window.location.href = 'dashboard.html';
+            }
+            else if (acaoMasterPendente === 'excluir') { 
+                await db.from('demandas').delete().eq('id', demandaId); window.location.href = 'dashboard.html'; 
+            }
+            acaoMasterPendente = null; 
+        }
+
+        window.apagarFotoUnica = async function(index) {
+            if (!confirm('Apagar este anexo?')) return;
+            const fotos = [...(demandaAtual.fotos_urls || [])];
+            fotos.splice(index, 1);
+            await db.from('demandas').update({ fotos_urls: fotos }).eq('id', demandaId);
+            window.location.reload();
+        }
+
+        window.forcarDownload = async function(url, nome) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const a = document.createElement('a');
+                a.href = window.URL.createObjectURL(blob);
+                a.download = nome; a.click();
+            } catch { alert('Erro ao baixar.'); }
+        }
+
+        async function uploadCloudinaryDirect(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', uploadPreset);
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, { method: 'POST', body: formData });
+            const data = await res.json();
+            return data.secure_url;
+        }
+
+        window.uploadNovosAnexos = async function() {
+            const pdfFile = document.getElementById('extraPdf').files[0];
+            const mediaFiles = document.getElementById('extraFotos').files;
+            if (!pdfFile && mediaFiles.length === 0) return alert('Selecione algum arquivo!');
+
+            const btn = document.getElementById('btnUploadExtra');
+            const prog = document.getElementById('progressoExtra');
+            btn.disabled = true; prog.style.display = 'block';
+
+            try {
+                let updates = {};
+                if (pdfFile) { prog.textContent = 'Enviando Novo PDF...'; updates.pdf_url = await uploadCloudinaryDirect(pdfFile); }
+                if (mediaFiles.length > 0) {
+                    let novasFotos = [];
+                    for (let i = 0; i < mediaFiles.length; i++) {
+                        prog.textContent = `Enviando mídia ${i+1}/${mediaFiles.length}...`;
+                        novasFotos.push(await uploadCloudinaryDirect(mediaFiles[i]));
+                    }
+                    updates.fotos_urls = [...(demandaAtual.fotos_urls || []).filter(f => f), ...novasFotos];
+                }
+                await db.from('demandas').update(updates).eq('id', demandaId);
+                window.location.reload(); 
+            } catch (e) { alert('Erro: ' + e.message);
+            } finally { btn.disabled = false; setTimeout(() => { prog.style.display = 'none'; }, 3000); }
+        }
+
+        inicializarSistema();
+    </script>
+</body>
+</html>
