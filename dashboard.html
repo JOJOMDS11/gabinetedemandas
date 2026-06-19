@@ -91,6 +91,7 @@
         </a>
         <div style="display:flex; align-items:center; gap:12px;">
             <span style="font-size:13px;">👤 <span id="nomeUsuario"></span></span>
+            <button class="btn-logout" id="btnGerenciarSecretarias" onclick="abrirGerenciadorSecretarias()" title="Gerenciar lista de Secretarias">⚙️ Secretarias</button>
             <button class="btn-logout" id="btnLogout">Sair</button>
         </div>
     </div>
@@ -149,6 +150,31 @@
             <div class="modal-botoes">
                 <button style="background:#e0e0e0; color:#333; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalExclusao()">Cancelar</button>
                 <button id="btnConfirmarSenhaAcao" style="background:#c0392b; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="processarExclusao()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Gerenciamento de Secretarias -->
+    <div class="modal-overlay" id="modalSecretarias">
+        <div class="modal-box" style="max-width: 420px; text-align: left;">
+            <h3 style="text-align:center;">⚙️ Gerenciar Secretarias</h3>
+            <p style="color:#555; font-size:13px; margin-bottom:15px; text-align:center;">Esta lista aparece nos formulários de Nova Demanda e Edição.</p>
+
+            <div id="avisoTabelaSecretarias" style="display:none; background:#fff3cd; color:#856404; padding:10px; border-radius:4px; font-size:12px; margin-bottom:12px;">
+                ⚠️ A tabela <b>secretarias</b> ainda não existe no banco. Crie-a no Supabase (veja o SQL no rodapé) para poder salvar suas alterações. Por enquanto está sendo exibida apenas a lista padrão.
+            </div>
+
+            <div style="display:flex; gap:8px; margin-bottom:15px;">
+                <input type="text" id="inputNovaSecretaria" placeholder="Nome da nova secretaria/órgão..." style="flex:1; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                <button onclick="adicionarSecretaria()" style="background:#27ae60; color:white; border:none; padding:10px 14px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
+            </div>
+
+            <div id="listaSecretariasModal" style="max-height: 280px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
+                <p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>
+            </div>
+
+            <div class="modal-botoes">
+                <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharGerenciadorSecretarias()">Fechar</button>
             </div>
         </div>
     </div>
@@ -214,6 +240,92 @@
         }
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
+
+        // ===================== GERENCIADOR DE SECRETARIAS =====================
+        // Lista padrão usada como fallback enquanto a tabela 'secretarias' não
+        // existir no Supabase. As mesmas secretarias padrão de nova-demanda.html
+        // e ver-demanda.html, para manter consistência entre as telas.
+        const secretariasPadraoFallback = [
+            'GABINETE', 'SEMOB', 'SEMOV', 'SEMURB', 'SEMMAM', 'SEMAE',
+            'SAÚDE', 'EDUCAÇÃO', 'FAZENDA', 'OUVIDORIA', 'CEPOM',
+            'Secretaria Municipal de Habitação - SEMHAB',
+            'Secretaria Municipal de Proteção Animal - SEMPA',
+            'Secretaria Geral de Governo - SGG',
+            'PREFEITURA'
+        ];
+        let tabelaSecretariasExiste = true;
+
+        window.abrirGerenciadorSecretarias = async function() {
+            document.getElementById('modalSecretarias').classList.add('ativo');
+            await renderizarListaSecretarias();
+        }
+
+        window.fecharGerenciadorSecretarias = function() {
+            document.getElementById('modalSecretarias').classList.remove('ativo');
+        }
+
+        async function buscarSecretarias() {
+            try {
+                const { data, error } = await db.from('secretarias').select('id, nome').order('nome');
+                if (error) throw error;
+                tabelaSecretariasExiste = true;
+                return data || [];
+            } catch (e) {
+                tabelaSecretariasExiste = false;
+                // Sem tabela ainda: devolve a lista padrão sem 'id' (não editável/excluível até a tabela existir)
+                return secretariasPadraoFallback.map(nome => ({ id: null, nome }));
+            }
+        }
+
+        async function renderizarListaSecretarias() {
+            const lista = document.getElementById('listaSecretariasModal');
+            lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
+
+            const secretarias = await buscarSecretarias();
+
+            document.getElementById('avisoTabelaSecretarias').style.display = tabelaSecretariasExiste ? 'none' : 'block';
+
+            if (secretarias.length === 0) {
+                lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhuma secretaria cadastrada.</p>';
+                return;
+            }
+
+            lista.innerHTML = secretarias.map(s => `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:8px 10px; border-radius:4px;">
+                    <span style="font-size:13px;">${s.nome}</span>
+                    ${s.id ? `<button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button>` : `<span style="font-size:11px; color:#999;">padrão</span>`}
+                </div>
+            `).join('');
+        }
+
+        window.adicionarSecretaria = async function() {
+            const input = document.getElementById('inputNovaSecretaria');
+            const nome = input.value.trim();
+            if (!nome) return alert('Digite o nome da secretaria!');
+
+            try {
+                const { error } = await db.from('secretarias').insert([{ nome }]);
+                if (error) throw error;
+                input.value = '';
+                await renderizarListaSecretarias();
+            } catch (e) {
+                alert('Não foi possível salvar: a tabela "secretarias" provavelmente ainda não existe no Supabase. Peça para criar com o SQL:\n\ncreate table secretarias (id bigint generated always as identity primary key, nome text not null unique);');
+            }
+        }
+
+        window.excluirSecretaria = async function(id, btn) {
+            if (!confirm('Remover esta secretaria da lista?')) return;
+            btn.disabled = true;
+            try {
+                const { error } = await db.from('secretarias').delete().eq('id', id);
+                if (error) throw error;
+                await renderizarListaSecretarias();
+            } catch (e) {
+                alert('Erro ao excluir.');
+                btn.disabled = false;
+            }
+        }
+        // =================== FIM GERENCIADOR DE SECRETARIAS ===================
 
         window.filtrar = function(status) {
             filtroAtual = status;
