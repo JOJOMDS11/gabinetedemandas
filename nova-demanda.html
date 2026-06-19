@@ -110,9 +110,9 @@
 
         <div class="form-row">
             <div class="form-group">
-                <label>Responsável (Opcional)</label>
-                <select id="responsavel_inicial">
-                    <option value="">Deixar em aberto</option>
+                <label>Responsável (Dono da Ordem)</label>
+                <select id="responsavel_ordem">
+                    <option value="">Não definido</option>
                     <option value="Daniel">Daniel</option>
                     <option value="João Pedro">João Pedro</option>
                     <option value="Alemão">Alemão</option>
@@ -274,7 +274,7 @@
         window.enviarDemanda = async function() {
             const tipo_solicitacao = document.getElementById('tipo_solicitacao').value;
             const assunto = document.getElementById('assunto').value.trim();
-            const responsavel_inicial = document.getElementById('responsavel_inicial').value;
+            const responsavel_ordem = document.getElementById('responsavel_ordem').value; // Novo Campo
             const numero_demanda = document.getElementById('numero_demanda').value.trim();
             
             const data_agendada = document.getElementById('data_agendada').value || null;
@@ -314,15 +314,12 @@
                 }
                 prog.style.display = 'none';
 
-                // LÓGICA DE STATUS INICIAL INTELIGENTE
                 let statusInicial = 'Pendente'; 
                 if (tiposAtualBloqueados.includes(tipo_solicitacao)) {
                     statusInicial = usuarioLogado === 'Daniel' ? 'Aprovada' : 'Aguardando Aprovação';
                 } else if (usuarioLogado === 'Daniel') {
-                    statusInicial = 'Pendente'; // Daniel também cria rotinas livres
+                    statusInicial = 'Pendente'; 
                 }
-
-                const responsaveis = responsavel_inicial ? [responsavel_inicial] : [];
 
                 await db.from('demandas').insert([{
                     tipo_solicitacao, numero_demanda, assunto, rua, numero, bairro, 
@@ -333,7 +330,8 @@
                     pdf_url: pdf_url,
                     status: statusInicial, 
                     criador: usuarioLogado, 
-                    responsaveis: responsaveis         
+                    responsavel_ordem: responsavel_ordem, // Salva na nova gaveta
+                    responsaveis: [] // Nasce sem ninguém executando, a não ser que assumam lá dentro
                 }]);
 
                 msg.className = 'mensagem sucesso'; msg.textContent = 'Registro salvo com sucesso!'; msg.style.display = 'block';
