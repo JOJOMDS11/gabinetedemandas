@@ -52,7 +52,7 @@
                 <label>Senha</label>
                 <input type="password" id="senha" placeholder="******" required>
             </div>
-            <button type="submit" id="btnAcessar" class="btn-login" disabled>Carregando sistema...</button>
+            <button type="submit" id="btnAcessar" class="btn-login" disabled>Verificando sessão...</button>
             <div class="error" id="erro"></div>
             <div class="success" id="sucesso"></div>
         </form>
@@ -79,6 +79,16 @@
                 
                 // Cria o cliente Supabase nativo
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
+
+                // 🔥 A MÁGICA DO AUTO-LOGIN AQUI 🔥
+                // O Supabase olha no navegador se o usuário já fez login alguma vez
+                const { data: { session } } = await db.auth.getSession();
+                
+                if (session) {
+                    // Se a sessão for válida, pula direto pro Dashboard!
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
                 
                 const btn = document.getElementById('btnAcessar');
                 btn.textContent = 'Acessar Sistema';
@@ -114,7 +124,7 @@
             try {
                 const emailAlvo = emailsSinteticos[usuario];
 
-                // 🔥 A MÁGICA: Login Real no Supabase Auth
+                // Login Real no Supabase Auth
                 const { data, error } = await db.auth.signInWithPassword({
                     email: emailAlvo,
                     password: senha
@@ -124,7 +134,7 @@
                     erroEl.textContent = 'Senha incorreta ou usuário não cadastrado!'; 
                     erroEl.style.display = 'block';
                 } else {
-                    // Sucesso! O SDK do Supabase já salvou a sessão/Token seguro no navegador.
+                    // Sucesso! O SDK do Supabase já salvou a sessão automaticamente.
                     // Vamos salvar o Nome no localStorage SÓ para a interface visual usar depois.
                     localStorage.setItem('usuarioLogado', usuario);
                     
