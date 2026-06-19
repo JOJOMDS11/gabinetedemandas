@@ -18,8 +18,8 @@
         h2 { color: #185199; margin-bottom: 25px; text-align: center; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #333; font-weight: bold; font-size: 13px; }
-        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-        input:focus, textarea:focus { outline: none; border-color: #185199; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #185199; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 10px; }
         .preview-item { border-radius: 4px; border: 1px solid #eee; overflow: hidden; height: 80px; position: relative; cursor: pointer; }
@@ -32,8 +32,6 @@
         .sucesso { background: #e2f8c5; color: #185199; border: 1px solid #98ED34; }
         .erro { background: #ffe5e5; color: #c0392b; }
         #uploadProgress { font-size: 13px; color: #185199; font-weight: bold; margin-top: 5px; display: none; }
-        
-        /* Lightbox */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; }
         .modal-overlay.ativo { display: flex; }
         .modal-overlay img, .modal-overlay video { max-width: 90%; max-height: 90vh; border-radius: 8px; }
@@ -47,17 +45,58 @@
     </div>
 
     <div class="container">
-        <h2>Adicionar Demanda</h2>
+        <h2>Adicionar Registro</h2>
         <div id="mensagem" class="mensagem"></div>
 
         <div class="form-row">
             <div class="form-group" style="grid-column: 1 / -1;">
-                <label>Assunto *</label>
-                <input type="text" id="assunto" placeholder="Ex: Limpeza de bueiro" required>
+                <label>Tipo de Solicitação *</label>
+                <select id="tipo_solicitacao" required onchange="adaptarFormulario()">
+                    <option value="">Selecione o tipo...</option>
+                    <optgroup label="Agendas e Internos">
+                        <option value="Agenda VISITA AO GABINETE">Agenda VISITA AO GABINETE</option>
+                        <option value="AGENDA visita EXTERNA">AGENDA visita EXTERNA</option>
+                        <option value="GABINETE">GABINETE</option>
+                        <option value="REUNIÃO">REUNIÃO</option>
+                    </optgroup>
+                    <optgroup label="Demandas">
+                        <option value="DEMANDA">DEMANDA (Geral)</option>
+                        <option value="Demanda Externa">Demanda Externa</option>
+                    </optgroup>
+                    <optgroup label="Legislativo e Projetos">
+                        <option value="INDICAÇÃO">INDICAÇÃO</option>
+                        <option value="Moção de Apoio">Moção de Apoio</option>
+                        <option value="PEDIDO DE PROVIDÊNCIAS">PEDIDO DE PROVIDÊNCIAS</option>
+                        <option value="PROJETO DE LEI">PROJETO DE LEI</option>
+                        <option value="Projeto de Lei de Vereador">Projeto de Lei de Vereador</option>
+                        <option value="Projeto de Resolução (PR)">Projeto de Resolução (PR)</option>
+                        <option value="REQUERIMENTO">REQUERIMENTO</option>
+                        <option value="SESSÃO SOLENE">SESSÃO SOLENE</option>
+                    </optgroup>
+                </select>
             </div>
         </div>
-        
+
         <div class="form-row">
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label>Assunto *</label>
+                <input type="text" id="assunto" placeholder="Ex: Limpeza de bueiro, Visita do João..." required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Responsável Pela Demanda</label>
+                <select id="responsavel_inicial">
+                    <option value="">Deixar em aberto (ou assumir depois)</option>
+                    <option value="Daniel">Daniel</option>
+                    <option value="João Pedro">João Pedro</option>
+                    <option value="Alemão">Alemão</option>
+                    <option value="Antonio">Antonio</option>
+                    <option value="Luana">Luana</option>
+                    <option value="Débora">Débora</option>
+                </select>
+            </div>
             <div class="form-group">
                 <label>Nº da Demanda (Opcional)</label>
                 <input type="text" id="numero_demanda" placeholder="Ex: 55">
@@ -67,7 +106,7 @@
         <div class="form-row">
             <div class="form-group">
                 <label>Nome do Solicitante (Opcional)</label>
-                <input type="text" id="solicitante_nome" placeholder="Nome do morador">
+                <input type="text" id="solicitante_nome" placeholder="Nome da pessoa">
             </div>
             <div class="form-group">
                 <label>Telefone / WhatsApp (Opcional)</label>
@@ -75,23 +114,26 @@
             </div>
         </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label>Rua *</label>
-                <input type="text" id="rua" required>
+        <!-- Grupo de Endereço (Será escondido se não for necessário) -->
+        <div id="bloco_endereco">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Rua / Local</label>
+                    <input type="text" id="rua">
+                </div>
+                <div class="form-group">
+                    <label>Número</label>
+                    <input type="text" id="numero">
+                </div>
             </div>
             <div class="form-group">
-                <label>Número *</label>
-                <input type="text" id="numero" required>
+                <label>Bairro</label>
+                <input type="text" id="bairro">
             </div>
-        </div>
-        <div class="form-group">
-            <label>Bairro *</label>
-            <input type="text" id="bairro" required>
         </div>
         
         <div class="form-group">
-            <label>Descrição Opcional</label>
+            <label>Descrição / Detalhes</label>
             <textarea id="descricao" rows="3"></textarea>
         </div>
         
@@ -134,11 +176,30 @@
 
                 const btn = document.getElementById('btnEnviar');
                 btn.disabled = false;
-                btn.textContent = 'Salvar Demanda';
+                btn.textContent = 'Salvar Registro';
             } catch (err) {
                 document.getElementById('mensagem').className = 'mensagem erro';
                 document.getElementById('mensagem').textContent = 'Erro de API.';
                 document.getElementById('mensagem').style.display = 'block';
+            }
+        }
+
+        // Lógica para Esconder/Mostrar o Endereço com base no Tipo
+        function adaptarFormulario() {
+            const tipo = document.getElementById('tipo_solicitacao').value;
+            const blocoEndereco = document.getElementById('bloco_endereco');
+            
+            // Tipos que geralmente NÃO precisam de endereço de rua
+            const tiposSemEndereco = [
+                'Agenda VISITA AO GABINETE', 'GABINETE', 'REUNIÃO', 'INDICAÇÃO', 
+                'Moção de Apoio', 'PROJETO DE LEI', 'Projeto de Lei de Vereador', 
+                'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'
+            ];
+
+            if (tiposSemEndereco.includes(tipo)) {
+                blocoEndereco.style.display = 'none';
+            } else {
+                blocoEndereco.style.display = 'block';
             }
         }
 
@@ -147,11 +208,7 @@
         document.getElementById('fotos').addEventListener('change', function(e) {
             const novos = Array.from(e.target.files);
             if (arquivosSelecionados.length + novos.length > 5) { alert('Máximo 5 arquivos!'); return; }
-            
-            novos.forEach(file => {
-                arquivosSelecionados.push(file);
-                renderizarPreviews();
-            });
+            novos.forEach(file => { arquivosSelecionados.push(file); renderizarPreviews(); });
             this.value = ''; 
         });
 
@@ -161,38 +218,21 @@
             arquivosSelecionados.forEach((file, index) => {
                 const url = URL.createObjectURL(file);
                 const isVideo = file.type.startsWith('video/');
-                const mediaTag = isVideo 
-                    ? `<video src="${url}" muted loop onclick="abrirLightbox('${url}', true)"></video>` 
-                    : `<img src="${url}" onclick="abrirLightbox('${url}', false)">`;
-                
-                grid.innerHTML += `
-                    <div class="preview-item">
-                        ${mediaTag}
-                        <button class="btn-remover-preview" onclick="event.stopPropagation(); removerArquivo(${index})">✕</button>
-                    </div>`;
+                const mediaTag = isVideo ? `<video src="${url}" muted loop onclick="abrirLightbox('${url}', true)"></video>` : `<img src="${url}" onclick="abrirLightbox('${url}', false)">`;
+                grid.innerHTML += `<div class="preview-item">${mediaTag}<button class="btn-remover-preview" onclick="event.stopPropagation(); removerArquivo(${index})">✕</button></div>`;
             });
         }
 
-        window.removerArquivo = function(index) {
-            arquivosSelecionados.splice(index, 1);
-            renderizarPreviews();
-        }
+        window.removerArquivo = function(index) { arquivosSelecionados.splice(index, 1); renderizarPreviews(); }
 
         window.abrirLightbox = function(url, isVideo) {
             document.getElementById('lightbox').classList.add('ativo');
-            const img = document.getElementById('lightboxImg');
-            const vid = document.getElementById('lightboxVid');
-            if (isVideo) {
-                vid.src = url; vid.style.display = 'block'; img.style.display = 'none'; vid.play();
-            } else {
-                img.src = url; img.style.display = 'block'; vid.style.display = 'none';
-            }
+            const img = document.getElementById('lightboxImg'); const vid = document.getElementById('lightboxVid');
+            if (isVideo) { vid.src = url; vid.style.display = 'block'; img.style.display = 'none'; vid.play(); } 
+            else { img.src = url; img.style.display = 'block'; vid.style.display = 'none'; }
         }
 
-        window.fecharLightbox = function() {
-            document.getElementById('lightbox').classList.remove('ativo');
-            document.getElementById('lightboxVid').pause();
-        }
+        window.fecharLightbox = function() { document.getElementById('lightbox').classList.remove('ativo'); document.getElementById('lightboxVid').pause(); }
 
         async function uploadCloudinary(file) {
             const formData = new FormData();
@@ -204,11 +244,13 @@
         }
 
         window.enviarDemanda = async function() {
+            const tipo_solicitacao = document.getElementById('tipo_solicitacao').value;
             const assunto = document.getElementById('assunto').value.trim();
+            const responsavel_inicial = document.getElementById('responsavel_inicial').value;
             const numero_demanda = document.getElementById('numero_demanda').value.trim();
-            const rua = document.getElementById('rua').value.trim();
-            const numero = document.getElementById('numero').value.trim();
-            const bairro = document.getElementById('bairro').value.trim();
+            const rua = document.getElementById('rua').value.trim() || '';
+            const numero = document.getElementById('numero').value.trim() || '';
+            const bairro = document.getElementById('bairro').value.trim() || '';
             const solicitante_nome = document.getElementById('solicitante_nome').value.trim();
             const solicitante_tel = document.getElementById('solicitante_tel').value.trim();
             const arquivoPDF = document.getElementById('pdfFile').files[0];
@@ -216,8 +258,8 @@
             const msg = document.getElementById('mensagem');
             msg.style.display = 'none';
 
-            if (!assunto || !rua || !numero || !bairro) {
-                msg.className = 'mensagem erro'; msg.textContent = '❌ Preencha os campos obrigatórios (*)!'; msg.style.display = 'block'; return;
+            if (!tipo_solicitacao || !assunto) {
+                msg.className = 'mensagem erro'; msg.textContent = '❌ Preencha o Tipo e o Assunto!'; msg.style.display = 'block'; window.scrollTo(0,0); return;
             }
 
             const btn = document.getElementById('btnEnviar');
@@ -227,10 +269,7 @@
             try {
                 prog.style.display = 'block';
                 let pdf_url = null;
-                if (arquivoPDF) {
-                    prog.textContent = `Enviando PDF...`;
-                    pdf_url = await uploadCloudinary(arquivoPDF);
-                }
+                if (arquivoPDF) { prog.textContent = `Enviando PDF...`; pdf_url = await uploadCloudinary(arquivoPDF); }
 
                 const fotosUrls = [];
                 if (arquivosSelecionados.length > 0) {
@@ -242,22 +281,23 @@
                 prog.style.display = 'none';
 
                 const statusInicial = usuarioLogado === 'Daniel' ? 'Aprovada' : 'Aguardando Aprovação';
+                const responsaveis = responsavel_inicial ? [responsavel_inicial] : [];
 
                 await db.from('demandas').insert([{
-                    numero_demanda, assunto, rua, numero, bairro, 
+                    tipo_solicitacao, numero_demanda, assunto, rua, numero, bairro, 
                     descricao: document.getElementById('descricao').value.trim(),
                     solicitante_nome, solicitante_tel,
                     fotos_urls: fotosUrls, 
                     pdf_url: pdf_url,
                     status: statusInicial, 
                     criador: usuarioLogado, 
-                    responsaveis: []         
+                    responsaveis: responsaveis         
                 }]);
 
-                msg.className = 'mensagem sucesso'; msg.textContent = 'Demanda criada com sucesso!'; msg.style.display = 'block';
+                msg.className = 'mensagem sucesso'; msg.textContent = 'Registro salvo com sucesso!'; msg.style.display = 'block';
                 setTimeout(() => window.location.href = 'dashboard.html', 1500);
             } catch (e) {
-                prog.style.display = 'none'; btn.disabled = false; btn.textContent = 'Salvar Demanda';
+                prog.style.display = 'none'; btn.disabled = false; btn.textContent = 'Salvar Registro';
                 msg.className = 'mensagem erro'; msg.textContent = 'Erro: ' + e.message; msg.style.display = 'block';
             }
         };
