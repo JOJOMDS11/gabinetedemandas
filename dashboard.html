@@ -99,7 +99,7 @@
 
         async function inicializarSistema() {
             try {
-                const res = await fetch('/api/config');
+                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
                 carregarDemandas();
