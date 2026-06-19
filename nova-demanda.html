@@ -60,7 +60,7 @@
         <div class="box-importacao">
             <label>🪄 Preenchimento Automático (Planilha)</label>
             <textarea id="textoMagico" rows="2" placeholder="Clique aqui e faça Ctrl+V da linha do Excel..." oninput="executarMagia()"></textarea>
-            <button type="button" class="box-importacao-copy-btn" onclick="copiarTextoMagico()" title="Copia o texto para a área de transferência">📋 Copiar Resultado</button>
+            <button type="button" class="box-importacao-copy-btn" onclick="copiarTextoMagico()" title="Copia o resultado para a área de transferência">📋 Copiar Resultado</button>
             <span id="badgeStatusForcado" class="badge-status"></span>
         </div>
 
@@ -143,15 +143,15 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Nº da Demanda</label>
-                <input type="text" id="numero_demanda" placeholder="Ex: 55">
+                <label>Nº da Demanda (Auto)</label>
+                <input type="text" id="numero_demanda" readonly placeholder="Preenchido automaticamente">
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label>Nome do Solicitante</label>
-                <input type="text" id="solicitante_nome" placeholder="Nome da pessoa">
+                <label>Solicitante (Nome) *</label>
+                <input type="text" id="solicitante_nome" placeholder="João Silva..." required>
             </div>
             <div class="form-group">
                 <label>Telefone / WhatsApp</label>
@@ -163,43 +163,40 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>Rua / Local</label>
-                    <input type="text" id="rua">
+                    <input type="text" id="rua" placeholder="Ex: Rua Principal">
                 </div>
                 <div class="form-group">
                     <label>Número</label>
-                    <input type="text" id="numero">
+                    <input type="text" id="numero" placeholder="123">
                 </div>
             </div>
             <div class="form-group">
                 <label>Bairro</label>
-                <input type="text" id="bairro">
+                <input type="text" id="bairro" placeholder="Ex: Centro">
             </div>
-        </div>
-        
-        <div class="form-group">
-            <label>Descrição / Detalhes (Texto completo)</label>
-            <textarea id="descricao" rows="4"></textarea>
         </div>
 
-        <!-- SEÇÃO TÉCNICA -->
+        <div class="form-group">
+            <label>Descrição / Detalhes (Texto completo)</label>
+            <textarea id="descricao" rows="3" placeholder="Descreva a demanda com detalhes..."></textarea>
+        </div>
+
         <div class="secao-tecnica">
-            <h4 style="color:#185199; margin-bottom:10px; font-size:13px;">⚙️ Acompanhamento Técnico</h4>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Expediente</label>
-                    <input type="text" id="expediente" placeholder="Ex: Exp. 5152">
-                </div>
-                <div class="form-group">
-                    <label>Protocolo 156 / PDP</label>
-                    <input type="text" id="protocolo" placeholder="Ex: PDP 4230">
-                </div>
+            <h3 style="color:#185199; font-size:14px; margin-bottom:10px;">⚙️ Campos Técnicos (Opcional)</h3>
+            <div class="form-group">
+                <label>Protocolo 156</label>
+                <input type="text" id="protocolo" placeholder="Ex: 156 2026/001234" onfocus="if(!this.value) this.value='156 2026/'">
             </div>
             <div class="form-group">
-                <label>Link Legis</label>
-                <input type="url" id="link_legis" placeholder="https://admin.camarasaoleopoldo...">
+                <label>Expediente (Legis)</label>
+                <input type="text" id="expediente" placeholder="Ex: Exp. 5149">
+            </div>
+            <div class="form-group">
+                <label>Link Direto do Legis</label>
+                <input type="url" id="link_legis" placeholder="Cole a URL inteira aqui: https://...">
             </div>
         </div>
-        
+
         <div class="form-group" style="background:#f9f9f9; padding: 10px; border-radius: 4px; margin-top: 15px;">
             <label style="color:#c0392b;">Documento PDF (Opcional)</label>
             <input type="file" id="pdfFile" accept="application/pdf">
@@ -227,197 +224,11 @@
     <script>
         let db, cloudName, uploadPreset;
         let usuarioLogado = localStorage.getItem('usuarioLogado');
+        let formularioAlterado = false;
+
         if (!usuarioLogado) window.location.href = 'index.html';
 
         const tiposAtualBloqueados = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
-
-        async function inicializarSistema() {
-            try {
-                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
-                const config = await res.json();
-                db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
-                cloudName = config.cloudinaryName;
-                uploadPreset = config.uploadPreset;
-
-                const btn = document.getElementById('btnEnviar');
-                btn.disabled = false;
-                btn.textContent = 'Salvar Registro';
-            } catch (err) {
-                document.getElementById('mensagem').className = 'mensagem erro';
-                document.getElementById('mensagem').textContent = 'Erro de API.';
-                document.getElementById('mensagem').style.display = 'block';
-            }
-        }
-
-        // Função para apagar tudo antes de colar novos dados
-        function limparFormulario() {
-            document.getElementById('tipo_solicitacao').value = '';
-            document.getElementById('assunto').value = '';
-            document.getElementById('data_agendada').value = '';
-            document.getElementById('horario_agendado').value = '';
-            document.getElementById('secretaria').value = '';
-            document.getElementById('providencias').value = '';
-            document.getElementById('responsavel_ordem').value = '';
-            document.getElementById('numero_demanda').value = '';
-            document.getElementById('solicitante_nome').value = '';
-            document.getElementById('solicitante_tel').value = '';
-            document.getElementById('rua').value = '';
-            document.getElementById('numero').value = '';
-            document.getElementById('bairro').value = '';
-            document.getElementById('descricao').value = '';
-            document.getElementById('expediente').value = '';
-            document.getElementById('protocolo').value = '';
-            document.getElementById('link_legis').value = '';
-            document.getElementById('statusForcado').value = '';
-            document.getElementById('badgeStatusForcado').style.display = 'none';
-        }
-
-        // LÓGICA DO CHEAT CODE APRIMORADA (Direto no Input)
-        function executarMagia() {
-            const textarea = document.getElementById('textoMagico');
-            const texto = textarea.value;
-            if (!texto.trim()) return;
-
-            // 1. Zera o formulário para evitar misturar dados antigos com novos
-            limparFormulario();
-
-            // 2. Extrai os dados da planilha
-            const celulas = texto.split('\t');
-            let parsed = { numero: '', data: '', resp: '', status: '', tipo: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '' };
-
-            const nomesConhecidos = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
-            const tiposConhecidos = ['Agenda VISITA AO GABINETE', 'AGENDA visita EXTERNA', 'GABINETE', 'REUNIÃO', 'visita ao Gabinete', 'DEMANDA', 'Demanda Externa', 'INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
-            const statusConhecidos = ['Aberta', 'Pendente', 'Em Andamento', 'Aguardando', 'Aguardando Aprovação', 'Aprovada', '156 Pedido', 'Aguardando Exp', 'Atendido', 'Resolvido', 'Concluída', 'Arquivada', 'Rejeitada', 'Sem Legis'];
-
-            celulas.forEach(c => {
-                let cell = c.trim();
-                if(!cell) return;
-
-                // Extrair Data
-                if (cell.match(/^\d{2}\/\d{2}\/\d{2,4}$/)) {
-                    let p = cell.split('/');
-                    let ano = p[2].length === 2 ? '20' + p[2] : p[2];
-                    parsed.data = `${ano}-${p[1]}-${p[0]}`;
-                }
-                // Extrair Número 
-                else if (cell.match(/^\d{1,5}$/) && !parsed.numero) {
-                    parsed.numero = cell;
-                }
-                // Extrair Dono Ordem
-                else if (nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase())) {
-                    parsed.resp = nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase());
-                }
-                // Extrair Tipo
-                else if (tiposConhecidos.find(t => t.toLowerCase() === cell.toLowerCase())) {
-                    parsed.tipo = tiposConhecidos.find(t => t.toLowerCase() === cell.toLowerCase());
-                }
-                // Extrair Status da Planilha
-                else if (statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase())) {
-                    parsed.status = statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase());
-                }
-                // Extrair Expediente
-                else if (cell.toLowerCase().includes('exp.') || cell.toLowerCase().includes('expediente')) {
-                    parsed.expediente = cell;
-                }
-                // Extrair Protocolo (PDP ou 156)
-                else if (cell.match(/^[A-Z]+\s\d+\/\d{4}$/) || cell.includes('156 202')) {
-                    parsed.protocolo = cell;
-                }
-                // Extrair Secretaria (Começa com SEM ou é palavra conhecida)
-                else if (cell.match(/^SEM[A-Z]+$/i) || ['OBRAS', 'SAÚDE', 'GABINETE'].includes(cell.toUpperCase())) {
-                    if (!parsed.secretaria) parsed.secretaria = cell;
-                }
-                // Extrair Nome (Se for palavra curta e não encaixou em nada)
-                else if (cell.length > 2 && cell.length < 25 && !cell.match(/\d/) && !parsed.nome && cell.toLowerCase() !== 'ver detalhes') {
-                    parsed.nome = cell; 
-                }
-                // Sobrou = Textão (Descrição e Assunto) e possível telefone grudado
-                else if (cell.length > 5 && cell.toLowerCase() !== 'ver detalhes' && cell.toLowerCase() !== 'ver mais') {
-                    if(parsed.desc) parsed.desc += '\n' + cell;
-                    else parsed.desc = cell;
-                }
-            });
-
-            // LIMPEZA DA DESCRIÇÃO (Para separar telefone do assunto)
-            if (parsed.desc) {
-                // Procura padrões de telefone (ex: (51.) 996.707.733 ou 51 9999-9999)
-                let matchTel = parsed.desc.match(/(?:\(?0?51\)?\.?\s*)?9?\d{3,4}[-.]?\d{3,4}/);
-                if (matchTel && !parsed.tel) {
-                    parsed.tel = matchTel[0].trim();
-                    // Tira o telefone do início do texto para não poluir o Assunto
-                    parsed.desc = parsed.desc.replace(matchTel[0], '').trim();
-                    // Limpa pontos ou hífens que sobram no começo da frase
-                    parsed.desc = parsed.desc.replace(/^[.-]\s*/, '').trim();
-                }
-            }
-
-            // 3. Preenche a Tela Automaticamente
-            if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo;
-            if(parsed.numero) document.getElementById('numero_demanda').value = parsed.numero;
-            if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
-            if(parsed.resp) document.getElementById('responsavel_ordem').value = parsed.resp;
-            if(parsed.secretaria) document.getElementById('secretaria').value = parsed.secretaria;
-            if(parsed.expediente) document.getElementById('expediente').value = parsed.expediente;
-            if(parsed.protocolo) document.getElementById('protocolo').value = parsed.protocolo;
-            if(parsed.nome) document.getElementById('solicitante_nome').value = parsed.nome;
-            if(parsed.tel) document.getElementById('solicitante_tel').value = parsed.tel;
-            
-            if(parsed.status) {
-                document.getElementById('statusForcado').value = parsed.status;
-                const badge = document.getElementById('badgeStatusForcado');
-                badge.textContent = '📌 Importado: ' + parsed.status;
-                badge.style.display = 'inline-block';
-            }
-
-            if(parsed.desc) {
-                document.getElementById('descricao').value = parsed.desc;
-                
-                // Assunto recebe apenas a primeira frase curta
-                let primeiraLinha = parsed.desc.split('\n')[0];
-                document.getElementById('assunto').value = primeiraLinha.substring(0, 60) + (primeiraLinha.length > 60 ? '...' : '');
-
-                // IA DE ENDEREÇOS (Extrai do texto)
-                let matchRua = parsed.desc.match(/(?:Rua|Av|Avenida|Travessa)\s([^,]+),\s*n[ºo]?\s*(\d+)/i);
-                if(matchRua) {
-                    document.getElementById('rua').value = matchRua[1].trim();
-                    document.getElementById('numero').value = matchRua[2].trim();
-                }
-                let matchBairro = parsed.desc.match(/bairro\s([^,.]+)/i);
-                if(matchBairro) {
-                    document.getElementById('bairro').value = matchBairro[1].trim();
-                }
-            }
-
-            adaptarFormulario();
-
-            // Pisca o campo de verde para dar feedback de sucesso e limpa o texto colado
-            textarea.style.backgroundColor = '#e2f8c5';
-            textarea.value = '✅ Dados importados com sucesso!';
-            setTimeout(() => { 
-                textarea.value = ''; 
-                textarea.style.backgroundColor = 'transparent'; 
-            }, 2000);
-        }
-
-        function adaptarFormulario() {
-            const tipo = document.getElementById('tipo_solicitacao').value;
-            const blocoEndereco = document.getElementById('bloco_endereco');
-            
-            const tiposSemEndereco = [
-                'Agenda VISITA AO GABINETE', 'GABINETE', 'REUNIÃO', 'INDICAÇÃO', 
-                'Moção de Apoio', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 
-                'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE', 'visita ao Gabinete'
-            ];
-
-            if (tiposSemEndereco.includes(tipo)) {
-                blocoEndereco.style.display = 'none';
-            } else {
-                blocoEndereco.style.display = 'block';
-            }
-        }
-
-        let arquivosSelecionados = [];
-        let formularioAlterado = false;
 
         // Monitorar alterações no formulário
         document.addEventListener('change', function() { formularioAlterado = true; });
@@ -480,6 +291,170 @@
             }
         }
 
+        async function inicializarSistema() {
+            try {
+                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
+                const config = await res.json();
+                db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                cloudName = config.cloudinaryName;
+                uploadPreset = config.uploadPreset;
+
+                const btn = document.getElementById('btnEnviar');
+                btn.disabled = false;
+                btn.textContent = 'Salvar Registro';
+            } catch (err) {
+                document.getElementById('mensagem').className = 'mensagem erro';
+                document.getElementById('mensagem').textContent = 'Erro de API.';
+                document.getElementById('mensagem').style.display = 'block';
+            }
+        }
+
+        // Função para apagar tudo antes de colar novos dados
+        function limparFormulario() {
+            document.getElementById('tipo_solicitacao').value = '';
+            document.getElementById('assunto').value = '';
+            document.getElementById('data_agendada').value = '';
+            document.getElementById('horario_agendado').value = '';
+            document.getElementById('secretaria').value = '';
+            document.getElementById('providencias').value = '';
+            document.getElementById('responsavel_ordem').value = '';
+            document.getElementById('numero_demanda').value = '';
+            document.getElementById('solicitante_nome').value = '';
+            document.getElementById('solicitante_tel').value = '';
+            document.getElementById('rua').value = '';
+            document.getElementById('numero').value = '';
+            document.getElementById('bairro').value = '';
+            document.getElementById('descricao').value = '';
+            document.getElementById('expediente').value = '';
+            document.getElementById('protocolo').value = '';
+            document.getElementById('link_legis').value = '';
+            document.getElementById('statusForcado').value = '';
+            document.getElementById('badgeStatusForcado').style.display = 'none';
+        }
+
+        // LÓGICA DO CHEAT CODE APRIMORADA
+        function executarMagia() {
+            const textarea = document.getElementById('textoMagico');
+            const texto = textarea.value;
+            if (!texto.trim()) return;
+
+            limparFormulario();
+
+            const celulas = texto.split('\t');
+            let parsed = { numero: '', data: '', resp: '', status: '', tipo: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '' };
+
+            const nomesConhecidos = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
+            const tiposConhecidos = ['Agenda VISITA AO GABINETE', 'AGENDA visita EXTERNA', 'GABINETE', 'REUNIÃO', 'visita ao Gabinete', 'DEMANDA', 'Demanda Externa', 'INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+            const statusConhecidos = ['Aberta', 'Pendente', 'Em Andamento', 'Aguardando', 'Aguardando Aprovação', 'Aprovada', '156 Pedido', 'Aguardando Exp', 'Atendido', 'Resolvido', 'Concluída', 'Arquivada', 'Rejeitada', 'Sem Legis'];
+
+            celulas.forEach(c => {
+                let cell = c.trim();
+                if(!cell) return;
+
+                if (cell.match(/^\d{2}\/\d{2}\/\d{2,4}$/)) {
+                    let p = cell.split('/');
+                    let ano = p[2].length === 2 ? '20' + p[2] : p[2];
+                    parsed.data = `${ano}-${p[1]}-${p[0]}`;
+                }
+                else if (cell.match(/^\d{1,5}$/) && !parsed.numero) {
+                    parsed.numero = cell;
+                }
+                else if (nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase())) {
+                    parsed.resp = nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase());
+                }
+                else if (tiposConhecidos.find(t => t.toLowerCase() === cell.toLowerCase())) {
+                    parsed.tipo = tiposConhecidos.find(t => t.toLowerCase() === cell.toLowerCase());
+                }
+                else if (statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase())) {
+                    parsed.status = statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase());
+                }
+                else if (cell.toLowerCase().includes('exp.') || cell.toLowerCase().includes('expediente')) {
+                    parsed.expediente = cell;
+                }
+                else if (cell.match(/^[A-Z]+\s\d+\/\d{4}$/) || cell.includes('156 202')) {
+                    parsed.protocolo = cell;
+                }
+                else if (cell.match(/^SEM[A-Z]+$/i) || ['OBRAS', 'SAÚDE', 'GABINETE'].includes(cell.toUpperCase())) {
+                    if (!parsed.secretaria) parsed.secretaria = cell;
+                }
+                else if (cell.length > 2 && cell.length < 25 && !cell.match(/\d/) && !parsed.nome && cell.toLowerCase() !== 'ver detalhes') {
+                    parsed.nome = cell; 
+                }
+                else if (cell.length > 5 && cell.toLowerCase() !== 'ver detalhes' && cell.toLowerCase() !== 'ver mais') {
+                    if(parsed.desc) parsed.desc += '\n' + cell;
+                    else parsed.desc = cell;
+                }
+            });
+
+            if (parsed.desc) {
+                let matchTel = parsed.desc.match(/(?:\(?0?51\)?\.?\s*)?9?\d{3,4}[-.]?\d{3,4}/);
+                if (matchTel && !parsed.tel) {
+                    parsed.tel = matchTel[0].trim();
+                    parsed.desc = parsed.desc.replace(matchTel[0], '').trim();
+                    parsed.desc = parsed.desc.replace(/^[.-]\s*/, '').trim();
+                }
+            }
+
+            if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo;
+            if(parsed.numero) document.getElementById('numero_demanda').value = parsed.numero;
+            if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
+            if(parsed.resp) document.getElementById('responsavel_ordem').value = parsed.resp;
+            if(parsed.secretaria) document.getElementById('secretaria').value = parsed.secretaria;
+            if(parsed.expediente) document.getElementById('expediente').value = parsed.expediente;
+            if(parsed.protocolo) document.getElementById('protocolo').value = parsed.protocolo;
+            if(parsed.nome) document.getElementById('solicitante_nome').value = parsed.nome;
+            if(parsed.tel) document.getElementById('solicitante_tel').value = parsed.tel;
+            
+            if(parsed.status) {
+                document.getElementById('statusForcado').value = parsed.status;
+                const badge = document.getElementById('badgeStatusForcado');
+                badge.textContent = '📌 Importado: ' + parsed.status;
+                badge.style.display = 'inline-block';
+            }
+
+            if(parsed.desc) {
+                document.getElementById('descricao').value = parsed.desc;
+                let primeiraLinha = parsed.desc.split('\n')[0];
+                document.getElementById('assunto').value = primeiraLinha.substring(0, 60) + (primeiraLinha.length > 60 ? '...' : '');
+
+                let matchRua = parsed.desc.match(/(?:Rua|Av|Avenida|Travessa)\s([^,]+),\s*n[ºo]?\s*(\d+)/i);
+                if(matchRua) {
+                    document.getElementById('rua').value = matchRua[1].trim();
+                    document.getElementById('numero').value = matchRua[2].trim();
+                }
+                let matchBairro = parsed.desc.match(/bairro\s([^,.]+)/i);
+                if(matchBairro) {
+                    document.getElementById('bairro').value = matchBairro[1].trim();
+                }
+            }
+
+            adaptarFormulario();
+
+            textarea.style.backgroundColor = '#e2f8c5';
+            textarea.value = '✅ Dados importados com sucesso!';
+            setTimeout(() => { 
+                textarea.value = ''; 
+                textarea.style.backgroundColor = 'transparent'; 
+            }, 2000);
+        }
+
+        function adaptarFormulario() {
+            const tipo = document.getElementById('tipo_solicitacao').value;
+            const blocoEndereco = document.getElementById('bloco_endereco');
+            
+            const tiposSemEndereco = [
+                'Agenda VISITA AO GABINETE', 'GABINETE', 'REUNIÃO', 'INDICAÇÃO', 
+                'Moção de Apoio', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 
+                'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE', 'visita ao Gabinete'
+            ];
+
+            if (tiposSemEndereco.includes(tipo)) {
+                blocoEndereco.style.display = 'none';
+            } else {
+                blocoEndereco.style.display = 'block';
+            }
+        }
+
         let arquivosSelecionados = [];
 
         document.getElementById('fotos').addEventListener('change', function(e) {
@@ -538,7 +513,6 @@
             const solicitante_tel = document.getElementById('solicitante_tel').value.trim();
             const arquivoPDF = document.getElementById('pdfFile').files[0];
 
-            // Campos técnicos
             const expediente = document.getElementById('expediente').value.trim();
             const protocolo = document.getElementById('protocolo').value.trim();
             const link_legis = document.getElementById('link_legis').value.trim();
@@ -568,12 +542,11 @@
                 }
                 prog.style.display = 'none';
 
-                // DESCUBRE O STATUS (Lógica normal ou Status vindo do Cheat Code)
                 let statusInicial = 'Pendente'; 
                 const statusForcado = document.getElementById('statusForcado').value;
 
                 if (statusForcado) {
-                    statusInicial = statusForcado; // Usa o status importado (ex: Resolvido, Concluída)
+                    statusInicial = statusForcado;
                 } else {
                     if (tiposAtualBloqueados.includes(tipo_solicitacao)) {
                         statusInicial = usuarioLogado === 'Daniel' ? 'Aprovada' : 'Aguardando Aprovação';
@@ -593,13 +566,20 @@
                     status: statusInicial, 
                     criador: usuarioLogado, 
                     responsavel_ordem: responsavel_ordem, 
-                    responsaveis: [] // Os executores assumem depois
+                    responsaveis: []
                 }]);
 
                 msg.className = 'mensagem sucesso'; msg.textContent = 'Registro salvo com sucesso!'; msg.style.display = 'block';
+                formularioAlterado = false;
                 setTimeout(() => window.location.href = 'dashboard.html', 1500);
             } catch (e) {
                 prog.style.display = 'none'; btn.disabled = false; btn.textContent = 'Salvar Registro';
                 msg.className = 'mensagem erro'; msg.textContent = 'Erro: ' + e.message; msg.style.display = 'block';
             }
         };
+
+        inicializarSistema();
+        inicializarNumeroDemanda();
+    </script>
+</body>
+</html>
