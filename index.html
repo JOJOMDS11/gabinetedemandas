@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabinete Daniel Daudt - Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f0f2f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .login-container { background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; padding: 40px; border-top: 5px solid #185199; }
+        .logo { text-align: center; margin-bottom: 25px; }
+        .logo img { max-width: 280px; height: auto; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #185199; font-weight: 700; font-size: 14px; }
+        select, input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; }
+        select:focus, input:focus { outline: none; border-color: #185199; }
+        .btn-login { width: 100%; padding: 14px; background-color: #185199; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        .btn-login:hover { background-color: #123e75; }
+        .error, .success { font-size: 14px; margin-top: 15px; text-align: center; display: none; padding: 10px; border-radius: 4px; font-weight: bold; }
+        .error { background: #ffe5e5; color: #c0392b; }
+        .success { background: #e2f8c5; color: #185199; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <img src="https://i.imgur.com/coryuD6.png" alt="Logo Daniel Daudt">
+        </div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Quem é você?</label>
+                <select id="usuario" required>
+                    <option value="">Selecione seu nome</option>
+                    <option value="Daniel">Daniel</option>
+                    <option value="João Pedro">João Pedro</option>
+                    <option value="Alemão">Alemão</option>
+                    <option value="Antonio">Antonio</option>
+                    <option value="Luana">Luana</option>
+                    <option value="Débora">Débora</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="senha" placeholder="******" required>
+            </div>
+            <button type="submit" id="btnAcessar" class="btn-login">Acessar Sistema</button>
+            <div class="error" id="erro"></div>
+            <div class="success" id="sucesso"></div>
+        </form>
+    </div>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const usuario = document.getElementById('usuario').value;
+            const senha = document.getElementById('senha').value;
+            const erroEl = document.getElementById('erro');
+            const sucessoEl = document.getElementById('sucesso');
+            const btn = document.getElementById('btnAcessar');
+            
+            erroEl.style.display = 'none'; sucessoEl.style.display = 'none';
+            if (!usuario) { erroEl.textContent = 'Selecione seu nome!'; erroEl.style.display = 'block'; return; }
+            
+            btn.textContent = 'Verificando...';
+            btn.disabled = true;
+
+            try {
+                // Aqui está a mudança para a sua nova função no Supabase
+                const response = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'login', usuario, senha })
+                });
+
+                if (response.ok) {
+                    localStorage.setItem('usuarioLogado', usuario);
+                    sucessoEl.textContent = 'Acesso liberado!'; sucessoEl.style.display = 'block';
+                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+                } else {
+                    erroEl.textContent = 'Senha incorreta!'; erroEl.style.display = 'block';
+                }
+            } catch (error) {
+                console.error(error);
+                erroEl.textContent = 'Erro de conexão com o servidor.'; erroEl.style.display = 'block';
+            } finally {
+                btn.textContent = 'Acessar Sistema';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

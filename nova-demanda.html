@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabinete Daniel Daudt - Nova Demanda</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f0f2f5; }
+        .bg-primary { background-color: #185199; }
+        .btn-primary { background-color: #185199; color: white; border: none; }
+        .btn-primary:hover { background-color: #123e75; }
+        .navbar { padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; color: white; }
+        .navbar img { height: 80px; background: white; padding: 5px; border-radius: 4px; }
+        .navbar a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
+        .container { max-width: 600px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 4px solid #98ED34; }
+        h2 { color: #185199; margin-bottom: 25px; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #333; font-weight: bold; font-size: 13px; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        input:focus, textarea:focus { outline: none; border-color: #185199; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 10px; }
+        .preview-item { border-radius: 4px; border: 1px solid #eee; overflow: hidden; height: 80px; }
+        .preview-item img, .preview-item video { width: 100%; height: 100%; object-fit: cover; }
+        .botoes { display: flex; gap: 10px; margin-top: 25px; }
+        button { flex: 1; padding: 12px; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer; border: none;}
+        .btn-cancelar { background: #e0e0e0; color: #333; flex: 0.4; }
+        .mensagem { padding: 12px; border-radius: 4px; margin-bottom: 15px; display: none; font-weight: bold; text-align: center; font-size: 14px; }
+        .sucesso { background: #e2f8c5; color: #185199; border: 1px solid #98ED34; }
+        .erro { background: #ffe5e5; color: #c0392b; }
+        #uploadProgress { font-size: 13px; color: #185199; font-weight: bold; margin-top: 5px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="navbar bg-primary">
+        <a href="dashboard.html">← Voltar</a>
+        <a href="dashboard.html" style="font-size: 16px; text-decoration: none;" title="Página Inicial">INÍCIO</a>
+        <img src="https://i.imgur.com/coryuD6.png" alt="Logo">
+    </div>
+
+    <div class="container">
+        <h2>Adicionar Demanda</h2>
+        <div id="mensagem" class="mensagem"></div>
+
+        <div class="form-group">
+            <label>Assunto *</label>
+            <input type="text" id="assunto" placeholder="Ex: Limpeza de bueiro" required>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Rua *</label>
+                <input type="text" id="rua" required>
+            </div>
+            <div class="form-group">
+                <label>Número *</label>
+                <input type="text" id="numero" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Bairro *</label>
+            <input type="text" id="bairro" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Descrição Opcional</label>
+            <textarea id="descricao" rows="3"></textarea>
+        </div>
+        
+        <div class="form-group" style="background:#f9f9f9; padding: 10px; border-radius: 4px;">
+            <label style="color:#c0392b;">Documento PDF (Opcional)</label>
+            <input type="file" id="pdfFile" accept="application/pdf">
+        </div>
+
+        <div class="form-group">
+            <label>Fotos/Vídeos (Máx 5)</label>
+            <input type="file" id="fotos" accept="image/*,video/*" multiple>
+            <div class="preview-grid" id="previewGrid"></div>
+            <div id="uploadProgress"></div>
+        </div>
+
+        <div class="botoes">
+            <button class="btn-cancelar" onclick="window.location.href='dashboard.html'">Cancelar</button>
+            <button class="btn-primary" id="btnEnviar" onclick="enviarDemanda()" disabled>Aguarde...</button>
+        </div>
+    </div>
+
+    <script>
+        let db, cloudName, uploadPreset;
+
+        let usuarioLogado = localStorage.getItem('usuarioLogado');
+        if (!usuarioLogado) window.location.href = 'index.html';
+
+        async function inicializarSistema() {
+            try {
+                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
+                const config = await res.json();
+                db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                cloudName = config.cloudinaryName;
+                uploadPreset = config.uploadPreset;
+
+                const btn = document.getElementById('btnEnviar');
+                btn.disabled = false;
+                btn.textContent = 'Salvar Demanda';
+            } catch (err) {
+                document.getElementById('mensagem').className = 'mensagem erro';
+                document.getElementById('mensagem').textContent = 'Erro de API Vercel.';
+                document.getElementById('mensagem').style.display = 'block';
+            }
+        }
+
+        let arquivosSelecionados = [];
+
+        document.getElementById('fotos').addEventListener('change', function(e) {
+            const novos = Array.from(e.target.files);
+            if (arquivosSelecionados.length + novos.length > 5) { alert('Máximo 5 arquivos!'); return; }
+            
+            novos.forEach(file => {
+                arquivosSelecionados.push(file);
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    const grid = document.getElementById('previewGrid');
+                    if (file.type.startsWith('video/')) {
+                        grid.innerHTML += `<div class="preview-item"><video src="${ev.target.result}" autoplay muted loop></video></div>`;
+                    } else {
+                        grid.innerHTML += `<div class="preview-item"><img src="${ev.target.result}"></div>`;
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        async function uploadCloudinary(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', uploadPreset);
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, { method: 'POST', body: formData });
+            const data = await res.json();
+            return data.secure_url;
+        }
+
+        window.enviarDemanda = async function() {
+            const assunto = document.getElementById('assunto').value.trim();
+            const rua = document.getElementById('rua').value.trim();
+            const numero = document.getElementById('numero').value.trim();
+            const bairro = document.getElementById('bairro').value.trim();
+            const arquivoPDF = document.getElementById('pdfFile').files[0];
+            
+            const msg = document.getElementById('mensagem');
+            msg.style.display = 'none';
+
+            if (!assunto || !rua || !numero || !bairro) {
+                msg.className = 'mensagem erro'; msg.textContent = '❌ Preencha os campos com asterisco!'; msg.style.display = 'block'; return;
+            }
+
+            const btn = document.getElementById('btnEnviar');
+            btn.disabled = true; btn.textContent = 'Salvando...';
+            const prog = document.getElementById('uploadProgress');
+
+            try {
+                prog.style.display = 'block';
+                let pdf_url = null;
+                if (arquivoPDF) {
+                    prog.textContent = `Enviando PDF...`;
+                    pdf_url = await uploadCloudinary(arquivoPDF);
+                }
+
+                const fotosUrls = [];
+                if (arquivosSelecionados.length > 0) {
+                    for (let i = 0; i < arquivosSelecionados.length; i++) {
+                        prog.textContent = `Subindo mídia ${i+1}/${arquivosSelecionados.length}...`;
+                        fotosUrls.push(await uploadCloudinary(arquivosSelecionados[i]));
+                    }
+                }
+                prog.style.display = 'none';
+
+                await db.from('demandas').insert([{
+                    assunto, rua, numero, bairro, 
+                    descricao: document.getElementById('descricao').value.trim(),
+                    fotos_urls: fotosUrls, 
+                    pdf_url: pdf_url,
+                    status: 'Aberta', 
+                    criador: usuarioLogado, 
+                    responsavel: ''         
+                }]);
+
+                msg.className = 'mensagem sucesso'; msg.textContent = 'Demanda criada! Voltando...'; msg.style.display = 'block';
+                setTimeout(() => window.location.href = 'dashboard.html', 1500);
+            } catch (e) {
+                prog.style.display = 'none'; btn.disabled = false; btn.textContent = 'Salvar Demanda';
+                msg.className = 'mensagem erro'; msg.textContent = 'Erro: ' + e.message; msg.style.display = 'block';
+            }
+        };
+
+        inicializarSistema();
+    </script>
+</body>
+</html>
