@@ -50,7 +50,7 @@
 
         <div class="form-row">
             <div class="form-group" style="grid-column: 1 / -1;">
-                <label>Tipo de Solicitação *</label>
+                <label>Solicitação (Tipo) *</label>
                 <select id="tipo_solicitacao" required onchange="adaptarFormulario()">
                     <option value="">Selecione o tipo...</option>
                     <optgroup label="Agendas e Internos">
@@ -58,6 +58,7 @@
                         <option value="AGENDA visita EXTERNA">AGENDA visita EXTERNA</option>
                         <option value="GABINETE">GABINETE</option>
                         <option value="REUNIÃO">REUNIÃO</option>
+                        <option value="visita ao Gabinete">visita ao Gabinete</option>
                     </optgroup>
                     <optgroup label="Demandas">
                         <option value="DEMANDA">DEMANDA (Geral)</option>
@@ -68,6 +69,7 @@
                         <option value="Moção de Apoio">Moção de Apoio</option>
                         <option value="PEDIDO DE PROVIDÊNCIAS">PEDIDO DE PROVIDÊNCIAS</option>
                         <option value="PROJETO DE LEI">PROJETO DE LEI</option>
+                        <option value="projeto de Lei">projeto de Lei</option>
                         <option value="Projeto de Lei de Vereador">Projeto de Lei de Vereador</option>
                         <option value="Projeto de Resolução (PR)">Projeto de Resolução (PR)</option>
                         <option value="REQUERIMENTO">REQUERIMENTO</option>
@@ -80,15 +82,39 @@
         <div class="form-row">
             <div class="form-group" style="grid-column: 1 / -1;">
                 <label>Assunto *</label>
-                <input type="text" id="assunto" placeholder="Ex: Limpeza de bueiro, Visita do João..." required>
+                <input type="text" id="assunto" placeholder="Ex: Limpeza de bueiro, Visita..." required>
+            </div>
+        </div>
+
+        <!-- NOVOS CAMPOS DA PLANILHA -->
+        <div class="form-row">
+            <div class="form-group">
+                <label>Data</label>
+                <input type="date" id="data_agendada">
+            </div>
+            <div class="form-group">
+                <label>Horário</label>
+                <input type="time" id="horario_agendado">
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label>Responsável Pela Demanda</label>
+                <label>Secretaria</label>
+                <input type="text" id="secretaria" placeholder="Ex: SEMOV, SEMMA...">
+            </div>
+            <div class="form-group">
+                <label>Providências</label>
+                <input type="text" id="providencias" placeholder="Ações a tomar...">
+            </div>
+        </div>
+        <!-- FIM NOVOS CAMPOS -->
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Responsável (Opcional)</label>
                 <select id="responsavel_inicial">
-                    <option value="">Deixar em aberto (ou assumir depois)</option>
+                    <option value="">Deixar em aberto</option>
                     <option value="Daniel">Daniel</option>
                     <option value="João Pedro">João Pedro</option>
                     <option value="Alemão">Alemão</option>
@@ -114,7 +140,7 @@
             </div>
         </div>
 
-        <!-- Grupo de Endereço (Será escondido se não for necessário) -->
+        <!-- Grupo de Endereço -->
         <div id="bloco_endereco">
             <div class="form-row">
                 <div class="form-group">
@@ -133,7 +159,7 @@
         </div>
         
         <div class="form-group">
-            <label>Descrição / Detalhes</label>
+            <label>Descrição / Detalhes Adicionais</label>
             <textarea id="descricao" rows="3"></textarea>
         </div>
         
@@ -189,11 +215,10 @@
             const tipo = document.getElementById('tipo_solicitacao').value;
             const blocoEndereco = document.getElementById('bloco_endereco');
             
-            // Tipos que geralmente NÃO precisam de endereço de rua
             const tiposSemEndereco = [
                 'Agenda VISITA AO GABINETE', 'GABINETE', 'REUNIÃO', 'INDICAÇÃO', 
-                'Moção de Apoio', 'PROJETO DE LEI', 'Projeto de Lei de Vereador', 
-                'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'
+                'Moção de Apoio', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 
+                'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE', 'visita ao Gabinete'
             ];
 
             if (tiposSemEndereco.includes(tipo)) {
@@ -248,6 +273,12 @@
             const assunto = document.getElementById('assunto').value.trim();
             const responsavel_inicial = document.getElementById('responsavel_inicial').value;
             const numero_demanda = document.getElementById('numero_demanda').value.trim();
+            
+            const data_agendada = document.getElementById('data_agendada').value || null;
+            const horario_agendado = document.getElementById('horario_agendado').value || null;
+            const secretaria = document.getElementById('secretaria').value.trim();
+            const providencias = document.getElementById('providencias').value.trim();
+
             const rua = document.getElementById('rua').value.trim() || '';
             const numero = document.getElementById('numero').value.trim() || '';
             const bairro = document.getElementById('bairro').value.trim() || '';
@@ -259,7 +290,7 @@
             msg.style.display = 'none';
 
             if (!tipo_solicitacao || !assunto) {
-                msg.className = 'mensagem erro'; msg.textContent = '❌ Preencha o Tipo e o Assunto!'; msg.style.display = 'block'; window.scrollTo(0,0); return;
+                msg.className = 'mensagem erro'; msg.textContent = '❌ Preencha o Tipo de Solicitação e o Assunto!'; msg.style.display = 'block'; window.scrollTo(0,0); return;
             }
 
             const btn = document.getElementById('btnEnviar');
@@ -287,6 +318,7 @@
                     tipo_solicitacao, numero_demanda, assunto, rua, numero, bairro, 
                     descricao: document.getElementById('descricao').value.trim(),
                     solicitante_nome, solicitante_tel,
+                    data_agendada, horario_agendado, secretaria, providencias,
                     fotos_urls: fotosUrls, 
                     pdf_url: pdf_url,
                     status: statusInicial, 
