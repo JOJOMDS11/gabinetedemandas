@@ -89,8 +89,16 @@
 
         <div class="filtros-avancados">
             <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, rua, Nº, 156, data..." oninput="mudarPagina(1); renderDemandas()">
+            
+            <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()">
+                <option value="">📁 Filtro: Todas Categorias</option>
+                <option value="Agendas">📅 Agendas e Internos</option>
+                <option value="Demandas">🚧 Demandas (Rua/Externa)</option>
+                <option value="Legislativo">⚖️ Legislativo e Projetos</option>
+            </select>
+
             <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()">
-                <option value="">👥 Filtro: Todos da Equipe</option>
+                <option value="">👥 Filtro: Toda a Equipe (Cuidando/Executando)</option>
                 <option value="Daniel">Daniel</option>
                 <option value="João Pedro">João Pedro</option>
                 <option value="Alemão">Alemão</option>
@@ -122,7 +130,13 @@
         let todasDemandas = [];
         let filtroAtual = 'Todas';
         let paginaAtual = 1;
-        const itensPorPagina = 9; // Aumentei um pouquinho para mostrar mais de uma vez
+        const itensPorPagina = 9;
+
+        // Categorias para o novo filtro
+        const tiposAgendas = ['Agenda VISITA AO GABINETE', 'AGENDA visita EXTERNA', 'GABINETE', 'REUNIÃO', 'visita ao Gabinete'];
+        const tiposDemandasLivre = ['DEMANDA', 'Demanda Externa'];
+        const tiposLegis = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+
 
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         if (!usuarioLogado) window.location.href = 'index.html';
@@ -173,9 +187,11 @@
 
             const termoBusca = document.getElementById('buscaGeral').value.toLowerCase();
             const respSelecionado = document.getElementById('filtroResp').value;
+            const catSelecionada = document.getElementById('filtroCategoria').value;
 
             let lista = todasDemandas;
             
+            // Filtro de Status
             if (filtroAtual === 'Todas') {
                 lista = lista.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada');
             } else if (filtroAtual === 'Aberta') {
@@ -186,13 +202,18 @@
                 lista = lista.filter(d => d.status === filtroAtual);
             }
 
+            // Filtro de Categoria
+            if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
+            if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
+            if (catSelecionada === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
+
+            // Filtro de Executores (Cuidando)
             if (respSelecionado) {
                 lista = lista.filter(d => (d.responsaveis || []).includes(respSelecionado));
             }
 
             if (termoBusca) {
                 lista = lista.filter(d => {
-                    // Formata a data para a busca funcionar tbm se ele digitar "15/08"
                     let dFormat = '';
                     if(d.data_agendada) {
                         const oData = new Date(d.data_agendada + 'T00:00:00');
@@ -246,10 +267,11 @@
                 if (demanda.status === 'Arquivada') badgeClass = 'badge-Arquivada';
                 if (demanda.status === 'Rejeitada') badgeClass = 'badge-Rejeitada';
 
-                // Lógica de Responsáveis (Nome ajustado para "Responsáveis")
+                // Lógica de "Dono da Ordem" e "Executores"
+                const donoOrdem = demanda.responsavel_ordem ? demanda.responsavel_ordem : 'Não definido';
                 const cuindoTxt = responsaveis.length > 0 ? responsaveis.join(', ') : 'Nenhum';
 
-                // Formatação de Data / Horário para o Dashboard
+                // Formatação de Data e Horário (tirando os segundos)
                 let infoAgenda = '';
                 if (demanda.data_agendada || demanda.horario_agendado) {
                     let dataAgendadaFormatada = '';
@@ -257,7 +279,12 @@
                         const objData = new Date(demanda.data_agendada + 'T00:00:00');
                         dataAgendadaFormatada = objData.toLocaleDateString('pt-BR');
                     }
-                    infoAgenda = `<div class="info" style="color:#d35400; font-weight:bold;">📅 Data/Hora: ${dataAgendadaFormatada} ${demanda.horario_agendado ? 'às ' + demanda.horario_agendado : ''}</div>`;
+                    let horaFormatada = '';
+                    if (demanda.horario_agendado) {
+                        // Pega apenas HH:MM (ex: 17:50 em vez de 17:50:00)
+                        horaFormatada = demanda.horario_agendado.substring(0, 5);
+                    }
+                    infoAgenda = `<div class="info" style="color:#d35400; font-weight:bold;">📅 Data/Hora: ${dataAgendadaFormatada} ${horaFormatada ? 'às ' + horaFormatada : ''}</div>`;
                 }
 
                 const infoSecretaria = demanda.secretaria ? `<div class="info">🏢 Sec: <b>${demanda.secretaria}</b></div>` : '';
@@ -273,9 +300,9 @@
                 } else if (encerrada) {
                     btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Encerrada</button>`;
                 } else if (euCuido) {
-                    btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}')">🚪 Deixar de Cuidar</button>`;
+                    btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}')">🚪 Deixar de Executar</button>`;
                 } else {
-                    btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}')">🙋 Assumir Demanda</button>`;
+                    btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}')">🙋 Assumir Execução</button>`;
                 }
 
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${demanda.numero_demanda}</div>` : '';
@@ -291,9 +318,8 @@
                                 ${infoAgenda}
                                 ${demanda.rua ? `<div class="info">📍 ${demanda.rua}, ${demanda.numero} - ${demanda.bairro}</div>` : ''}
                                 ${infoSecretaria}
-                                ${demanda.protocolo ? `<div class="info">📄 Prot: <b>${demanda.protocolo}</b></div>` : ''}
-                                <div class="info">✍️ Por: <b>${demanda.criador || 'Desconhecido'}</b></div>
-                                <div class="info">👥 Responsáveis: <b>${cuindoTxt}</b></div>
+                                <div class="info" style="margin-top: 5px;">✍️ Resp. Ordem: <b>${donoOrdem}</b></div>
+                                <div class="info">👥 Cuidando (Executores): <b>${cuindoTxt}</b></div>
                                 ${tempoCard}
                                 <div class="acoes-card">${btnPrincipal}</div>
                             </div>
