@@ -156,6 +156,7 @@
         let demandaAtual = null;
         let acaoMasterPendente = null; 
         const SENHA_MASTER = 'master2025';
+        let temAlteracoesNaoSalvas = false;
 
         const tiposProjetos = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
         const tiposDemandas156 = ['DEMANDA', 'Demanda Externa'];
@@ -168,6 +169,27 @@
 
         const adminUsers = ['Daniel', 'João Pedro', 'Luana'];
         const isAdmin = adminUsers.includes(usuarioLogado);
+
+        // Monitorar alterações no formulário
+        window.addEventListener('beforeunload', function(e) {
+            if (temAlteracoesNaoSalvas) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        });
+
+        document.addEventListener('change', function(e) {
+            if (e.target.id && e.target.id.startsWith('edit')) {
+                temAlteracoesNaoSalvas = true;
+            }
+        });
+
+        document.addEventListener('input', function(e) {
+            if (e.target.id && e.target.id.startsWith('edit')) {
+                temAlteracoesNaoSalvas = true;
+            }
+        });
 
         const urlParams = new URLSearchParams(window.location.search);
         const demandaId = urlParams.get('id');
@@ -251,6 +273,20 @@
 
             html += '</ul>';
             return html;
+        }
+
+        window.abrirMapa = function(rua, num, bairro) { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${rua}, ${num}, ${bairro}, São Leopoldo, RS`)}`, '_blank'); }
+
+        window.copiarResumo = function() {
+            const d = demandaAtual;
+            const resumo = `*${d.tipo_solicitacao || 'Registro'}*\n${d.assunto}\n\n*Solicitante:* ${d.solicitante_nome}\n*Telefone:* ${d.solicitante_tel}\n\n*Endereço:* ${d.rua}, ${d.numero} - ${d.bairro}\n*Status:* ${d.status}${d.protocolo ? '\n*Protocolo 156:* ' + d.protocolo : ''}${d.expediente ? '\n*Expediente:* ' + d.expediente : ''}`;
+            const textarea = document.createElement('textarea');
+            textarea.value = resumo;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert('✅ Resumo copiado para área de transferência!');
         }
 
         window.abrirMapa = function(rua, num, bairro) { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${rua}, ${num}, ${bairro}, São Leopoldo, RS`)}`, '_blank'); }
@@ -396,7 +432,7 @@
             const tagsResponsaveis = responsaveis.length > 0 ? `<div class="responsaveis-lista">${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}')">✕</button></div>`).join('')}</div>` : '<span style="color:#999;">Ninguém assumiu ainda</span>';
 
             const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui()">🙋 Eu Assumo (Vou Executar)</button>` : '';
-            const msgWhats = encodeURIComponent(`*${d.tipo_solicitacao || 'Registro'}:* ${d.assunto}\n*Endereço:* ${d.rua}, ${d.numero}\n*Status:* ${d.status}\n\nAcesse: ${window.location.href}`);
+            const msgWhats = encodeURIComponent(`*${d.tipo_solicitacao || 'Registro'}:* ${d.assunto}\n*Solicitante:* ${d.solicitante_nome}\n*Telefone:* ${d.solicitante_tel}\n*Endereço:* ${d.rua}, ${d.numero} - ${d.bairro}\n*Status:* ${d.status}${d.protocolo ? '\n*Protocolo 156:* ' + d.protocolo : ''}${d.expediente ? '\n*Expediente:* ' + d.expediente : ''}\n\n🔗 Acesse: ${window.location.href}`);
             const btnWhats = `<a href="https://wa.me/?text=${msgWhats}" target="_blank" class="btn-whats">📱 WhatsApp</a>`;
             const inputDemandaNum = isAdmin ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" placeholder="Ex: 55" style="max-width:150px; padding:5px;">` : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
 
@@ -413,8 +449,7 @@
                     <h2>Detalhes <span class="badge ${badgeClass}">${d.status}</span> ${seloAprovado}</h2>
 
                     <div class="links-externos">
-                        <a href="https://www.saoleopoldo.rs.gov.br/servico/685673/518?titulo=156+-+Abertura+de+Servi%C3%A7os" target="_blank" class="btn-link">🔗 Abrir 156</a>
-                        <a href="https://admin.camarasaoleopoldo.rs.gov.br/admin/index.php?accesscheck=%2Fadmin.php" target="_blank" class="btn-link">🔗 Sistema Legis</a>
+                        <button class="btn-link" style="background:#9b59b6; color:white; border-color:#8e44ad;" onclick="copiarResumo()">📋 Copiar Resumo</button>
                         ${d.link_legis ? `<a href="${d.link_legis}" target="_blank" class="btn-link" style="background:#f39c12; color:white; border-color:#e67e22;">🔗 Ver Legis Anexado</a>` : ''}
                     </div>
 
@@ -427,7 +462,17 @@
                     <div class="info-group"><label>Tipo de Solicitação</label><p>📌 <b>${d.tipo_solicitacao || 'Não classificado'}</b></p></div>
                     <div class="info-group"><label>Assunto</label><p>${d.assunto}</p></div>
                     
-                    ${(d.data_agendada || d.horario_agendado) ? `
+                    ${d.protocolo ? `
+                    <div class="info-group" style="background:#d0e8ff; padding:10px; border-radius:4px;">
+                        <label>Protocolo 156</label>
+                        <p>🔢 <b>${d.protocolo}</b></p>
+                    </div>` : ''}
+
+                    ${d.expediente ? `
+                    <div class="info-group" style="background:#f5cd79; padding:10px; border-radius:4px;">
+                        <label>Expediente (Legis)</label>
+                        <p>📄 <b>${d.expediente}</b></p>
+                    </div>` : ''}
                     <div class="info-group" style="background:#e8f0ff; padding:10px; border-radius:4px;">
                         <label>Data e Horário</label>
                         <p>📅 ${dataApresentacao} &nbsp; ⏰ ${horaFormatada || '--:--'}</p>
@@ -550,6 +595,13 @@
                         <h4>⚙️ Status & Acompanhamento Técnico</h4>
                         
                         <div class="form-group"><label>Nº Visual da Demanda (Admin)</label>${inputDemandaNum}</div>
+
+                        ${responsaveis.includes(usuarioLogado) || euCuido ? `
+                        <div style="background:#e8f0ff; border: 1px solid #185199; padding:15px; border-radius:8px; margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+                            <a href="https://www.saoleopoldo.rs.gov.br/servico/685673/518?titulo=156+-+Abertura+de+Servi%C3%A7os" target="_blank" class="btn-link" style="flex:1; min-width:140px;">🔗 Abrir 156</a>
+                            <a href="https://admin.camarasaoleopoldo.rs.gov.br/admin/index.php?accesscheck=%2Fadmin.php" target="_blank" class="btn-link" style="flex:1; min-width:140px;">🔗 Sistema Legis</a>
+                        </div>
+                        ` : ''}
 
                         <div class="form-row">
                             <div class="form-group">
@@ -745,6 +797,7 @@
             }
             const { error } = await db.from('demandas').update(updates).eq('id', demandaId);
             if (!error) { 
+                temAlteracoesNaoSalvas = false;
                 if (updates.status === 'Arquivada' || updates.status === 'Rejeitada' || updates.status === 'Concluída' || updates.status === 'Atendido' || updates.status === 'Resolvido') {
                     window.location.href = 'dashboard.html';
                 } else {
