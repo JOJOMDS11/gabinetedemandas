@@ -31,7 +31,9 @@
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
         .botoes { display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap; }
-        button { flex: 1; min-width: 120px; padding: 12px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; text-align: center; text-decoration: none; display: inline-block; }
+        button { flex: 1; min-width: 120px; padding: 12px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; text-align: center; text-decoration: none; display: inline-block; transition: background-color 0.2s;}
+        button:disabled { opacity: 0.7; cursor: not-allowed; }
+        
         .btn-salvar { background: #185199; color: white; }
         .btn-assumir { background: #98ED34; color: #185199; }
         .btn-retirar { background: #e67e22; color: white; }
@@ -89,22 +91,24 @@
         .btn-link { background: #ecf0f1; color: #2c3e50; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; text-decoration: none; border: 1px solid #bdc3c7; flex: 1; text-align: center; min-width: 130px; }
         .btn-link:hover { background: #bdc3c7; }
 
+        /* Modais Padronizados */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; }
         .modal-overlay.ativo { display: flex; flex-direction: column; }
-        .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #98ED34; }
-        .modal-box h3 { color: #185199; margin-bottom: 15px; }
-        .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;}
+        .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #c0392b; text-align:center;}
+        .modal-box.master { border-top-color: #f39c12; }
+        .modal-box h3 { color: #333; margin-bottom: 15px; }
+        .modal-box p { font-size: 14px; margin-bottom: 20px; color: #555; }
+        .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; text-align:center; font-size:16px;}
         .modal-botoes { display: flex; gap: 10px; }
-        
+
         #lightboxImg, #lightboxVid { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); object-fit: contain; }
         #lightboxPdf { width: 90%; height: 75vh; border: none; border-radius: 8px; background: white; margin-bottom: 10px; }
-        
         .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; font-size: 30px; padding: 15px 20px; cursor: pointer; border-radius: 4px; z-index: 10000; }
         .lightbox-nav:hover { background: rgba(0,0,0,0.9); }
         #btnPrev { left: 10px; }
         #btnNext { right: 10px; }
         #btnFecharLightbox { position: absolute; top: 15px; right: 15px; background: rgba(231,76,60,0.9); color: white; border: none; padding: 10px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; z-index: 10000; }
-        
+
         @media (max-width: 600px) {
             .lightbox-nav { padding: 10px; font-size: 20px; }
             .form-row { grid-template-columns: 1fr; }
@@ -138,15 +142,26 @@
         <button id="btnNext" class="lightbox-nav" onclick="mudarMedia(1, event)">❯</button>
     </div>
 
-    <div class="modal-overlay" id="modalSenhaMaster" style="z-index: 10001;">
+    <div class="modal-overlay" id="modalAviso">
         <div class="modal-box">
+            <h3 id="modalAvisoTitulo">Atenção</h3>
+            <p id="modalAvisoMensagem"></p>
+            <div class="modal-botoes">
+                <button style="background:#e0e0e0; color:#333; flex:1;" onclick="document.getElementById('modalAviso').classList.remove('ativo')">Cancelar</button>
+                <button id="btnConfirmaAviso" style="background:#c0392b; color:white; flex:1;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalSenhaMaster" style="z-index: 10001;">
+        <div class="modal-box master">
             <h3>🔐 Autenticação Master</h3>
-            <p style="color:#555; margin-bottom:15px; font-size:13px;" id="modalSenhaTexto">Digite a senha master para confirmar.</p>
-            <input type="password" id="inputSenhaMaster" placeholder="Senha master">
+            <p id="modalSenhaTexto">Digite a senha master para confirmar a ação.</p>
+            <input type="password" id="inputSenhaMaster" placeholder="Senha secreta">
             <div id="erroSenhaMaster" style="color:#c0392b; font-size:13px; margin-bottom:10px; display:none;">Senha incorreta!</div>
             <div class="modal-botoes">
-                <button style="background:#e0e0e0; color:#333; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalSenha()">Cancelar</button>
-                <button style="background:#27ae60; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="confirmarAcaoMaster()">✅ Confirmar</button>
+                <button style="background:#e0e0e0; color:#333; flex:1;" onclick="fecharModalSenha()">Cancelar</button>
+                <button id="btnConfirmarSenha" style="background:#27ae60; color:white; flex:1;" onclick="confirmarAcaoMaster()">✅ Confirmar</button>
             </div>
         </div>
     </div>
@@ -155,15 +170,11 @@
         let db, cloudName, uploadPreset;
         let demandaAtual = null;
         let acaoMasterPendente = null; 
-        
-        // A senha master foi ofuscada em Base64 para proteção de leitura do código
-        const HASH_MASTER = 'bWFzdGVyMjAyNQ=='; 
-        
+        let acaoConfirmacaoPendente = null;
         let temAlteracoesNaoSalvas = false;
 
         const tiposProjetos = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
-        const tiposDemandas156 = ['DEMANDA', 'Demanda Externa'];
-
+        
         let mediaGlobal = [];
         let indexLightboxAtual = 0;
 
@@ -174,23 +185,11 @@
         const isAdmin = adminUsers.includes(usuarioLogado);
 
         window.addEventListener('beforeunload', function(e) {
-            if (temAlteracoesNaoSalvas) {
-                e.preventDefault();
-                e.returnValue = '';
-                return '';
-            }
-        });
-
-        document.addEventListener('change', function(e) {
-            if (e.target.id && e.target.id.startsWith('edit')) {
-                temAlteracoesNaoSalvas = true;
-            }
+            if (temAlteracoesNaoSalvas) { e.preventDefault(); e.returnValue = ''; return ''; }
         });
 
         document.addEventListener('input', function(e) {
-            if (e.target.id && e.target.id.startsWith('edit')) {
-                temAlteracoesNaoSalvas = true;
-            }
+            if (e.target.id && e.target.id.startsWith('edit')) temAlteracoesNaoSalvas = true;
         });
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -277,17 +276,34 @@
             return html;
         }
 
-        window.abrirMapa = function(rua, num, bairro) { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${rua}, ${num}, ${bairro}, São Leopoldo, RS`)}`, '_blank'); }
+        window.abrirMapa = function(rua, num, bairro) { 
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${rua}, ${num}, ${bairro}, São Leopoldo, RS`)}`, '_blank'); 
+        }
 
-        // RESUMO INTELIGENTE
+        // Função Genérica de Confirmação Bonita
+        function pedirConfirmacao(titulo, mensagem, callbackCallback) {
+            document.getElementById('modalAvisoTitulo').textContent = titulo;
+            document.getElementById('modalAvisoMensagem').innerHTML = mensagem;
+            document.getElementById('modalAviso').classList.add('ativo');
+            
+            const btnConfirmar = document.getElementById('btnConfirmaAviso');
+            btnConfirmar.onclick = () => {
+                document.getElementById('modalAviso').classList.remove('ativo');
+                btnConfirmar.textContent = '⏳ ...';
+                callbackCallback();
+            };
+        }
+
+        // NOVO: Copiar Resumo e WhatsApp Inteligentes (Pula vazios e foca no PDF)
         window.copiarResumo = function() {
             const d = demandaAtual;
-            
             let resumo = `*${d.tipo_solicitacao || 'Registro'}*\n${d.assunto}\n`;
+            
             if (d.solicitante_nome) resumo += `\n*Solicitante:* ${d.solicitante_nome}`;
-            if (d.solicitante_tel) resumo += `\n*Telefone:* ${d.solicitante_tel}`;
-            if (d.rua || d.bairro) resumo += `\n*Endereço:* ${d.rua || ''}${d.numero ? ', ' + d.numero : ''} ${d.bairro ? '- ' + d.bairro : ''}`;
-            resumo += `\n*Status:* ${d.status}`;
+            if (d.solicitante_tel)  resumo += `\n*Telefone:* ${d.solicitante_tel}`;
+            if (d.rua || d.bairro)  resumo += `\n*Endereço:* ${d.rua || ''}${d.numero ? ', ' + d.numero : ''} ${d.bairro ? '- ' + d.bairro : ''}`;
+            
+            resumo += `\n\n*Status:* ${d.status}`;
             if (d.protocolo) resumo += `\n*Protocolo 156:* ${d.protocolo}`;
             if (d.expediente) resumo += `\n*Expediente:* ${d.expediente}`;
             if (d.pdf_url) resumo += `\n\n*Para ver o PDF clique aqui:* ${d.pdf_url}`;
@@ -298,7 +314,7 @@
             textarea.select();
             document.execCommand('copy');
             document.body.removeChild(textarea);
-            alert('✅ Resumo copiado para área de transferência!');
+            alert('✅ Resumo inteligente copiado!');
         }
 
         window.abrirLightboxIndex = function(index) { indexLightboxAtual = index; atualizarLightbox(); }
@@ -337,9 +353,6 @@
             if (tiposProjetos.includes(tipo)) {
                 etapas = ['Aprovada', 'Em Andamento', 'Aguardando Exp', 'Concluída'];
                 if(statusFake === '156 Pedido') statusFake = 'Aguardando Exp';
-            } else if (tiposDemandas156.includes(tipo)) {
-                etapas = ['Aberta', 'Em Andamento', '156 Pedido', 'Concluída'];
-                if (statusFake === 'Pendente') statusFake = 'Aberta';
             } else {
                 etapas = ['Pendente', 'Em Andamento', 'Atendido', 'Concluída'];
                 if (statusFake === 'Aberta' || statusFake === 'Aguardando') statusFake = 'Pendente';
@@ -347,11 +360,7 @@
             }
 
             let indexAtual = etapas.indexOf(statusFake);
-            
-            if (['Concluída', 'Atendido', 'Resolvido'].includes(status)) {
-                indexAtual = etapas.length - 1;
-            }
-
+            if (['Concluída', 'Atendido', 'Resolvido'].includes(status)) indexAtual = etapas.length - 1;
             if(status === 'Aguardando Aprovação' || status === 'Sem Legis') indexAtual = -1;
             if(status === 'Rejeitada' || status === 'Arquivada') return ''; 
             
@@ -395,8 +404,8 @@
 
                 if (d.status === 'Aguardando Aprovação') {
                     if (usuarioLogado === 'Daniel') {
-                        alertaAprovacao = `<div class="alerta-aprovacao" style="grid-column:1/-1;">⏳ Esta demanda está aguardando sua aprovação, Daniel!<br><br><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda()">✅ Aprovar Formalmente</button><button style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="rejeitarDemanda()">❌ Rejeitar</button></div></div>`;
-                        btnAprovacao = `<button style="background:#27ae60; color:white; flex:1;" onclick="aprovarDemanda()">✅ Aprovar Formal</button>`;
+                        alertaAprovacao = `<div class="alerta-aprovacao" style="grid-column:1/-1;">⏳ Esta demanda está aguardando sua aprovação, Daniel!<br><br><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda(this)">✅ Aprovar Formalmente</button><button style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="rejeitarDemanda()">❌ Rejeitar</button></div></div>`;
+                        btnAprovacao = `<button style="background:#27ae60; color:white; flex:1;" onclick="aprovarDemanda(this)">✅ Aprovar Formal</button>`;
                     } else {
                         btnAprovacao = `<button style="background:#9b59b6; color:white; flex:1;" onclick="iniciarAcaoMaster('aprovar')">🔐 Aprovar c/ Senha</button>`;
                     }
@@ -415,7 +424,7 @@
                 if (d.historico) { temVisto = d.historico.some(h => h.status === 'Visto'); }
 
                 if (!temVisto && usuarioLogado === 'Daniel') {
-                    btnAprovacao = `<button style="background:#3498db; color:white; flex:1;" onclick="darVisto()">👀 Dar Visto (Marcar como Ciente)</button>`;
+                    btnAprovacao = `<button style="background:#3498db; color:white; flex:1;" onclick="darVisto(this)">👀 Dar Visto (Marcar Ciente)</button>`;
                 }
 
                 if (temVisto) {
@@ -439,17 +448,21 @@
                 htmlFotos = '<p style="color:#999; text-align:center; padding:20px;">Nenhuma imagem ou vídeo.</p>';
             }
 
-            const tagsResponsaveis = responsaveis.length > 0 ? `<div class="responsaveis-lista">${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}')">✕</button></div>`).join('')}</div>` : '<span style="color:#999;">Ninguém assumiu ainda</span>';
+            const tagsResponsaveis = responsaveis.length > 0 ? `<div class="responsaveis-lista">${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}', this)">✕</button></div>`).join('')}</div>` : '<span style="color:#999;">Ninguém assumiu ainda</span>';
 
-            const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui()">🙋 Eu Assumo (Vou Executar)</button>` : '';
+            const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui(this)">🙋 Eu Assumo (Executar)</button>` : '';
             const inputDemandaNum = isAdmin ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" placeholder="Ex: 55" style="max-width:150px; padding:5px;">` : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
 
-            // MENSAGEM DO WHATSAPP INTELIGENTE
+            // Lógica do Mapa anti-crash (undefined protection)
+            const ruaSegura = d.rua ? d.rua.replace(/'/g,"\\'") : '';
+            const bairroSeguro = d.bairro ? d.bairro.replace(/'/g,"\\'") : '';
+
+            // Texto WhatsApp Inteligente
             let textoWhats = `*${d.tipo_solicitacao || 'Registro'}*\n${d.assunto}\n`;
             if (d.solicitante_nome) textoWhats += `\n*Solicitante:* ${d.solicitante_nome}`;
             if (d.solicitante_tel) textoWhats += `\n*Telefone:* ${d.solicitante_tel}`;
             if (d.rua || d.bairro) textoWhats += `\n*Endereço:* ${d.rua || ''}${d.numero ? ', ' + d.numero : ''} ${d.bairro ? '- ' + d.bairro : ''}`;
-            textoWhats += `\n*Status:* ${d.status}`;
+            textoWhats += `\n\n*Status:* ${d.status}`;
             if (d.protocolo) textoWhats += `\n*Protocolo 156:* ${d.protocolo}`;
             if (d.expediente) textoWhats += `\n*Expediente:* ${d.expediente}`;
             if (d.pdf_url) textoWhats += `\n\n*Para ver o PDF clique aqui:* ${d.pdf_url}`;
@@ -511,7 +524,7 @@
                     ${(d.rua || d.bairro) ? `
                     <div class="info-group">
                         <label>Endereço</label>
-                        <p>${d.rua}, ${d.numero} - ${d.bairro} <button class="btn-foto" style="background:#3498db; margin-left:10px;" onclick="abrirMapa('${d.rua.replace(/'/g,"\\'")}','${d.numero}','${d.bairro.replace(/'/g,"\\'")}')">📍 Mapa</button></p>
+                        <p>${d.rua}, ${d.numero} - ${d.bairro} <button class="btn-foto" style="background:#3498db; margin-left:10px;" onclick="abrirMapa('${ruaSegura}','${d.numero}','${bairroSeguro}')">📍 Mapa</button></p>
                     </div>` : ''}
                     
                     <div class="info-group"><label>Descrição</label><p>${d.descricao || 'Sem descrição.'}</p></div>
@@ -609,7 +622,7 @@
                                 <option value="Luana">Luana</option>
                                 <option value="Débora">Débora</option>
                             </select>
-                            <button class="btn-foto" style="background:#27ae60; padding:8px 15px;" onclick="adicionarResponsavelManual()">➕ Adicionar Executor</button>
+                            <button class="btn-foto" style="background:#27ae60; padding:8px 15px;" onclick="adicionarResponsavelManual(this)">➕ Adicionar Executor</button>
                         </div>
                     </div>
 
@@ -678,7 +691,7 @@
                     <div class="botoes">
                         ${btnAssumir}
                         ${btnAprovacao}
-                        <button class="btn-salvar" onclick="salvarAlteracoes()">💾 Salvar Tudo</button>
+                        <button class="btn-salvar" onclick="salvarAlteracoes(this)">💾 Salvar Tudo</button>
                         ${btnWhats}
                     </div>
 
@@ -691,9 +704,9 @@
 
                     <div class="upload-extra">
                         <h4 style="color:#185199; margin-bottom:10px;">Adicionar Anexos</h4>
-                        <label style="font-size:12px; font-weight:bold;">Documento PDF (Adicionar ou Substituir o atual)</label>
+                        <label style="font-size:12px; font-weight:bold;">Documento PDF (Substituir o atual)</label>
                         <input type="file" id="extraPdf" accept="application/pdf" style="width:100%; margin-bottom:15px;">
-                        <label style="font-size:12px; font-weight:bold;">Fotos/Vídeos</label>
+                        <label style="font-size:12px; font-weight:bold;">Fotos/Vídeos (Máx 15MB)</label>
                         <input type="file" id="extraFotos" accept="image/*,video/*" multiple style="width:100%;">
                         <button class="btn-salvar" style="width:100%; margin-top:10px;" id="btnUploadExtra" onclick="uploadNovosAnexos()">⬆️ Subir</button>
                         <div id="progressoExtra" style="font-size:13px; color:#185199; font-weight:bold; display:none; margin-top:5px;"></div>
@@ -706,58 +719,68 @@
                 </div>`;
         }
 
-        window.excluirPdf = async function() {
-            if(!confirm('Certeza que quer excluir o pdf?')) return;
-            const { error } = await db.from('demandas').update({ pdf_url: null }).eq('id', demandaId);
-            if(!error) { window.location.reload(); }
+        window.excluirPdf = function() {
+            pedirConfirmacao('🗑️ Excluir PDF', 'Tem a certeza que deseja excluir o PDF desta demanda?', async () => {
+                const { error } = await db.from('demandas').update({ pdf_url: null }).eq('id', demandaId);
+                if(!error) window.location.reload(); 
+            });
         }
 
-        window.assumirAqui = async function() {
+        window.assumirAqui = async function(btn) {
+            btn.textContent = '⏳ Assumindo...'; btn.disabled = true;
             const responsaveis = demandaAtual.responsaveis || [];
-            if (responsaveis.includes(usuarioLogado)) return;
-            await db.from('demandas').update({ responsaveis: [...responsaveis, usuarioLogado] }).eq('id', demandaId);
+            if (!responsaveis.includes(usuarioLogado)) {
+                await db.from('demandas').update({ responsaveis: [...responsaveis, usuarioLogado] }).eq('id', demandaId);
+            }
             window.location.reload();
         }
 
-        window.sairDaCuidado = async function(nome) {
+        window.sairDaCuidado = async function(nome, btn) {
+            btn.disabled = true; btn.style.opacity = '0.5';
             const responsaveis = (demandaAtual.responsaveis || []).filter(r => r !== nome);
             await db.from('demandas').update({ responsaveis }).eq('id', demandaId);
             window.location.reload();
         }
 
-        window.adicionarResponsavelManual = async function() {
+        window.adicionarResponsavelManual = async function(btn) {
             const novoResp = document.getElementById('addResponsavelSelect').value;
             if(!novoResp) return alert('Selecione alguém na lista!');
             const responsaveis = demandaAtual.responsaveis || [];
             if(responsaveis.includes(novoResp)) return alert('Esta pessoa já está como executor.');
+            
+            btn.textContent = '⏳'; btn.disabled = true;
             await db.from('demandas').update({ responsaveis: [...responsaveis, novoResp] }).eq('id', demandaId);
             window.location.reload();
         }
 
-        window.aprovarDemanda = async function() { 
+        window.aprovarDemanda = async function(btn) { 
+            btn.textContent = '⏳ Aprovando...'; btn.disabled = true;
             const hist = demandaAtual.historico || [];
             hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
             await db.from('demandas').update({ status: 'Aprovada', historico: hist }).eq('id', demandaId); 
             window.location.reload(); 
         }
 
-        window.darVisto = async function() { 
+        window.darVisto = async function(btn) { 
+            btn.textContent = '⏳ Visto...'; btn.disabled = true;
             const hist = demandaAtual.historico || [];
             hist.push({ status: 'Visto', autor: usuarioLogado, data: new Date().toISOString() });
             await db.from('demandas').update({ historico: hist }).eq('id', demandaId); 
             window.location.reload(); 
         }
 
-        window.rejeitarDemanda = async function() {
-            if(!confirm('Rejeitar demanda? As fotos serão apagadas (PDF será mantido).')) return;
-            const hist = demandaAtual.historico || [];
-            hist.push({ status: 'Rejeitada', autor: usuarioLogado, data: new Date().toISOString() });
-            
-            await db.from('demandas').update({ status: 'Rejeitada', fotos_urls: [], historico: hist }).eq('id', demandaId);
-            window.location.href = 'dashboard.html';
+        window.rejeitarDemanda = function() {
+            pedirConfirmacao('❌ Rejeitar Demanda', 'Atenção: Ao rejeitar, <b>todas as fotos serão apagadas</b> do sistema. O PDF será mantido.', async () => {
+                const hist = demandaAtual.historico || [];
+                hist.push({ status: 'Rejeitada', autor: usuarioLogado, data: new Date().toISOString() });
+                await db.from('demandas').update({ status: 'Rejeitada', fotos_urls: [], historico: hist }).eq('id', demandaId);
+                window.location.href = 'dashboard.html';
+            });
         }
 
-        window.salvarAlteracoes = async function() {
+        window.salvarAlteracoes = async function(btn) {
+            btn.textContent = '⏳ Salvando...'; btn.disabled = true;
+            
             let statusEdit = document.getElementById('editStatus') ? document.getElementById('editStatus').value : demandaAtual.status;
             let protocolo = document.getElementById('editProtocolo') ? document.getElementById('editProtocolo').value.trim() : (demandaAtual.protocolo || '');
             let expediente = document.getElementById('editExpediente') ? document.getElementById('editExpediente').value.trim() : (demandaAtual.expediente || '');
@@ -807,9 +830,17 @@
             }
 
             if(updates.status === 'Rejeitada' || updates.status === 'Arquivada') {
-                if(!confirm('Atenção: Mudar para este status apagará as mídias permanentemente. Continuar?')) return;
-                updates.fotos_urls = [];
+                pedirConfirmacao('Atenção: Mudar Status', 'Mudar para este status apagará as fotos do servidor permanentemente. Continuar?', async () => {
+                    updates.fotos_urls = [];
+                    await executarSaveFinal(updates, btn);
+                });
+                return;
             }
+            
+            await executarSaveFinal(updates, btn);
+        }
+
+        async function executarSaveFinal(updates, btn) {
             const { error } = await db.from('demandas').update(updates).eq('id', demandaId);
             if (!error) { 
                 temAlteracoesNaoSalvas = false;
@@ -818,17 +849,24 @@
                 } else {
                     window.location.reload(); 
                 }
+            } else {
+                btn.textContent = 'Erro ao salvar!'; btn.disabled = false;
             }
         }
 
         window.iniciarAcaoMaster = function(acao) {
             if (acao === 'excluir') {
-                if(!confirm('⚠️ Certeza absoluta que quer EXCLUIR do banco de dados?\n(Se clicou sem querer, clique em Cancelar)')) return;
+                pedirConfirmacao('🗑️ Excluir Definitivo', 'Certeza absoluta que quer EXCLUIR do banco de dados?', () => chamarAcaoMasterModal(acao));
+                return;
             }
+            chamarAcaoMasterModal(acao);
+        }
+
+        function chamarAcaoMasterModal(acao) {
             acaoMasterPendente = acao;
             let msg = '';
             if(acao === 'aprovar') msg = 'Aprovar demanda sem ser o Daniel.';
-            if(acao === 'arquivar') msg = 'Arquivar demanda (Apagará as mídias).';
+            if(acao === 'arquivar') msg = 'Arquivar demanda (Apagará as fotos).';
             if(acao === 'excluir') msg = 'Excluir definitivamente do sistema.';
             document.getElementById('modalSenhaTexto').textContent = msg;
             document.getElementById('inputSenhaMaster').value = '';
@@ -839,36 +877,55 @@
         window.fecharModalSenha = function() { document.getElementById('modalSenhaMaster').classList.remove('ativo'); }
 
         window.confirmarAcaoMaster = async function() {
-            // A senha é avaliada via Base64 (btoa) para não ficar legível no código fonte
-            if (btoa(document.getElementById('inputSenhaMaster').value.trim()) !== HASH_MASTER) { 
-                document.getElementById('erroSenhaMaster').style.display = 'block'; 
-                return; 
-            }
-            document.getElementById('modalSenhaMaster').classList.remove('ativo'); 
-            const hist = demandaAtual.historico || [];
+            const senhaDigitada = document.getElementById('inputSenhaMaster').value.trim();
+            const btn = document.getElementById('btnConfirmarSenha');
+            if(!senhaDigitada) return;
+            
+            btn.textContent = '⏳...'; btn.disabled = true;
 
-            if (acaoMasterPendente === 'aprovar') {
-                hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
-                await db.from('demandas').update({ status: 'Aprovada', historico: hist }).eq('id', demandaId);
-                window.location.reload();
+            try {
+                // CHAMA A EDGE FUNCTION PARA VALIDAR (Sem Senha no Frontend)
+                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'validar_master', senha: senhaDigitada })
+                });
+
+                if (res.ok) {
+                    document.getElementById('modalSenhaMaster').classList.remove('ativo'); 
+                    const hist = demandaAtual.historico || [];
+
+                    if (acaoMasterPendente === 'aprovar') {
+                        hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
+                        await db.from('demandas').update({ status: 'Aprovada', historico: hist }).eq('id', demandaId);
+                        window.location.reload();
+                    }
+                    else if (acaoMasterPendente === 'arquivar') {
+                        hist.push({ status: 'Arquivada', autor: usuarioLogado, data: new Date().toISOString() });
+                        await db.from('demandas').update({ status: 'Arquivada', fotos_urls: [], historico: hist }).eq('id', demandaId);
+                        window.location.href = 'dashboard.html';
+                    }
+                    else if (acaoMasterPendente === 'excluir') { 
+                        await db.from('demandas').delete().eq('id', demandaId); window.location.href = 'dashboard.html'; 
+                    }
+                    acaoMasterPendente = null; 
+                } else {
+                    document.getElementById('erroSenhaMaster').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('erroSenhaMaster').style.display = 'block';
+            } finally {
+                btn.textContent = '✅ Confirmar'; btn.disabled = false;
             }
-            else if (acaoMasterPendente === 'arquivar') {
-                hist.push({ status: 'Arquivada', autor: usuarioLogado, data: new Date().toISOString() });
-                await db.from('demandas').update({ status: 'Arquivada', fotos_urls: [], historico: hist }).eq('id', demandaId);
-                window.location.href = 'dashboard.html';
-            }
-            else if (acaoMasterPendente === 'excluir') { 
-                await db.from('demandas').delete().eq('id', demandaId); window.location.href = 'dashboard.html'; 
-            }
-            acaoMasterPendente = null; 
         }
 
-        window.apagarFotoUnica = async function(index) {
-            if (!confirm('Apagar este anexo?')) return;
-            const fotos = [...(demandaAtual.fotos_urls || [])];
-            fotos.splice(index, 1);
-            await db.from('demandas').update({ fotos_urls: fotos }).eq('id', demandaId);
-            window.location.reload();
+        window.apagarFotoUnica = function(index) {
+            pedirConfirmacao('🗑️ Apagar Mídia', 'Certeza que deseja apagar este anexo?', async () => {
+                const fotos = [...(demandaAtual.fotos_urls || [])];
+                fotos.splice(index, 1);
+                await db.from('demandas').update({ fotos_urls: fotos }).eq('id', demandaId);
+                window.location.reload();
+            });
         }
 
         window.forcarDownload = async function(url, nome) {
@@ -894,6 +951,13 @@
             const pdfFile = document.getElementById('extraPdf').files[0];
             const mediaFiles = document.getElementById('extraFotos').files;
             if (!pdfFile && mediaFiles.length === 0) return alert('Selecione algum arquivo!');
+
+            // VALIDAÇÃO DE TAMANHO MÁXIMO (15MB por arquivo)
+            const MAX_MB = 15;
+            if (pdfFile && pdfFile.size > MAX_MB * 1024 * 1024) return alert(`PDF gigante! Máximo permitido: ${MAX_MB}MB`);
+            for(let f of mediaFiles) {
+                if (f.size > MAX_MB * 1024 * 1024) return alert(`A mídia ${f.name} é gigante! Máximo permitido: ${MAX_MB}MB por arquivo.`);
+            }
 
             const btn = document.getElementById('btnUploadExtra');
             const prog = document.getElementById('progressoExtra');
