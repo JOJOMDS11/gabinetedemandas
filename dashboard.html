@@ -223,18 +223,7 @@
             }, 350); 
         });
 
-        // ================= FUNÇÕES DE NOTIFICAÇÃO NATIVA (CELULAR E PC) =================
-        async function pedirPermissaoNotificacao() {
-            let permissao = Notification.permission;
-            if (permissao !== 'granted') {
-                permissao = await Notification.requestPermission();
-            }
-            if (permissao === 'granted') {
-                console.log('🔔 Permissão de notificação concedida!');
-            }
-            return permissao;
-        }
-
+// ================= FUNÇÕES DE NOTIFICAÇÃO NATIVA (CELULAR E PC) =================
         async function mostrarNotificacaoCelular(titulo, mensagem) {
             if (Notification.permission !== 'granted') return;
             
@@ -244,7 +233,7 @@
                     body: mensagem,
                     icon: 'https://i.imgur.com/coryuD6.png',
                     badge: 'https://i.imgur.com/coryuD6.png',
-                    vibrate: [200, 100, 500], 
+                    vibrate: [200, 100, 500], // Vibração ativada!
                     requireInteraction: true
                 });
             } else {
@@ -254,21 +243,34 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => {
+                // Só mostra o botão se a permissão NÃO foi dada ainda
                 if (Notification.permission !== 'granted') {
                     const btnNotif = document.createElement('button');
                     btnNotif.className = 'btn-sino';
                     btnNotif.innerHTML = '🔔 Ativar';
                     btnNotif.title = "Ativar Notificações";
-                    btnNotif.onclick = async () => {
-                        await pedirPermissaoNotificacao();
-                        btnNotif.style.display = 'none';
+                    
+                    // Disparo DIRETO no clique (sem async), pro celular não bloquear!
+                    btnNotif.onclick = function() {
+                        Notification.requestPermission().then(function(permissao) {
+                            if (permissao === 'granted') {
+                                alert("✅ Avisos ativados! O telemóvel vai apitar nas novas demandas.");
+                                btnNotif.style.display = 'none';
+                            } else if (permissao === 'denied') {
+                                alert("❌ O telemóvel bloqueou os avisos. Precisas de ir às definições da App no Android e ativar as Notificações manualmente.");
+                            } else {
+                                alert("⚠️ O pedido foi ignorado pelo sistema. Tenta novamente.");
+                            }
+                        }).catch(function(erro) {
+                            alert("Erro: " + erro);
+                        });
                     };
+                    
                     const navbarActions = document.querySelector('.navbar-actions');
                     if(navbarActions) navbarActions.prepend(btnNotif);
                 }
             }, 1000); 
         });
-        // ================= FIM FUNÇÕES DE NOTIFICAÇÃO =================
 
         async function inicializarSistema() {
             try {
