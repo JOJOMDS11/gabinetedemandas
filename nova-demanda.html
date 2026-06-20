@@ -208,8 +208,16 @@
                 <input type="text" id="protocolo" placeholder="Ex: 156 2026/001234" onfocus="if(!this.value) this.value='156 2026/'">
             </div>
             <div class="form-group">
+                <label>PDP (Poder Executivo)</label>
+                <input type="text" id="pdp" placeholder="Ex: PDP 4071/2026">
+            </div>
+            <div class="form-group">
                 <label>Expediente (Legis)</label>
                 <input type="text" id="expediente" placeholder="Ex: Exp. 5149">
+            </div>
+            <div class="form-group">
+                <label>Observações Internas</label>
+                <textarea id="observacoes" rows="2" placeholder="Anotações para a equipe (não visível ao solicitante)"></textarea>
             </div>
             <div class="form-group">
                 <label>Link Direto do Legis</label>
@@ -377,7 +385,9 @@
             document.getElementById('doc_numero').value = '';
             document.getElementById('expediente').value = '';
             document.getElementById('protocolo').value = '';
+            document.getElementById('pdp').value = '';
             document.getElementById('link_legis').value = '';
+            document.getElementById('observacoes').value = '';
             document.getElementById('statusForcado').value = '';
             document.getElementById('badgeStatusForcado').style.display = 'none';
             
@@ -395,7 +405,7 @@
 
             limparFormulario();
 
-            let parsed = { data: '', resp: '', status: '', tipo: '', doc_tipo: '', doc_numero: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '' };
+            let parsed = { data: '', resp: '', status: '', tipo: '', doc_tipo: '', doc_numero: '', expediente: '', protocolo: '', pdp: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '', obs: '' };
 
             const nomesConhecidos = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
             const tiposConhecidos = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO', 'DEMANDA (GERAL)', 'DEMANDA EXTERNA', 'INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
@@ -436,11 +446,19 @@
                 }
                 else if (cell.match(/^[A-Za-z]+\s\d+\/\d{4}$/)) {
                     let parts = cell.split(/\s+/);
-                    parsed.doc_numero = parts[1];
                     let prefix = parts[0].toUpperCase();
-                    if(prefix === 'REQ') parsed.doc_tipo = 'Requerimento';
-                    else if(prefix === 'MEMO') parsed.doc_tipo = 'Memorando';
-                    else parsed.doc_tipo = 'Ofício'; 
+                    
+                    // Detectar se é PDP ou outro documento
+                    if(prefix === 'PDP') {
+                        parsed.pdp = cell;
+                    } else if(prefix === '156' || prefix.startsWith('156')) {
+                        parsed.protocolo = cell;
+                    } else {
+                        parsed.doc_numero = parts[1];
+                        if(prefix === 'REQ') parsed.doc_tipo = 'Requerimento';
+                        else if(prefix === 'MEMO') parsed.doc_tipo = 'Memorando';
+                        else parsed.doc_tipo = 'Ofício';
+                    }
                 }
                 else if (nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase())) {
                     parsed.resp = nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase());
@@ -526,6 +544,7 @@
             }
             if(parsed.expediente) document.getElementById('expediente').value = parsed.expediente;
             if(parsed.protocolo) document.getElementById('protocolo').value = parsed.protocolo;
+            if(parsed.pdp) document.getElementById('pdp').value = parsed.pdp;
             if(parsed.nome) document.getElementById('solicitante_nome').value = parsed.nome;
             if(parsed.tel) document.getElementById('solicitante_tel').value = parsed.tel;
             
@@ -691,7 +710,9 @@
 
             const expediente = document.getElementById('expediente').value.trim();
             const protocolo = document.getElementById('protocolo').value.trim();
+            const pdp = document.getElementById('pdp').value.trim();
             const link_legis = document.getElementById('link_legis').value.trim();
+            const observacoes = document.getElementById('observacoes').value.trim();
             
             const msg = document.getElementById('mensagem');
             msg.style.display = 'none';
@@ -753,7 +774,9 @@
                     solicitante_nome, solicitante_tel,
                     data_agendada, horario_agendado, secretaria, providencias,
                     doc_tipo, doc_numero, 
-                    expediente, protocolo, link_legis,
+                    expediente, protocolo, pdp, link_legis,
+                    observacoes_internas: observacoes,
+                    data_criacao: new Date().toISOString(),
                     fotos_urls: fotosUrls, 
                     pdf_url: pdf_url,
                     status: statusInicial, 
