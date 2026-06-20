@@ -195,6 +195,7 @@
                         <option value="Ofício">Ofício</option>
                         <option value="Memorando">Memorando</option>
                         <option value="Requerimento">Requerimento</option>
+                        <option value="PDP">PDP</option>
                     </select>
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
@@ -206,10 +207,6 @@
             <div class="form-group">
                 <label>Protocolo 156</label>
                 <input type="text" id="protocolo" placeholder="Ex: 156 2026/001234" onfocus="if(!this.value) this.value='156 2026/'">
-            </div>
-            <div class="form-group">
-                <label>PDP (Poder Executivo)</label>
-                <input type="text" id="pdp" placeholder="Ex: PDP 4071/2026">
             </div>
             <div class="form-group">
                 <label>Expediente (Legis)</label>
@@ -385,7 +382,6 @@
             document.getElementById('doc_numero').value = '';
             document.getElementById('expediente').value = '';
             document.getElementById('protocolo').value = '';
-            document.getElementById('pdp').value = '';
             document.getElementById('link_legis').value = '';
             document.getElementById('observacoes').value = '';
             document.getElementById('statusForcado').value = '';
@@ -405,7 +401,7 @@
 
             limparFormulario();
 
-            let parsed = { data: '', resp: '', status: '', tipo: '', doc_tipo: '', doc_numero: '', expediente: '', protocolo: '', pdp: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '', obs: '' };
+            let parsed = { data: '', resp: '', status: '', tipo: '', doc_tipo: '', doc_numero: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '', obs: '' };
 
             const nomesConhecidos = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
             const tiposConhecidos = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO', 'DEMANDA (GERAL)', 'DEMANDA EXTERNA', 'INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
@@ -433,6 +429,13 @@
                 textoSemTel = texto.replace(matchTelGlobal[0], ' ');
             }
 
+            // EXTRAÇÃO GLOBAL DO 156 (Inquebrável)
+            let match156Global = textoSemTel.match(/(?:protocolo\s*)?(156\s*20\d{2}\/\d+)/i);
+            if (match156Global) {
+                parsed.protocolo = match156Global[1];
+                textoSemTel = textoSemTel.replace(match156Global[0], ' ');
+            }
+
             const celulas = textoSemTel.split('\t');
 
             celulas.forEach(c => {
@@ -444,19 +447,15 @@
                     let ano = p[2].length === 2 ? '20' + p[2] : p[2];
                     parsed.data = `${ano}-${p[1]}-${p[0]}`;
                 }
-                else if (cell.match(/^[A-Za-z]+\s\d+\/\d{4}$/)) {
-                    let parts = cell.split(/\s+/);
-                    let prefix = parts[0].toUpperCase();
-                    
-                    // Detectar se é PDP ou outro documento
-                    if(prefix === 'PDP') {
-                        parsed.pdp = cell;
-                    } else if(prefix === '156' || prefix.startsWith('156')) {
-                        parsed.protocolo = cell;
-                    } else {
-                        parsed.doc_numero = parts[1];
+                // Lê Documentos (Ofício, Memo, Req, PDP)
+                else if (cell.match(/^[A-Za-z]+\s*\d+\/\d{4}$/)) {
+                    let docMatch = cell.match(/^([A-Za-z]+)\s*(\d+\/\d{4})$/);
+                    if (docMatch) {
+                        parsed.doc_numero = docMatch[2];
+                        let prefix = docMatch[1].toUpperCase();
                         if(prefix === 'REQ') parsed.doc_tipo = 'Requerimento';
                         else if(prefix === 'MEMO') parsed.doc_tipo = 'Memorando';
+                        else if(prefix === 'PDP') parsed.doc_tipo = 'PDP';
                         else parsed.doc_tipo = 'Ofício';
                     }
                 }
@@ -483,38 +482,6 @@
                     else parsed.desc = cell;
                 }
             });
-
-            if (!parsed.tel && parsed.desc) {
-                let matchTel = parsed.desc.match(regexTelefoneGlobal);
-                if (matchTel) {
-                    let telBruto = matchTel[0].trim();
-                    let somenteDigitos = telBruto.replace(/\D/g, '');
-                    if (somenteDigitos.length >= 10) {
-                        let ddd = somenteDigitos.slice(0, 2);
-                        let resto = somenteDigitos.slice(2);
-                        if (resto.length === 9) {
-                            parsed.tel = `(${ddd}) ${resto.slice(0,5)}-${resto.slice(5)}`;
-                        } else if (resto.length === 8) {
-                            parsed.tel = `(${ddd}) ${resto.slice(0,4)}-${resto.slice(4)}`;
-                        } else {
-                            parsed.tel = `(${ddd}) ${resto}`;
-                        }
-                    } else {
-                        parsed.tel = telBruto;
-                    }
-                    parsed.desc = parsed.desc.replace(matchTel[0], '').trim();
-                    parsed.desc = parsed.desc.replace(/^[.\-,]\s*/, '').trim();
-                }
-            }
-
-            if (parsed.desc) {
-                let match156 = parsed.desc.match(/(?:[,.-]?\s*)?(?:protocolo\s*)?(156\s*202\d\/\d+)/i);
-                if (match156) {
-                    parsed.protocolo = match156[1]; 
-                    parsed.desc = parsed.desc.replace(match156[0], '').trim();
-                    parsed.desc = parsed.desc.replace(/^[.,\s]+|[.,\s]+$/g, '').trim();
-                }
-            }
 
             // REGRA DE OURO NA COLAGEM
             if (parsed.doc_numero || parsed.expediente) {
@@ -544,7 +511,6 @@
             }
             if(parsed.expediente) document.getElementById('expediente').value = parsed.expediente;
             if(parsed.protocolo) document.getElementById('protocolo').value = parsed.protocolo;
-            if(parsed.pdp) document.getElementById('pdp').value = parsed.pdp;
             if(parsed.nome) document.getElementById('solicitante_nome').value = parsed.nome;
             if(parsed.tel) document.getElementById('solicitante_tel').value = parsed.tel;
             
@@ -710,7 +676,6 @@
 
             const expediente = document.getElementById('expediente').value.trim();
             const protocolo = document.getElementById('protocolo').value.trim();
-            const pdp = document.getElementById('pdp').value.trim();
             const link_legis = document.getElementById('link_legis').value.trim();
             const observacoes = document.getElementById('observacoes').value.trim();
             
@@ -774,7 +739,7 @@
                     solicitante_nome, solicitante_tel,
                     data_agendada, horario_agendado, secretaria, providencias,
                     doc_tipo, doc_numero, 
-                    expediente, protocolo, pdp, link_legis,
+                    expediente, protocolo, link_legis,
                     observacoes_internas: observacoes,
                     data_criacao: new Date().toISOString(),
                     fotos_urls: fotosUrls, 
