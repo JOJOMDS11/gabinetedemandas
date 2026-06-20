@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gabinete Daniel Daudt - Login</title>
+    <title>Gabinete - Login</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#185199">
     <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
 
-    <!-- SDK do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -33,11 +32,11 @@
 <body>
     <div class="login-container">
         <div class="logo">
-            <img src="https://i.imgur.com/coryuD6.png" alt="Logo Daniel Daudt">
+            <img src="https://i.imgur.com/coryuD6.png" alt="Logo Gabinete">
         </div>
         <form id="loginForm">
             <div class="form-group">
-                <label>Quem é você?</label>
+                <label for="usuario">Quem é você?</label>
                 <select id="usuario" required>
                     <option value="">Selecione seu nome</option>
                     <option value="Daniel">Daniel</option>
@@ -49,10 +48,10 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Senha</label>
+                <label for="senha">Senha</label>
                 <input type="password" id="senha" placeholder="******" required>
             </div>
-            <button type="submit" id="btnAcessar" class="btn-login" disabled>Verificando sessão...</button>
+            <button type="submit" id="btnAcessar" class="btn-login" disabled>Verificando acesso...</button>
             <div class="error" id="erro"></div>
             <div class="success" id="sucesso"></div>
         </form>
@@ -61,7 +60,6 @@
     <script>
         let db;
 
-        // Dicionário invisível para traduzir o Nome selecionado no E-mail sintético
         const emailsSinteticos = {
             'Daniel': 'daniel@gabinete.interno',
             'João Pedro': 'joaopedro@gabinete.interno',
@@ -73,29 +71,26 @@
 
         async function inicializarSistema() {
             try {
-                // Puxa as chaves públicas (URL e Anon Key) da Edge Function
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
                 
-                // Cria o cliente Supabase nativo
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
 
-                // 🔥 A MÁGICA DO AUTO-LOGIN AQUI 🔥
-                // O Supabase olha no navegador se o usuário já fez login alguma vez
                 const { data: { session } } = await db.auth.getSession();
                 
-                if (session) {
-                    // Se a sessão for válida, pula direto pro Dashboard!
-                    window.location.href = 'dashboard.html';
+                if (session && localStorage.getItem('usuarioLogado')) {
+                    // Se tiver sessão válida E tiver o nome do usuário salvo, vai pro dashboard
+                    window.location.replace('dashboard.html');
                     return;
                 }
                 
+                // Se chegou aqui, não tem sessão. Libera o botão.
                 const btn = document.getElementById('btnAcessar');
                 btn.textContent = 'Acessar Sistema';
                 btn.disabled = false;
             } catch (err) {
                 const erroEl = document.getElementById('erro');
-                erroEl.textContent = 'Erro ao conectar ao servidor.';
+                erroEl.textContent = 'Erro de comunicação com o servidor principal.';
                 erroEl.style.display = 'block';
             }
         }
@@ -113,7 +108,7 @@
             sucessoEl.style.display = 'none';
 
             if (!usuario) { 
-                erroEl.textContent = 'Selecione seu nome!'; 
+                erroEl.textContent = 'Selecione seu nome na lista.'; 
                 erroEl.style.display = 'block'; 
                 return; 
             }
@@ -124,27 +119,25 @@
             try {
                 const emailAlvo = emailsSinteticos[usuario];
 
-                // Login Real no Supabase Auth
                 const { data, error } = await db.auth.signInWithPassword({
                     email: emailAlvo,
                     password: senha
                 });
 
                 if (error) {
-                    erroEl.textContent = 'Senha incorreta ou usuário não cadastrado!'; 
+                    erroEl.textContent = 'Acesso negado. Senha incorreta.'; 
                     erroEl.style.display = 'block';
                 } else {
-                    // Sucesso! O SDK do Supabase já salvou a sessão automaticamente.
-                    // Vamos salvar o Nome no localStorage SÓ para a interface visual usar depois.
                     localStorage.setItem('usuarioLogado', usuario);
                     
-                    sucessoEl.textContent = 'Acesso liberado!'; 
+                    sucessoEl.textContent = 'Identidade confirmada!'; 
                     sucessoEl.style.display = 'block';
-                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+                    
+                    // window.location.replace apaga o login do histórico de "voltar" do navegador
+                    setTimeout(() => { window.location.replace('dashboard.html'); }, 800);
                 }
             } catch (error) {
-                console.error(error);
-                erroEl.textContent = 'Erro de sistema.'; 
+                erroEl.textContent = 'Falha no sistema de login.'; 
                 erroEl.style.display = 'block';
             } finally {
                 btn.textContent = 'Acessar Sistema';
