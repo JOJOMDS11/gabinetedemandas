@@ -18,7 +18,7 @@
         .text-primary { color: #185199; }
         .navbar { padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; color: white; }
         .navbar img { height: 80px; background: white; padding: 5px; border-radius: 4px; }
-        .btn-logout { background: transparent; color: white; border: 1px solid white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .btn-logout { background: transparent; color: white; border: 1px solid white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: background 0.2s; }
         .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; }
         .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; }
@@ -74,7 +74,6 @@
         .page-btn { padding: 7px 12px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .page-btn.ativo { background: #185199; color: white; }
 
-        /* Estilo dos Modais Padronizados */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; }
         .modal-overlay.ativo { display: flex; flex-direction: column; }
         .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #c0392b; text-align: center; }
@@ -187,9 +186,9 @@
         const itensPorPagina = 9;
         let idParaExcluir = null;
 
-        const tiposAgendas = ['Agenda VISITA AO GABINETE', 'AGENDA visita EXTERNA', 'GABINETE', 'REUNIÃO', 'visita ao Gabinete'];
-        const tiposDemandasLivre = ['DEMANDA', 'Demanda Externa'];
-        const tiposLegis = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+        const tiposAgendas = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO'];
+        const tiposDemandasLivre = ['DEMANDA (GERAL)', 'DEMANDA EXTERNA'];
+        const tiposLegis = ['INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
 
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         let authToken = localStorage.getItem('authToken'); 
@@ -212,6 +211,54 @@
             }, 350); 
         });
 
+        // ================= FUNÇÕES DE NOTIFICAÇÃO NATIVA (CELULAR E PC) =================
+        async function pedirPermissaoNotificacao() {
+            let permissao = Notification.permission;
+            if (permissao !== 'granted') {
+                permissao = await Notification.requestPermission();
+            }
+            if (permissao === 'granted') {
+                console.log('🔔 Permissão de notificação concedida!');
+            }
+            return permissao;
+        }
+
+        async function mostrarNotificacaoCelular(titulo, mensagem) {
+            if (Notification.permission !== 'granted') return;
+            
+            if ('serviceWorker' in navigator) {
+                const sw = await navigator.serviceWorker.ready;
+                sw.showNotification(titulo, {
+                    body: mensagem,
+                    icon: 'https://i.imgur.com/coryuD6.png',
+                    badge: 'https://i.imgur.com/coryuD6.png',
+                    vibrate: [200, 100, 500], 
+                    requireInteraction: true
+                });
+            } else {
+                new Notification(titulo, { body: mensagem, icon: 'https://i.imgur.com/coryuD6.png' });
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(() => {
+                if (Notification.permission !== 'granted') {
+                    const btnNotif = document.createElement('button');
+                    btnNotif.className = 'btn-logout';
+                    btnNotif.style.backgroundColor = '#d35400';
+                    btnNotif.style.borderColor = '#d35400';
+                    btnNotif.innerHTML = '🔔 Ativar Avisos';
+                    btnNotif.onclick = async () => {
+                        await pedirPermissaoNotificacao();
+                        btnNotif.style.display = 'none';
+                    };
+                    const navbarDiv = document.querySelector('.navbar div');
+                    if(navbarDiv) navbarDiv.prepend(btnNotif);
+                }
+            }, 1000); 
+        });
+        // ================= FIM FUNÇÕES DE NOTIFICAÇÃO =================
+
         async function inicializarSistema() {
             try {
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
@@ -220,16 +267,33 @@
                     global: { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} }
                 });
                 carregarDemandas();
+                
+                // Radar em Tempo Real do Dashboard (Atualiza tela E emite notificação Smart)
                 db.channel('dashboard-live')
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, (payload) => {
                       if (payload.eventType === 'INSERT') {
                           todasDemandas.unshift(payload.new);
+                          
+                          // NOTIFICAÇÃO SMART: Só notifica o Daniel se a demanda EXIGIR atenção (Aguardando ou Pendente)
+                          if (usuarioLogado === 'Daniel') {
+                              if (['Pendente', 'Aberta', 'Aguardando Aprovação'].includes(payload.new.status)) {
+                                  mostrarNotificacaoCelular("🚨 NOVA DEMANDA!", payload.new.assunto);
+                              }
+                          }
                       } else if (payload.eventType === 'UPDATE') {
                           const idx = todasDemandas.findIndex(d => d.id === payload.new.id);
                           if (idx !== -1) todasDemandas[idx] = payload.new;
+                          
+                          // NOTIFICAÇÃO DE APROVAÇÃO: Avisa a equipe (menos o Daniel) que ele aprovou
+                          if (payload.new.status === 'Aprovada' && payload.old.status !== 'Aprovada') {
+                              if (usuarioLogado !== 'Daniel') {
+                                  mostrarNotificacaoCelular("✅ DEMANDA APROVADA!", `O Daniel aprovou: ${payload.new.assunto}`);
+                              }
+                          }
                       } else if (payload.eventType === 'DELETE') {
                           todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id);
                       }
+                      
                       todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
                       renderDemandas();
                   })
@@ -241,10 +305,6 @@
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
-        // ===================== GERENCIADOR DE SECRETARIAS =====================
-        // Lista padrão usada como fallback enquanto a tabela 'secretarias' não
-        // existir no Supabase. As mesmas secretarias padrão de nova-demanda.html
-        // e ver-demanda.html, para manter consistência entre as telas.
         const secretariasPadraoFallback = [
             'GABINETE', 'SEMOB', 'SEMOV', 'SEMURB', 'SEMMAM', 'SEMAE',
             'SAÚDE', 'EDUCAÇÃO', 'FAZENDA', 'OUVIDORIA', 'CEPOM',
@@ -272,7 +332,6 @@
                 return data || [];
             } catch (e) {
                 tabelaSecretariasExiste = false;
-                // Sem tabela ainda: devolve a lista padrão sem 'id' (não editável/excluível até a tabela existir)
                 return secretariasPadraoFallback.map(nome => ({ id: null, nome }));
             }
         }
@@ -280,16 +339,12 @@
         async function renderizarListaSecretarias() {
             const lista = document.getElementById('listaSecretariasModal');
             lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
-
             const secretarias = await buscarSecretarias();
-
             document.getElementById('avisoTabelaSecretarias').style.display = tabelaSecretariasExiste ? 'none' : 'block';
-
             if (secretarias.length === 0) {
                 lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhuma secretaria cadastrada.</p>';
                 return;
             }
-
             lista.innerHTML = secretarias.map(s => `
                 <div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:8px 10px; border-radius:4px;">
                     <span style="font-size:13px;">${s.nome}</span>
@@ -302,14 +357,13 @@
             const input = document.getElementById('inputNovaSecretaria');
             const nome = input.value.trim();
             if (!nome) return alert('Digite o nome da secretaria!');
-
             try {
                 const { error } = await db.from('secretarias').insert([{ nome }]);
                 if (error) throw error;
                 input.value = '';
                 await renderizarListaSecretarias();
             } catch (e) {
-                alert('Não foi possível salvar: a tabela "secretarias" provavelmente ainda não existe no Supabase. Peça para criar com o SQL:\n\ncreate table secretarias (id bigint generated always as identity primary key, nome text not null unique);');
+                alert('Erro ao salvar. Verifique se a tabela existe no banco de dados.');
             }
         }
 
@@ -325,7 +379,6 @@
                 btn.disabled = false;
             }
         }
-        // =================== FIM GERENCIADOR DE SECRETARIAS ===================
 
         window.filtrar = function(status) {
             filtroAtual = status;
@@ -336,74 +389,67 @@
             renderDemandas();
         }
 
-  // Adicione esta lista antes da função renderDemandas, lá em cima no script
-const apelidos = {
-    'daniel': ['daniel', 'daniel daudt']
-};
+        const apelidos = {
+            'daniel': ['daniel', 'daniel daudt']
+        };
 
-function renderDemandas() {
-    const container = document.getElementById('demandas');
-    const pagContainer = document.getElementById('paginacaoContainer');
+        function renderDemandas() {
+            const container = document.getElementById('demandas');
+            const pagContainer = document.getElementById('paginacaoContainer');
 
-    const termoBusca = document.getElementById('buscaGeral').value.toLowerCase();
-    const respSelecionado = document.getElementById('filtroResp').value;
-    const catSelecionada = document.getElementById('filtroCategoria').value;
+            const termoBusca = document.getElementById('buscaGeral').value.toLowerCase();
+            const respSelecionado = document.getElementById('filtroResp').value;
+            const catSelecionada = document.getElementById('filtroCategoria').value;
 
-    let lista = todasDemandas;
-    
-    // Filtro de Status
-    if (filtroAtual === 'Todas') {
-        lista = lista.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada');
-    } else if (filtroAtual === 'Aberta') {
-        lista = lista.filter(d => d.status === 'Aberta' || d.status === 'Pendente');
-    } else if (filtroAtual === 'Concluída') {
-        lista = lista.filter(d => d.status === 'Concluída' || d.status === 'Atendido' || d.status === 'Resolvido');
-    } else {
-        lista = lista.filter(d => d.status === filtroAtual);
-    }
-
-    // Filtro de Categoria
-    if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
-    if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
-    if (catSelecionada === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
-
-    // FILTRO DE RESPONSÁVEIS APRIMORADO (Com Sinónimos)
-    if (respSelecionado) {
-        const buscaOriginal = respSelecionado.toLowerCase().trim();
-        // Se existir na tabela de apelidos, pega todos, senão usa só o que foi digitado
-        const termosBusca = apelidos[buscaOriginal] || [buscaOriginal]; 
-        
-        lista = lista.filter(d => {
-            const reps = (d.responsaveis || []);
-            const respOrdem = (d.responsavel_ordem || '');
-
-            // Verifica se QUALQUER UM dos termos de busca aparece no nome
-            return termosBusca.some(termo => 
-                reps.some(r => r.toLowerCase().includes(termo)) || 
-                respOrdem.toLowerCase().includes(termo)
-            );
-        });
-    }
-
-    // Busca Geral
-    if (termoBusca) {
-        lista = lista.filter(d => {
-            let dFormat = '';
-            if(d.data_agendada) {
-                const oData = new Date(d.data_agendada + 'T00:00:00');
-                dFormat = oData.toLocaleDateString('pt-BR');
+            let lista = todasDemandas;
+            
+            if (filtroAtual === 'Todas') {
+                lista = lista.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada');
+            } else if (filtroAtual === 'Aberta') {
+                lista = lista.filter(d => d.status === 'Aberta' || d.status === 'Pendente');
+            } else if (filtroAtual === 'Concluída') {
+                lista = lista.filter(d => d.status === 'Concluída' || d.status === 'Atendido' || d.status === 'Resolvido');
+            } else {
+                lista = lista.filter(d => d.status === filtroAtual);
             }
-            return (d.assunto || '').toLowerCase().includes(termoBusca) ||
-                   (d.rua || '').toLowerCase().includes(termoBusca) ||
-                   (d.bairro || '').toLowerCase().includes(termoBusca) ||
-                   (d.numero_demanda || '').toLowerCase().includes(termoBusca) ||
-                   (d.protocolo || '').toLowerCase().includes(termoBusca) ||
-                   (d.secretaria || '').toLowerCase().includes(termoBusca) ||
-                   (d.solicitante_nome || '').toLowerCase().includes(termoBusca) ||
-                   (d.responsavel_ordem || '').toLowerCase().includes(termoBusca) ||
-                   (dFormat).includes(termoBusca);
-        });
-    }
+
+            if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
+            if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
+            if (catSelecionada === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
+
+            if (respSelecionado) {
+                const buscaOriginal = respSelecionado.toLowerCase().trim();
+                const termosBusca = apelidos[buscaOriginal] || [buscaOriginal]; 
+                
+                lista = lista.filter(d => {
+                    const reps = (d.responsaveis || []);
+                    const respOrdem = (d.responsavel_ordem || '');
+                    return termosBusca.some(termo => 
+                        reps.some(r => r.toLowerCase().includes(termo)) || 
+                        respOrdem.toLowerCase().includes(termo)
+                    );
+                });
+            }
+
+            if (termoBusca) {
+                lista = lista.filter(d => {
+                    let dFormat = '';
+                    if(d.data_agendada) {
+                        const oData = new Date(d.data_agendada + 'T00:00:00');
+                        dFormat = oData.toLocaleDateString('pt-BR');
+                    }
+                    return (d.assunto || '').toLowerCase().includes(termoBusca) ||
+                           (d.rua || '').toLowerCase().includes(termoBusca) ||
+                           (d.bairro || '').toLowerCase().includes(termoBusca) ||
+                           (d.numero_demanda || '').toLowerCase().includes(termoBusca) ||
+                           (d.protocolo || '').toLowerCase().includes(termoBusca) ||
+                           (d.secretaria || '').toLowerCase().includes(termoBusca) ||
+                           (d.solicitante_nome || '').toLowerCase().includes(termoBusca) ||
+                           (d.responsavel_ordem || '').toLowerCase().includes(termoBusca) ||
+                           (dFormat).includes(termoBusca);
+                });
+            }
+
             if (lista.length === 0) {
                 container.innerHTML = '<p style="color:#777;grid-column:1/-1;text-align:center;padding:30px;">Nenhuma demanda encontrada com estes filtros.</p>';
                 pagContainer.innerHTML = '';
