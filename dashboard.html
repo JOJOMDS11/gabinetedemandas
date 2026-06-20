@@ -224,26 +224,48 @@
         });
 
 // ================= FUNÇÕES DE NOTIFICAÇÃO NATIVA (CELULAR E PC) =================
+        // Garante que o Service Worker está registrado também aqui no dashboard
+        // (antes só era registrado em index.html; se o usuário entrar direto aqui
+        // sem passar pelo login recentemente, as notificações não tinham como funcionar)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('✅ Service Worker OK (dashboard):', reg.scope))
+                .catch(err => console.error('❌ Falha ao registrar Service Worker:', err));
+        } else {
+            console.error('❌ Este navegador não suporta Service Worker.');
+        }
+
         async function mostrarNotificacaoCelular(titulo, mensagem) {
-            if (Notification.permission !== 'granted') return;
+            if (Notification.permission !== 'granted') {
+                console.warn('🔕 Notificação NÃO exibida: permissão é "' + Notification.permission + '" (precisa ser "granted").');
+                return;
+            }
             
-            if ('serviceWorker' in navigator) {
-                const sw = await navigator.serviceWorker.ready;
-                sw.showNotification(titulo, {
-                    body: mensagem,
-                    icon: 'https://i.imgur.com/coryuD6.png',
-                    badge: 'https://i.imgur.com/coryuD6.png',
-                    vibrate: [200, 100, 500], // Vibração ativada!
-                    requireInteraction: true
-                });
-            } else {
-                new Notification(titulo, { body: mensagem, icon: 'https://i.imgur.com/coryuD6.png' });
+            try {
+                if ('serviceWorker' in navigator) {
+                    const sw = await navigator.serviceWorker.ready;
+                    await sw.showNotification(titulo, {
+                        body: mensagem,
+                        icon: 'https://i.imgur.com/coryuD6.png',
+                        badge: 'https://i.imgur.com/coryuD6.png',
+                        vibrate: [200, 100, 500], // Vibração ativada!
+                        requireInteraction: true
+                    });
+                    console.log('🔔 Notificação enviada via Service Worker:', titulo);
+                } else {
+                    new Notification(titulo, { body: mensagem, icon: 'https://i.imgur.com/coryuD6.png' });
+                    console.log('🔔 Notificação enviada via Notification API direta:', titulo);
+                }
+            } catch (err) {
+                console.error('❌ Erro ao tentar exibir notificação:', err);
             }
         }
 
         document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => {
-                // Só mostra o botão se a permissão NÃO foi dada ainda
+                const navbarActions = document.querySelector('.navbar-actions');
+
+                // Se a permissão NÃO foi dada ainda, mostra o botão de Ativar
                 if (Notification.permission !== 'granted') {
                     const btnNotif = document.createElement('button');
                     btnNotif.className = 'btn-sino';
@@ -266,8 +288,19 @@
                         });
                     };
                     
-                    const navbarActions = document.querySelector('.navbar-actions');
                     if(navbarActions) navbarActions.prepend(btnNotif);
+                } else {
+                    // Permissão já concedida: mostra um botão de TESTE para confirmar
+                    // que a exibição da notificação funciona neste dispositivo/navegador
+                    const btnTeste = document.createElement('button');
+                    btnTeste.className = 'btn-sino';
+                    btnTeste.style.background = '#185199';
+                    btnTeste.innerHTML = '🔔 Testar';
+                    btnTeste.title = "Enviar notificação de teste";
+                    btnTeste.onclick = function() {
+                        mostrarNotificacaoCelular('🔔 Teste Gabinete 360', 'Se você está vendo isso, a notificação local funciona neste aparelho.');
+                    };
+                    if(navbarActions) navbarActions.prepend(btnTeste);
                 }
             }, 1000); 
         });
@@ -302,7 +335,9 @@
                           if (idx !== -1) todasDemandas[idx] = payload.new;
                           
                           if (payload.new.status === 'Aprovada' && payload.old.status !== 'Aprovada') {
-                              if (usuarioLogado !== 'Daniel') {
+                              const ehCriador = payload.new.criador === usuarioLogado;
+                              const estaCuidando = (payload.new.responsaveis || []).includes(usuarioLogado);
+                              if (usuarioLogado !== 'Daniel' && (ehCriador || estaCuidando)) {
                                   mostrarNotificacaoCelular("✅ Demanda Aprovada", `O Daniel aprovou: ${payload.new.assunto}`);
                               }
                           }
@@ -313,7 +348,17 @@
                       todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
                       renderDemandas();
                   })
-                  .subscribe();
+                  .subscribe((status, err) => {
+                      if (status === 'SUBSCRIBED') {
+                          console.log('✅ Realtime conectado: avisos automáticos vão funcionar.');
+                      } else if (status === 'CHANNEL_ERROR') {
+                          console.error('❌ Realtime com ERRO ao conectar (provável causa das notificações não chegarem). Detalhe:', err);
+                      } else if (status === 'TIMED_OUT') {
+                          console.error('❌ Realtime demorou demais para conectar (timeout).');
+                      } else if (status === 'CLOSED') {
+                          console.warn('⚠️ Canal Realtime fechado.');
+                      }
+                  });
             } catch (err) {
                 document.getElementById('demandas').innerHTML = '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
             }
