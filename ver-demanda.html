@@ -364,6 +364,7 @@
             resumo += `\n\n*Status:* ${d.status}`;
             if (d.doc_tipo || d.doc_numero) resumo += `\n*Doc Interno:* ${d.doc_tipo || 'Doc'} ${d.doc_numero || ''}`;
             if (d.protocolo) resumo += `\n*Protocolo 156:* ${d.protocolo}`;
+            if (d.pdp) resumo += `\n*PDP:* ${d.pdp}`;
             if (d.expediente) resumo += `\n*Expediente:* ${d.expediente}`;
             if (d.pdf_url) resumo += `\n\n*Para ver o PDF clique aqui:* ${d.pdf_url}`;
 
@@ -502,6 +503,7 @@
             textoWhats += `\n\n*Status:* ${d.status}`;
             if (d.doc_tipo || d.doc_numero) textoWhats += `\n*Doc Interno:* ${d.doc_tipo || 'Doc'} ${d.doc_numero || ''}`;
             if (d.protocolo) textoWhats += `\n*Protocolo 156:* ${d.protocolo}`;
+            if (d.pdp) textoWhats += `\n*PDP:* ${d.pdp}`;
             if (d.expediente) textoWhats += `\n*Expediente:* ${d.expediente}`;
             if (d.pdf_url) textoWhats += `\n\n*Para ver o PDF clique aqui:* ${d.pdf_url}`;
             textoWhats += `\n\n🔗 Acesse: ${window.location.href}`;
@@ -548,6 +550,7 @@
                     
                     ${(d.doc_tipo || d.doc_numero) ? `<div class="info-group" style="background:#e8f0ff; padding:10px; border-radius:4px;"><label>Documento Interno</label><p>📄 <b>${d.doc_tipo || 'Doc'}: ${d.doc_numero || ''}</b></p></div>` : ''}
                     ${d.protocolo ? `<div class="info-group" style="background:#d0e8ff; padding:10px; border-radius:4px;"><label>Protocolo 156</label><p>🔢 <b>${d.protocolo}</b></p></div>` : ''}
+                    ${d.pdp ? `<div class="info-group" style="background:#fff3cd; padding:10px; border-radius:4px;"><label>PDP (Poder Executivo)</label><p>📋 <b>${d.pdp}</b></p></div>` : ''}
                     ${d.expediente ? `<div class="info-group" style="background:#f5cd79; padding:10px; border-radius:4px;"><label>Expediente (Legis)</label><p>📄 <b>${d.expediente}</b></p></div>` : ''}
                     ${(d.data_agendada || d.horario_agendado) ? `<div class="info-group" style="background:#e8f0ff; padding:10px; border-radius:4px;"><label>Data e Horário</label><p>📅 ${dataApresentacao}   ⏰ ${horaFormatada || '--:--'}</p></div>` : ''}
                     ${d.secretaria ? `<div class="info-group"><label>Secretaria</label><p>🏢 ${d.secretaria}</p></div>` : ''}
@@ -692,7 +695,9 @@
                         </div>
                         
                         <div class="form-group"><label>Protocolo 156</label><input type="text" id="editProtocolo" value="${d.protocolo || ''}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher" ${bloqueado}></div>
+                        <div class="form-group"><label>PDP (Poder Executivo)</label><input type="text" id="editPdp" value="${d.pdp || ''}" placeholder="Ex: PDP 4071/2026" ${bloqueado}></div>
                         <div class="form-group"><label>Expediente (Legis)</label><input type="text" id="editExpediente" value="${d.expediente || ''}" placeholder="Ex: Exp. 5149" ${bloqueado}></div>
+                        <div class="form-group"><label>Observações Internas (Equipe)</label><textarea id="editObservacoes" rows="2" placeholder="Anotações que só a equipe vê..." ${bloqueado}>${d.observacoes_internas || ''}</textarea></div>
                         <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:4px;"><label>Link Direto do Legis 🔗</label><input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo..." ${bloqueado}></div>
                     </div>
 
@@ -805,7 +810,9 @@
             let doc_tipo = document.getElementById('editDocTipo') ? document.getElementById('editDocTipo').value : (demandaAtual.doc_tipo || '');
             let doc_numero = document.getElementById('editDocNumero') ? document.getElementById('editDocNumero').value.trim() : (demandaAtual.doc_numero || '');
             let protocolo = document.getElementById('editProtocolo') ? document.getElementById('editProtocolo').value.trim() : (demandaAtual.protocolo || '');
+            let pdp = document.getElementById('editPdp') ? document.getElementById('editPdp').value.trim() : (demandaAtual.pdp || '');
             let expediente = document.getElementById('editExpediente') ? document.getElementById('editExpediente').value.trim() : (demandaAtual.expediente || '');
+            let observacoes_internas = document.getElementById('editObservacoes') ? document.getElementById('editObservacoes').value.trim() : (demandaAtual.observacoes_internas || '');
             let linkLegis = document.getElementById('editLinkLegis') ? document.getElementById('editLinkLegis').value.trim() : (demandaAtual.link_legis || '');
             const data_agendada = document.getElementById('editDataAgendada') ? document.getElementById('editDataAgendada').value || null : demandaAtual.data_agendada;
             const horario_agendado = document.getElementById('editHorarioAgendado') ? document.getElementById('editHorarioAgendado').value || null : demandaAtual.horario_agendado;
@@ -831,7 +838,8 @@
             }
 
             const updates = {
-                status: statusEdit, doc_tipo: doc_tipo, doc_numero: doc_numero, protocolo: protocolo, expediente: expediente, link_legis: linkLegis,
+                status: statusEdit, doc_tipo: doc_tipo, doc_numero: doc_numero, protocolo: protocolo, pdp: pdp, expediente: expediente, link_legis: linkLegis,
+                observacoes_internas: observacoes_internas,
                 data_agendada: data_agendada, horario_agendado: horario_agendado, secretaria: secretaria, providencias: providencias,
                 tipo_solicitacao: tipo_solicitacao, assunto: assunto, descricao: descricao, solicitante_nome: nomeSol, solicitante_tel: telSol, responsavel_ordem: responsavel_ordem
             };
