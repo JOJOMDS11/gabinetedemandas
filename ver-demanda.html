@@ -92,7 +92,7 @@
         .progress-step.completed { color: white; background: #27ae60; border-color: #27ae60; }
 
         .links-externos { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;}
-        .btn-link { background: #ecf0f1; color: #2c3e50; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; text-decoration: none; border: 1px solid #bdc3c7; flex: 1; text-align: center; min-width: 130px; }
+        .btn-link { background: #ecf0f1; color: #2c3e50; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; text-decoration: none; border: 1px solid #bdc3c7; flex: 1; text-align: center; min-width: 130px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;}
         .btn-link:hover { background: #bdc3c7; }
 
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; }
@@ -484,7 +484,7 @@
             } else { htmlFotos = '<p style="color:#999; text-align:center; padding:20px;">Nenhuma imagem ou vídeo.</p>'; }
 
             const tagsResponsaveis = responsaveis.length > 0 ? `${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}', this)">✕</button></div>`).join('')}` : '<span style="color:#999;">Ninguém assumiu ainda</span>';
-            const btnAssumirAqui = !encerrada && !euEstouCuidando ? `<button class="btn-foto" style="background:#185199; margin-left:10px;" onclick="assumirAqui(this)">🙋 Me tornar executor</button>` : '';
+            const btnAssumirAqui = !encerrada && !euEstouCuidando ? `<button class="btn-foto" style="background:#27ae60; color:white; margin-left:10px; padding: 6px 12px; font-size: 13px;" onclick="assumirAqui(this)">🙋 Me tornar executor</button>` : '';
 
             const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui(this)">🙋 Eu Assumo (Executar)</button>` : '';
             const inputDemandaNum = isAdmin
@@ -514,6 +514,16 @@
             if (d.horario_agendado) { horaFormatada = d.horario_agendado.substring(0, 5); }
 
             construirTimelineHtml(d);
+
+            const linksEquipe = euEstouCuidando ? `
+                <div style="background:#e8f0ff; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px dashed #185199;">
+                    <h4 style="color:#185199; margin-bottom:10px; font-size: 14px;">🔗 Links Rápidos do Executor</h4>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <a href="https://www.saoleopoldo.rs.gov.br/servico/685673/518?titulo=Solicita%C3%A7%C3%A3o+-+156" target="_blank" class="btn-link" style="background:#0984e3; color:white; border:none; text-decoration:none;">🔢 Abrir Site 156</a>
+                        <a href="https://admin.camarasaoleopoldo.rs.gov.br/admin/index.php?accesscheck=%2Fadmin.projeto.view.php" target="_blank" class="btn-link" style="background:#d35400; color:white; border:none; text-decoration:none;">📄 Abrir Legis</a>
+                    </div>
+                </div>
+            ` : '';
 
             document.getElementById('conteudo').innerHTML = `
                 ${alertaAprovacao}
@@ -557,6 +567,8 @@
 
                     <h2>Acompanhamento & Edição</h2>
                     ${isAtualBloqueado && bloqueado !== '' ? `<div style="color:#c0392b; font-size:13px; font-weight:bold; margin-bottom:10px; background:#ffe5e5; padding:10px; border-radius:4px; border:1px solid #c0392b;">⚠️ Bloqueado: Este projeto requer aprovação para edição de andamento.</div>` : ''}
+
+                    ${linksEquipe}
 
                     <div class="bloco-edicao">
                         <h4>✏️ Corrigir Dados Principais</h4>
@@ -721,7 +733,7 @@
                 </div>`;
 
             popularSelectSecretaria(d.secretaria || '');
-            renderTimelinePagina(); // Renderiza a primeira página da timeline
+            renderTimelinePagina(); 
         }
 
         let arquivosExtrasSelecionados = [];
@@ -933,7 +945,6 @@
             const data = await res.json(); return data.secure_url;
         }
 
-        // LÓGICA DE PREVIEW PARA NOVOS ANEXOS (NA EDIÇÃO)
         document.addEventListener('change', function(e) {
             if (e.target.id === 'extraPdf') {
                 const file = e.target.files[0];
