@@ -24,6 +24,11 @@
         .btn-login { width: 100%; padding: 14px; background-color: #185199; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         .btn-login:hover { background-color: #123e75; }
         .btn-login:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        
+        /* Estilo do botão de instalar que vai aparecer magicamente */
+        .btn-instalar { width: 100%; padding: 14px; background-color: #27ae60; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; display: none; transition: background 0.2s; box-shadow: 0 4px 6px rgba(39, 174, 96, 0.3);}
+        .btn-instalar:hover { background-color: #219653; }
+
         .error, .success { font-size: 14px; margin-top: 15px; text-align: center; display: none; padding: 10px; border-radius: 4px; font-weight: bold; }
         .error { background: #ffe5e5; color: #c0392b; }
         .success { background: #e2f8c5; color: #185199; }
@@ -35,7 +40,6 @@
             <img src="https://i.imgur.com/coryuD6.png" alt="Logo Gabinete">
         </div>
         <form id="loginForm">
-            <!-- Label ligada ao ID corrigida -->
             <div class="form-group">
                 <label for="usuario">Quem é você?</label>
                 <select id="usuario" required>
@@ -48,12 +52,14 @@
                     <option value="Débora">Débora</option>
                 </select>
             </div>
-            <!-- Label ligada ao ID corrigida -->
             <div class="form-group">
                 <label for="senha">Senha</label>
                 <input type="password" id="senha" placeholder="******" required>
             </div>
             <button type="submit" id="btnAcessar" class="btn-login" disabled>Verificando acesso...</button>
+            
+            <button type="button" id="btnInstalarApp" class="btn-instalar">📲 Instalar Aplicativo</button>
+
             <div class="error" id="erro"></div>
             <div class="success" id="sucesso"></div>
         </form>
@@ -80,7 +86,6 @@
 
                 const { data: { session } } = await db.auth.getSession();
                 
-                // Dupla verificação anti-loop
                 if (session && localStorage.getItem('usuarioLogado')) {
                     window.location.replace('dashboard.html');
                     return;
@@ -134,7 +139,6 @@
                     sucessoEl.textContent = 'Identidade confirmada!'; 
                     sucessoEl.style.display = 'block';
                     
-                    // REPLACE para não ficar no histórico de navegação
                     setTimeout(() => { window.location.replace('dashboard.html'); }, 800);
                 }
             } catch (error) {
@@ -149,13 +153,44 @@
         inicializarSistema();
     </script>
 
-    <!-- Registrar Service Worker para PWA -->
     <script>
+        // Registra o Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
                 .then(reg => console.log('✅ Service Worker registrado', reg))
                 .catch(err => console.log('❌ Erro ao registrar SW:', err));
         }
+
+        // Lógica do botão de instalação PWA
+        let promptDeInstalacao;
+        const btnInstalarApp = document.getElementById('btnInstalarApp');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Evita que o Chrome mostre o balão automático padrão
+            e.preventDefault();
+            // Guarda o evento para acionarmos depois
+            promptDeInstalacao = e;
+            // Mostra o nosso botão verde bonito
+            btnInstalarApp.style.display = 'block';
+        });
+
+        btnInstalarApp.addEventListener('click', async () => {
+            if (!promptDeInstalacao) return;
+            // Mostra a telinha do sistema pedindo para instalar
+            promptDeInstalacao.prompt();
+            // Espera o usuário escolher "Instalar" ou "Cancelar"
+            const resultado = await promptDeInstalacao.userChoice;
+            if (resultado.outcome === 'accepted') {
+                console.log('Usuário aceitou instalar o App!');
+                btnInstalarApp.style.display = 'none'; // Some com o botão se instalou
+            }
+            promptDeInstalacao = null; // Limpa o evento
+        });
+
+        // Se o App já estiver instalado e abrindo como App, esconde o botão
+        window.addEventListener('appinstalled', () => {
+            btnInstalarApp.style.display = 'none';
+        });
     </script>
 </body>
 </html>
