@@ -536,10 +536,37 @@
                 badge.style.display = 'inline-block';
             }
 
-            if(parsed.desc) {
+           if(parsed.desc) {
                 document.getElementById('descricao').value = parsed.desc;
-                let primeiraLinha = parsed.desc.split('\n')[0];
-                document.getElementById('assunto').value = primeiraLinha.substring(0, 60) + (primeiraLinha.length > 60 ? '...' : '');
+                
+                // --- LÓGICA DO ASSUNTO INTELIGENTE ---
+                let assuntoInteligente = parsed.desc.split('\n')[0];
+                
+                // 1. Remove jargões burocráticos iniciais
+                assuntoInteligente = assuntoInteligente.replace(/^(solicita|requer|pede|encaminha|solicitamos)(mos)?\s+(a|o|as|os|que|para|uma|um)\s+/i, '');
+                assuntoInteligente = assuntoInteligente.replace(/^(solicita|requer|pede|encaminha)\s+/i, '');
+                
+                // 2. Força a primeira letra a ficar Maiúscula
+                if(assuntoInteligente.length > 0) {
+                    assuntoInteligente = assuntoInteligente.charAt(0).toUpperCase() + assuntoInteligente.slice(1);
+                }
+
+                // 3. Corta o texto antes de começar a falar do endereço/local (para não poluir o assunto)
+                const cortes = [" na rua", " na av", " na travessa", " no bairro", " em via", " especificamente", " ao longo", " defronte", " em frente", ", conforme", " no município", ", no"];
+                for (let corte of cortes) {
+                    let idx = assuntoInteligente.toLowerCase().indexOf(corte);
+                    if (idx > 0) {
+                        assuntoInteligente = assuntoInteligente.substring(0, idx);
+                    }
+                }
+
+                // 4. Limpa pontuação sobrando no final e aplica limite de caracteres seguro
+                assuntoInteligente = assuntoInteligente.replace(/[,.-]+$/, '').trim();
+                if (assuntoInteligente.length > 65) {
+                    assuntoInteligente = assuntoInteligente.substring(0, 65).trim() + '...';
+                }
+
+                document.getElementById('assunto').value = assuntoInteligente;
 
                 let matchRua = parsed.desc.match(/(?:Rua|Av|Avenida|Travessa)\s([^,]+),\s*n[ºo]?\s*(\d+)/i);
                 if(matchRua) {
