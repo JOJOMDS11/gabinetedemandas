@@ -114,11 +114,11 @@
         <div class="form-row">
             <div class="form-group">
                 <label>Data</label>
-                <input type="date" id="data_agendada">
+                <input type="date" id="data_agendada" onfocus="preencherDataHojeSeVazio(this)">
             </div>
             <div class="form-group">
                 <label>Horário</label>
-                <input type="time" id="horario_agendado">
+                <input type="time" id="horario_agendado" onfocus="preencherHoraAgoraSeVazio(this)">
             </div>
         </div>
 
@@ -323,6 +323,25 @@
             textarea.select();
             document.execCommand('copy');
             alert('✅ Texto copiado para a área de transferência!');
+        }
+
+        window.preencherDataHojeSeVazio = function(input) {
+            if (input.value) return;
+            const agora = new Date();
+            const ano = agora.getFullYear();
+            const mes = String(agora.getMonth() + 1).padStart(2, '0');
+            const dia = String(agora.getDate()).padStart(2, '0');
+            input.value = `${ano}-${mes}-${dia}`;
+            input.dispatchEvent(new Event('change'));
+        }
+
+        window.preencherHoraAgoraSeVazio = function(input) {
+            if (input.value) return;
+            const agora = new Date();
+            const horas = String(agora.getHours()).padStart(2, '0');
+            const minutos = String(agora.getMinutes()).padStart(2, '0');
+            input.value = `${horas}:${minutos}`;
+            input.dispatchEvent(new Event('change'));
         }
 
         function montarNumeroDemanda() {
