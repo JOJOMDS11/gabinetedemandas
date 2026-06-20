@@ -25,7 +25,7 @@
         .preview-item { border-radius: 4px; border: 1px solid #eee; overflow: hidden; height: 80px; position: relative; }
         .preview-item img, .preview-item video { width: 100%; height: 100%; object-fit: cover; }
         .btn-remover-preview { position: absolute; top: 2px; right: 2px; background: rgba(231,76,60,0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .botoes { display: flex; gap: 10px; margin-top: 25px; }
+        .botoes { display: flex; gap: 10px; margin-top: 15px; }
         button { flex: 1; padding: 12px; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer; border: none;}
         .btn-cancelar { background: #e0e0e0; color: #333; flex: 0.4; }
         .mensagem { padding: 12px; border-radius: 4px; margin-bottom: 15px; display: none; font-weight: bold; text-align: center; font-size: 14px; }
@@ -48,8 +48,8 @@
         .pdf-preview-box { display: none; background: #e8f0ff; color: #185199; padding: 8px 12px; border-radius: 4px; border: 1px solid #185199; font-size: 13px; font-weight: bold; margin-top: 8px; align-items: center; justify-content: space-between; }
         .pdf-preview-box button { background: none; border: none; color: #c0392b; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0; min-width: unset; flex: none; }
         
-        /* Estilo da Checkbox Inteligente Anti-Spam */
-        .box-aprovacao { background:#fff8e1; padding:10px 15px; border-radius:4px; border:1px solid #f39c12; display:none; margin-bottom: 20px;}
+        /* Estilo da Checkbox Inteligente Anti-Spam - MOVIDO PARA BAIXO */
+        .box-aprovacao { background:#fff8e1; padding:15px; border-radius:8px; border:1px solid #f39c12; display:none; margin-top: 25px; margin-bottom: 5px;}
         .box-aprovacao label { display:flex; align-items:center; gap:8px; cursor:pointer; color:#d35400; margin-bottom:0; font-size: 14px;}
         .box-aprovacao input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
     </style>
@@ -72,15 +72,6 @@
 
         <h2>Adicionar Registro</h2>
         <div id="mensagem" class="mensagem"></div>
-
-        <!-- Checkbox Anti-Spam: Invisível pro Daniel, visível para a Equipe -->
-        <div class="box-aprovacao" id="blocoAprovacaoSmart">
-            <label>
-                <input type="checkbox" id="checkAprovacaoDaniel" checked>
-                <span>🔔 Exigir aprovação do Daniel (Notificá-lo no celular)</span>
-            </label>
-            <p style="font-size:11px; color:#777; margin-top:5px; margin-left:26px;">A Magia desmarca isso sozinha para retroativos, assim o celular dele não apita 500 vezes.</p>
-        </div>
         
         <input type="hidden" id="statusForcado" value="">
 
@@ -246,6 +237,15 @@
             <input type="file" id="fotos" accept="image/*,video/*" multiple>
             <div class="preview-grid" id="previewGrid"></div>
             <div id="uploadProgress"></div>
+        </div>
+
+        <!-- Checkbox Anti-Spam: Movidinha pra cá, perto do botão -->
+        <div class="box-aprovacao" id="blocoAprovacaoSmart">
+            <label>
+                <input type="checkbox" id="checkAprovacaoDaniel" checked>
+                <span>🔔 Exigir aprovação do Daniel (Notificá-lo no celular)</span>
+            </label>
+            <p style="font-size:11px; color:#777; margin-top:5px; margin-left:26px;">A Magia desmarca isso sozinha para retroativos, assim o celular dele não apita 500 vezes.</p>
         </div>
 
         <div class="botoes">
