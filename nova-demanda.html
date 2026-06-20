@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gabinete Daniel Daudt - Nova Demanda</title>
+    <title>Gabinete - Nova Demanda</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -22,7 +22,7 @@
         input:focus, textarea:focus, select:focus { outline: none; border-color: #185199; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 10px; }
-        .preview-item { border-radius: 4px; border: 1px solid #eee; overflow: hidden; height: 80px; position: relative; cursor: pointer; }
+        .preview-item { border-radius: 4px; border: 1px solid #eee; overflow: hidden; height: 80px; position: relative; }
         .preview-item img, .preview-item video { width: 100%; height: 100%; object-fit: cover; }
         .btn-remover-preview { position: absolute; top: 2px; right: 2px; background: rgba(231,76,60,0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .botoes { display: flex; gap: 10px; margin-top: 25px; }
@@ -44,6 +44,10 @@
         .badge-status { background: #9b59b6; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 10px; display: none;}
         
         .secao-tecnica { background: #fdfdfd; padding: 15px; border: 1px dashed #ccc; border-radius: 8px; margin-top: 15px; }
+
+        /* Estilos do Preview do PDF */
+        .pdf-preview-box { display: none; background: #e8f0ff; color: #185199; padding: 8px 12px; border-radius: 4px; border: 1px solid #185199; font-size: 13px; font-weight: bold; margin-top: 8px; align-items: center; justify-content: space-between; }
+        .pdf-preview-box button { background: none; border: none; color: #c0392b; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0; min-width: unset; flex: none; }
     </style>
 </head>
 <body>
@@ -73,24 +77,22 @@
                 <select id="tipo_solicitacao" required onchange="adaptarFormulario()">
                     <option value="">Selecione o tipo...</option>
                     <optgroup label="Agendas e Internos (Livre)">
-                        <option value="Agenda VISITA AO GABINETE">Agenda VISITA AO GABINETE</option>
-                        <option value="AGENDA visita EXTERNA">AGENDA visita EXTERNA</option>
+                        <option value="AGENDA VISITA AO GABINETE">AGENDA VISITA AO GABINETE</option>
+                        <option value="AGENDA VISITA EXTERNA">AGENDA VISITA EXTERNA</option>
                         <option value="GABINETE">GABINETE</option>
                         <option value="REUNIÃO">REUNIÃO</option>
-                        <option value="visita ao Gabinete">visita ao Gabinete</option>
                     </optgroup>
                     <optgroup label="Demandas (Livre)">
-                        <option value="DEMANDA">DEMANDA (Geral)</option>
-                        <option value="Demanda Externa">Demanda Externa</option>
+                        <option value="DEMANDA (GERAL)">DEMANDA (GERAL)</option>
+                        <option value="DEMANDA EXTERNA">DEMANDA EXTERNA</option>
                     </optgroup>
                     <optgroup label="Legislativo e Projetos (Requer Aprovação)">
                         <option value="INDICAÇÃO">INDICAÇÃO</option>
-                        <option value="Moção de Apoio">Moção de Apoio</option>
+                        <option value="MOÇÃO DE APOIO">MOÇÃO DE APOIO</option>
                         <option value="PEDIDO DE PROVIDÊNCIAS">PEDIDO DE PROVIDÊNCIAS</option>
                         <option value="PROJETO DE LEI">PROJETO DE LEI</option>
-                        <option value="projeto de Lei">projeto de Lei</option>
-                        <option value="Projeto de Lei de Vereador">Projeto de Lei de Vereador</option>
-                        <option value="Projeto de Resolução (PR)">Projeto de Resolução (PR)</option>
+                        <option value="PROJETO DE LEI DE VEREADOR">PROJETO DE LEI DE VEREADOR</option>
+                        <option value="PROJETO DE RESOLUÇÃO (PR)">PROJETO DE RESOLUÇÃO (PR)</option>
                         <option value="REQUERIMENTO">REQUERIMENTO</option>
                         <option value="SESSÃO SOLENE">SESSÃO SOLENE</option>
                     </optgroup>
@@ -216,12 +218,13 @@
         </div>
 
         <div class="form-group" style="background:#f9f9f9; padding: 10px; border-radius: 4px; margin-top: 15px;">
-            <label style="color:#c0392b;">Documento PDF (Opcional)</label>
+            <label style="color:#c0392b;">Documento PDF (Opcional - Máx 15MB)</label>
             <input type="file" id="pdfFile" accept="application/pdf">
+            <div id="pdfPreviewBox" class="pdf-preview-box"></div>
         </div>
 
         <div class="form-group">
-            <label>Fotos/Vídeos (Máx 5)</label>
+            <label>Fotos/Vídeos (Máx 5 fotos e 1 vídeo. Máx 15MB cada)</label>
             <input type="file" id="fotos" accept="image/*,video/*" multiple>
             <div class="preview-grid" id="previewGrid"></div>
             <div id="uploadProgress"></div>
@@ -233,11 +236,7 @@
         </div>
     </div>
 
-    <!-- Lightbox de Mídias -->
-    <div id="lightbox" class="modal-overlay" onclick="fecharLightbox()">
-        <img id="lightboxImg" style="display:none;">
-        <video id="lightboxVid" controls style="display:none;"></video>
-    </div>
+    <!-- Lightbox de Mídias (Removido da Criação porque não há lightbox de imagem aqui, só o grid de preview direto) -->
 
     <script>
         let db, cloudName, uploadPreset;
@@ -246,7 +245,7 @@
 
         if (!usuarioLogado) window.location.href = 'index.html';
 
-        const tiposAtualBloqueados = ['INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+        const tiposAtualBloqueados = ['INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
         const nomesEquipe = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
 
         const secretariasPadrao = [
@@ -381,6 +380,12 @@
             document.getElementById('link_legis').value = '';
             document.getElementById('statusForcado').value = '';
             document.getElementById('badgeStatusForcado').style.display = 'none';
+            
+            // Limpa Mídias ao colar nova planilha
+            arquivoPdfSelecionado = null;
+            document.getElementById('pdfPreviewBox').style.display = 'none';
+            arquivosSelecionados = [];
+            renderizarPreviews();
         }
 
         function executarMagia() {
@@ -393,7 +398,7 @@
             let parsed = { data: '', resp: '', status: '', tipo: '', doc_tipo: '', doc_numero: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '' };
 
             const nomesConhecidos = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
-            const tiposConhecidos = ['Agenda VISITA AO GABINETE', 'AGENDA visita EXTERNA', 'GABINETE', 'REUNIÃO', 'visita ao Gabinete', 'DEMANDA', 'Demanda Externa', 'INDICAÇÃO', 'Moção de Apoio', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+            const tiposConhecidos = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO', 'DEMANDA (GERAL)', 'DEMANDA EXTERNA', 'INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
             const statusConhecidos = ['Aberta', 'Pendente', 'Em Andamento', 'Aguardando', 'Aguardando Aprovação', 'Aprovada', '156 Pedido', 'Aguardando Exp', 'Atendido', 'Resolvido', 'Concluída', 'Arquivada', 'Rejeitada', 'Sem Legis'];
 
             const regexTelefoneGlobal = /\(?0?51\)?[\s.]*\.?\d{3,5}[-.\s]?\d{3,4}[-.\s]?\d{0,3}/;
@@ -440,8 +445,8 @@
                 else if (nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase())) {
                     parsed.resp = nomesConhecidos.find(n => n.toLowerCase() === cell.toLowerCase());
                 }
-                else if (tiposConhecidos.find(t => t.toLowerCase() === cell.toLowerCase())) {
-                    parsed.tipo = tiposConhecidos.find(t => t.toLowerCase() === cell.toLowerCase());
+                else if (tiposConhecidos.find(t => t.toUpperCase() === cell.toUpperCase())) {
+                    parsed.tipo = tiposConhecidos.find(t => t.toUpperCase() === cell.toUpperCase());
                 }
                 else if (statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase())) {
                     parsed.status = statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase());
@@ -493,14 +498,14 @@
                 }
             }
 
-            // REGRA DE OURO: Se tem Documento ou Expediente, já passou da fase de aprovação
+            // REGRA DE OURO NA COLAGEM
             if (parsed.doc_numero || parsed.expediente) {
                 if (!parsed.status || ['aberta', 'pendente', 'aguardando', 'aguardando aprovação'].includes(parsed.status.toLowerCase())) {
                     parsed.status = 'Aprovada';
                 }
             }
 
-            if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo;
+            if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo.toUpperCase();
             if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
             if(parsed.resp) document.getElementById('responsavel_ordem').value = parsed.resp;
             
@@ -563,9 +568,9 @@
             const blocoEndereco = document.getElementById('bloco_endereco');
             
             const tiposSemEndereco = [
-                'Agenda VISITA AO GABINETE', 'GABINETE', 'REUNIÃO', 'INDICAÇÃO', 
-                'Moção de Apoio', 'PROJETO DE LEI', 'projeto de Lei', 'Projeto de Lei de Vereador', 
-                'Projeto de Resolução (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE', 'visita ao Gabinete'
+                'AGENDA VISITA AO GABINETE', 'GABINETE', 'REUNIÃO', 'INDICAÇÃO', 
+                'MOÇÃO DE APOIO', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 
+                'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'
             ];
 
             if (tiposSemEndereco.includes(tipo)) {
@@ -575,13 +580,44 @@
             }
         }
 
+        // LÓGICA AVANÇADA DE MÍDIAS (Acúmulo e Preview)
         let arquivosSelecionados = [];
+        let arquivoPdfSelecionado = null;
+
+        document.getElementById('pdfFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 15 * 1024 * 1024) { alert('PDF muito grande! O máximo é 15MB.'); this.value = ''; return; }
+            
+            arquivoPdfSelecionado = file;
+            const box = document.getElementById('pdfPreviewBox');
+            box.innerHTML = `📄 ${file.name} <button type="button" onclick="removerPdfPreview()">✕</button>`;
+            box.style.display = 'flex';
+            this.value = ''; // Limpa para permitir re-seleção
+        });
+
+        window.removerPdfPreview = function() {
+            arquivoPdfSelecionado = null;
+            document.getElementById('pdfPreviewBox').style.display = 'none';
+        }
 
         document.getElementById('fotos').addEventListener('change', function(e) {
             const novos = Array.from(e.target.files);
-            if (arquivosSelecionados.length + novos.length > 5) { alert('Máximo 5 arquivos!'); return; }
-            novos.forEach(file => { arquivosSelecionados.push(file); renderizarPreviews(); });
-            this.value = ''; 
+            let videosCount = arquivosSelecionados.filter(f => f.type.startsWith('video/')).length;
+            let fotosCount = arquivosSelecionados.filter(f => f.type.startsWith('image/')).length;
+
+            novos.forEach(file => {
+                if (file.size > 15 * 1024 * 1024) { alert(`O arquivo ${file.name} passou do limite de 15MB!`); return; }
+                if (file.type.startsWith('video/')) {
+                    if (videosCount >= 1) { alert('Você já escolheu 1 vídeo. O limite é 1 por demanda.'); return; }
+                    videosCount++; arquivosSelecionados.push(file);
+                } else if (file.type.startsWith('image/')) {
+                    if (fotosCount >= 5) { alert('Você já atingiu o limite de 5 fotos.'); return; }
+                    fotosCount++; arquivosSelecionados.push(file);
+                }
+            });
+            renderizarPreviews();
+            this.value = ''; // Permite clicar de novo e somar mais arquivos!
         });
 
         function renderizarPreviews() {
@@ -590,21 +626,12 @@
             arquivosSelecionados.forEach((file, index) => {
                 const url = URL.createObjectURL(file);
                 const isVideo = file.type.startsWith('video/');
-                const mediaTag = isVideo ? `<video src="${url}" muted loop onclick="abrirLightbox('${url}', true)"></video>` : `<img src="${url}" onclick="abrirLightbox('${url}', false)">`;
-                grid.innerHTML += `<div class="preview-item">${mediaTag}<button class="btn-remover-preview" onclick="event.stopPropagation(); removerArquivo(${index})">✕</button></div>`;
+                const mediaTag = isVideo ? `<video src="${url}" muted loop></video>` : `<img src="${url}">`;
+                grid.innerHTML += `<div class="preview-item">${mediaTag}<button type="button" class="btn-remover-preview" onclick="removerArquivo(${index})">✕</button></div>`;
             });
         }
 
         window.removerArquivo = function(index) { arquivosSelecionados.splice(index, 1); renderizarPreviews(); }
-
-        window.abrirLightbox = function(url, isVideo) {
-            document.getElementById('lightbox').classList.add('ativo');
-            const img = document.getElementById('lightboxImg'); const vid = document.getElementById('lightboxVid');
-            if (isVideo) { vid.src = url; vid.style.display = 'block'; img.style.display = 'none'; vid.play(); } 
-            else { img.src = url; img.style.display = 'block'; vid.style.display = 'none'; }
-        }
-
-        window.fecharLightbox = function() { document.getElementById('lightbox').classList.remove('ativo'); document.getElementById('lightboxVid').pause(); }
 
         async function uploadCloudinary(file) {
             const formData = new FormData();
@@ -631,7 +658,6 @@
             const bairro = document.getElementById('bairro').value.trim() || '';
             const solicitante_nome = document.getElementById('solicitante_nome').value.trim();
             const solicitante_tel = document.getElementById('solicitante_tel').value.trim();
-            const arquivoPDF = document.getElementById('pdfFile').files[0];
 
             const doc_tipo = document.getElementById('doc_tipo').value;
             const doc_numero = document.getElementById('doc_numero').value.trim();
@@ -654,7 +680,7 @@
             try {
                 prog.style.display = 'block';
                 let pdf_url = null;
-                if (arquivoPDF) { prog.textContent = `Enviando PDF...`; pdf_url = await uploadCloudinary(arquivoPDF); }
+                if (arquivoPdfSelecionado) { prog.textContent = `Enviando PDF...`; pdf_url = await uploadCloudinary(arquivoPdfSelecionado); }
 
                 const fotosUrls = [];
                 if (arquivosSelecionados.length > 0) {
