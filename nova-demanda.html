@@ -45,9 +45,13 @@
         
         .secao-tecnica { background: #fdfdfd; padding: 15px; border: 1px dashed #ccc; border-radius: 8px; margin-top: 15px; }
 
-        /* Estilos do Preview do PDF */
         .pdf-preview-box { display: none; background: #e8f0ff; color: #185199; padding: 8px 12px; border-radius: 4px; border: 1px solid #185199; font-size: 13px; font-weight: bold; margin-top: 8px; align-items: center; justify-content: space-between; }
         .pdf-preview-box button { background: none; border: none; color: #c0392b; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0; min-width: unset; flex: none; }
+        
+        /* Estilo da Checkbox Inteligente Anti-Spam */
+        .box-aprovacao { background:#fff8e1; padding:10px 15px; border-radius:4px; border:1px solid #f39c12; display:none; margin-bottom: 20px;}
+        .box-aprovacao label { display:flex; align-items:center; gap:8px; cursor:pointer; color:#d35400; margin-bottom:0; font-size: 14px;}
+        .box-aprovacao input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -68,6 +72,15 @@
 
         <h2>Adicionar Registro</h2>
         <div id="mensagem" class="mensagem"></div>
+
+        <!-- Checkbox Anti-Spam: Invisível pro Daniel, visível para a Equipe -->
+        <div class="box-aprovacao" id="blocoAprovacaoSmart">
+            <label>
+                <input type="checkbox" id="checkAprovacaoDaniel" checked>
+                <span>🔔 Exigir aprovação do Daniel (Notificá-lo no celular)</span>
+            </label>
+            <p style="font-size:11px; color:#777; margin-top:5px; margin-left:26px;">A Magia desmarca isso sozinha para retroativos, assim o celular dele não apita 500 vezes.</p>
+        </div>
         
         <input type="hidden" id="statusForcado" value="">
 
@@ -241,8 +254,6 @@
         </div>
     </div>
 
-    <!-- Lightbox de Mídias (Removido da Criação porque não há lightbox de imagem aqui, só o grid de preview direto) -->
-
     <script>
         let db, cloudName, uploadPreset;
         let usuarioLogado = localStorage.getItem('usuarioLogado');
@@ -344,6 +355,11 @@
 
         async function inicializarSistema() {
             try {
+                // ESCONDE O BOTÃO DO DANIEL
+                if (usuarioLogado !== 'Daniel') {
+                    document.getElementById('blocoAprovacaoSmart').style.display = 'block';
+                }
+
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
@@ -386,8 +402,8 @@
             document.getElementById('observacoes').value = '';
             document.getElementById('statusForcado').value = '';
             document.getElementById('badgeStatusForcado').style.display = 'none';
+            document.getElementById('checkAprovacaoDaniel').checked = true; // Reseta a checkbox
             
-            // Limpa Mídias ao colar nova planilha
             arquivoPdfSelecionado = null;
             document.getElementById('pdfPreviewBox').style.display = 'none';
             arquivosSelecionados = [];
@@ -483,8 +499,43 @@
                 }
             });
 
-            // REGRA DE OURO NA COLAGEM
-            if (parsed.doc_numero || parsed.expediente) {
+            if (!parsed.tel && parsed.desc) {
+                let matchTel = parsed.desc.match(regexTelefoneGlobal);
+                if (matchTel) {
+                    let telBruto = matchTel[0].trim();
+                    let somenteDigitos = telBruto.replace(/\D/g, '');
+                    if (somenteDigitos.length >= 10) {
+                        let ddd = somenteDigitos.slice(0, 2);
+                        let resto = somenteDigitos.slice(2);
+                        if (resto.length === 9) {
+                            parsed.tel = `(${ddd}) ${resto.slice(0,5)}-${resto.slice(5)}`;
+                        } else if (resto.length === 8) {
+                            parsed.tel = `(${ddd}) ${resto.slice(0,4)}-${resto.slice(4)}`;
+                        } else {
+                            parsed.tel = `(${ddd}) ${resto}`;
+                        }
+                    } else {
+                        parsed.tel = telBruto;
+                    }
+                    parsed.desc = parsed.desc.replace(matchTel[0], '').trim();
+                    parsed.desc = parsed.desc.replace(/^[.\-,]\s*/, '').trim();
+                }
+            }
+
+            if (parsed.desc) {
+                let match156 = parsed.desc.match(/(?:[,.-]?\s*)?(?:protocolo\s*)?(156\s*202\d\/\d+)/i);
+                if (match156) {
+                    parsed.protocolo = match156[1]; 
+                    parsed.desc = parsed.desc.replace(match156[0], '').trim();
+                    parsed.desc = parsed.desc.replace(/^[.,\s]+|[.,\s]+$/g, '').trim();
+                }
+            }
+
+            // REGRA DE OURO E CHECKBOX ANTI-SPAM
+            if (parsed.doc_numero || parsed.expediente || ['aprovada', 'concluída', 'arquivada'].includes((parsed.status || '').toLowerCase())) {
+                // Desmarca a notificação pro Daniel automaticamente
+                document.getElementById('checkAprovacaoDaniel').checked = false;
+                
                 if (!parsed.status || ['aberta', 'pendente', 'aguardando', 'aguardando aprovação'].includes(parsed.status.toLowerCase())) {
                     parsed.status = 'Aprovada';
                 }
@@ -524,19 +575,15 @@
            if(parsed.desc) {
                 document.getElementById('descricao').value = parsed.desc;
                 
-                // --- LÓGICA DO ASSUNTO INTELIGENTE ---
                 let assuntoInteligente = parsed.desc.split('\n')[0];
                 
-                // 1. Remove jargões burocráticos iniciais
                 assuntoInteligente = assuntoInteligente.replace(/^(solicita|requer|pede|encaminha|solicitamos)(mos)?\s+(a|o|as|os|que|para|uma|um)\s+/i, '');
                 assuntoInteligente = assuntoInteligente.replace(/^(solicita|requer|pede|encaminha)\s+/i, '');
                 
-                // 2. Força a primeira letra a ficar Maiúscula
                 if(assuntoInteligente.length > 0) {
                     assuntoInteligente = assuntoInteligente.charAt(0).toUpperCase() + assuntoInteligente.slice(1);
                 }
 
-                // 3. Corta o texto antes de começar a falar do endereço/local (para não poluir o assunto)
                 const cortes = [" na rua", " na av", " na travessa", " no bairro", " em via", " especificamente", " ao longo", " defronte", " em frente", ", conforme", " no município", ", no"];
                 for (let corte of cortes) {
                     let idx = assuntoInteligente.toLowerCase().indexOf(corte);
@@ -545,7 +592,6 @@
                     }
                 }
 
-                // 4. Limpa pontuação sobrando no final e aplica limite de caracteres seguro
                 assuntoInteligente = assuntoInteligente.replace(/[,.-]+$/, '').trim();
                 if (assuntoInteligente.length > 65) {
                     assuntoInteligente = assuntoInteligente.substring(0, 65).trim() + '...';
@@ -592,7 +638,6 @@
             }
         }
 
-        // LÓGICA AVANÇADA DE MÍDIAS (Acúmulo e Preview)
         let arquivosSelecionados = [];
         let arquivoPdfSelecionado = null;
 
@@ -605,7 +650,7 @@
             const box = document.getElementById('pdfPreviewBox');
             box.innerHTML = `📄 ${file.name} <button type="button" onclick="removerPdfPreview()">✕</button>`;
             box.style.display = 'flex';
-            this.value = ''; // Limpa para permitir re-seleção
+            this.value = ''; 
         });
 
         window.removerPdfPreview = function() {
@@ -629,7 +674,7 @@
                 }
             });
             renderizarPreviews();
-            this.value = ''; // Permite clicar de novo e somar mais arquivos!
+            this.value = ''; 
         });
 
         function renderizarPreviews() {
@@ -717,7 +762,13 @@
                     }
                 }
 
-                // REGRA DE OURO NA HORA DE SALVAR (Segurança)
+                // O GRANDE TRUQUE ANTI-SPAM (Se a caixa não está marcada, pula a aprovação pra não notificar)
+                if (usuarioLogado !== 'Daniel' && !document.getElementById('checkAprovacaoDaniel').checked) {
+                    if (['Pendente', 'Aberta', 'Aguardando', 'Aguardando Aprovação'].includes(statusInicial)) {
+                        statusInicial = 'Aprovada';
+                    }
+                }
+
                 if (['Pendente', 'Aberta', 'Aguardando', 'Aguardando Aprovação'].includes(statusInicial)) {
                     if (doc_numero || expediente) {
                         statusInicial = 'Aprovada';
