@@ -235,6 +235,66 @@
             console.error('❌ Este navegador não suporta Service Worker.');
         }
 
+        // Chave pública VAPID (usada para inscrever este aparelho no Push real).
+        // A chave privada correspondente fica só na Edge Function, nunca aqui.
+        const VAPID_PUBLIC_KEY = 'BKpSVEN9NzySiKfUsN1xwmOX_pyr9wJZvmKvrJo836ZrdV_S0ooNGkakEn38QXfbQTr5GkgIxNTEnx1xWVZ6THo';
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+            return outputArray;
+        }
+
+        // Inscreve este aparelho para receber Push DE VERDADE (funciona mesmo
+        // com o site/app fechado) e salva a inscrição no banco, vinculada ao
+        // usuário logado. Chamado depois que `db` (cliente Supabase) já existe.
+        async function inscreverPushReal() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                console.warn('⚠️ Este navegador não suporta Push real. Vai funcionar só com o site aberto.');
+                return;
+            }
+            if (Notification.permission !== 'granted') return;
+
+            // Espera o cliente do Supabase (`db`) ficar pronto, caso a inicialização
+            // ainda esteja em andamento (até 5 segundos).
+            let tentativas = 0;
+            while (!db && tentativas < 50) {
+                await new Promise(r => setTimeout(r, 100));
+                tentativas++;
+            }
+            if (!db) { console.error('❌ Não foi possível inscrever push: conexão com banco não ficou pronta.'); return; }
+
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                let subscription = await reg.pushManager.getSubscription();
+                if (!subscription) {
+                    subscription = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    });
+                }
+
+                const sub = subscription.toJSON();
+                const { error } = await db.from('push_subscriptions').upsert({
+                    usuario: usuarioLogado,
+                    endpoint: sub.endpoint,
+                    p256dh: sub.keys.p256dh,
+                    auth: sub.keys.auth
+                }, { onConflict: 'endpoint' });
+
+                if (error) {
+                    console.error('❌ Falha ao salvar inscrição de push no banco:', error.message);
+                } else {
+                    console.log('✅ Inscrito para Push real como', usuarioLogado);
+                }
+            } catch (err) {
+                console.error('❌ Falha ao inscrever Push real:', err);
+            }
+        }
+
         async function mostrarNotificacaoCelular(titulo, mensagem) {
             if (Notification.permission !== 'granted') {
                 console.warn('🔕 Notificação NÃO exibida: permissão é "' + Notification.permission + '" (precisa ser "granted").');
@@ -276,8 +336,9 @@
                     btnNotif.onclick = function() {
                         Notification.requestPermission().then(function(permissao) {
                             if (permissao === 'granted') {
-                                alert("✅ Avisos ativados! O telemóvel vai apitar nas novas demandas.");
+                                alert("✅ Avisos ativados! Vai chegar aviso mesmo com o app fechado.");
                                 btnNotif.style.display = 'none';
+                                inscreverPushReal();
                             } else if (permissao === 'denied') {
                                 alert("❌ O telemóvel bloqueou os avisos. Precisas de ir às definições da App no Android e ativar as Notificações manualmente.");
                             } else {
@@ -313,6 +374,12 @@
                     global: { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} }
                 });
                 carregarDemandas();
+
+                // Se a permissão de notificação já tinha sido concedida antes,
+                // garante que este aparelho está inscrito para Push real
+                if (Notification.permission === 'granted') {
+                    inscreverPushReal();
+                }
                 
                 // Radar em Tempo Real do Dashboard
                 db.channel('dashboard-live')
