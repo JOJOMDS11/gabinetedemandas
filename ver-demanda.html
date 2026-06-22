@@ -451,10 +451,13 @@
 
             let alertaAprovacao = ''; let btnAprovacao = ''; let seloAprovado = ''; let bloqueado = '';
 
+            // Localize este bloco dentro da função renderizar(d) e substitua:
+
             if (isAtualBloqueado) {
                 const estaAguardando = (d.status === 'Aguardando Aprovação' || d.status === 'Aberta' || d.status === 'Pendente');
                 bloqueado = estaAguardando ? 'disabled style="background:#eee; cursor:not-allowed;"' : '';
 
+                // A LÓGICA CORRIGIDA:
                 if (d.status === 'Aguardando Aprovação') {
                     if (usuarioLogado === 'Daniel') {
                         alertaAprovacao = `<div class="alerta-aprovacao" style="grid-column:1/-1;">⏳ Esta demanda está aguardando sua aprovação, Daniel!<br><br><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda(this)">✅ Aprovar Formalmente</button><button style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="rejeitarDemanda()">❌ Rejeitar</button></div></div>`;
@@ -463,6 +466,11 @@
                         btnAprovacao = `<button style="background:#9b59b6; color:white; flex:1;" onclick="iniciarAcaoMaster('aprovar')">🔐 Aprovar c/ Senha</button>`;
                     }
                 }
+                // Garante que o botão de Aprovar também apareça se o status for Aguardando
+                else if (d.status === 'Aguardando' && usuarioLogado === 'Daniel') {
+                     btnAprovacao = `<button style="background:#27ae60; color:white; flex:1;" onclick="aprovarDemanda(this)">✅ Aprovar Formal</button>`;
+                }
+
                 let nomeAprovador = 'Daniel'; 
                 if (d.historico) { const eventoAprovacao = d.historico.find(h => h.status === 'Aprovada'); if (eventoAprovacao && eventoAprovacao.autor) nomeAprovador = eventoAprovacao.autor; }
                 seloAprovado = (!['Aberta', 'Pendente', 'Aguardando', 'Aguardando Aprovação', 'Rejeitada'].includes(d.status)) ? `<span class="aprovado-daniel">Aprovada por ${nomeAprovador} ✓</span>` : '';
