@@ -11,6 +11,9 @@
     <meta name="theme-color" content="#185199">
     <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
 
+    <!-- 🔒 DOMPurify (Prevenção contra XSS) -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f2f5; color: #333; }
@@ -86,8 +89,8 @@
         .page-btn { padding: 7px 12px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .page-btn.ativo { background: #185199; color: white; }
 
-        /* Estilos dos Botões Micro (Copiar e Mais info) */
-        .btn-micro { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; border-radius: 4px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        /* Estilos dos Botões Micro */
+        .btn-micro { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 11px; font-weight: bold; padding: 4px 8px; height: 26px;}
         .btn-micro:hover { background: #e2e8f0; color: #185199; border-color: #185199; }
 
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; padding: 15px;}
@@ -97,7 +100,6 @@
         .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-size:16px;}
         .modal-botoes { display: flex; gap: 10px; margin-top: 15px;}
 
-        /* Modal Exclusivo para Ver a Descrição */
         .modal-desc-box { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 500px; border-top: 4px solid #185199; display: flex; flex-direction: column; max-height: 85vh; text-align: left; }
         .modal-desc-box h3 { color: #185199; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
@@ -148,7 +150,6 @@
         </div>
 
        <div class="container">
-        <!-- FILTROS NO TOPO -->
         <div class="filtros" style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #ddd;">
             <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
             <button class="filtro-btn ativo" data-status="Aberta" onclick="filtrar('Aberta')">Abertas/Pendentes <span id="count-Aberta" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
@@ -166,13 +167,13 @@
         <div class="paginacao" id="paginacaoContainer"></div>
     </div>
 
-    <!-- Modal de Autenticação Segura -->
+    <!-- Modal Autenticação -->
     <div class="modal-overlay" id="modalSenhaSegura">
         <div class="modal-box">
             <h3>🔐 Exclusão de Registro</h3>
             <p style="color:#555; margin-bottom:15px; font-size:13px;">Digite a senha master para autorizar a exclusão desta demanda.</p>
             <input type="password" id="inputSenhaAcao" placeholder="Senha master">
-            <div id="erroSenhaAcao" style="color:#c0392b; font-size:13px; margin-bottom:10px; display:none;">Senha incorreta ou erro de servidor!</div>
+            <div id="erroSenhaAcao" style="color:#c0392b; font-size:13px; margin-bottom:10px; display:none;">Senha incorreta ou erro!</div>
             <div class="modal-botoes">
                 <button style="background:#e0e0e0; color:#333; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalExclusao()">Cancelar</button>
                 <button id="btnConfirmarSenhaAcao" style="background:#c0392b; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="processarExclusao()">Confirmar</button>
@@ -180,32 +181,25 @@
         </div>
     </div>
 
-    <!-- Modal de Gerenciamento de Secretarias -->
+    <!-- Modal Secretarias -->
     <div class="modal-overlay" id="modalSecretarias">
         <div class="modal-box" style="max-width: 420px; text-align: left;">
             <h3 style="text-align:center;">⚙️ Gerenciar Secretarias</h3>
             <p style="color:#555; font-size:13px; margin-bottom:15px; text-align:center;">Esta lista aparece nos formulários de Nova Demanda e Edição.</p>
-
-            <div id="avisoTabelaSecretarias" style="display:none; background:#fff3cd; color:#856404; padding:10px; border-radius:4px; font-size:12px; margin-bottom:12px;">
-                ⚠️ A tabela <b>secretarias</b> ainda não existe no banco. Crie-a no Supabase (veja o SQL no rodapé) para poder salvar suas alterações. Por enquanto está sendo exibida apenas a lista padrão.
-            </div>
-
             <div style="display:flex; gap:8px; margin-bottom:15px;">
                 <input type="text" id="inputNovaSecretaria" placeholder="Nome da nova secretaria/órgão..." style="flex:1; padding:10px; border:1px solid #ccc; border-radius:4px;">
                 <button onclick="adicionarSecretaria()" style="background:#27ae60; color:white; border:none; padding:10px 14px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
             </div>
-
             <div id="listaSecretariasModal" style="max-height: 280px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
                 <p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>
             </div>
-
             <div class="modal-botoes">
                 <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharGerenciadorSecretarias()">Fechar</button>
             </div>
         </div>
     </div>
 
-    <!-- Novo Modal de Descrição (Popout) -->
+    <!-- Modal Descrição -->
     <div class="modal-overlay" id="modalDescOverlay">
         <div class="modal-desc-box">
             <h3>Detalhes da Demanda <button type="button" onclick="fecharModalDescricao()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#c0392b;" title="Fechar">✕</button></h3>
@@ -234,7 +228,7 @@
         let authToken = localStorage.getItem('authToken'); 
 
         if (!usuarioLogado) window.location.href = 'index.html';
-        document.getElementById('nomeUsuario').textContent = usuarioLogado;
+        document.getElementById('nomeUsuario').textContent = usuarioLogado; // textContent é seguro nativamente contra XSS
 
         document.getElementById('btnLogout').addEventListener('click', () => {
             localStorage.removeItem('usuarioLogado');
@@ -253,341 +247,124 @@
 
 // ================= FUNÇÕES DE NOTIFICAÇÃO NATIVA E PUSH =================
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('✅ Service Worker OK (dashboard):', reg.scope))
-                .catch(err => console.error('❌ Falha ao registrar Service Worker:', err));
-        } else {
-            console.error('❌ Este navegador não suporta Service Worker.');
+            navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
         }
 
         const PUBLIC_VAPID_KEY = 'BKpSVEN9NzySiKfUsN1xwmOX_pyr9wJZvmKvrJo836ZrdV_S0ooNGkakEn38QXfbQTr5GkgIxNTEnx1xWVZ6THo';
 
         function urlB64ToUint8Array(base64String) {
           const padding = '='.repeat((4 - base64String.length % 4) % 4);
-          const base64 = (base64String + padding)
-            .replace(/\-/g, '+')
-            .replace(/_/g, '/');
-
+          const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
           const rawData = window.atob(base64);
           const outputArray = new Uint8Array(rawData.length);
-
-          for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-          }
+          for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
           return outputArray;
         }
 
         async function ativarAvisosPush() {
             try {
                 const permissao = await Notification.requestPermission();
-                if (permissao !== 'granted') {
-                    alert("❌ O telemóvel bloqueou. Precisas de permitir as notificações nas definições da App.");
-                    return;
-                }
-
+                if (permissao !== 'granted') return alert("❌ Notificações bloqueadas pelo navegador.");
                 const swRegistration = await navigator.serviceWorker.ready;
-                
-                const applicationServerKey = urlB64ToUint8Array(PUBLIC_VAPID_KEY);
                 const subscription = await swRegistration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: applicationServerKey
+                    userVisibleOnly: true, applicationServerKey: urlB64ToUint8Array(PUBLIC_VAPID_KEY)
                 });
-                
                 const subJson = subscription.toJSON();
-                
-                const { error } = await db.from('push_subscriptions').upsert({
-                    usuario: usuarioLogado,
-                    endpoint: subJson.endpoint,
-                    p256dh: subJson.keys.p256dh,
-                    auth: subJson.keys.auth
+                await db.from('push_subscriptions').upsert({
+                    usuario: usuarioLogado, endpoint: subJson.endpoint, p256dh: subJson.keys.p256dh, auth: subJson.keys.auth
                 }, { onConflict: 'endpoint' });
-
-                if (error) {
-                    console.error("Erro Supabase:", error);
-                    alert("⚠️ Erro ao salvar a inscrição no banco de dados.");
-                    return;
-                }
-
-                alert("✅ Sucesso! Vais receber avisos mesmo com a app fechada.");
-                
-                const btnSino = document.querySelector('.btn-sino');
-                if(btnSino) btnSino.style.display = 'none';
-
-            } catch (err) {
-                console.error("Erro Push:", err);
-                alert("⚠️ Erro ao registar dispositivo.");
-            }
+                alert("✅ Sucesso!");
+                const btnSino = document.querySelector('.btn-sino'); if(btnSino) btnSino.style.display = 'none';
+            } catch (err) {}
         }
 
         document.addEventListener("DOMContentLoaded", () => {
             setTimeout(async () => {
                 const navbarActions = document.querySelector('.navbar-actions');
-
                 if (Notification.permission !== 'granted') {
                     const btnNotif = document.createElement('button');
-                    btnNotif.className = 'btn-sino';
-                    btnNotif.innerHTML = '🔔 Ativar';
-                    btnNotif.title = "Ativar Notificações";
+                    btnNotif.className = 'btn-sino'; btnNotif.innerHTML = '🔔 Ativar';
                     btnNotif.onclick = ativarAvisosPush;
-                    
                     if(navbarActions) navbarActions.prepend(btnNotif);
                 } 
             }, 1000); 
         });
 
-        async function inscreverPushReal() {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-            if (Notification.permission !== 'granted') return;
-
-            let tentativas = 0;
-            while (!db && tentativas < 50) {
-                await new Promise(r => setTimeout(r, 100));
-                tentativas++;
-            }
-            if (!db) return;
-
-            try {
-                const reg = await navigator.serviceWorker.ready;
-                let subscription = await reg.pushManager.getSubscription();
-                if (!subscription) {
-                    subscription = await reg.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: urlB64ToUint8Array(PUBLIC_VAPID_KEY)
-                    });
-                }
-
-                const sub = subscription.toJSON();
-                await db.from('push_subscriptions').upsert({
-                    usuario: usuarioLogado,
-                    endpoint: sub.endpoint,
-                    p256dh: sub.keys.p256dh,
-                    auth: sub.keys.auth
-                }, { onConflict: 'endpoint' });
-
-            } catch (err) {
-                console.error('❌ Falha ao inscrever Push real:', err);
-            }
-        }
-
-        async function mostrarNotificacaoCelular(titulo, mensagem, urlClick) {
-            if (Notification.permission !== 'granted') return;
-            
-            try {
-                if ('serviceWorker' in navigator) {
-                    const sw = await navigator.serviceWorker.ready;
-                    await sw.showNotification(titulo, {
-                        body: mensagem,
-                        icon: 'https://i.imgur.com/coryuD6.png',
-                        badge: 'https://i.imgur.com/coryuD6.png',
-                        vibrate: [200, 100, 500],
-                        requireInteraction: true,
-                        data: { url: urlClick || '/dashboard.html' } // Envia o URL para o SW
-                    });
-                } else {
-                    const n = new Notification(titulo, { body: mensagem, icon: 'https://i.imgur.com/coryuD6.png' });
-                    if (urlClick) n.onclick = function() { window.location.href = urlClick; };
-                }
-            } catch (err) {
-                console.error('❌ Erro ao tentar exibir notificação:', err);
-            }
-        }
-
       async function inicializarSistema() {
             try {
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
+                db = supabase.createClient(config.supabaseUrl, config.supabaseKey, {
+                    global: { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} }
+                });
 
-                db = supabase.createClient(
-                    config.supabaseUrl,
-                    config.supabaseKey,
-                    {
-                        global: {
-                            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
-                        }
-                    }
-                );
-
-                
                 (async () => {
                     try {
                         const agora = new Date().toISOString();
-                        await db.from('ultimo_acesso').upsert(
-                            { usuario: usuarioLogado, acessado_em: agora },
-                            { onConflict: 'usuario' }
-                        );
-                        
-                        const { data: acessos } = await db
-                            .from('ultimo_acesso')
-                            .select('usuario, acessado_em')
-                            .order('acessado_em', { ascending: false });
-                        
+                        await db.from('ultimo_acesso').upsert({ usuario: usuarioLogado, acessado_em: agora }, { onConflict: 'usuario' });
+                        const { data: acessos } = await db.from('ultimo_acesso').select('usuario, acessado_em').order('acessado_em', { ascending: false });
                         if (acessos && acessos.length > 0) {
                             const linhas = acessos.map(a => {
                                 const dt = new Date(a.acessado_em);
                                 const fmt = dt.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
-                                return `<span style="margin-right:12px;">👤 <b>${a.usuario}</b>: ${fmt}</span>`;
+                                // Uso de DOMPurify para proteção de injeção no login
+                                return `<span style="margin-right:12px;">👤 <b>${DOMPurify.sanitize(a.usuario)}</b>: ${fmt}</span>`;
                             }).join('');
                             const faixa = document.getElementById('faixaUltimoAcesso');
                             if (faixa) faixa.innerHTML = '🕐 Último acesso: ' + linhas;
                         }
-                    } catch(e) { console.warn('Último acesso:', e); }
+                    } catch(e) { }
                 })();
 
                 await carregarDemandas();
 
-                if (Notification.permission === 'granted') {
-                    inscreverPushReal();
-                }
-
                 db.channel('dashboard-live')
-                    .on(
-                        'postgres_changes',
-                        { event: '*', schema: 'public', table: 'demandas' },
-                        async (payload) => {
-
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, async (payload) => {
                             if (payload.eventType === 'INSERT') {
                                 todasDemandas.unshift(payload.new);
-
-                                if (payload.new.status !== filtroAtual && contadoresNovas[payload.new.status] !== undefined) {
-                                    contadoresNovas[payload.new.status]++;
-                                }
-
-                                if (['Pendente', 'Aberta', 'Aguardando Aprovação', 'Aguardando'].includes(payload.new.status)) {
-                                    const assuntoCurto = payload.new.assunto?.length > 35 ? payload.new.assunto.substring(0, 35) + '...' : payload.new.assunto;
-                                    
-                                    const quemAbriu = payload.new.criador || 'Equipe';
-                                    const solicitante = payload.new.solicitante_nome ? ` (De: ${payload.new.solicitante_nome})` : '';
-                                    const corpoNotificacao = `Aberto por: ${quemAbriu}${solicitante}\nAssunto: ${assuntoCurto}`;
-                                    
-                                    const linkDemanda = `/ver-demanda.html?id=${payload.new.id}`;
-
-                                    db.functions.invoke('send-push', {
-                                        body: {
-                                            payload: {
-                                                title: '🔔 Nova demanda',
-                                                body: corpoNotificacao,
-                                                url: linkDemanda 
-                                            },
-                                            targetUsers: ['Daniel']
-                                        }
-                                    }).catch(err => console.error('Erro push:', err));
-
-                                    if (usuarioLogado === 'Daniel') {
-                                        mostrarNotificacaoCelular('🔔 Nova demanda', corpoNotificacao, linkDemanda);
-                                    }
-                                }
+                                if (payload.new.status !== filtroAtual && contadoresNovas[payload.new.status] !== undefined) contadoresNovas[payload.new.status]++;
                             }
                             else if (payload.eventType === 'UPDATE') {
                                 const idx = todasDemandas.findIndex(d => d.id === payload.new.id);
                                 const statusAntigo = idx !== -1 ? todasDemandas[idx].status : payload.old?.status;
-
-                                if (idx !== -1) {
-                                    todasDemandas[idx] = payload.new;
-                                } else {
-                                    todasDemandas.unshift(payload.new);
-                                }
-
-                                if (payload.new.status !== statusAntigo && payload.new.status !== filtroAtual && contadoresNovas[payload.new.status] !== undefined) {
-                                    contadoresNovas[payload.new.status]++;
-                                }
-
-                              if (payload.new.status === 'Aprovada' && statusAntigo !== 'Aprovada') {
-                                    let interessados = [payload.new.criador, ...(payload.new.responsaveis || [])].filter(x => x && x !== 'Daniel');
-                                    interessados = [...new Set(interessados)];
-
-                                    if (interessados.length > 0) {
-                                        const linkDemanda = `/ver-demanda.html?id=${payload.new.id}`;
-
-                                        db.functions.invoke('send-push', {
-                                            body: {
-                                                payload: {
-                                                    title: '✅ Demanda Aprovada',
-                                                    body: `O Daniel aprovou: ${payload.new.assunto}`,
-                                                    url: linkDemanda
-                                                },
-                                                targetUsers: interessados
-                                            }
-                                        }).catch(err => console.error('Erro push:', err));
-
-                                        if (interessados.includes(usuarioLogado)) {
-                                            mostrarNotificacaoCelular('✅ Demanda Aprovada', `O Daniel aprovou: ${payload.new.assunto}`, linkDemanda);
-                                        }
-                                    }
-                                }
+                                if (idx !== -1) todasDemandas[idx] = payload.new; else todasDemandas.unshift(payload.new);
+                                if (payload.new.status !== statusAntigo && payload.new.status !== filtroAtual && contadoresNovas[payload.new.status] !== undefined) contadoresNovas[payload.new.status]++;
                             }
                             else if (payload.eventType === 'DELETE') {
                                 todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id);
                             }
-
                             todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
-                            atualizarContadores();
-                            renderDemandas();
+                            atualizarContadores(); renderDemandas();
                         }
-                    )
-                    .subscribe((status, err) => {
-                        if (status === 'SUBSCRIBED') {
-                            console.log('✅ Realtime conectado: avisos automáticos vão funcionar.');
-                        } else if (status === 'CHANNEL_ERROR') {
-                            console.error('❌ Realtime com ERRO ao conectar.', err);
-                        } else if (status === 'TIMED_OUT') {
-                            console.error('❌ Realtime timeout.');
-                        } else if (status === 'CLOSED') {
-                            console.warn('⚠️ Canal Realtime fechado.');
-                        }
-                    });
+                    ).subscribe();
 
             } catch (err) {
-                console.error('Erro ao inicializar:', err);
                 document.getElementById('demandas').innerHTML = '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
             }
         }
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
-        const secretariasPadraoFallback = [
-            'GABINETE', 'SEMOB', 'SEMOV', 'SEMURB', 'SEMMAM', 'SEMAE',
-            'SAÚDE', 'EDUCAÇÃO', 'FAZENDA', 'OUVIDORIA', 'CEPOM',
-            'Secretaria Municipal de Habitação - SEMHAB',
-            'Secretaria Municipal de Proteção Animal - SEMPA',
-            'Secretaria Geral de Governo - SGG',
-            'PREFEITURA'
-        ];
-        let tabelaSecretariasExiste = true;
-
         window.abrirGerenciadorSecretarias = async function() {
             document.getElementById('modalSecretarias').classList.add('ativo');
             await renderizarListaSecretarias();
         }
 
-        window.fecharGerenciadorSecretarias = function() {
-            document.getElementById('modalSecretarias').classList.remove('ativo');
-        }
-
-        async function buscarSecretarias() {
-            try {
-                const { data, error } = await db.from('secretarias').select('id, nome').order('nome');
-                if (error) throw error;
-                tabelaSecretariasExiste = true;
-                return data || [];
-            } catch (e) {
-                tabelaSecretariasExiste = false;
-                return secretariasPadraoFallback.map(nome => ({ id: null, nome }));
-            }
-        }
+        window.fecharGerenciadorSecretarias = function() { document.getElementById('modalSecretarias').classList.remove('ativo'); }
 
         async function renderizarListaSecretarias() {
             const lista = document.getElementById('listaSecretariasModal');
             lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
-            const secretarias = await buscarSecretarias();
-            document.getElementById('avisoTabelaSecretarias').style.display = tabelaSecretariasExiste ? 'none' : 'block';
-            if (secretarias.length === 0) {
-                lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhuma secretaria cadastrada.</p>';
-                return;
-            }
+            const { data, error } = await db.from('secretarias').select('id, nome').order('nome');
+            const secretarias = data || [];
+            
+            if (secretarias.length === 0) { lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhuma secretaria cadastrada.</p>'; return; }
+            
+            // Higienização contra XSS
             lista.innerHTML = secretarias.map(s => `
                 <div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:8px 10px; border-radius:4px;">
-                    <span style="font-size:13px;">${s.nome}</span>
-                    ${s.id ? `<button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button>` : `<span style="font-size:11px; color:#999;">padrão</span>`}
+                    <span style="font-size:13px;">${DOMPurify.sanitize(s.nome)}</span>
+                    <button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button>
                 </div>
             `).join('');
         }
@@ -597,66 +374,32 @@
             const nome = input.value.trim();
             if (!nome) return alert('Digite o nome da secretaria!');
             try {
-                const { error } = await db.from('secretarias').insert([{ nome }]);
-                if (error) throw error;
-                input.value = '';
-                await renderizarListaSecretarias();
-            } catch (e) {
-                alert('Erro ao salvar. Verifique se a tabela existe no banco de dados.');
-            }
+                await db.from('secretarias').insert([{ nome }]);
+                input.value = ''; await renderizarListaSecretarias();
+            } catch (e) { alert('Erro ao salvar.'); }
         }
 
         window.excluirSecretaria = async function(id, btn) {
             if (!confirm('Remover esta secretaria da lista?')) return;
             btn.disabled = true;
-            try {
-                const { error } = await db.from('secretarias').delete().eq('id', id);
-                if (error) throw error;
-                await renderizarListaSecretarias();
-            } catch (e) {
-                alert('Erro ao excluir.');
-                btn.disabled = false;
-            }
+            try { await db.from('secretarias').delete().eq('id', id); await renderizarListaSecretarias(); } catch (e) { alert('Erro ao excluir.'); btn.disabled = false; }
         }
 
         window.filtrar = function(status) {
-            filtroAtual = status;
-            paginaAtual = 1;
-            
-            if (contadoresNovas[status] !== undefined) {
-                contadoresNovas[status] = 0;
-            }
+            filtroAtual = status; paginaAtual = 1;
+            if (contadoresNovas[status] !== undefined) contadoresNovas[status] = 0;
             if (status === 'Aguardando execução da secretaria') contadoresNovas['Aguardando execução da secretaria'] = 0;
-
-            document.querySelectorAll('.filtro-btn').forEach(btn => {
-                btn.classList.toggle('ativo', btn.getAttribute('data-status') === status);
-            });
-            
-            atualizarContadores();
-            renderDemandas();
+            document.querySelectorAll('.filtro-btn').forEach(btn => { btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); });
+            atualizarContadores(); renderDemandas();
         }
-
-        const apelidos = {
-            'daniel': ['daniel', 'daniel daudt']
-        };
         
         function atualizarContadores() {
-            const mapId = {
-                'Aguardando Aprovação': 'count-Aguardando Aprovação', 'Aberta': 'count-Aberta',
-                'Aprovada': 'count-Aprovada', 'Em Andamento': 'count-Em Andamento',
-                'Aguardando execução da secretaria': 'count-Sec', '156 Pedido': 'count-156 Pedido'
-            };
-
+            const mapId = { 'Aguardando Aprovação': 'count-Aguardando Aprovação', 'Aberta': 'count-Aberta', 'Aprovada': 'count-Aprovada', 'Em Andamento': 'count-Em Andamento', 'Aguardando execução da secretaria': 'count-Sec', '156 Pedido': 'count-156 Pedido' };
             for (const [status, badgeId] of Object.entries(mapId)) {
                 const badge = document.getElementById(badgeId);
                 if (badge) {
                     const count = contadoresNovas[status] || 0;
-                    if (count > 0) {
-                        badge.textContent = count;
-                        badge.style.display = 'inline-block';
-                    } else {
-                        badge.style.display = 'none';
-                    }
+                    if (count > 0) { badge.textContent = count; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; }
                 }
             }
         }
@@ -671,15 +414,10 @@
 
             let lista = todasDemandas;
             
-            if (filtroAtual === 'Todas') {
-                lista = lista.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada');
-            } else if (filtroAtual === 'Aberta') {
-                lista = lista.filter(d => d.status === 'Aberta' || d.status === 'Pendente');
-            } else if (filtroAtual === 'Concluída') {
-                lista = lista.filter(d => d.status === 'Concluída' || d.status === 'Atendido' || d.status === 'Resolvido');
-            } else {
-                lista = lista.filter(d => d.status === filtroAtual);
-            }
+            if (filtroAtual === 'Todas') lista = lista.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada');
+            else if (filtroAtual === 'Aberta') lista = lista.filter(d => d.status === 'Aberta' || d.status === 'Pendente');
+            else if (filtroAtual === 'Concluída') lista = lista.filter(d => d.status === 'Concluída' || d.status === 'Atendido' || d.status === 'Resolvido');
+            else lista = lista.filter(d => d.status === filtroAtual);
 
             if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
@@ -687,47 +425,30 @@
 
             if (respSelecionado) {
                 const buscaOriginal = respSelecionado.toLowerCase().trim();
-                const termosBusca = apelidos[buscaOriginal] || [buscaOriginal]; 
-                
+                const termosBusca = ['daniel', 'daniel daudt'].includes(buscaOriginal) ? ['daniel', 'daniel daudt'] : [buscaOriginal]; 
                 lista = lista.filter(d => {
-                    const reps = (d.responsaveis || []);
-                    const respOrdem = (d.responsavel_ordem || '');
-                    return termosBusca.some(termo => 
-                        reps.some(r => r.toLowerCase().includes(termo)) || 
-                        respOrdem.toLowerCase().includes(termo)
-                    );
+                    const reps = (d.responsaveis || []); const respOrdem = (d.responsavel_ordem || '');
+                    return termosBusca.some(t => reps.some(r => r.toLowerCase().includes(t)) || respOrdem.toLowerCase().includes(t));
                 });
             }
 
             if (termoBusca) {
                 lista = lista.filter(d => {
-                    let dFormat = '';
-                    if(d.data_agendada) {
-                        const oData = new Date(d.data_agendada + 'T00:00:00');
-                        dFormat = oData.toLocaleDateString('pt-BR');
-                    }
-                    return (d.assunto || '').toLowerCase().includes(termoBusca) ||
-                           (d.rua || '').toLowerCase().includes(termoBusca) ||
-                           (d.bairro || '').toLowerCase().includes(termoBusca) ||
-                           (d.numero_demanda || '').toLowerCase().includes(termoBusca) ||
-                           (d.protocolo || '').toLowerCase().includes(termoBusca) ||
-                           (d.secretaria || '').toLowerCase().includes(termoBusca) ||
-                           (d.solicitante_nome || '').toLowerCase().includes(termoBusca) ||
-                           (d.responsavel_ordem || '').toLowerCase().includes(termoBusca) ||
-                           (dFormat).includes(termoBusca);
+                    let dFormat = ''; if(d.data_agendada) dFormat = new Date(d.data_agendada + 'T00:00:00').toLocaleDateString('pt-BR');
+                    return (d.assunto || '').toLowerCase().includes(termoBusca) || (d.rua || '').toLowerCase().includes(termoBusca) || (d.bairro || '').toLowerCase().includes(termoBusca) || (d.numero_demanda || '').toLowerCase().includes(termoBusca) || (d.protocolo || '').toLowerCase().includes(termoBusca) || (d.secretaria || '').toLowerCase().includes(termoBusca) || (d.solicitante_nome || '').toLowerCase().includes(termoBusca) || (d.responsavel_ordem || '').toLowerCase().includes(termoBusca) || (dFormat).includes(termoBusca);
                 });
             }
 
             if (lista.length === 0) {
                 container.innerHTML = '<p style="color:#777;grid-column:1/-1;text-align:center;padding:30px;">Nenhuma demanda encontrada com estes filtros.</p>';
-                pagContainer.innerHTML = '';
-                return;
+                pagContainer.innerHTML = ''; return;
             }
 
             const totalPaginas = Math.ceil(lista.length / itensPorPagina);
             const inicio = (paginaAtual - 1) * itensPorPagina;
             const paginada = lista.slice(inicio, inicio + itensPorPagina);
 
+            // HIGIENIZAÇÃO DE OUTPUTS (Proteção XSS DOMPurify)
             container.innerHTML = paginada.map(demanda => {
                 const fotos = (demanda.fotos_urls || []).filter(f => f);
                 const responsaveis = (demanda.responsaveis || []).filter(r => r);
@@ -736,27 +457,28 @@
                 const euCuido = responsaveis.includes(usuarioLogado);
                 const aguardandoDaniel = (demanda.status === 'Aguardando Aprovação' || demanda.status === 'Aguardando') && usuarioLogado === 'Daniel';
 
-                // --- ESTÉTICA EXECUTIVA DE MÍDIAS ---
+                const sAssunto = DOMPurify.sanitize(demanda.assunto || '');
+                const sTipo = DOMPurify.sanitize(demanda.tipo_solicitacao || 'Registro');
+                const sSec = DOMPurify.sanitize(demanda.secretaria || '');
+                const sNomeSol = DOMPurify.sanitize(demanda.solicitante_nome || '');
+                const sRua = DOMPurify.sanitize(demanda.rua || '');
+                const sNum = DOMPurify.sanitize(demanda.numero || '');
+                const sBairro = DOMPurify.sanitize(demanda.bairro || '');
+                const sProt = DOMPurify.sanitize(demanda.protocolo || '');
+                const sPdp = DOMPurify.sanitize(demanda.pdp || '');
+                const sExp = DOMPurify.sanitize(demanda.expediente || '');
+                const donoOrdem = demanda.responsavel_ordem ? DOMPurify.sanitize(demanda.responsavel_ordem) : 'Não definido';
+                const cuindoTxt = responsaveis.length > 0 ? DOMPurify.sanitize(responsaveis.join(', ')) : 'Nenhum';
+
                 let mediaTag = '';
                 if (fotoPrincipal) {
                     mediaTag = isVideo(fotoPrincipal) ? `<video src="${fotoPrincipal}" muted loop></video>` : `<img src="${fotoPrincipal}">`;
                 } else if (demanda.pdf_url) {
-                    mediaTag = `
-                        <div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: linear-gradient(135deg, #185199, #123e75); color:white;">
-                            <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-bottom:8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                            <span style="font-size:11px; font-weight:bold; letter-spacing: 1px;">DOCUMENTO OFICIAL</span>
-                        </div>`;
+                    mediaTag = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: linear-gradient(135deg, #185199, #123e75); color:white;"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-bottom:8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg><span style="font-size:11px; font-weight:bold; letter-spacing: 1px;">DOCUMENTO OFICIAL</span></div>`;
                 } else {
-                    mediaTag = `
-                        <div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: #e2e8f0; position:relative; overflow:hidden;">
-                            <img src="https://i.imgur.com/coryuD6.png" style="position:absolute; width:120%; height:auto; opacity:0.04; top:50%; left:50%; transform:translate(-50%, -50%);">
-                            <span style="font-size:11px; font-weight:bold; color:#64748b; z-index:1; letter-spacing:1px; text-transform:uppercase;">Registro Interno</span>
-                        </div>`;
+                    mediaTag = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: #e2e8f0; position:relative; overflow:hidden;"><img src="https://i.imgur.com/coryuD6.png" style="position:absolute; width:120%; height:auto; opacity:0.04; top:50%; left:50%; transform:translate(-50%, -50%);"><span style="font-size:11px; font-weight:bold; color:#64748b; z-index:1; letter-spacing:1px; text-transform:uppercase;">Registro Interno</span></div>`;
                 }
-                
-                if (demanda.pdf_url) {
-                    mediaTag += `<a href="ver-demanda.html?id=${demanda.id}" class="btn-pdf-card" onclick="event.stopPropagation()">📄 PDF Anexado</a>`;
-                }
+                if (demanda.pdf_url) mediaTag += `<a href="ver-demanda.html?id=${demanda.id}" class="btn-pdf-card" onclick="event.stopPropagation()">📄 PDF Anexado</a>`;
 
                 let badgeClass = 'badge-Aberta';
                 if (demanda.status === 'Pendente') badgeClass = 'badge-Pendente';
@@ -766,66 +488,41 @@
                 if (demanda.status === '156 Pedido') badgeClass = 'badge-156';
                 if (demanda.status === 'Aguardando Exp') badgeClass = 'badge-Exp';
                 if (demanda.status === 'Sem Legis') badgeClass = 'badge-SemLegis';
-                if (demanda.status === 'Concluída' || demanda.status === 'Atendido' || demanda.status === 'Resolvido') badgeClass = 'badge-Concluida';
+                if (['Concluída', 'Atendido', 'Resolvido'].includes(demanda.status)) badgeClass = 'badge-Concluida';
                 if (demanda.status === 'Arquivada') badgeClass = 'badge-Arquivada';
                 if (demanda.status === 'Aguardando execução da secretaria') badgeClass = 'badge-Secretaria';
                 if (demanda.status === 'Rejeitada') badgeClass = 'badge-Rejeitada';
 
-                const donoOrdem = demanda.responsavel_ordem ? demanda.responsavel_ordem : 'Não definido';
-                const cuindoTxt = responsaveis.length > 0 ? responsaveis.join(', ') : 'Nenhum';
-
                 let infoAgenda = '';
                 if (demanda.data_agendada || demanda.horario_agendado) {
-                    let dataAgendadaFormatada = '';
-                    if (demanda.data_agendada) {
-                        const objData = new Date(demanda.data_agendada + 'T00:00:00');
-                        dataAgendadaFormatada = objData.toLocaleDateString('pt-BR');
-                    }
-                    let horaFormatada = '';
-                    if (demanda.horario_agendado) {
-                        horaFormatada = demanda.horario_agendado.substring(0, 5);
-                    }
-                    infoAgenda = `<div class="info" style="color:#d35400; font-weight:bold;">📅 Data/Hora: ${dataAgendadaFormatada} ${horaFormatada ? 'às ' + horaFormatada : ''}</div>`;
+                    let dFormat = ''; if(demanda.data_agendada) dFormat = new Date(demanda.data_agendada + 'T00:00:00').toLocaleDateString('pt-BR');
+                    let hFormat = demanda.horario_agendado ? demanda.horario_agendado.substring(0, 5) : '';
+                    infoAgenda = `<div class="info" style="color:#d35400; font-weight:bold;">📅 Data/Hora: ${dFormat} ${hFormat ? 'às '+hFormat : ''}</div>`;
                 }
 
-                const infoSecretaria = demanda.secretaria ? `<div class="info">🏢 Sec: <b>${demanda.secretaria}</b></div>` : '';
-                const ruaCerta = demanda.rua ? demanda.rua : '';
-                const bairroCerto = demanda.bairro ? '- ' + demanda.bairro : '';
-                const numCerto = demanda.numero ? ', ' + demanda.numero : '';
-                const infoEndereco = ruaCerta ? `<div class="info">📍 ${ruaCerta}${numCerto} ${bairroCerto}</div>` : '';
+                const infoSecretaria = sSec ? `<div class="info">🏢 Sec: <b>${sSec}</b></div>` : '';
+                const infoEndereco = sRua ? `<div class="info">📍 ${sRua}${sNum ? ', '+sNum : ''} ${sBairro ? '- '+sBairro : ''}</div>` : '';
 
                 let btnPrincipal = '';
-                if (aguardandoDaniel) {
-                    btnPrincipal = `<button class="btn-acao verde" onclick="event.stopPropagation(); window.location.href='ver-demanda.html?id=${demanda.id}'">👁️ Ver & Aprovar</button>`;
-                } else if (demanda.status === 'Arquivada') {
-                    btnPrincipal = `
-                        <button class="btn-acao cinza" disabled>🔒 Arquivada</button>
-                        <button class="btn-acao" style="background:#c0392b; flex: 0.5;" onclick="event.stopPropagation(); solicitarExclusao('${demanda.id}')">🗑️ Excluir</button>
-                    `;
-                } else if (encerrada) {
-                    btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Encerrada</button>`;
-                } else if (euCuido) {
-                    btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}', this)">🚪 Deixar de Executar</button>`;
-                } else {
-                    btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}', this)">🙋 Assumir Execução</button>`;
-                }
+                if (aguardandoDaniel) btnPrincipal = `<button class="btn-acao verde" onclick="event.stopPropagation(); window.location.href='ver-demanda.html?id=${demanda.id}'">👁️ Ver & Aprovar</button>`;
+                else if (demanda.status === 'Arquivada') btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Arquivada</button><button class="btn-acao" style="background:#c0392b; flex:0.5;" onclick="event.stopPropagation(); solicitarExclusao('${demanda.id}')">🗑️ Excluir</button>`;
+                else if (encerrada) btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Encerrada</button>`;
+                else if (euCuido) btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}', this)">🚪 Deixar de Executar</button>`;
+                else btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}', this)">🙋 Assumir Execução</button>`;
 
-                const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${demanda.numero_demanda}</div>` : '';
+                const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${DOMPurify.sanitize(demanda.numero_demanda)}</div>` : '';
                 const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 Aberto ${tempoRelativo(demanda.criado_em)}</div>` : '';
-                
-                // Tratamento seguro do texto para a função onclick
-                const assuntoSafe = (demanda.assunto || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
                 return `<div class="demanda-card ${aguardandoDaniel ? 'aguardando-daniel' : ''}" onclick="window.location.href='ver-demanda.html?id=${demanda.id}'">
                             ${numTag}
                             <div class="demanda-media">${mediaTag}</div>
                             <div class="demanda-conteudo">
                                 <span class="badge ${badgeClass}">${demanda.status}</span>
-                                
                                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:5px;">
-                                    <div class="titulo" style="margin-bottom:0;">${demanda.assunto}</div>
+                                    <div class="titulo" style="margin-bottom:0;">${sAssunto}</div>
                                     <div style="display:flex; gap:4px; flex-shrink:0;">
-                                        <button class="btn-micro" onclick="event.stopPropagation(); copiarTexto('${assuntoSafe}')" title="Copiar Assunto">
+                                        <button class="btn-micro" onclick="event.stopPropagation(); copiarTexto('${assuntoSafeJs}')" title="Copiar Assunto">
                                             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                                         </button>
                                         <button class="btn-micro" onclick="event.stopPropagation(); abrirModalDescricao('${demanda.id}')" title="Ver Detalhes/Descrição">
@@ -833,17 +530,14 @@
                                         </button>
                                     </div>
                                 </div>
-                                
-                                <div class="info">📌 ${demanda.tipo_solicitacao || 'Registro'}</div>
-                                ${infoAgenda}
-                                ${infoEndereco}
-                                ${infoSecretaria}
-                                ${demanda.solicitante_nome ? `<div class="info">👤 Solic: <b>${demanda.solicitante_nome}</b></div>` : ''}
+                                <div class="info">📌 ${sTipo}</div>
+                                ${infoAgenda} ${infoEndereco} ${infoSecretaria}
+                                ${sNomeSol ? `<div class="info">👤 Solic: <b>${sNomeSol}</b></div>` : ''}
                                 <div class="info" style="margin-top: 5px;">✍️ Resp. Ordem: <b>${donoOrdem}</b></div>
                                 <div class="info">👥 Cuidando: <b>${cuindoTxt}</b></div>
-                                ${demanda.protocolo ? `<div class="info" style="color:#0984e3; font-weight:bold;">🔢 156: ${demanda.protocolo}</div>` : ''}
-                                ${demanda.pdp ? `<div class="info" style="color:#f39c12; font-weight:bold;">📋 PDP: ${demanda.pdp}</div>` : ''}
-                                ${demanda.expediente || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${demanda.expediente || 'Anexado'}</div>` : ''}
+                                ${sProt ? `<div class="info" style="color:#0984e3; font-weight:bold;">🔢 156: ${sProt}</div>` : ''}
+                                ${sPdp ? `<div class="info" style="color:#f39c12; font-weight:bold;">📋 PDP: ${sPdp}</div>` : ''}
+                                ${sExp || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${sExp || 'Anexado'}</div>` : ''}
                                 ${tempoCard}
                                 <div class="acoes-card">${btnPrincipal}</div>
                             </div>
@@ -851,9 +545,7 @@
             }).join('');
 
             let pagHtml = '';
-            for (let i = 1; i <= totalPaginas; i++) {
-                pagHtml += `<button class="page-btn ${i===paginaAtual?'ativo':''}" onclick="mudarPagina(${i})">Pág ${i}</button>`;
-            }
+            for (let i = 1; i <= totalPaginas; i++) { pagHtml += `<button class="page-btn ${i===paginaAtual?'ativo':''}" onclick="mudarPagina(${i})">Pág ${i}</button>`; }
             pagContainer.innerHTML = totalPaginas > 1 ? pagHtml : '';
         }
 
@@ -861,113 +553,82 @@
 
         function tempoRelativo(dataStr) {
             if (!dataStr) return '';
-            const agora = new Date();
-            const data = new Date(dataStr);
+            const agora = new Date(); const data = new Date(dataStr);
             const diff = Math.floor((agora - data) / 1000);
-            if (diff < 60) return 'agora mesmo';
-            if (diff < 3600) return `há ${Math.floor(diff/60)} min`;
-            if (diff < 86400) return `há ${Math.floor(diff/3600)}h`;
-            if (diff < 2592000) return `há ${Math.floor(diff/86400)} dias`;
+            if (diff < 60) return 'agora mesmo'; if (diff < 3600) return `há ${Math.floor(diff/60)} min`;
+            if (diff < 86400) return `há ${Math.floor(diff/3600)}h`; if (diff < 2592000) return `há ${Math.floor(diff/86400)} dias`;
             return data.toLocaleDateString('pt-BR');
         }
 
         setInterval(() => {
-            document.querySelectorAll('[data-criado]').forEach(el => {
-                el.textContent = '🕐 Aberto ' + tempoRelativo(el.getAttribute('data-criado'));
-            });
+            document.querySelectorAll('[data-criado]').forEach(el => { el.textContent = '🕐 Aberto ' + tempoRelativo(el.getAttribute('data-criado')); });
         }, 30000);
 
         async function carregarDemandas() {
             const { data, error } = await db.from('demandas').select('*').order('criado_em', { ascending: false });
-            if (!error) { 
-                todasDemandas = data || []; 
-                renderDemandas(); 
-            }
+            if (!error) { todasDemandas = data || []; renderDemandas(); }
         }
 
         window.assumirDemanda = async function(id, btnElement) {
             btnElement.textContent = '⏳ ...'; btnElement.disabled = true;
-            const demanda = todasDemandas.find(d => d.id === id);
-            if (!demanda) return;
-            const resp = (demanda.responsaveis || []).filter(r => r);
-            if (resp.includes(usuarioLogado)) return;
-            const updates = { responsaveis: [...resp, usuarioLogado] };
-            await db.from('demandas').update(updates).eq('id', id);
+            const demanda = todasDemandas.find(d => d.id === id); if (!demanda) return;
+            const resp = (demanda.responsaveis || []).filter(r => r); if (resp.includes(usuarioLogado)) return;
+            await db.from('demandas').update({ responsaveis: [...resp, usuarioLogado] }).eq('id', id);
         }
 
         window.sairDemanda = async function(id, btnElement) {
             btnElement.textContent = '⏳ ...'; btnElement.disabled = true;
-            const demanda = todasDemandas.find(d => d.id === id);
-            if (!demanda) return;
+            const demanda = todasDemandas.find(d => d.id === id); if (!demanda) return;
             const resp = (demanda.responsaveis || []).filter(r => r !== usuarioLogado);
             await db.from('demandas').update({ responsaveis: resp }).eq('id', id);
         }
 
         window.solicitarExclusao = function(id) {
             idParaExcluir = id;
-            document.getElementById('inputSenhaAcao').value = '';
-            document.getElementById('erroSenhaAcao').style.display = 'none';
+            document.getElementById('inputSenhaAcao').value = ''; document.getElementById('erroSenhaAcao').style.display = 'none';
             document.getElementById('modalSenhaSegura').classList.add('ativo');
         }
 
-        window.fecharModalExclusao = function() {
-            document.getElementById('modalSenhaSegura').classList.remove('ativo');
-            idParaExcluir = null;
-        }
+        window.fecharModalExclusao = function() { document.getElementById('modalSenhaSegura').classList.remove('ativo'); idParaExcluir = null; }
 
         window.processarExclusao = async function() {
-            const senha = document.getElementById('inputSenhaAcao').value.trim();
-            const btn = document.getElementById('btnConfirmarSenhaAcao');
-            if(!senha) return;
-            
-            btn.textContent = '⏳ Excluindo...'; btn.disabled = true;
-
+            const senha = document.getElementById('inputSenhaAcao').value.trim(); const btn = document.getElementById('btnConfirmarSenhaAcao');
+            if(!senha) return; btn.textContent = '⏳ Excluindo...'; btn.disabled = true;
             try {
-                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'validar_master', senha: senha })
-                });
-
-                if (res.ok) {
-                    await db.from('demandas').delete().eq('id', idParaExcluir);
-                    fecharModalExclusao();
-                    carregarDemandas(); 
-                } else {
-                    document.getElementById('erroSenhaAcao').style.display = 'block';
-                }
-            } catch (error) {
-                document.getElementById('erroSenhaAcao').style.display = 'block';
-            } finally {
-                btn.textContent = 'Confirmar'; btn.disabled = false;
-            }
+                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'validar_master', senha: senha }) });
+                if (res.ok) { await db.from('demandas').delete().eq('id', idParaExcluir); fecharModalExclusao(); carregarDemandas(); } 
+                else { document.getElementById('erroSenhaAcao').style.display = 'block'; }
+            } catch (error) { document.getElementById('erroSenhaAcao').style.display = 'block'; } 
+            finally { btn.textContent = 'Confirmar'; btn.disabled = false; }
         }
 
-        // --- FUNÇÕES DOS BOTÕES MICRO E MODAL ---
         window.copiarTexto = function(texto) {
-            navigator.clipboard.writeText(texto).then(() => {
-                alert('Copiado para a área de transferência!');
-            }).catch(err => {
-                console.error('Erro ao copiar texto:', err);
-            });
+            navigator.clipboard.writeText(texto).then(() => { alert('Copiado para a área de transferência!'); }).catch(err => {});
         }
 
         window.abrirModalDescricao = function(id) {
-            const demanda = todasDemandas.find(d => d.id == id);
-            if (!demanda) return;
+            const demanda = todasDemandas.find(d => d.id == id); if (!demanda) return;
             const desc = demanda.descricao ? demanda.descricao : 'Nenhuma descrição detalhada fornecida neste registro.';
-            document.getElementById('modalDescTexto').textContent = desc;
+            document.getElementById('modalDescTexto').textContent = desc; // textContent protege contra XSS nativamente
             document.getElementById('modalDescOverlay').classList.add('ativo');
         }
 
-        window.fecharModalDescricao = function() {
-            document.getElementById('modalDescOverlay').classList.remove('ativo');
-        }
+        window.fecharModalDescricao = function() { document.getElementById('modalDescOverlay').classList.remove('ativo'); }
+        window.copiarTextoModal = function() { copiarTexto(document.getElementById('modalDescTexto').textContent); }
 
-        window.copiarTextoModal = function() {
-            const texto = document.getElementById('modalDescTexto').textContent;
-            copiarTexto(texto);
+        // --- PROTEÇÃO DE SESSÃO (TIMEOUT DE 30 MINUTOS) ---
+        let sessionTimeout;
+        function resetarSessao() {
+            clearTimeout(sessionTimeout);
+            sessionTimeout = setTimeout(() => {
+                alert("Sessão expirada por inatividade. Por segurança, faça login novamente.");
+                document.getElementById('btnLogout').click();
+            }, 30 * 60 * 1000);
         }
+        document.addEventListener('mousemove', resetarSessao);
+        document.addEventListener('keypress', resetarSessao);
+        document.addEventListener('click', resetarSessao);
+        resetarSessao();
 
         inicializarSistema();
     </script>
