@@ -1014,7 +1014,7 @@
                 if (file.size > 15 * 1024 * 1024) { alert('PDF muito grande! O máximo é 15MB.'); e.target.value = ''; return; }
                 arquivoPdfExtraSelecionado = file;
                 const box = document.getElementById('pdfExtraPreviewBox');
-                box.innerHTML = `📄 ${file.name} <button type="button" onclick="removerPdfExtraPreview()">✕</button>`;
+                box.innerHTML = `📄 ${DOMPurify.sanitize(file.name)} <button type="button" onclick="removerPdfExtraPreview()">✕</button>`;
                 box.style.display = 'flex';
                 e.target.value = ''; 
             }
