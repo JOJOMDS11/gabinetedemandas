@@ -565,15 +565,18 @@
             });
 
             // Extração avançada DENTRO da descrição
-            if (parsed.desc) {
-                let match156 = parsed.desc.match(/protocolo\s*(156\s*20\d{2}\/\d+)/i);
-                if (match156) parsed.protocolo = match156[1];
-
-                let matchRua = parsed.desc.match(/(Rua|Av\.?|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)\s+([^,]+)(?:[,.-]\s*(?:n[ºo]?\s*)?(\d+|s\/?n))?/i);
-                if (matchRua) {
-                    parsed.rua = matchRua[1] + ' ' + matchRua[2].trim();
-                    if (matchRua[3]) parsed.numero = matchRua[3].trim();
-                }
+           let match156 = texto.match(/156\s*20\d{2}\/\d+/i);
+if (match156) {
+    parsed.protocolo = match156[0];
+} else {
+    // Se não pegou no texto todo, tenta buscar dentro da descrição caso ela tenha sido preenchida
+    let match156Desc = (parsed.desc || "").match(/156\s*20\d{2}\/\d+/i);
+    if(match156Desc) {
+        parsed.protocolo = match156Desc[0];
+        // Remove da descrição para não ficar duplicado
+        parsed.desc = parsed.desc.replace(match156Desc[0], '').trim();
+    }
+}
 
                 let matchBairro = parsed.desc.match(/bairro\s+([^,.]+)/i);
                 if (matchBairro) parsed.bairro = matchBairro[1].trim();
