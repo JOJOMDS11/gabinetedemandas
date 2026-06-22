@@ -538,7 +538,7 @@ async function inscreverPushReal() {
                               }
                           }
                       }
-                      } else if (payload.eventType === 'UPDATE') {
+                       else if (payload.eventType === 'UPDATE') {
                           const idx = todasDemandas.findIndex(d => d.id === payload.new.id);
                           if (idx !== -1) todasDemandas[idx] = payload.new;
                           
