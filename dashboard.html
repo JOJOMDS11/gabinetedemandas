@@ -69,7 +69,7 @@
         .badge-Rejeitada { background: #c0392b; color: white; }
         .badge-Secretaria { background: #e8dbf4; color: #8e44ad; border: 1px solid #8e44ad; }
 
-        .titulo { font-size: 15px; font-weight: bold; margin-bottom: 5px; color: #185199; }
+        .titulo { font-size: 15px; font-weight: bold; color: #185199; line-height: 1.3; }
         .info { font-size: 12px; color: #555; margin-bottom: 4px; }
         .info-tempo { font-size: 11px; color: #999; margin-bottom: 4px; font-style: italic; margin-top: 5px; }
         
@@ -86,12 +86,21 @@
         .page-btn { padding: 7px 12px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .page-btn.ativo { background: #185199; color: white; }
 
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; }
+        /* Estilos dos Botões Micro (Copiar e Mais info) */
+        .btn-micro { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; border-radius: 4px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        .btn-micro:hover { background: #e2e8f0; color: #185199; border-color: #185199; }
+
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; padding: 15px;}
         .modal-overlay.ativo { display: flex; flex-direction: column; }
         .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #c0392b; text-align: center; }
         .modal-box h3 { color: #333; margin-bottom: 15px; }
         .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-size:16px;}
         .modal-botoes { display: flex; gap: 10px; margin-top: 15px;}
+
+        /* Modal Exclusivo para Ver a Descrição */
+        .modal-desc-box { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 500px; border-top: 4px solid #185199; display: flex; flex-direction: column; max-height: 85vh; text-align: left; }
+        .modal-desc-box h3 { color: #185199; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
     </style>
 </head>
 <body>
@@ -193,6 +202,15 @@
             <div class="modal-botoes">
                 <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharGerenciadorSecretarias()">Fechar</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Novo Modal de Descrição (Popout) -->
+    <div class="modal-overlay" id="modalDescOverlay">
+        <div class="modal-desc-box">
+            <h3>Detalhes da Demanda <button type="button" onclick="fecharModalDescricao()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#c0392b;" title="Fechar">✕</button></h3>
+            <div class="modal-desc-content" id="modalDescTexto"></div>
+            <button class="btn-acao azul" style="padding:12px; font-size:14px;" onclick="copiarTextoModal()">📋 Copiar Texto Completo</button>
         </div>
     </div>
 
@@ -393,7 +411,6 @@
                 (async () => {
                     try {
                         const agora = new Date().toISOString();
-                        // Salva o acesso atual do usuário logado
                         await db.from('ultimo_acesso').upsert(
                             { usuario: usuarioLogado, acessado_em: agora },
                             { onConflict: 'usuario' }
@@ -606,7 +623,6 @@
             filtroAtual = status;
             paginaAtual = 1;
             
-            // Zera o contador local quando o usuário clica para ver a aba
             if (contadoresNovas[status] !== undefined) {
                 contadoresNovas[status] = 0;
             }
@@ -720,10 +736,24 @@
                 const euCuido = responsaveis.includes(usuarioLogado);
                 const aguardandoDaniel = (demanda.status === 'Aguardando Aprovação' || demanda.status === 'Aguardando') && usuarioLogado === 'Daniel';
 
-                let mediaTag = '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#999;background:#e0e0e0;">📸 Sem Mídia</div>';
+                // --- ESTÉTICA EXECUTIVA DE MÍDIAS ---
+                let mediaTag = '';
                 if (fotoPrincipal) {
                     mediaTag = isVideo(fotoPrincipal) ? `<video src="${fotoPrincipal}" muted loop></video>` : `<img src="${fotoPrincipal}">`;
+                } else if (demanda.pdf_url) {
+                    mediaTag = `
+                        <div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: linear-gradient(135deg, #185199, #123e75); color:white;">
+                            <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-bottom:8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            <span style="font-size:11px; font-weight:bold; letter-spacing: 1px;">DOCUMENTO OFICIAL</span>
+                        </div>`;
+                } else {
+                    mediaTag = `
+                        <div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: #e2e8f0; position:relative; overflow:hidden;">
+                            <img src="https://i.imgur.com/coryuD6.png" style="position:absolute; width:120%; height:auto; opacity:0.04; top:50%; left:50%; transform:translate(-50%, -50%);">
+                            <span style="font-size:11px; font-weight:bold; color:#64748b; z-index:1; letter-spacing:1px; text-transform:uppercase;">Registro Interno</span>
+                        </div>`;
                 }
+                
                 if (demanda.pdf_url) {
                     mediaTag += `<a href="ver-demanda.html?id=${demanda.id}" class="btn-pdf-card" onclick="event.stopPropagation()">📄 PDF Anexado</a>`;
                 }
@@ -782,13 +812,28 @@
 
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${demanda.numero_demanda}</div>` : '';
                 const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 Aberto ${tempoRelativo(demanda.criado_em)}</div>` : '';
+                
+                // Tratamento seguro do texto para a função onclick
+                const assuntoSafe = (demanda.assunto || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
                 return `<div class="demanda-card ${aguardandoDaniel ? 'aguardando-daniel' : ''}" onclick="window.location.href='ver-demanda.html?id=${demanda.id}'">
                             ${numTag}
                             <div class="demanda-media">${mediaTag}</div>
                             <div class="demanda-conteudo">
                                 <span class="badge ${badgeClass}">${demanda.status}</span>
-                                <div class="titulo">${demanda.assunto}</div>
+                                
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:5px;">
+                                    <div class="titulo" style="margin-bottom:0;">${demanda.assunto}</div>
+                                    <div style="display:flex; gap:4px; flex-shrink:0;">
+                                        <button class="btn-micro" onclick="event.stopPropagation(); copiarTexto('${assuntoSafe}')" title="Copiar Assunto">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                        </button>
+                                        <button class="btn-micro" onclick="event.stopPropagation(); abrirModalDescricao('${demanda.id}')" title="Ver Detalhes/Descrição">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                
                                 <div class="info">📌 ${demanda.tipo_solicitacao || 'Registro'}</div>
                                 ${infoAgenda}
                                 ${infoEndereco}
@@ -896,6 +941,32 @@
             } finally {
                 btn.textContent = 'Confirmar'; btn.disabled = false;
             }
+        }
+
+        // --- FUNÇÕES DOS BOTÕES MICRO E MODAL ---
+        window.copiarTexto = function(texto) {
+            navigator.clipboard.writeText(texto).then(() => {
+                alert('Copiado para a área de transferência!');
+            }).catch(err => {
+                console.error('Erro ao copiar texto:', err);
+            });
+        }
+
+        window.abrirModalDescricao = function(id) {
+            const demanda = todasDemandas.find(d => d.id == id);
+            if (!demanda) return;
+            const desc = demanda.descricao ? demanda.descricao : 'Nenhuma descrição detalhada fornecida neste registro.';
+            document.getElementById('modalDescTexto').textContent = desc;
+            document.getElementById('modalDescOverlay').classList.add('ativo');
+        }
+
+        window.fecharModalDescricao = function() {
+            document.getElementById('modalDescOverlay').classList.remove('ativo');
+        }
+
+        window.copiarTextoModal = function() {
+            const texto = document.getElementById('modalDescTexto').textContent;
+            copiarTexto(texto);
         }
 
         inicializarSistema();
