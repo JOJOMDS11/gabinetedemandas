@@ -242,16 +242,40 @@
        // ================= FUNÇÕES DE WEB PUSH DEFINITIVO =================
         const PUBLIC_VAPID_KEY = 'BKpSVEN9NzySiKfUsN1xwmOX_pyr9wJZvmKvrJo836ZrdV_S0ooNGkakEn38QXfbQTr5GkgIxNTEnx1xWVZ6THo';
 
-        function urlB64ToUint8Array(base64String) {
-            const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-            const rawData = window.atob(base64);
-            const outputArray = new Uint8Array(rawData.length);
-            for (let i = 0; i < rawData.length; ++i) {
-                outputArray[i] = rawData.charCodeAt(i);
-            }
-            return outputArray;
-        }
+        // Corrigido o nome da função para urlB64ToUint8Array
+function urlB64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+async function inscreverPushReal() {
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      // Corrigido: Usando PUBLIC_VAPID_KEY em vez de VAPID_PUBLIC_KEY
+      applicationServerKey: urlB64ToUint8Array(PUBLIC_VAPID_KEY) 
+    });
+    
+    // Salvar no Supabase
+    await supabase.from('push_subscriptions').insert([{ 
+        subscription: subscription 
+    }]);
+    console.log('Inscrição para push real feita com sucesso!');
+  } catch (err) {
+    console.error('Erro na inscrição do push:', err);
+  }
+}
 
         async function ativarAvisosPush() {
             try {
