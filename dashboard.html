@@ -436,10 +436,9 @@
                                     const assuntoCurto = payload.new.assunto?.length > 35 ? payload.new.assunto.substring(0, 35) + '...' : payload.new.assunto;
                                     
                                     const quemAbriu = payload.new.criador || 'Equipe';
-                                    const solicitante = payload.new.solicitante_nome ? ` de ${payload.new.solicitante_nome}` : '';
-                                    const corpoNotificacao = `Aberta por ${quemAbriu}${solicitante}\nAssunto: ${assuntoCurto}`;
+                                    const solicitante = payload.new.solicitante_nome ? ` (De: ${payload.new.solicitante_nome})` : '';
+                                    const corpoNotificacao = `Aberto por: ${quemAbriu}${solicitante}\nAssunto: ${assuntoCurto}`;
                                     
-                                    // AQUI: URL dinâmico com o ID
                                     const linkDemanda = `/ver-demanda.html?id=${payload.new.id}`;
 
                                     db.functions.invoke('send-push', {
@@ -457,7 +456,7 @@
                                         mostrarNotificacaoCelular('🔔 Nova demanda', corpoNotificacao, linkDemanda);
                                     }
                                 }
-
+                            }
                             else if (payload.eventType === 'UPDATE') {
                                 const idx = todasDemandas.findIndex(d => d.id === payload.new.id);
                                 const statusAntigo = idx !== -1 ? todasDemandas[idx].status : payload.old?.status;
@@ -477,7 +476,6 @@
                                     interessados = [...new Set(interessados)];
 
                                     if (interessados.length > 0) {
-                                        // AQUI: URL dinâmico com o ID
                                         const linkDemanda = `/ver-demanda.html?id=${payload.new.id}`;
 
                                         db.functions.invoke('send-push', {
@@ -496,7 +494,7 @@
                                         }
                                     }
                                 }
-
+                            }
                             else if (payload.eventType === 'DELETE') {
                                 todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id);
                             }
@@ -523,7 +521,6 @@
                 document.getElementById('demandas').innerHTML = '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
             }
         }
-
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
