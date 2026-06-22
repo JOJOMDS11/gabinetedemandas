@@ -240,7 +240,7 @@
 
             <div class="form-group">
                 <label>Protocolo Administrativo (156)</label>
-                <input type="text" id="protocolo" placeholder="Padrão: 156 2026/000000" onfocus="if(!this.value) this.value='156 2026/'">
+                <input type="text" id="protocolo" placeholder="Ex: 156 2026/000000" onfocus="if(!this.value) this.value='156 2026/'">
             </div>
             <div class="form-group">
                 <label>Identificação Legislativa</label>
@@ -296,6 +296,9 @@
             'CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE',
             'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'
         ].sort();
+
+        // Bairros Conhecidos para extração inteligente
+        const bairrosSL = ['CENTRO', 'FEITORIA', 'CAMPINA', 'SCHARLAU', 'SANTOS DUMONT', 'RIO DOS SINOS', 'VICENTINA', 'SÃO JOSÉ', 'SÃO MIGUEL', 'CRISTO REI', 'FIÃO', 'DUQUE DE CAXIAS', 'JARDIM AMÉRICA', 'FAZENDA SÃO BORJA', 'PINHEIRO', 'RIO BRANCO', 'SANTA TEREZA', 'POMBAL', 'ARROIO DA MANTEIGA', 'BOA VISTA', 'MORRO DO ESPELHO', 'PADRE REUS', 'PASSO DOS FERREIROS', 'CAMPESTRE', 'JARDIM LUCIANA', 'COHAB'];
 
         async function carregarSecretarias() {
             const select = document.getElementById('secretaria');
@@ -485,31 +488,27 @@
 
             const tiposConhecidos = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO', 'DEMANDA (GERAL)', 'DEMANDA EXTERNA', 'INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
             const statusConhecidos = ['156 Pedido', 'Aberta', 'Aguardando', 'Aguardando Aprovação', 'Aguardando execução da secretaria', 'Aguardando Exp', 'Aprovada', 'Arquivada', 'Atendido', 'Concluída', 'Em Andamento', 'Pendente', 'Rejeitada', 'Resolvido', 'Sem Legis'];
-            const secOficiais = [
-                'CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE',
-                'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'
-            ];
-
+            
             const celulas = texto.split('\t');
 
             celulas.forEach(c => {
                 let cell = c.trim();
                 if(!cell || cell === '-' || cell === 'S/N' || cell.toLowerCase() === 'ver detalhes') return;
 
-                // Captura de Link do Legis
+                // Captura Link do Legis
                 if (cell.match(/https?:\/\/[^\s]+/i) || cell.includes('camarasaoleopoldo.rs.gov.br')) {
                     let matchLink = cell.match(/https?:\/\/[^\s]+/i);
                     parsed.link_legis = matchLink ? matchLink[0] : cell.trim();
                     return;
                 }
 
-                // Captura de Data
+                // Captura Data
                 if (cell.match(/^\d{2}\/\d{2}\/\d{2,4}$/)) {
                     let p = cell.split('/'); let ano = p[2].length === 2 ? '20' + p[2] : p[2];
                     parsed.data = `${ano}-${p[1]}-${p[0]}`; return;
                 }
                 
-                // Documentos Internos
+                // Documentos Internos (Memo, Requerimento, PDP, etc)
                 let docMatch = cell.match(/^([A-Za-zÀ-ÿ]+)[\s-]*(\d+\/\d{4})$/i);
                 if (docMatch) {
                     parsed.doc_numero = docMatch[2];
@@ -539,14 +538,9 @@
                     parsed.expediente = cell; return;
                 }
 
-                // 156 isolado
-                if (cell.match(/^156\s*20\d{2}\/\d+$/)) {
-                    parsed.protocolo = cell.match(/^156\s*20\d{2}\/\d+$/)[0]; return;
-                }
-
                 // Secretarias
                 let isSecretaria = false;
-                for(let s of secOficiais) {
+                for(let s of secretariasPadrao) {
                     if (cell.toUpperCase().startsWith(s)) { 
                         if (s === 'SEMHAB') parsed.secretaria = 'Secretaria Municipal de Habitação - SEMHAB';
                         else if (s === 'SEMPA') parsed.secretaria = 'Secretaria Municipal de Proteção Animal - SEMPA';
@@ -556,11 +550,8 @@
                     }
                 }
                 if (isSecretaria) return;
-                if (cell.toUpperCase().includes('GERAL DE GOVERNO')) { parsed.secretaria = 'Secretaria Geral de Governo - SGG'; return; }
-                if (cell.toUpperCase().includes('PROTEÇÃO ANIMAL')) { parsed.secretaria = 'Secretaria Municipal de Proteção Animal - SEMPA'; return; }
-                if (cell.toUpperCase().includes('HABITAÇÃO')) { parsed.secretaria = 'Secretaria Municipal de Habitação - SEMHAB'; return; }
 
-                // Tratamento blindado de Telefones (resolve o "(51.) 998.618.999")
+                // Tratamento blindado de Telefones
                 let justDigits = cell.replace(/\D/g, '');
                 if (justDigits.length >= 8 && justDigits.length <= 13 && !cell.match(/[a-zA-Z]{4,}/)) {
                     if(justDigits.length === 11) parsed.tel = `(${justDigits.substring(0,2)}) ${justDigits.substring(2,7)}-${justDigits.substring(7)}`;
@@ -569,50 +560,67 @@
                     return; 
                 }
 
-                // Ignora IDs ou Contadores
-                if (cell.match(/^\d{1,5}$/)) return;
+                // Ignora IDs/Números soltos (para não sujar nome ou assunto)
+                if (cell.match(/^\d{1,6}$/)) return;
 
-                // A coluna gigantesca é a descrição da demanda
+                // Descrição da Demanda (Geralmente é o texto mais longo)
                 if (cell.length > 50) {
                     parsed.desc = parsed.desc ? parsed.desc + '\n' + cell : cell;
                     return;
                 }
 
-                // Solicitante (Se for texto curto e não tiver número)
+                // Solicitante (Texto curto, sem números)
                 if (cell.length > 2 && cell.length <= 40 && !cell.match(/\d/) && !parsed.nome) {
                     parsed.nome = cell; return;
                 }
             });
 
-            // Extração avançada DENTRO da descrição
+            // Extração de Endereço, Protocolo e Resumo DE DENTRO DA DESCRIÇÃO
             if (parsed.desc) {
-                let match156Desc = parsed.desc.match(/156\s*20\d{2}\/\d+/i);
-                if(match156Desc) {
-                    parsed.protocolo = match156Desc[0];
-                    parsed.desc = parsed.desc.replace(match156Desc[0], '').trim();
+                
+                // 1. Extrai Protocolo (Ex: "protocolo 156 2026/7537" ou "protocolo MEIO AMBIENTE 2026/1466")
+                let matchProt = parsed.desc.match(/protocolo\s+([A-Za-z0-9\s]+\s*20\d{2}\/\d+(?:\s*Vol\.?\s*\d+)?)/i);
+                if(matchProt) {
+                    parsed.protocolo = matchProt[1].trim();
+                    parsed.desc = parsed.desc.replace(matchProt[0], '').trim();
+                } else {
+                    let match156Desc = parsed.desc.match(/156\s*20\d{2}\/\d+/i);
+                    if(match156Desc) {
+                        parsed.protocolo = match156Desc[0];
+                        parsed.desc = parsed.desc.replace(match156Desc[0], '').trim();
+                    }
                 }
 
-                let matchRua = parsed.desc.match(/(?:Rua|Av|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)\s+([^,]+)(?:[,.-]\s*(?:n[ºo]?\s*)?(\d+|s\/?n))?/i);
+                // 2. Extrai Rua e Número ("Ruas Porto Camargo e Ferrabraz" ou "Rua Edmundo Félix, nº 301")
+                let matchRua = parsed.desc.match(/(?:Rua|Ruas|Av\.?|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)\s+([^,.-]+)(?:[,.-]\s*(?:n[ºo]?\s*)?(\d+|s\/?n))?/i);
                 if (matchRua) {
-                    parsed.rua = matchRua[1].trim();
+                    let prefix = matchRua[0].match(/^(Ruas|Rua|Av\.?|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)/i)[0];
+                    parsed.rua = prefix + ' ' + matchRua[1].trim();
                     if (matchRua[2]) parsed.numero = matchRua[2].trim();
+                    else parsed.numero = 'S/N';
                 }
 
-                let matchBairro = parsed.desc.match(/(?:bairro\s+|no\s+)([a-zA-ZÀ-ÿ\s]+)/i);
+                // 3. Extrai Bairro ("bairro Campina" ou cruza com lista)
+                let matchBairro = parsed.desc.match(/(?:bairro|b\.)\s+([A-Za-zÀ-ÿ\s]+?)(?:,|\.| no | na | em | protocolo |$)/i);
                 if (matchBairro) {
-                    let extractedBairro = matchBairro[1].trim();
-                    // Limpar sobras de texto
-                    extractedBairro = extractedBairro.split(',')[0].split(' no ')[0].trim();
-                    parsed.bairro = extractedBairro;
+                    parsed.bairro = matchBairro[1].trim();
+                } else {
+                    for (let b of bairrosSL) {
+                        let regex = new RegExp(`\\b${b}\\b`, 'i');
+                        if (regex.test(parsed.desc)) { parsed.bairro = b; break; }
+                    }
                 }
 
-                // Assunto Resumido (Melhorado e Limpo)
+                // 4. Assunto Resumido Perfeito
                 let primeiraLinha = parsed.desc.split('\n')[0];
                 let assuntoInteligente = primeiraLinha;
                 assuntoInteligente = assuntoInteligente.replace(/^(solicita|requer|pede|encaminha|solicitamos)(mos)?\s+(a|o|as|os|que|para|uma|um|de)?\s*/i, '');
-                if(assuntoInteligente.length > 0) assuntoInteligente = assuntoInteligente.charAt(0).toUpperCase() + assuntoInteligente.slice(1);
+                
+                if(assuntoInteligente.length > 0) {
+                    assuntoInteligente = assuntoInteligente.charAt(0).toUpperCase() + assuntoInteligente.slice(1);
+                }
 
-                const cortes = [" na rua", " na av", " na travessa", " no bairro", " em via", " especificamente", " ao longo", " defronte", " em frente", ", conforme", " no município", ", no", " n°", " nº", " numero", " número"];
+                const cortes = [" na rua", " nas ruas", " na av", " na travessa", " no bairro", " em via", " especificamente", " especial", " ao longo", " defronte", " em frente", ", conforme", " no município", ", no ", " n°", " nº", " numero", " número", " em razão", " devido a", ", situada"];
                 for (let corte of cortes) {
                     let idx = assuntoInteligente.toLowerCase().indexOf(corte);
                     if (idx > 0) assuntoInteligente = assuntoInteligente.substring(0, idx);
@@ -623,7 +631,7 @@
                 parsed.assunto = assuntoInteligente || 'Demanda sem título';
             }
 
-            // Aplica os dados nos campos
+            // Popula os campos do formulário
             if(parsed.link_legis) document.getElementById('link_legis').value = parsed.link_legis;
             if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo.toUpperCase();
             if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
@@ -815,7 +823,7 @@
                 const statusForcado = document.getElementById('status_forcado').value;
 
                 if (statusForcado) {
-                    statusInicial = statusForcado; // Se você selecionou um status, ele VAI usar esse status e ponto.
+                    statusInicial = statusForcado; 
                 } else {
                     if (tiposAtualBloqueados.includes(tipo_solicitacao)) {
                         statusInicial = usuarioLogado === 'Daniel' ? 'Aprovada' : 'Aguardando Aprovação';
@@ -823,7 +831,6 @@
                         statusInicial = 'Pendente'; 
                     }
                     
-                    // Somente aprova automaticamente se a caixa foi desmarcada E o sistema jogou para "Aguardando Aprovação"
                     if (usuarioLogado !== 'Daniel' && !document.getElementById('checkAprovacaoDaniel').checked) {
                         if (statusInicial === 'Aguardando Aprovação') {
                             statusInicial = 'Aprovada';
