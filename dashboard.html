@@ -27,8 +27,8 @@
         .btn-sino { background: #e67e22; color: white; border: none; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; animation: pulse 2s infinite; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         
         @media (max-width: 600px) {
-            .user-name-span { display: none; }
-            .brand-text { display: none; }
+            .user-name-span { display: none; } /* Esconde "👤 João Pedro" no mobile */
+            .brand-text { display: none; } /* Esconde "Gabinete Daniel" no mobile */
         }
 
         .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; }
@@ -137,23 +137,18 @@
         </div>
 
        <div class="container">
-        <!-- FILTROS NO TOPO -->
+        <!-- FILTROS NO TOPO (Reordenados e com Spans ocultos por padrão) -->
         <div class="filtros" style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #ddd;">
-            <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas <span id="count-Todas" style="font-size:10px; background:#eee; padding:2px 6px; border-radius:10px; color:#333;">0</span></button>
-            <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn ativo" data-status="Aberta" onclick="filtrar('Aberta')">Abertas/Pendentes <span id="count-Aberta" style="font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            
-            <!-- ✅ APROVADAS REPOSICIONADO -->
-            <button class="filtro-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas <span id="count-Aprovada" style="font-size:10px; background:#27ae60; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-
-            <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">Andamento <span id="count-Em Andamento" style="font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="156 Pedido" onclick="filtrar('156 Pedido')">156 Pedido <span id="count-156 Pedido" style="font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
+            <button class="filtro-btn ativo" data-status="Aberta" onclick="filtrar('Aberta')">Abertas/Pendentes <span id="count-Aberta" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas <span id="count-Aprovada" style="display:none; font-size:10px; background:#27ae60; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="display:none; font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">Andamento <span id="count-Em Andamento" style="display:none; font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="156 Pedido" onclick="filtrar('156 Pedido')">156 Pedido <span id="count-156 Pedido" style="display:none; font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
             <button class="filtro-btn" data-status="Aguardando Exp" onclick="filtrar('Aguardando Exp')">Exp Legis</button>
             <button class="filtro-btn" data-status="Concluída" onclick="filtrar('Concluída')">Concluídas</button>
             <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
-            
-            <!-- 🏢 EXEC SEC REPOSICIONADO -->
-            <button class="filtro-btn" data-status="Aguardando execução da secretaria" onclick="filtrar('Aguardando execução da secretaria')">🏢 Exec. Secretaria <span id="count-Sec" style="font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Aguardando execução da secretaria" onclick="filtrar('Aguardando execução da secretaria')">🏢 Exec. Secretaria <span id="count-Sec" style="display:none; font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
         </div>
 
         <div class="cards-grid" id="demandas">A carregar...</div>
@@ -207,6 +202,11 @@
         const itensPorPagina = 9;
         let idParaExcluir = null;
 
+        // CONTROLE LOCAL DE "MENSAGENS NÃO LIDAS" (Somente as que estão fora do filtroAtual)
+        let contadoresNovas = {
+            'Aguardando Aprovação': 0, 'Aberta': 0, 'Aprovada': 0, 'Em Andamento': 0, 'Aguardando execução da secretaria': 0, '156 Pedido': 0
+        };
+
         const tiposAgendas = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO'];
         const tiposDemandasLivre = ['DEMANDA (GERAL)', 'DEMANDA EXTERNA'];
         const tiposLegis = ['INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
@@ -232,7 +232,7 @@
             }, 350); 
         });
 
-// ================= FUNÇÕES DE NOTIFICAÇÃO NATIVA (CELULAR E PC) =================
+// ================= FUNÇÕES DE NOTIFICAÇÃO NATIVA E PUSH =================
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
                 .then(reg => console.log('✅ Service Worker OK (dashboard):', reg.scope))
@@ -241,7 +241,6 @@
             console.error('❌ Este navegador não suporta Service Worker.');
         }
 
-       // ================= FUNÇÕES DE WEB PUSH DEFINITIVO =================
         const PUBLIC_VAPID_KEY = 'BKpSVEN9NzySiKfUsN1xwmOX_pyr9wJZvmKvrJo836ZrdV_S0ooNGkakEn38QXfbQTr5GkgIxNTEnx1xWVZ6THo';
 
         function urlB64ToUint8Array(base64String) {
@@ -277,12 +276,12 @@
                 
                 const subJson = subscription.toJSON();
                 
-                const { error } = await db.from('push_subscriptions').insert([{
+                const { error } = await db.from('push_subscriptions').upsert({
                     usuario: usuarioLogado,
                     endpoint: subJson.endpoint,
                     p256dh: subJson.keys.p256dh,
                     auth: subJson.keys.auth
-                }]);
+                }, { onConflict: 'endpoint' });
 
                 if (error) {
                     console.error("Erro Supabase:", error);
@@ -310,62 +309,15 @@
                     btnNotif.className = 'btn-sino';
                     btnNotif.innerHTML = '🔔 Ativar';
                     btnNotif.title = "Ativar Notificações";
-                    
-                    btnNotif.onclick = function() {
-                        Notification.requestPermission().then(function(permissao) {
-                            if (permissao === 'granted') {
-                                alert("✅ Avisos ativados! Vai chegar aviso mesmo com o app fechado.");
-                                btnNotif.style.display = 'none';
-                                inscreverPushReal();
-                            } else if (permissao === 'denied') {
-                                alert("❌ O telemóvel bloqueou os avisos. Precisas de ir às definições da App no Android e ativar as Notificações manualmente.");
-                            } else {
-                                alert("⚠️ O pedido foi ignorado pelo sistema. Tenta novamente.");
-                            }
-                        }).catch(function(erro) {
-                            alert("Erro: " + erro);
-                        });
-                    };
+                    btnNotif.onclick = ativarAvisosPush;
                     
                     if(navbarActions) navbarActions.prepend(btnNotif);
-                } else {
-                    const btnTeste = document.createElement('button');
-                    btnTeste.className = 'btn-sino';
-                    btnTeste.style.background = '#185199';
-                    btnTeste.innerHTML = '🔔 ';
-                    btnTeste.title = "Enviar notificação de teste";
-                    
-                    btnTeste.onclick = async function() {
-                        const payload = {
-                          title: "Nova Demanda Recebida!",
-                          body: "Isso é um teste real via VAPID. Clique para abrir o dashboard.",
-                          url: "/dashboard.html" 
-                        };
-
-                        try {
-                          const { data, error } = await db.functions.invoke('send-push', {
-                            body: { payload }
-                          });
-
-                          if (error) throw error;
-                          console.log('Push real disparado via Edge Function!', data);
-                          alert('Notificação de teste enviada! Veja no celular do Daniel se chegou.');
-                        } catch (err) {
-                          console.error('Erro ao chamar a Edge Function send-push:', err);
-                          alert('Erro ao enviar teste de notificação.');
-                        }
-                    };
-                    
-                    if(navbarActions) navbarActions.prepend(btnTeste);
-                }
+                } 
             }, 1000); 
         });
 
         async function inscreverPushReal() {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-                console.warn('⚠️ Este navegador não suporta Push real. Vai funcionar só com o site aberto.');
-                return;
-            }
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
             if (Notification.permission !== 'granted') return;
 
             let tentativas = 0;
@@ -373,7 +325,7 @@
                 await new Promise(r => setTimeout(r, 100));
                 tentativas++;
             }
-            if (!db) { console.error('❌ Não foi possível inscrever push: conexão com banco não ficou pronta.'); return; }
+            if (!db) return;
 
             try {
                 const reg = await navigator.serviceWorker.ready;
@@ -386,28 +338,20 @@
                 }
 
                 const sub = subscription.toJSON();
-                const { error } = await db.from('push_subscriptions').upsert({
+                await db.from('push_subscriptions').upsert({
                     usuario: usuarioLogado,
                     endpoint: sub.endpoint,
                     p256dh: sub.keys.p256dh,
                     auth: sub.keys.auth
                 }, { onConflict: 'endpoint' });
 
-                if (error) {
-                    console.error('❌ Falha ao salvar inscrição de push no banco:', error.message);
-                } else {
-                    console.log('✅ Inscrito para Push real como', usuarioLogado);
-                }
             } catch (err) {
                 console.error('❌ Falha ao inscrever Push real:', err);
             }
         }
 
         async function mostrarNotificacaoCelular(titulo, mensagem) {
-            if (Notification.permission !== 'granted') {
-                console.warn('🔕 Notificação NÃO exibida: permissão é "' + Notification.permission + '" (precisa ser "granted").');
-                return;
-            }
+            if (Notification.permission !== 'granted') return;
             
             try {
                 if ('serviceWorker' in navigator) {
@@ -419,10 +363,8 @@
                         vibrate: [200, 100, 500],
                         requireInteraction: true
                     });
-                    console.log('🔔 Notificação enviada via Service Worker:', titulo);
                 } else {
                     new Notification(titulo, { body: mensagem, icon: 'https://i.imgur.com/coryuD6.png' });
-                    console.log('🔔 Notificação enviada via Notification API direta:', titulo);
                 }
             } catch (err) {
                 console.error('❌ Erro ao tentar exibir notificação:', err);
@@ -474,43 +416,65 @@
                      if (payload.eventType === 'INSERT') {
                           todasDemandas.unshift(payload.new);
                           
-                          // AVISA VIA PUSH: Garantimos que o 'Aguardando' simples também vai chamar o Edge Function
+                          // Lógica da Bolinha de Não Lida (incrementa se chegou em outra aba)
+                          if (payload.new.status !== filtroAtual && contadoresNovas[payload.new.status] !== undefined) {
+                              contadoresNovas[payload.new.status]++;
+                          }
+                          
+                          // PUSH SÓ PARA O DANIEL se a demanda nova precisar de aprovação
                           if (['Pendente', 'Aberta', 'Aguardando Aprovação', 'Aguardando'].includes(payload.new.status)) {
-                              let assuntoCurto = payload.new.assunto;
-                              if(assuntoCurto.length > 35) assuntoCurto = assuntoCurto.substring(0, 35) + '...';
+                              let assuntoCurto = payload.new.assunto && payload.new.assunto.length > 35 ? payload.new.assunto.substring(0, 35) + '...' : payload.new.assunto;
                               
                               const pushPayload = {
                                 title: "🔔 Gabinete Daniel",
-                                body: `Nova demanda: ${assuntoCurto}`,
+                                body: `Nova demanda para aprovação: ${assuntoCurto}`,
                                 url: "/dashboard.html"
                               };
 
                               db.functions.invoke('send-push', {
-                                body: { payload: pushPayload }
+                                body: { payload: pushPayload, targetUsers: ['Daniel'] } // Define apenas o Daniel
                               }).catch(err => console.error('Erro ao chamar push real:', err));
-                          }
-                          
-                          // MANTÉM A NOTIFICAÇÃO LOCAL caso o usuário esteja no painel
-                          if (usuarioLogado === 'Daniel') {
-                              if (['Pendente', 'Aberta', 'Aguardando Aprovação', 'Aguardando'].includes(payload.new.status)) {
-                                  let assuntoCurto = payload.new.assunto;
-                                  if(assuntoCurto.length > 35) assuntoCurto = assuntoCurto.substring(0, 35) + '...';
+                              
+                              if (usuarioLogado === 'Daniel') {
                                   mostrarNotificacaoCelular("🔔 Gabinete Daniel", `Nova demanda para aprovação: ${assuntoCurto}`);
                               }
                           }
                       }
                        else if (payload.eventType === 'UPDATE') {
                           const idx = todasDemandas.findIndex(d => d.id === payload.new.id);
+                          const statusAntigo = idx !== -1 ? todasDemandas[idx].status : payload.old?.status;
+                          
                           if (idx !== -1) {
                               todasDemandas[idx] = payload.new;
                           } else {
                               todasDemandas.unshift(payload.new);
                           }
                           
-                          if (payload.new.status === 'Aprovada' && payload.old.status !== 'Aprovada') {
-                              const ehCriador = payload.new.criador === usuarioLogado;
-                              const estaCuidando = (payload.new.responsaveis || []).includes(usuarioLogado);
-                              if (usuarioLogado !== 'Daniel' && (ehCriador || estaCuidando)) {
+                          // Lógica da Bolinha: Incrementa se trocou de status e não é a aba atual
+                          if (payload.new.status !== statusAntigo && payload.new.status !== filtroAtual) {
+                              if (contadoresNovas[payload.new.status] !== undefined) {
+                                  contadoresNovas[payload.new.status]++;
+                              }
+                          }
+                          
+                          // PUSH SÓ PARA A EQUIPE se o Daniel aprovou
+                          if (payload.new.status === 'Aprovada' && statusAntigo !== 'Aprovada') {
+                              let interessados = [payload.new.criador, ...(payload.new.responsaveis || [])].filter(x => x && x !== 'Daniel');
+                              interessados = [...new Set(interessados)]; // Remove duplicados
+                              
+                              if (interessados.length > 0) {
+                                  const pushPayload = {
+                                    title: "✅ Demanda Aprovada",
+                                    body: `O Daniel aprovou: ${payload.new.assunto}`,
+                                    url: "/dashboard.html"
+                                  };
+                                  
+                                  db.functions.invoke('send-push', {
+                                    body: { payload: pushPayload, targetUsers: interessados } // Define apenas os criadores/responsáveis
+                                  }).catch(err => console.error('Erro ao chamar push real:', err));
+                              }
+
+                              if (interessados.includes(usuarioLogado)) {
                                   mostrarNotificacaoCelular("✅ Demanda Aprovada", `O Daniel aprovou: ${payload.new.assunto}`);
                               }
                           }
@@ -520,7 +484,6 @@
                       
                       todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
                       
-                      // CRUCIAL PARA O AUTO-REFRESH (garante a atualização instantânea)
                       atualizarContadores();
                       renderDemandas();
                   })
@@ -620,9 +583,18 @@
         window.filtrar = function(status) {
             filtroAtual = status;
             paginaAtual = 1;
+            
+            // Zera o contador local quando o usuário clica para ver a aba
+            if (contadoresNovas[status] !== undefined) {
+                contadoresNovas[status] = 0;
+            }
+            if (status === 'Aguardando execução da secretaria') contadoresNovas['Aguardando execução da secretaria'] = 0;
+
             document.querySelectorAll('.filtro-btn').forEach(btn => {
                 btn.classList.toggle('ativo', btn.getAttribute('data-status') === status);
             });
+            
+            atualizarContadores();
             renderDemandas();
         }
 
@@ -631,27 +603,24 @@
         };
         
         function atualizarContadores() {
-            let counts = {
-                'Todas': todasDemandas.filter(d => !['Arquivada', 'Rejeitada'].includes(d.status)).length,
-                'Aguardando Aprovação': 0, 'Aberta': 0, 'Em Andamento': 0, 'Sec': 0, '156 Pedido': 0, 'Aprovada': 0
+            const mapId = {
+                'Aguardando Aprovação': 'count-Aguardando Aprovação', 'Aberta': 'count-Aberta',
+                'Aprovada': 'count-Aprovada', 'Em Andamento': 'count-Em Andamento',
+                'Aguardando execução da secretaria': 'count-Sec', '156 Pedido': 'count-156 Pedido'
             };
 
-            todasDemandas.forEach(d => {
-                if (d.status === 'Aguardando Aprovação' || d.status === 'Aguardando') counts['Aguardando Aprovação']++;
-                if (d.status === 'Aberta' || d.status === 'Pendente') counts['Aberta']++;
-                if (d.status === 'Aprovada') counts['Aprovada']++; // Nova contagem adicionada
-                if (d.status === 'Em Andamento') counts['Em Andamento']++;
-                if (d.status === 'Aguardando execução da secretaria') counts['Sec']++;
-                if (d.status === '156 Pedido') counts['156 Pedido']++;
-            });
-
-            document.getElementById('count-Todas').textContent = counts['Todas'];
-            document.getElementById('count-Aguardando Aprovação').textContent = counts['Aguardando Aprovação'];
-            document.getElementById('count-Aberta').textContent = counts['Aberta'];
-            document.getElementById('count-Aprovada').textContent = counts['Aprovada']; // Aplicando na tela
-            document.getElementById('count-Em Andamento').textContent = counts['Em Andamento'];
-            document.getElementById('count-Sec').textContent = counts['Sec'];
-            document.getElementById('count-156 Pedido').textContent = counts['156 Pedido'];
+            for (const [status, badgeId] of Object.entries(mapId)) {
+                const badge = document.getElementById(badgeId);
+                if (badge) {
+                    const count = contadoresNovas[status] || 0;
+                    if (count > 0) {
+                        badge.textContent = count;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            }
         }
         
         function renderDemandas() {
@@ -845,7 +814,6 @@
             const { data, error } = await db.from('demandas').select('*').order('criado_em', { ascending: false });
             if (!error) { 
                 todasDemandas = data || []; 
-                atualizarContadores(); // Chamada crítica para os números não virem zerados de início
                 renderDemandas(); 
             }
         }
