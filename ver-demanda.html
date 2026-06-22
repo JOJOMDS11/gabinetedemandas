@@ -126,6 +126,9 @@
         .btn-remover-preview { position: absolute; top: 2px; right: 2px; background: rgba(231,76,60,0.9); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .pdf-preview-box { display: none; background: #e8f0ff; color: #185199; padding: 8px 12px; border-radius: 4px; border: 1px solid #185199; font-size: 13px; font-weight: bold; margin-top: 8px; align-items: center; justify-content: space-between; }
         .pdf-preview-box button { background: none; border: none; color: #c0392b; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0; min-width: unset; flex: none; }
+        
+        .btn-micro { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 11px; font-weight: bold; padding: 4px 8px; height: 26px;}
+        .btn-micro:hover { background: #e2e8f0; color: #185199; border-color: #185199; }
     </style>
 </head>
 <body>
@@ -196,12 +199,9 @@
         const isAdmin = adminUsers.includes(usuarioLogado);
 
         const secretariasPadrao = [
-            'GABINETE', 'SEMOB', 'SEMOV', 'SEMURB', 'SEMMAM', 'SEMAE',
-            'SAÚDE', 'EDUCAÇÃO', 'FAZENDA', 'OUVIDORIA', 'CEPOM',
-            'Secretaria Municipal de Habitação - SEMHAB',
-            'Secretaria Municipal de Proteção Animal - SEMPA',
-            'Secretaria Geral de Governo - SGG',
-            'PREFEITURA'
+            'CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE',
+            'Secretaria Geral de Governo - SGG', 'Secretaria Municipal de Habitação - SEMHAB',
+            'Secretaria Municipal de Proteção Animal - SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'
         ];
         let listaSecretariasCarregada = secretariasPadrao;
 
@@ -209,7 +209,7 @@
             try {
                 const { data, error } = await db.from('secretarias').select('nome').order('nome');
                 if (!error && data && data.length > 0) {
-                    listaSecretariasCarregada = data.map(r => r.nome);
+                    listaSecretariasCarregada = data.map(r => r.nome).sort();
                 }
             } catch (e) { }
         }
@@ -246,6 +246,17 @@
 
         window.addEventListener('beforeunload', function(e) { if (temAlteracoesNaoSalvas) { e.preventDefault(); e.returnValue = ''; return ''; } });
         document.addEventListener('input', function(e) { if (e.target.id && e.target.id.startsWith('edit')) temAlteracoesNaoSalvas = true; });
+
+        window.copiarTexto = function(texto) {
+            navigator.clipboard.writeText(texto).then(() => {
+                alert('Copiado para a área de transferência!');
+            }).catch(err => { console.error('Erro ao copiar texto:', err); });
+        }
+
+        window.copiarDescricao = function() {
+            const desc = demandaAtual.descricao || '';
+            copiarTexto(desc);
+        }
 
         const urlParams = new URLSearchParams(window.location.search);
         const demandaId = urlParams.get('id');
@@ -310,17 +321,17 @@
                 if(['Aprovada', 'Concluída', 'Atendido', 'Resolvido', '156 Pedido'].includes(h.status)) cor = 'verde';
                 if(h.status === 'Rejeitada') cor = 'vermelho';
                 if(['Arquivada', 'Sem Legis'].includes(h.status)) cor = 'cinza';
-                if(['Visto', 'Solicitado pela equipe', 'Edição'].includes(h.status)) cor = 'azul';
+                if(['Visto', 'Solicitado via Equipe Interna', 'Edição'].includes(h.status)) cor = 'azul';
 
                 let texto = `Status alterado para <b>${h.status}</b> por ${h.autor}`;
                 if (h.status === 'Visto') texto = ` Visualizado e Visto por <b>${h.autor}</b>`;
-                if (h.status === 'Solicitado pela equipe') texto = `🙋 Demanda solicitada por <b>${h.autor}</b> (equipe)`;
+                if (h.status === 'Solicitado via Equipe Interna') texto = `🙋 Demanda solicitada por <b>${h.autor}</b> (equipe)`;
                 if (h.status === 'Edição') texto = `✏️ <b>${h.autor}</b> editou: ${h.detalhes}`;
 
                 timelineItemsHtml.push(`<li><div class="timeline-dot ${cor}"></div><div class="timeline-evento">${texto}</div><div class="timeline-tempo">${tempoRelativo(h.data)}</div></li>`);
             });
 
-            timelineItemsHtml.reverse(); // Os mais recentes aparecem primeiro
+            timelineItemsHtml.reverse(); 
         }
 
         window.renderTimelinePagina = function() {
@@ -364,7 +375,6 @@
             resumo += `\n\n*Status:* ${d.status}`;
             if (d.doc_tipo || d.doc_numero) resumo += `\n*Doc Interno:* ${d.doc_tipo || 'Doc'} ${d.doc_numero || ''}`;
             if (d.protocolo) resumo += `\n*Protocolo 156:* ${d.protocolo}`;
-            if (d.pdp) resumo += `\n*PDP:* ${d.pdp}`;
             if (d.expediente) resumo += `\n*Expediente:* ${d.expediente}`;
             if (d.pdf_url) resumo += `\n\n*Para ver o PDF clique aqui:* ${d.pdf_url}`;
 
@@ -451,13 +461,10 @@
 
             let alertaAprovacao = ''; let btnAprovacao = ''; let seloAprovado = ''; let bloqueado = '';
 
-            // Localize este bloco dentro da função renderizar(d) e substitua:
-
             if (isAtualBloqueado) {
                 const estaAguardando = (d.status === 'Aguardando Aprovação' || d.status === 'Aberta' || d.status === 'Pendente');
                 bloqueado = estaAguardando ? 'disabled style="background:#eee; cursor:not-allowed;"' : '';
 
-                // A LÓGICA CORRIGIDA:
                 if (d.status === 'Aguardando Aprovação') {
                     if (usuarioLogado === 'Daniel') {
                         alertaAprovacao = `<div class="alerta-aprovacao" style="grid-column:1/-1;">⏳ Esta demanda está aguardando sua aprovação, Daniel!<br><br><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="aprovarDemanda(this)">✅ Aprovar Formalmente</button><button style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="rejeitarDemanda()">❌ Rejeitar</button></div></div>`;
@@ -466,7 +473,6 @@
                         btnAprovacao = `<button style="background:#9b59b6; color:white; flex:1;" onclick="iniciarAcaoMaster('aprovar')">🔐 Aprovar c/ Senha</button>`;
                     }
                 }
-                // Garante que o botão de Aprovar também apareça se o status for Aguardando
                 else if (d.status === 'Aguardando' && usuarioLogado === 'Daniel') {
                      btnAprovacao = `<button style="background:#27ae60; color:white; flex:1;" onclick="aprovarDemanda(this)">✅ Aprovar Formal</button>`;
                 }
@@ -483,14 +489,27 @@
 
             let htmlFotos = ''; let mediaIndex = d.pdf_url ? 1 : 0; 
             const fotosLimpo = (d.fotos_urls || []).filter(f => f);
-            if(fotosLimpo.length > 0) {
+            
+            if (fotosLimpo.length > 0) {
                 htmlFotos = fotosLimpo.map((f, i) => {
                     const currentIndex = mediaIndex + i; const vid = isVideo(f);
                     const mediaTag = vid ? `<video src="${f}" onclick="abrirLightboxIndex(${currentIndex})"></video>` : `<img src="${f}" onclick="abrirLightboxIndex(${currentIndex})">`;
                     const ext = vid ? '.mp4' : '.jpg';
                     return `<div class="foto-container">${mediaTag}<div class="acoes-foto"><button class="btn-foto btn-excluir-foto" onclick="event.stopPropagation(); apagarFotoUnica(${i})">🗑️</button><button class="btn-foto" onclick="event.stopPropagation(); forcarDownload('${f}', 'demanda_anexo${i}${ext}')">⬇️</button></div></div>`;
                 }).join('');
-            } else { htmlFotos = '<p style="color:#999; text-align:center; padding:20px;">Nenhuma imagem ou vídeo.</p>'; }
+            } else if (d.pdf_url) {
+                htmlFotos = `
+                <div style="height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; background: linear-gradient(135deg, #185199, #123e75); color:white; border-radius:8px; cursor:pointer;" onclick="abrirLightboxIndex(0)">
+                    <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-bottom:8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <span style="font-size:12px; font-weight:bold; letter-spacing: 1px;">DOCUMENTO OFICIAL (CLIQUE PARA ABRIR)</span>
+                </div>`;
+            } else {
+                htmlFotos = `
+                <div style="height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; background: #e2e8f0; position:relative; overflow:hidden; border-radius:8px;">
+                    <img src="https://i.imgur.com/coryuD6.png" style="position:absolute; width:auto; height:180%; opacity:0.04; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none;">
+                    <span style="font-size:12px; font-weight:bold; color:#64748b; z-index:1; letter-spacing:1px; text-transform:uppercase;">Registro Interno Sem Anexos</span>
+                </div>`;
+            }
 
             const tagsResponsaveis = responsaveis.length > 0 ? `${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}', this)">✕</button></div>`).join('')}` : '<span style="color:#999;">Ninguém assumiu ainda</span>';
             const btnAssumirAqui = !encerrada && !euEstouCuidando ? `<button class="btn-foto" style="background:#27ae60; color:white; margin-left:10px; padding: 6px 12px; font-size: 13px;" onclick="assumirAqui(this)">🙋 Me tornar executor</button>` : '';
@@ -511,7 +530,6 @@
             textoWhats += `\n\n*Status:* ${d.status}`;
             if (d.doc_tipo || d.doc_numero) textoWhats += `\n*Doc Interno:* ${d.doc_tipo || 'Doc'} ${d.doc_numero || ''}`;
             if (d.protocolo) textoWhats += `\n*Protocolo 156:* ${d.protocolo}`;
-            if (d.pdp) textoWhats += `\n*PDP:* ${d.pdp}`;
             if (d.expediente) textoWhats += `\n*Expediente:* ${d.expediente}`;
             if (d.pdf_url) textoWhats += `\n\n*Para ver o PDF clique aqui:* ${d.pdf_url}`;
             textoWhats += `\n\n🔗 Acesse: ${window.location.href}`;
@@ -524,6 +542,8 @@
             if (d.horario_agendado) { horaFormatada = d.horario_agendado.substring(0, 5); }
 
             construirTimelineHtml(d);
+
+            const assuntoSafe = (d.assunto || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
             const linksEquipe = euEstouCuidando ? `
                 <div style="background:#e8f0ff; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px dashed #185199;">
@@ -554,17 +574,29 @@
                     </div>` : ''}
 
                     <div class="info-group"><label>Tipo de Solicitação</label><p>📌 <b>${d.tipo_solicitacao || 'Não classificado'}</b></p></div>
-                    <div class="info-group"><label>Assunto</label><p>${d.assunto}</p></div>
+                    
+                    <div class="info-group">
+                        <label>Assunto</label>
+                        <p style="justify-content:space-between; align-items:flex-start;">
+                            <span style="flex:1;">${d.assunto}</span>
+                            <button class="btn-micro" onclick="copiarTexto('${assuntoSafe}')" title="Copiar Assunto">📋</button>
+                        </p>
+                    </div>
                     
                     ${(d.doc_tipo || d.doc_numero) ? `<div class="info-group" style="background:#e8f0ff; padding:10px; border-radius:4px;"><label>Documento Interno</label><p>📄 <b>${d.doc_tipo || 'Doc'}: ${d.doc_numero || ''}</b></p></div>` : ''}
                     ${d.protocolo ? `<div class="info-group" style="background:#d0e8ff; padding:10px; border-radius:4px;"><label>Protocolo 156</label><p>🔢 <b>${d.protocolo}</b></p></div>` : ''}
-                    ${d.pdp ? `<div class="info-group" style="background:#fff3cd; padding:10px; border-radius:4px;"><label>PDP (Poder Executivo)</label><p>📋 <b>${d.pdp}</b></p></div>` : ''}
                     ${d.expediente ? `<div class="info-group" style="background:#f5cd79; padding:10px; border-radius:4px;"><label>Expediente (Legis)</label><p>📄 <b>${d.expediente}</b></p></div>` : ''}
                     ${(d.data_agendada || d.horario_agendado) ? `<div class="info-group" style="background:#e8f0ff; padding:10px; border-radius:4px;"><label>Data e Horário</label><p>📅 ${dataApresentacao}   ⏰ ${horaFormatada || '--:--'}</p></div>` : ''}
                     ${d.secretaria ? `<div class="info-group"><label>Secretaria</label><p>🏢 ${d.secretaria}</p></div>` : ''}
                     ${(d.rua || d.bairro) ? `<div class="info-group"><label>Endereço</label><p>${d.rua}, ${d.numero} - ${d.bairro} <button class="btn-foto" style="background:#3498db; margin-left:10px;" onclick="abrirMapa('${ruaSegura}','${d.numero}','${bairroSeguro}')">📍 Mapa</button></p></div>` : ''}
                     
-                    <div class="info-group"><label>Descrição</label><p>${d.descricao || 'Sem descrição.'}</p></div>
+                    <div class="info-group">
+                        <label>Descrição</label>
+                        <div style="background:#f8fafc; padding:12px; border:1px solid #e2e8f0; border-radius:4px; font-size:14px; white-space:pre-wrap; margin-top:5px; position:relative;">
+                            ${d.descricao || 'Sem descrição.'}
+                            ${d.descricao ? `<button class="btn-micro" style="position:absolute; top:8px; right:8px; width:auto; padding:4px 8px; height:auto; font-size:11px; font-weight:bold;" onclick="copiarDescricao()">📋 Copiar</button>` : ''}
+                        </div>
+                    </div>
 
                     <div class="info-group" style="background:#f0f7e6; padding:10px; border-left:4px solid #27ae60; border-radius:4px;">
                         <label>Dados do Solicitante</label><p>👤 ${d.solicitante_nome || 'Não informado'}</p><p>📞 ${d.solicitante_tel || 'Não informado'}</p>
@@ -625,12 +657,12 @@
                             <label style="color:#d35400;">Responsável (Quem deu a Ordem)</label>
                             <select id="editResponsavelOrdem" ${bloqueado}>
                                 <option value="" ${!d.responsavel_ordem?'selected':''}>Não definido</option>
-                                <option value="Daniel" ${d.responsavel_ordem==='Daniel'?'selected':''}>Daniel</option>
-                                <option value="João Pedro" ${d.responsavel_ordem==='João Pedro'?'selected':''}>João Pedro</option>
                                 <option value="Alemão" ${d.responsavel_ordem==='Alemão'?'selected':''}>Alemão</option>
                                 <option value="Antonio" ${d.responsavel_ordem==='Antonio'?'selected':''}>Antonio</option>
-                                <option value="Luana" ${d.responsavel_ordem==='Luana'?'selected':''}>Luana</option>
+                                <option value="Daniel" ${d.responsavel_ordem==='Daniel'?'selected':''}>Daniel</option>
                                 <option value="Débora" ${d.responsavel_ordem==='Débora'?'selected':''}>Débora</option>
+                                <option value="João Pedro" ${d.responsavel_ordem==='João Pedro'?'selected':''}>João Pedro</option>
+                                <option value="Luana" ${d.responsavel_ordem==='Luana'?'selected':''}>Luana</option>
                             </select>
                         </div>
 
@@ -640,12 +672,12 @@
                         <div style="display:flex; gap:10px;">
                             <select id="addResponsavelSelect" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;">
                                 <option value="">Atribuir executor manualmente...</option>
-                                <option value="Daniel">Daniel</option>
-                                <option value="João Pedro">João Pedro</option>
                                 <option value="Alemão">Alemão</option>
                                 <option value="Antonio">Antonio</option>
-                                <option value="Luana">Luana</option>
+                                <option value="Daniel">Daniel</option>
                                 <option value="Débora">Débora</option>
+                                <option value="João Pedro">João Pedro</option>
+                                <option value="Luana">Luana</option>
                             </select>
                             <button class="btn-foto" style="background:#27ae60; padding:8px 15px;" onclick="adicionarResponsavelManual(this)">➕ Adicionar</button>
                         </div>
@@ -672,21 +704,21 @@
                         <div class="form-group">
                             <label>Status Manual</label>
                             <select id="editStatus" ${bloqueado}>
+                                <option value="156 Pedido" ${d.status==='156 Pedido'?'selected':''}>156 Pedido</option>
                                 <option value="Aberta" ${d.status==='Aberta'?'selected':''}>Aberta</option>
-                                <option value="Pendente" ${d.status==='Pendente'?'selected':''}>Pendente</option>
                                 <option value="Aguardando" ${d.status==='Aguardando'?'selected':''}>Aguardando</option>
                                 <option value="Aguardando Aprovação" ${d.status==='Aguardando Aprovação'?'selected':''}>Aguardando Aprovação</option>
-                                <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada</option>
-                                <option value="Em Andamento" ${d.status==='Em Andamento'?'selected':''}>Em Andamento</option>
-                                <option value="Sem Legis" ${d.status==='Sem Legis'?'selected':''}>Sem Legis</option>
-                                <option value="156 Pedido" ${d.status==='156 Pedido'?'selected':''}>156 Pedido</option>
+                                <option value="Aguardando execução da secretaria" ${d.status==='Aguardando execução da secretaria'?'selected':''}>Aguardando execução da Secretaria</option>
                                 <option value="Aguardando Exp" ${d.status==='Aguardando Exp'?'selected':''}>Aguardando Exp (Legis)</option>
-                                <option value="Atendido" ${d.status==='Atendido'?'selected':''}>Atendido</option>
-                                <option value="Resolvido" ${d.status==='Resolvido'?'selected':''}>Resolvido</option>
-                                <option value="Concluída" ${d.status==='Concluída'?'selected':''}>Concluída</option>
+                                <option value="Aprovada" ${d.status==='Aprovada'?'selected':''}>Aprovada</option>
                                 <option value="Arquivada" ${d.status==='Arquivada'?'selected':''}>Arquivada</option>
+                                <option value="Atendido" ${d.status==='Atendido'?'selected':''}>Atendido</option>
+                                <option value="Concluída" ${d.status==='Concluída'?'selected':''}>Concluída</option>
+                                <option value="Em Andamento" ${d.status==='Em Andamento'?'selected':''}>Em Andamento</option>
+                                <option value="Pendente" ${d.status==='Pendente'?'selected':''}>Pendente</option>
                                 <option value="Rejeitada" ${d.status==='Rejeitada'?'selected':''}>Rejeitada</option>
-                                <option value="Aguardando execução da secretaria" ${d.status==='Aguardando execução da secretaria'?'selected':''}>🏢 Aguardando execução da Secretaria</option>
+                                <option value="Resolvido" ${d.status==='Resolvido'?'selected':''}>Resolvido</option>
+                                <option value="Sem Legis" ${d.status==='Sem Legis'?'selected':''}>Sem Legis</option>
                             </select>
                         </div>
                         
@@ -695,16 +727,17 @@
                                 <label>Doc. Interno (Tipo)</label>
                                 <select id="editDocTipo" ${bloqueado}>
                                     <option value="" ${!d.doc_tipo?'selected':''}>Selecione...</option>
-                                    <option value="Ofício" ${d.doc_tipo==='Ofício'?'selected':''}>Ofício</option>
                                     <option value="Memorando" ${d.doc_tipo==='Memorando'?'selected':''}>Memorando</option>
+                                    <option value="Ofício" ${d.doc_tipo==='Ofício'?'selected':''}>Ofício</option>
+                                    <option value="PDP" ${d.doc_tipo==='PDP'?'selected':''}>PDP</option>
                                     <option value="Requerimento" ${d.doc_tipo==='Requerimento'?'selected':''}>Requerimento</option>
+                                    <option value="Sessão Solene" ${d.doc_tipo==='Sessão Solene'?'selected':''}>Sessão Solene</option>
                                 </select>
                             </div>
                             <div class="form-group" style="margin-bottom:0;"><label>Doc. Interno (Número)</label><input type="text" id="editDocNumero" value="${d.doc_numero || ''}" placeholder="Ex: 3900/2026" ${bloqueado}></div>
                         </div>
                         
                         <div class="form-group"><label>Protocolo 156</label><input type="text" id="editProtocolo" value="${d.protocolo || ''}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher" ${bloqueado}></div>
-                        <div class="form-group"><label>PDP (Poder Executivo)</label><input type="text" id="editPdp" value="${d.pdp || ''}" placeholder="Ex: PDP 4071/2026" ${bloqueado}></div>
                         <div class="form-group"><label>Expediente (Legis)</label><input type="text" id="editExpediente" value="${d.expediente || ''}" placeholder="Ex: Exp. 5149" ${bloqueado}></div>
                         <div class="form-group"><label>Observações Internas (Equipe)</label><textarea id="editObservacoes" rows="2" placeholder="Anotações que só a equipe vê..." ${bloqueado}>${d.observacoes_internas || ''}</textarea></div>
                         <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:4px;"><label>Link Direto do Legis 🔗</label><input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo..." ${bloqueado}></div>
@@ -819,7 +852,6 @@
             let doc_tipo = document.getElementById('editDocTipo') ? document.getElementById('editDocTipo').value : (demandaAtual.doc_tipo || '');
             let doc_numero = document.getElementById('editDocNumero') ? document.getElementById('editDocNumero').value.trim() : (demandaAtual.doc_numero || '');
             let protocolo = document.getElementById('editProtocolo') ? document.getElementById('editProtocolo').value.trim() : (demandaAtual.protocolo || '');
-            let pdp = document.getElementById('editPdp') ? document.getElementById('editPdp').value.trim() : (demandaAtual.pdp || '');
             let expediente = document.getElementById('editExpediente') ? document.getElementById('editExpediente').value.trim() : (demandaAtual.expediente || '');
             let observacoes_internas = document.getElementById('editObservacoes') ? document.getElementById('editObservacoes').value.trim() : (demandaAtual.observacoes_internas || '');
             let linkLegis = document.getElementById('editLinkLegis') ? document.getElementById('editLinkLegis').value.trim() : (demandaAtual.link_legis || '');
@@ -838,16 +870,14 @@
             const isAtualBloqueado = tiposProjetos.includes(tipo_solicitacao || demandaAtual.tipo_solicitacao);
             const estaAguardando = (demandaAtual.status === 'Aguardando Aprovação' || demandaAtual.status === 'Aberta' || demandaAtual.status === 'Pendente');
             
+            // Controle de segurança (Só não deixa editar os status pendentes sem ser aprovado pelo Daniel)
             if (isAtualBloqueado && estaAguardando) {
                 statusEdit = demandaAtual.status; protocolo = demandaAtual.protocolo || ''; expediente = demandaAtual.expediente || '';
                 linkLegis = demandaAtual.link_legis || ''; doc_tipo = demandaAtual.doc_tipo || ''; doc_numero = demandaAtual.doc_numero || '';
-            } else {
-                if (expediente && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada') { statusEdit = 'Concluída'; } 
-                else if (protocolo && protocolo !== '156 2026/' && statusEdit !== 'Aguardando Exp' && statusEdit !== 'Concluída' && statusEdit !== 'Arquivada' && statusEdit !== 'Rejeitada' && statusEdit !== 'Sem Legis') { statusEdit = '156 Pedido'; }
             }
 
             const updates = {
-                status: statusEdit, doc_tipo: doc_tipo, doc_numero: doc_numero, protocolo: protocolo, pdp: pdp, expediente: expediente, link_legis: linkLegis,
+                status: statusEdit, doc_tipo: doc_tipo, doc_numero: doc_numero, protocolo: protocolo, expediente: expediente, link_legis: linkLegis,
                 observacoes_internas: observacoes_internas,
                 data_agendada: data_agendada, horario_agendado: horario_agendado, secretaria: secretaria, providencias: providencias,
                 tipo_solicitacao: tipo_solicitacao, assunto: assunto, descricao: descricao, solicitante_nome: nomeSol, solicitante_tel: telSol, responsavel_ordem: responsavel_ordem
@@ -855,7 +885,6 @@
             
             const hist = demandaAtual.historico || [];
             
-            // Registrando os campos que foram editados na linha do tempo
             let alterados = [];
             if (tipo_solicitacao !== demandaAtual.tipo_solicitacao) alterados.push('Tipo');
             if (assunto !== demandaAtual.assunto) alterados.push('Assunto');
