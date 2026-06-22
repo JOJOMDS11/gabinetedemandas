@@ -371,7 +371,7 @@
             }
         }
 
-        async function inicializarSistema() {
+       async function inicializarSistema() {
             try {
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
@@ -379,30 +379,46 @@
                     global: { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} }
                 });
 
-                // --- ÚLTIMO ACESSO ---
-                (async () => {
-                    try {
-                        const agora = new Date().toISOString();
-                        await db.from('ultimo_acesso').upsert(
-                            { usuario: usuarioLogado, acessado_em: agora },
-                            { onConflict: 'usuario' }
-                        );
-                        const { data: acessos } = await db
-                            .from('ultimo_acesso')
-                            .select('usuario, acessado_em')
-                            .order('acessado_em', { ascending: false });
-                        if (acessos && acessos.length > 0) {
-                            const linhas = acessos.map(a => {
-                                const dt = new Date(a.acessado_em);
-                                const fmt = dt.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
-                                return `<span style="margin-right:12px;">👤 <b>${a.usuario}</b>: ${fmt}</span>`;
-                            }).join('');
-                            const faixa = document.getElementById('faixaUltimoAcesso');
-                            if (faixa) faixa.innerHTML = '🕐 Último acesso: ' + linhas;
-                        }
-                    } catch(e) { console.warn('Último acesso:', e); }
-                })();
-                // --- FIM ÚLTIMO ACESSO ---
+                carregarDemandas();
+                
+                // --- CANAL REALTIME RECONSTRUÍDO ---
+                db.channel('dashboard-live')
+                  .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, (payload) => {
+                     
+                     // Lógica de atualização da lista local
+                     if (payload.eventType === 'INSERT') {
+                          todasDemandas.unshift(payload.new);
+                     } else if (payload.eventType === 'UPDATE') {
+                          const idx = todasDemandas.findIndex(d => d.id === payload.new.id);
+                          if (idx !== -1) todasDemandas[idx] = payload.new;
+                     } else if (payload.eventType === 'DELETE') {
+                          todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id);
+                     }
+                     
+                     // REFRESH AUTOMÁTICO (forçado a cada mudança)
+                     todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+                     atualizarContadores();
+                     renderDemandas();
+                     
+                     // PUSH E NOTIFICAÇÃO (Garantindo que o Daniel receba sempre)
+                     if (payload.eventType === 'INSERT' && ['Pendente', 'Aberta', 'Aguardando Aprovação', 'Aguardando'].includes(payload.new.status)) {
+                          db.functions.invoke('send-push', { body: { payload: { title: "🔔 Gabinete Daniel", body: "Nova demanda para aprovação", url: "/dashboard.html" }, targetUsers: ['Daniel'] }});
+                          if (usuarioLogado === 'Daniel') mostrarNotificacaoCelular("🔔 Gabinete Daniel", "Nova demanda para aprovação!");
+                     }
+                     
+                     // AVISO DE APROVAÇÃO PARA EQUIPE
+                     if (payload.eventType === 'UPDATE' && payload.new.status === 'Aprovada' && payload.old.status !== 'Aprovada') {
+                          let interessados = [payload.new.criador, ...(payload.new.responsaveis || [])].filter(x => x && x !== 'Daniel');
+                          interessados = [...new Set(interessados)];
+                          if (interessados.length > 0) {
+                              db.functions.invoke('send-push', { body: { payload: { title: "✅ Aprovada", body: `Aprovado: ${payload.new.assunto}`, url: "/dashboard.html" }, targetUsers: interessados }});
+                              if (interessados.includes(usuarioLogado)) mostrarNotificacaoCelular("✅ Aprovada", `O Daniel aprovou: ${payload.new.assunto}`);
+                          }
+                     }
+                  })
+                  .subscribe();
+            } catch (err) { console.error("Erro", err); }
+        }
 
                 carregarDemandas();
 
