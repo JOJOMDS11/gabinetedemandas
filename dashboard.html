@@ -107,6 +107,7 @@
             <button class="btn-logout" id="btnLogout" title="Sair">🚪</button>
         </div>
     </div>
+    <div id="faixaUltimoAcesso" style="background:#f0f4ff; border-bottom:1px solid #ccd6f6; padding:5px 16px; font-size:12px; color:#444; white-space:nowrap; overflow-x:auto; text-overflow:ellipsis;">🕐 Carregando último acesso...</div>
 
     <div class="container">
         <div class="header-section">
@@ -138,9 +139,9 @@
        <div class="container">
         <!-- FILTROS NO TOPO -->
         <div class="filtros" style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #ddd;">
-            <button class="filtro-btn ativo" data-status="Todas" onclick="filtrar('Todas')">Todas <span id="count-Todas" style="font-size:10px; background:#eee; padding:2px 6px; border-radius:10px; color:#333;">0</span></button>
+            <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas <span id="count-Todas" style="font-size:10px; background:#eee; padding:2px 6px; border-radius:10px; color:#333;">0</span></button>
             <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="Aberta" onclick="filtrar('Aberta')">Abertas/Pendentes <span id="count-Aberta" style="font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn ativo" data-status="Aberta" onclick="filtrar('Aberta')">Abertas/Pendentes <span id="count-Aberta" style="font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
             <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">Andamento <span id="count-Em Andamento" style="font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
             <button class="filtro-btn" data-status="Aguardando execução da secretaria" onclick="filtrar('Aguardando execução da secretaria')">🏢 Exec. Secretaria <span id="count-Sec" style="font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
             <button class="filtro-btn" data-status="156 Pedido" onclick="filtrar('156 Pedido')">156 Pedido <span id="count-156 Pedido" style="font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
@@ -148,11 +149,6 @@
             <button class="filtro-btn" data-status="Aguardando Exp" onclick="filtrar('Aguardando Exp')">Exp Legis</button>
             <button class="filtro-btn" data-status="Concluída" onclick="filtrar('Concluída')">Concluídas</button>
             <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
-        </div>
-
-        <div class="header-section">
-            <h2 class="text-primary">Painel de Demandas</h2>
-            <button class="btn-nova" onclick="window.location.href='nova-demanda.html'">+ Nova Demanda</button>
         </div>
 
         <div class="cards-grid" id="demandas">A carregar...</div>
@@ -201,7 +197,7 @@
     <script>
         let db;
         let todasDemandas = [];
-        let filtroAtual = 'Todas';
+        let filtroAtual = 'Aberta';
         let paginaAtual = 1;
         const itensPorPagina = 9;
         let idParaExcluir = null;
@@ -444,6 +440,34 @@
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey, {
                     global: { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} }
                 });
+
+                // --- ÚLTIMO ACESSO: registrar e exibir para todos ---
+                (async () => {
+                    try {
+                        const agora = new Date().toISOString();
+                        // Salva o acesso atual do usuário logado
+                        await db.from('ultimo_acesso').upsert(
+                            { usuario: usuarioLogado, acessado_em: agora },
+                            { onConflict: 'usuario' }
+                        );
+                        // Busca os últimos acessos de todos
+                        const { data: acessos } = await db
+                            .from('ultimo_acesso')
+                            .select('usuario, acessado_em')
+                            .order('acessado_em', { ascending: false });
+                        if (acessos && acessos.length > 0) {
+                            const linhas = acessos.map(a => {
+                                const dt = new Date(a.acessado_em);
+                                const fmt = dt.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+                                return `<span style="margin-right:12px;">👤 <b>${a.usuario}</b>: ${fmt}</span>`;
+                            }).join('');
+                            const faixa = document.getElementById('faixaUltimoAcesso');
+                            if (faixa) faixa.innerHTML = '🕐 Último acesso: ' + linhas;
+                        }
+                    } catch(e) { console.warn('Último acesso:', e); }
+                })();
+                // --- FIM ÚLTIMO ACESSO ---
+
                 carregarDemandas();
 
                 // Se a permissão de notificação já tinha sido concedida antes,
@@ -477,6 +501,8 @@
                               const estaCuidando = (payload.new.responsaveis || []).includes(usuarioLogado);
                               if (usuarioLogado !== 'Daniel' && (ehCriador || estaCuidando)) {
                                   mostrarNotificacaoCelular("✅ Demanda Aprovada", `O Daniel aprovou: ${payload.new.assunto}`);
+                                  // Auto-reload do dashboard quando Daniel aprova
+                                  setTimeout(() => location.reload(), 1500);
                               }
                           }
                       } else if (payload.eventType === 'DELETE') {
