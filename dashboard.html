@@ -642,6 +642,7 @@ function atualizarContadores() {
                 if (demanda.status === 'Sem Legis') badgeClass = 'badge-SemLegis';
                 if (demanda.status === 'Concluída' || demanda.status === 'Atendido' || demanda.status === 'Resolvido') badgeClass = 'badge-Concluida';
                 if (demanda.status === 'Arquivada') badgeClass = 'badge-Arquivada';
+                if (demanda.status === 'Aguardando execução da secretaria') badgeClass = 'badge-Secretaria';
                 if (demanda.status === 'Rejeitada') badgeClass = 'badge-Rejeitada';
 
                 const donoOrdem = demanda.responsavel_ordem ? demanda.responsavel_ordem : 'Não definido';
