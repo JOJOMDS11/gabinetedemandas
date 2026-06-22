@@ -138,7 +138,7 @@
 
         <div class="form-row">
             <div class="form-group">
-                <label>Responsável (Dono da Ordem)</label>
+                <label>Responsável (Dono da Ordem) <span style="color:red;" title="Obrigatório">*</span></label>
                 <select id="responsavel_ordem">
                     <option value="">Não definido</option>
                     <option value="Daniel">Daniel</option>
@@ -748,6 +748,10 @@
 
             if (!tipo_solicitacao || !assunto) {
                 msg.className = 'mensagem erro'; msg.textContent = '❌ Preencha o Tipo de Solicitação e o Assunto!'; msg.style.display = 'block'; window.scrollTo(0,0); return;
+            }
+
+            if (!responsavel_ordem) {
+                msg.className = 'mensagem erro'; msg.textContent = '❌ Selecione o Responsável (Dono da Ordem) antes de salvar!'; msg.style.display = 'block'; window.scrollTo(0,0); return;
             }
 
             const btn = document.getElementById('btnEnviar');
