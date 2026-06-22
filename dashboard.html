@@ -371,7 +371,8 @@
             }
         }
 
-       async function inicializarSistema() {
+       
+async function inicializarSistema() {
     try {
         const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
         const config = await res.json();
@@ -391,7 +392,7 @@
         await carregarDemandas();
 
         if (Notification.permission === 'granted') {
-            inscreverPushReal();
+            await inscreverPushReal();
         }
 
         db.channel('dashboard-live')
@@ -407,55 +408,10 @@
                     if (payload.eventType === 'INSERT') {
                         todasDemandas.unshift(payload.new);
 
-                        if (
-                            payload.new.status !== filtroAtual &&
-                            contadoresNovas[payload.new.status] !== undefined
-                        ) {
-                            contadoresNovas[payload.new.status]++;
-                        }
-
-                        if (
-                            ['Pendente', 'Aberta', 'Aguardando Aprovação', 'Aguardando']
-                                .includes(payload.new.status)
-                        ) {
-                            const assuntoCurto =
-                                payload.new.assunto?.length > 35
-                                    ? payload.new.assunto.substring(0, 35) + '...'
-                                    : payload.new.assunto;
-
-                            db.functions
-                                .invoke('send-push', {
-                                    body: {
-                                        payload: {
-                                            title: '🔔 Gabinete Daniel',
-                                            body: `Nova demanda para aprovação: ${assuntoCurto}`,
-                                            url: '/dashboard.html'
-                                        },
-                                        targetUsers: ['Daniel']
-                                    }
-                                })
-                                .catch(err =>
-                                    console.error('Erro push:', err)
-                                );
-
-                            if (usuarioLogado === 'Daniel') {
-                                mostrarNotificacaoCelular(
-                                    '🔔 Gabinete Daniel',
-                                    `Nova demanda para aprovação: ${assuntoCurto}`
-                                );
-                            }
-                        }
-                    }
-
-                    else if (payload.eventType === 'UPDATE') {
+                    } else if (payload.eventType === 'UPDATE') {
                         const idx = todasDemandas.findIndex(
                             d => d.id === payload.new.id
                         );
-
-                        const statusAntigo =
-                            idx !== -1
-                                ? todasDemandas[idx].status
-                                : payload.old?.status;
 
                         if (idx !== -1) {
                             todasDemandas[idx] = payload.new;
@@ -463,55 +419,7 @@
                             todasDemandas.unshift(payload.new);
                         }
 
-                        if (
-                            payload.new.status !== statusAntigo &&
-                            payload.new.status !== filtroAtual &&
-                            contadoresNovas[payload.new.status] !== undefined
-                        ) {
-                            contadoresNovas[payload.new.status]++;
-                        }
-
-                        if (
-                            payload.new.status === 'Aprovada' &&
-                            statusAntigo !== 'Aprovada'
-                        ) {
-                            let interessados = [
-                                payload.new.criador,
-                                ...(payload.new.responsaveis || [])
-                            ]
-                                .filter(x => x && x !== 'Daniel');
-
-                            interessados = [...new Set(interessados)];
-
-                            if (interessados.length > 0) {
-                                db.functions
-                                    .invoke('send-push', {
-                                        body: {
-                                            payload: {
-                                                title: '✅ Demanda Aprovada',
-                                                body: `O Daniel aprovou: ${payload.new.assunto}`,
-                                                url: '/dashboard.html'
-                                            },
-                                            targetUsers: interessados
-                                        }
-                                    })
-                                    .catch(err =>
-                                        console.error('Erro push:', err)
-                                    );
-
-                                if (
-                                    interessados.includes(usuarioLogado)
-                                ) {
-                                    mostrarNotificacaoCelular(
-                                        '✅ Demanda Aprovada',
-                                        `O Daniel aprovou: ${payload.new.assunto}`
-                                    );
-                                }
-                            }
-                        }
-                    }
-
-                    else if (payload.eventType === 'DELETE') {
+                    } else if (payload.eventType === 'DELETE') {
                         todasDemandas =
                             todasDemandas.filter(
                                 d => d.id !== payload.old.id
@@ -528,143 +436,26 @@
                     renderDemandas();
                 }
             )
-            })
-.subscribe((status, err) => {
-    if (status === 'SUBSCRIBED') {
-        console.log('✅ Realtime conectado: avisos automáticos vão funcionar.');
-    } else if (status === 'CHANNEL_ERROR') {
-        console.error(
-            '❌ Realtime com ERRO ao conectar.',
-            err
-        );
-    } else if (status === 'TIMED_OUT') {
-        console.error(
-            '❌ Realtime timeout.'
-        );
-    } else if (status === 'CLOSED') {
-        console.warn(
-            '⚠️ Canal Realtime fechado.'
-        );
-    }
-});
-
-} catch (err) {
-    console.error('Erro ao inicializar:', err);
-
-    document.getElementById('demandas').innerHTML =
-        '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
-}
-}
-                carregarDemandas();
-
-                if (Notification.permission === 'granted') {
-                    inscreverPushReal();
+            .subscribe((status, err) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('✅ Realtime conectado');
+                } else if (status === 'CHANNEL_ERROR') {
+                    console.error('❌ Realtime erro', err);
+                } else if (status === 'TIMED_OUT') {
+                    console.warn('⏳ Realtime timeout');
                 }
-                
-                // Radar em Tempo Real do Dashboard
-                db.channel('dashboard-live')
-                  .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, (payload) => {
-                     if (payload.eventType === 'INSERT') {
-                          todasDemandas.unshift(payload.new);
-                          
-                          // Lógica da Bolinha de Não Lida (incrementa se chegou em outra aba)
-                          if (payload.new.status !== filtroAtual && contadoresNovas[payload.new.status] !== undefined) {
-                              contadoresNovas[payload.new.status]++;
-                          }
-                          
-                          // PUSH SÓ PARA O DANIEL se a demanda nova precisar de aprovação
-                          if (['Pendente', 'Aberta', 'Aguardando Aprovação', 'Aguardando'].includes(payload.new.status)) {
-                              let assuntoCurto = payload.new.assunto && payload.new.assunto.length > 35 ? payload.new.assunto.substring(0, 35) + '...' : payload.new.assunto;
-                              
-                              const pushPayload = {
-                                title: "🔔 Gabinete Daniel",
-                                body: `Nova demanda para aprovação: ${assuntoCurto}`,
-                                url: "/dashboard.html"
-                              };
+            });
 
-                              db.functions.invoke('send-push', {
-                                body: { payload: pushPayload, targetUsers: ['Daniel'] } // Define apenas o Daniel
-                              }).catch(err => console.error('Erro ao chamar push real:', err));
-                              
-                              if (usuarioLogado === 'Daniel') {
-                                  mostrarNotificacaoCelular("🔔 Gabinete Daniel", `Nova demanda para aprovação: ${assuntoCurto}`);
-                              }
-                          }
-                      }
-                       else if (payload.eventType === 'UPDATE') {
-                          const idx = todasDemandas.findIndex(d => d.id === payload.new.id);
-                          const statusAntigo = idx !== -1 ? todasDemandas[idx].status : payload.old?.status;
-                          
-                          if (idx !== -1) {
-                              todasDemandas[idx] = payload.new;
-                          } else {
-                              todasDemandas.unshift(payload.new);
-                          }
-                          
-                          // Lógica da Bolinha: Incrementa se trocou de status e não é a aba atual
-                          if (payload.new.status !== statusAntigo && payload.new.status !== filtroAtual) {
-                              if (contadoresNovas[payload.new.status] !== undefined) {
-                                  contadoresNovas[payload.new.status]++;
-                              }
-                          }
-                          
-                          // PUSH SÓ PARA A EQUIPE se o Daniel aprovou
-                          if (payload.new.status === 'Aprovada' && statusAntigo !== 'Aprovada') {
-                              let interessados = [payload.new.criador, ...(payload.new.responsaveis || [])].filter(x => x && x !== 'Daniel');
-                              interessados = [...new Set(interessados)]; // Remove duplicados
-                              
-                              if (interessados.length > 0) {
-                                  const pushPayload = {
-                                    title: "✅ Demanda Aprovada",
-                                    body: `O Daniel aprovou: ${payload.new.assunto}`,
-                                    url: "/dashboard.html"
-                                  };
-                                  
-                                  db.functions.invoke('send-push', {
-                                    body: { payload: pushPayload, targetUsers: interessados } // Define apenas os criadores/responsáveis
-                                  }).catch(err => console.error('Erro ao chamar push real:', err));
-                              }
+    } catch (err) {
+        console.error('Erro ao inicializar:', err);
 
-                              if (interessados.includes(usuarioLogado)) {
-                                  mostrarNotificacaoCelular("✅ Demanda Aprovada", `O Daniel aprovou: ${payload.new.assunto}`);
-                              }
-                          }
-                      } else if (payload.eventType === 'DELETE') {
-                          todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id);
-                      }
-                      
-                      todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
-                      
-                      atualizarContadores();
-                      renderDemandas();
-                  })
-              })
-.subscribe((status, err) => {
-    if (status === 'SUBSCRIBED') {
-        console.log('✅ Realtime conectado: avisos automáticos vão funcionar.');
-    } else if (status === 'CHANNEL_ERROR') {
-        console.error(
-            '❌ Realtime com ERRO ao conectar.',
-            err
-        );
-    } else if (status === 'TIMED_OUT') {
-        console.error(
-            '❌ Realtime timeout.'
-        );
-    } else if (status === 'CLOSED') {
-        console.warn(
-            '⚠️ Canal Realtime fechado.'
-        );
+        document.getElementById('demandas').innerHTML =
+            '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
     }
-});
-
-} catch (err) {
-    console.error('Erro ao inicializar:', err);
-
-    document.getElementById('demandas').innerHTML =
-        '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
 }
-}
+
+
+
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
