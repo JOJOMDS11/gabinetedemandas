@@ -447,7 +447,7 @@ async function inscreverPushReal() {
                     const btnTeste = document.createElement('button');
                     btnTeste.className = 'btn-sino';
                     btnTeste.style.background = '#185199';
-                    btnTeste.innerHTML = '🔔 Testar';
+                    btnTeste.innerHTML = '🔔 ';
                     btnTeste.title = "Enviar notificação de teste";
                     btnTeste.onclick = function() {
                         mostrarNotificacaoCelular('🔔 Teste Gabinete 360', 'Se você está vendo isso, a notificação local funciona neste aparelho.');
@@ -503,19 +503,34 @@ async function inscreverPushReal() {
                 // Radar em Tempo Real do Dashboard
                 db.channel('dashboard-live')
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, (payload) => {
-                      if (payload.eventType === 'INSERT') {
+                     if (payload.eventType === 'INSERT') {
                           todasDemandas.unshift(payload.new);
                           
-                          // NOTIFICAÇÃO SMART: Só notifica o Daniel se a demanda EXIGIR atenção
+                          // 1. Avisa o Daniel via Push Real (Backend) não importa quem criou a demanda
+                          if (['Pendente', 'Aberta', 'Aguardando Aprovação'].includes(payload.new.status)) {
+                              let assuntoCurto = payload.new.assunto;
+                              if(assuntoCurto.length > 35) assuntoCurto = assuntoCurto.substring(0, 35) + '...';
+                              
+                              const pushPayload = {
+                                title: "🔔 Gabinete Daniel",
+                                body: `Nova demanda para aprovação - ${assuntoCurto}`,
+                                url: "/dashboard.html"
+                              };
+
+                              db.functions.invoke('send-push', {
+                                body: { payload: pushPayload }
+                              }).catch(err => console.error('Erro ao chamar push real:', err));
+                          }
+                          
+                          // 2. Mantém a notificação local caso o próprio Daniel esteja com a tela aberta
                           if (usuarioLogado === 'Daniel') {
                               if (['Pendente', 'Aberta', 'Aguardando Aprovação'].includes(payload.new.status)) {
                                   let assuntoCurto = payload.new.assunto;
                                   if(assuntoCurto.length > 35) assuntoCurto = assuntoCurto.substring(0, 35) + '...';
-                                  
-                                  // Formato limpo e bonito exigido
                                   mostrarNotificacaoCelular("🔔 Gabinete Daniel", `Daniel, nova demanda para aprovação - ${assuntoCurto}`);
                               }
                           }
+                      }
                       } else if (payload.eventType === 'UPDATE') {
                           const idx = todasDemandas.findIndex(d => d.id === payload.new.id);
                           if (idx !== -1) todasDemandas[idx] = payload.new;
