@@ -371,8 +371,7 @@
             }
         }
 
-       
-async function inicializarSistema() {
+       async function inicializarSistema() {
     try {
         const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
         const config = await res.json();
@@ -392,7 +391,7 @@ async function inicializarSistema() {
         await carregarDemandas();
 
         if (Notification.permission === 'granted') {
-            await inscreverPushReal();
+            inscreverPushReal();
         }
 
         db.channel('dashboard-live')
@@ -408,10 +407,55 @@ async function inicializarSistema() {
                     if (payload.eventType === 'INSERT') {
                         todasDemandas.unshift(payload.new);
 
-                    } else if (payload.eventType === 'UPDATE') {
+                        if (
+                            payload.new.status !== filtroAtual &&
+                            contadoresNovas[payload.new.status] !== undefined
+                        ) {
+                            contadoresNovas[payload.new.status]++;
+                        }
+
+                        if (
+                            ['Pendente', 'Aberta', 'Aguardando Aprovação', 'Aguardando']
+                                .includes(payload.new.status)
+                        ) {
+                            const assuntoCurto =
+                                payload.new.assunto?.length > 35
+                                    ? payload.new.assunto.substring(0, 35) + '...'
+                                    : payload.new.assunto;
+
+                            db.functions
+                                .invoke('send-push', {
+                                    body: {
+                                        payload: {
+                                            title: '🔔 Gabinete Daniel',
+                                            body: `Nova demanda para aprovação: ${assuntoCurto}`,
+                                            url: '/dashboard.html'
+                                        },
+                                        targetUsers: ['Daniel']
+                                    }
+                                })
+                                .catch(err =>
+                                    console.error('Erro push:', err)
+                                );
+
+                            if (usuarioLogado === 'Daniel') {
+                                mostrarNotificacaoCelular(
+                                    '🔔 Gabinete Daniel',
+                                    `Nova demanda para aprovação: ${assuntoCurto}`
+                                );
+                            }
+                        }
+                    }
+
+                    else if (payload.eventType === 'UPDATE') {
                         const idx = todasDemandas.findIndex(
                             d => d.id === payload.new.id
                         );
+
+                        const statusAntigo =
+                            idx !== -1
+                                ? todasDemandas[idx].status
+                                : payload.old?.status;
 
                         if (idx !== -1) {
                             todasDemandas[idx] = payload.new;
@@ -419,7 +463,55 @@ async function inicializarSistema() {
                             todasDemandas.unshift(payload.new);
                         }
 
-                    } else if (payload.eventType === 'DELETE') {
+                        if (
+                            payload.new.status !== statusAntigo &&
+                            payload.new.status !== filtroAtual &&
+                            contadoresNovas[payload.new.status] !== undefined
+                        ) {
+                            contadoresNovas[payload.new.status]++;
+                        }
+
+                        if (
+                            payload.new.status === 'Aprovada' &&
+                            statusAntigo !== 'Aprovada'
+                        ) {
+                            let interessados = [
+                                payload.new.criador,
+                                ...(payload.new.responsaveis || [])
+                            ]
+                                .filter(x => x && x !== 'Daniel');
+
+                            interessados = [...new Set(interessados)];
+
+                            if (interessados.length > 0) {
+                                db.functions
+                                    .invoke('send-push', {
+                                        body: {
+                                            payload: {
+                                                title: '✅ Demanda Aprovada',
+                                                body: `O Daniel aprovou: ${payload.new.assunto}`,
+                                                url: '/dashboard.html'
+                                            },
+                                            targetUsers: interessados
+                                        }
+                                    })
+                                    .catch(err =>
+                                        console.error('Erro push:', err)
+                                    );
+
+                                if (
+                                    interessados.includes(usuarioLogado)
+                                ) {
+                                    mostrarNotificacaoCelular(
+                                        '✅ Demanda Aprovada',
+                                        `O Daniel aprovou: ${payload.new.assunto}`
+                                    );
+                                }
+                            }
+                        }
+                    }
+
+                    else if (payload.eventType === 'DELETE') {
                         todasDemandas =
                             todasDemandas.filter(
                                 d => d.id !== payload.old.id
@@ -436,25 +528,33 @@ async function inicializarSistema() {
                     renderDemandas();
                 }
             )
-            .subscribe((status, err) => {
-                if (status === 'SUBSCRIBED') {
-                    console.log('✅ Realtime conectado');
-                } else if (status === 'CHANNEL_ERROR') {
-                    console.error('❌ Realtime erro', err);
-                } else if (status === 'TIMED_OUT') {
-                    console.warn('⏳ Realtime timeout');
-                }
-            });
-
-    } catch (err) {
-        console.error('Erro ao inicializar:', err);
-
-        document.getElementById('demandas').innerHTML =
-            '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
+            })
+.subscribe((status, err) => {
+    if (status === 'SUBSCRIBED') {
+        console.log('✅ Realtime conectado: avisos automáticos vão funcionar.');
+    } else if (status === 'CHANNEL_ERROR') {
+        console.error(
+            '❌ Realtime com ERRO ao conectar.',
+            err
+        );
+    } else if (status === 'TIMED_OUT') {
+        console.error(
+            '❌ Realtime timeout.'
+        );
+    } else if (status === 'CLOSED') {
+        console.warn(
+            '⚠️ Canal Realtime fechado.'
+        );
     }
+});
+
+} catch (err) {
+    console.error('Erro ao inicializar:', err);
+
+    document.getElementById('demandas').innerHTML =
+        '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
 }
-
-
+}
 
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
