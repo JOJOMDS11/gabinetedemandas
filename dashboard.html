@@ -208,9 +208,22 @@
     </div>
 
     <script>
-        let db;
+       let db;
         let todasDemandas = [];
-        let filtroAtual = 'Pendente';
+        let usuarioLogado = localStorage.getItem('usuarioLogado');
+        let authToken = localStorage.getItem('authToken'); 
+        
+        if (!usuarioLogado) window.location.href = 'index.html';
+        document.getElementById('nomeUsuario').textContent = usuarioLogado; 
+
+        // 🧠 NOVO: Cérebro que lembra a preferência de cada usuário!
+        let filtroPadrao = localStorage.getItem('filtro_preferido_' + usuarioLogado);
+        if (!filtroPadrao) {
+            // Se for o primeiro acesso, o Daniel cai na aprovação, a equipe cai nos pendentes
+            filtroPadrao = (usuarioLogado === 'Daniel') ? 'Aguardando Aprovação' : 'Pendente';
+        }
+        let filtroAtual = filtroPadrao;
+        
         let paginaAtual = 1;
         const itensPorPagina = 9;
         let idParaExcluir = null;
