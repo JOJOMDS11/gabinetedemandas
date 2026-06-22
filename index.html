@@ -19,13 +19,12 @@
         .logo img { max-width: 280px; height: auto; }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; color: #185199; font-weight: 700; font-size: 14px; }
-        select, input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; }
+        select, input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
         select:focus, input:focus { outline: none; border-color: #185199; }
         .btn-login { width: 100%; padding: 14px; background-color: #185199; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         .btn-login:hover { background-color: #123e75; }
         .btn-login:disabled { background-color: #95a5a6; cursor: not-allowed; }
         
-        /* Estilo do botão de instalar que vai aparecer magicamente */
         .btn-instalar { width: 100%; padding: 14px; background-color: #27ae60; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; display: none; transition: background 0.2s; box-shadow: 0 4px 6px rgba(39, 174, 96, 0.3);}
         .btn-instalar:hover { background-color: #219653; }
 
@@ -43,13 +42,7 @@
             <div class="form-group">
                 <label for="usuario">Quem é você?</label>
                 <select id="usuario" required>
-                    <option value="">Selecione seu nome</option>
-                    <option value="Daniel">Daniel</option>
-                    <option value="João Pedro">João Pedro</option>
-                    <option value="Alemão">Alemão</option>
-                    <option value="Antonio">Antonio</option>
-                    <option value="Luana">Luana</option>
-                    <option value="Débora">Débora</option>
+                    <!-- Preenchido via JavaScript -->
                 </select>
             </div>
             <div class="form-group">
@@ -57,9 +50,7 @@
                 <input type="password" id="senha" placeholder="******" required>
             </div>
             <button type="submit" id="btnAcessar" class="btn-login" disabled>Verificando acesso...</button>
-            
             <button type="button" id="btnInstalarApp" class="btn-instalar">📲 Instalar Aplicativo</button>
-
             <div class="error" id="erro"></div>
             <div class="success" id="sucesso"></div>
         </form>
@@ -67,7 +58,6 @@
 
     <script>
         let db;
-
         const emailsSinteticos = {
             'Daniel': 'daniel@gabinete.interno',
             'João Pedro': 'joaopedro@gabinete.interno',
@@ -77,15 +67,47 @@
             'Débora': 'debora@gabinete.interno'
         };
 
+        // LÓGICA DE ORDENAÇÃO DO LOGIN
+        function carregarListaUsuarios() {
+            const nomes = Object.keys(emailsSinteticos);
+            const select = document.getElementById('usuario');
+            
+            const historico = nomes.map(nome => {
+                const timeStr = localStorage.getItem('loginTime_' + nome);
+                return { nome, time: timeStr ? new Date(timeStr) : null };
+            });
+
+            // Ordena: Primeiro os mais recentes, depois ordem alfabética
+            historico.sort((a, b) => {
+                if (a.time && b.time) return b.time - a.time;
+                if (a.time) return -1;
+                if (b.time) return 1;
+                return a.nome.localeCompare(b.nome);
+            });
+
+            select.innerHTML = '<option value="">Selecione seu nome</option>';
+            historico.forEach(u => {
+                let label = u.nome;
+                if (u.time) {
+                    const dataFormatada = u.time.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' ' + u.time.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+                    label += ` (Último: ${dataFormatada})`;
+                }
+                select.innerHTML += `<option value="${u.nome}">${label}</option>`;
+            });
+
+            // Pré-seleciona o último usuário que logou neste aparelho
+            const ultimoUsuario = localStorage.getItem('ultimoUsuarioLogadoLocal');
+            if (ultimoUsuario) select.value = ultimoUsuario;
+        }
+
         async function inicializarSistema() {
+            carregarListaUsuarios();
             try {
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
-                
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
-
-                const { data: { session } } = await db.auth.getSession();
                 
+                const { data: { session } } = await db.auth.getSession();
                 if (session && localStorage.getItem('usuarioLogado')) {
                     window.location.replace('dashboard.html');
                     return;
@@ -95,101 +117,55 @@
                 btn.textContent = 'Acessar Sistema';
                 btn.disabled = false;
             } catch (err) {
-                const erroEl = document.getElementById('erro');
-                erroEl.textContent = 'Erro de comunicação com o servidor.';
-                erroEl.style.display = 'block';
+                document.getElementById('erro').textContent = 'Erro de comunicação com o servidor.';
+                document.getElementById('erro').style.display = 'block';
             }
         }
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const usuario = document.getElementById('usuario').value;
             const senha = document.getElementById('senha').value;
             const erroEl = document.getElementById('erro');
-            const sucessoEl = document.getElementById('sucesso');
             const btn = document.getElementById('btnAcessar');
             
             erroEl.style.display = 'none'; 
-            sucessoEl.style.display = 'none';
-
-            if (!usuario) { 
-                erroEl.textContent = 'Selecione seu nome na lista.'; 
-                erroEl.style.display = 'block'; 
-                return; 
-            }
+            if (!usuario) { erroEl.textContent = 'Selecione seu nome.'; erroEl.style.display = 'block'; return; }
             
-            btn.textContent = 'Autenticando...';
-            btn.disabled = true;
+            btn.textContent = 'Autenticando...'; btn.disabled = true;
 
             try {
-                const emailAlvo = emailsSinteticos[usuario];
-
-                const { data, error } = await db.auth.signInWithPassword({
-                    email: emailAlvo,
-                    password: senha
-                });
-
+                const { data, error } = await db.auth.signInWithPassword({ email: emailsSinteticos[usuario], password: senha });
                 if (error) {
-                    erroEl.textContent = 'Acesso negado. Senha incorreta.'; 
-                    erroEl.style.display = 'block';
+                    erroEl.textContent = 'Senha incorreta.'; erroEl.style.display = 'block';
                 } else {
                     localStorage.setItem('usuarioLogado', usuario);
-                    
-                    sucessoEl.textContent = 'Identidade confirmada!'; 
-                    sucessoEl.style.display = 'block';
-                    
-                    setTimeout(() => { window.location.replace('dashboard.html'); }, 800);
+                    // Salva o horário do login
+                    localStorage.setItem('loginTime_' + usuario, new Date().toISOString());
+                    localStorage.setItem('ultimoUsuarioLogadoLocal', usuario);
+                    window.location.replace('dashboard.html');
                 }
             } catch (error) {
-                erroEl.textContent = 'Falha no sistema de login.'; 
-                erroEl.style.display = 'block';
+                erroEl.textContent = 'Falha no sistema.'; erroEl.style.display = 'block';
             } finally {
-                btn.textContent = 'Acessar Sistema';
-                btn.disabled = false;
+                btn.textContent = 'Acessar Sistema'; btn.disabled = false;
             }
         });
 
         inicializarSistema();
-    </script>
 
-    <script>
-        // Registra o Service Worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('✅ Service Worker registrado', reg))
-                .catch(err => console.log('❌ Erro ao registrar SW:', err));
-        }
-
-        // Lógica do botão de instalação PWA
+        // PWA Install
         let promptDeInstalacao;
         const btnInstalarApp = document.getElementById('btnInstalarApp');
-
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Evita que o Chrome mostre o balão automático padrão
-            e.preventDefault();
-            // Guarda o evento para acionarmos depois
-            promptDeInstalacao = e;
-            // Mostra o nosso botão verde bonito
-            btnInstalarApp.style.display = 'block';
+            e.preventDefault(); promptDeInstalacao = e; btnInstalarApp.style.display = 'block';
         });
-
         btnInstalarApp.addEventListener('click', async () => {
             if (!promptDeInstalacao) return;
-            // Mostra a telinha do sistema pedindo para instalar
             promptDeInstalacao.prompt();
-            // Espera o usuário escolher "Instalar" ou "Cancelar"
             const resultado = await promptDeInstalacao.userChoice;
-            if (resultado.outcome === 'accepted') {
-                console.log('Usuário aceitou instalar o App!');
-                btnInstalarApp.style.display = 'none'; // Some com o botão se instalou
-            }
-            promptDeInstalacao = null; // Limpa o evento
-        });
-
-        // Se o App já estiver instalado e abrindo como App, esconde o botão
-        window.addEventListener('appinstalled', () => {
-            btnInstalarApp.style.display = 'none';
+            if (resultado.outcome === 'accepted') btnInstalarApp.style.display = 'none';
+            promptDeInstalacao = null;
         });
     </script>
 </body>
