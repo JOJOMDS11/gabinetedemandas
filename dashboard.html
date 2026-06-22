@@ -348,7 +348,7 @@
             }
         }
 
-        async function mostrarNotificacaoCelular(titulo, mensagem) {
+        async function mostrarNotificacaoCelular(titulo, mensagem, urlClick) {
             if (Notification.permission !== 'granted') return;
             
             try {
@@ -359,10 +359,12 @@
                         icon: 'https://i.imgur.com/coryuD6.png',
                         badge: 'https://i.imgur.com/coryuD6.png',
                         vibrate: [200, 100, 500],
-                        requireInteraction: true
+                        requireInteraction: true,
+                        data: { url: urlClick || '/dashboard.html' } // Envia o URL para o SW
                     });
                 } else {
-                    new Notification(titulo, { body: mensagem, icon: 'https://i.imgur.com/coryuD6.png' });
+                    const n = new Notification(titulo, { body: mensagem, icon: 'https://i.imgur.com/coryuD6.png' });
+                    if (urlClick) n.onclick = function() { window.location.href = urlClick; };
                 }
             } catch (err) {
                 console.error('❌ Erro ao tentar exibir notificação:', err);
