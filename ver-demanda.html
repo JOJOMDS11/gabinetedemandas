@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalhes da Demanda</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- 🔒 DOMPurify (Prevenção contra XSS) -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f2f5; color: #333; }
@@ -217,7 +221,7 @@
         function popularSelectSecretaria(valorAtual) {
             const select = document.getElementById('editSecretaria');
             if (!select) return;
-            const opcoes = listaSecretariasCarregada.map(s => `<option value="${s}">${s}</option>`).join('');
+            const opcoes = listaSecretariasCarregada.map(s => `<option value="${s}">${DOMPurify.sanitize(s)}</option>`).join('');
             select.innerHTML = '<option value="">Selecione...</option>' + opcoes + '<option value="__outra__">➕ Outra (digitar)</option>';
 
             if (!valorAtual) { select.value = ''; return; }
@@ -313,7 +317,8 @@
 
         function construirTimelineHtml(d) {
             timelineItemsHtml = []; 
-            timelineItemsHtml.push(`<li><div class="timeline-dot azul"></div><div class="timeline-evento">📋 Criada por <b>${d.criador || 'Desconhecido'}</b></div><div class="timeline-tempo">${tempoRelativo(d.criado_em)}</div></li>`);
+            const criadorS = DOMPurify.sanitize(d.criador || 'Desconhecido');
+            timelineItemsHtml.push(`<li><div class="timeline-dot azul"></div><div class="timeline-evento">📋 Criada por <b>${criadorS}</b></div><div class="timeline-tempo">${tempoRelativo(d.criado_em)}</div></li>`);
 
             const hist = d.historico || [];
             hist.forEach(h => {
@@ -323,10 +328,14 @@
                 if(['Arquivada', 'Sem Legis'].includes(h.status)) cor = 'cinza';
                 if(['Visto', 'Solicitado via Equipe Interna', 'Edição'].includes(h.status)) cor = 'azul';
 
-                let texto = `Status alterado para <b>${h.status}</b> por ${h.autor}`;
-                if (h.status === 'Visto') texto = ` Visualizado e Visto por <b>${h.autor}</b>`;
-                if (h.status === 'Solicitado via Equipe Interna') texto = `🙋 Demanda solicitada por <b>${h.autor}</b> (equipe)`;
-                if (h.status === 'Edição') texto = `✏️ <b>${h.autor}</b> editou: ${h.detalhes}`;
+                const safeAutor = DOMPurify.sanitize(h.autor || '');
+                const safeStatus = DOMPurify.sanitize(h.status || '');
+                const safeDetalhes = DOMPurify.sanitize(h.detalhes || '');
+
+                let texto = `Status alterado para <b>${safeStatus}</b> por ${safeAutor}`;
+                if (h.status === 'Visto') texto = ` Visualizado e Visto por <b>${safeAutor}</b>`;
+                if (h.status === 'Solicitado via Equipe Interna') texto = `🙋 Demanda solicitada por <b>${safeAutor}</b> (equipe)`;
+                if (h.status === 'Edição') texto = `✏️ <b>${safeAutor}</b> editou: ${safeDetalhes}`;
 
                 timelineItemsHtml.push(`<li><div class="timeline-dot ${cor}"></div><div class="timeline-evento">${texto}</div><div class="timeline-tempo">${tempoRelativo(h.data)}</div></li>`);
             });
@@ -440,8 +449,27 @@
         }
 
         function renderizar(d) {
+            // HIGIENIZAÇÃO GERAL CONTRA XSS EM TODOS OS DADOS DE EXIBIÇÃO
+            const sAssunto = DOMPurify.sanitize(d.assunto || '');
+            const sDesc = DOMPurify.sanitize(d.descricao || '');
+            const sRua = DOMPurify.sanitize(d.rua || '');
+            const sBairro = DOMPurify.sanitize(d.bairro || '');
+            const sNum = DOMPurify.sanitize(d.numero || '');
+            const sSec = DOMPurify.sanitize(d.secretaria || '');
+            const sSolic = DOMPurify.sanitize(d.solicitante_nome || '');
+            const sTel = DOMPurify.sanitize(d.solicitante_tel || '');
+            const sProt = DOMPurify.sanitize(d.protocolo || '');
+            const sExp = DOMPurify.sanitize(d.expediente || '');
+            const sDocTipo = DOMPurify.sanitize(d.doc_tipo || 'Doc');
+            const sDocNum = DOMPurify.sanitize(d.doc_numero || '');
+            const sProv = DOMPurify.sanitize(d.providencias || '');
+            const sObs = DOMPurify.sanitize(d.observacoes_internas || '');
+            const sTipo = DOMPurify.sanitize(d.tipo_solicitacao || 'Não classificado');
+            const sCriador = DOMPurify.sanitize(d.criador || 'Desconhecido');
+            const numSafeJs = (d.numero_demanda || '').replace(/'/g,"\\'");
+
             const responsaveis = (d.responsaveis || []).filter(r => r);
-            const donoOrdem = d.responsavel_ordem ? d.responsavel_ordem : 'Não definido';
+            const donoOrdem = d.responsavel_ordem ? DOMPurify.sanitize(d.responsavel_ordem) : 'Não definido';
             
             const euEstouCuidando = responsaveis.includes(usuarioLogado);
             const encerrada = ['Concluída', 'Atendido', 'Resolvido', 'Arquivada', 'Rejeitada'].includes(d.status);
@@ -478,7 +506,7 @@
                 }
 
                 let nomeAprovador = 'Daniel'; 
-                if (d.historico) { const eventoAprovacao = d.historico.find(h => h.status === 'Aprovada'); if (eventoAprovacao && eventoAprovacao.autor) nomeAprovador = eventoAprovacao.autor; }
+                if (d.historico) { const eventoAprovacao = d.historico.find(h => h.status === 'Aprovada'); if (eventoAprovacao && eventoAprovacao.autor) nomeAprovador = DOMPurify.sanitize(eventoAprovacao.autor); }
                 seloAprovado = (!['Aberta', 'Pendente', 'Aguardando', 'Aguardando Aprovação', 'Rejeitada'].includes(d.status)) ? `<span class="aprovado-daniel">Aprovada por ${nomeAprovador} ✓</span>` : '';
             } else {
                 let temVisto = false;
@@ -511,16 +539,16 @@
                 </div>`;
             }
 
-            const tagsResponsaveis = responsaveis.length > 0 ? `${responsaveis.map(r => `<div class="responsavel-tag">👤 ${r}<button onclick="sairDaCuidado('${r}', this)">✕</button></div>`).join('')}` : '<span style="color:#999;">Ninguém assumiu ainda</span>';
+            const tagsResponsaveis = responsaveis.length > 0 ? `${responsaveis.map(r => `<div class="responsavel-tag">👤 ${DOMPurify.sanitize(r)}<button onclick="sairDaCuidado('${DOMPurify.sanitize(r)}', this)">✕</button></div>`).join('')}` : '<span style="color:#999;">Ninguém assumiu ainda</span>';
             const btnAssumirAqui = !encerrada && !euEstouCuidando ? `<button class="btn-foto" style="background:#27ae60; color:white; margin-left:10px; padding: 6px 12px; font-size: 13px;" onclick="assumirAqui(this)">🙋 Me tornar executor</button>` : '';
 
             const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui(this)">🙋 Eu Assumo (Executar)</button>` : '';
             const inputDemandaNum = isAdmin
-                ? `<input type="text" id="editNumDemanda" value="${d.numero_demanda || ''}" readonly style="max-width:160px; padding:5px; background:#eee; font-weight:bold;">
+                ? `<input type="text" id="editNumDemanda" value="${numSafeJs}" readonly style="max-width:160px; padding:5px; background:#eee; font-weight:bold;">
                    <button type="button" class="btn-foto" style="background:#9b59b6; margin-left:8px;" onclick="regenerarNumeroDemanda()" title="Recalcula como Data + Hora atual">🔄 Atualizar p/ Data+Hora atual</button>`
-                : `<p><b>${d.numero_demanda || 'N/A'}</b></p>`;
+                : `<p><b>${numSafeJs || 'N/A'}</b></p>`;
 
-            const ruaSegura = d.rua ? d.rua.replace(/'/g,"\\'") : ''; const bairroSeguro = d.bairro ? d.bairro.replace(/'/g,"\\'") : '';
+            const ruaSegura = sRua.replace(/'/g,"\\'"); const bairroSeguro = sBairro.replace(/'/g,"\\'");
 
             let textoWhats = `*${(d.tipo_solicitacao || 'Registro').toUpperCase()}*\n*Assunto:* ${d.assunto}\n`;
             if (d.descricao) textoWhats += `*Detalhes:* ${d.descricao.substring(0, 150)}...\n`;
@@ -543,7 +571,7 @@
 
             construirTimelineHtml(d);
 
-            const assuntoSafe = (d.assunto || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
             const linksEquipe = euEstouCuidando ? `
                 <div style="background:#e8f0ff; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px dashed #185199;">
@@ -573,37 +601,37 @@
                         <button onclick="excluirPdf()" class="btn-foto" style="background:#c0392b; font-size: 13px; padding: 10px 15px;">🗑️ Excluir PDF</button>
                     </div>` : ''}
 
-                    <div class="info-group"><label>Tipo de Solicitação</label><p>📌 <b>${d.tipo_solicitacao || 'Não classificado'}</b></p></div>
+                    <div class="info-group"><label>Tipo de Solicitação</label><p>📌 <b>${sTipo}</b></p></div>
                     
                     <div class="info-group">
                         <label>Assunto</label>
                         <p style="justify-content:space-between; align-items:flex-start;">
-                            <span style="flex:1;">${d.assunto}</span>
-                            <button class="btn-micro" onclick="copiarTexto('${assuntoSafe}')" title="Copiar Assunto">📋</button>
+                            <span style="flex:1;">${sAssunto}</span>
+                            <button class="btn-micro" onclick="copiarTexto('${assuntoSafeJs}')" title="Copiar Assunto">📋</button>
                         </p>
                     </div>
                     
-                    ${(d.doc_tipo || d.doc_numero) ? `<div class="info-group" style="background:#e8f0ff; padding:10px; border-radius:4px;"><label>Documento Interno</label><p>📄 <b>${d.doc_tipo || 'Doc'}: ${d.doc_numero || ''}</b></p></div>` : ''}
-                    ${d.protocolo ? `<div class="info-group" style="background:#d0e8ff; padding:10px; border-radius:4px;"><label>Protocolo 156</label><p>🔢 <b>${d.protocolo}</b></p></div>` : ''}
-                    ${d.expediente ? `<div class="info-group" style="background:#f5cd79; padding:10px; border-radius:4px;"><label>Expediente (Legis)</label><p>📄 <b>${d.expediente}</b></p></div>` : ''}
+                    ${(d.doc_tipo || d.doc_numero) ? `<div class="info-group" style="background:#e8f0ff; padding:10px; border-radius:4px;"><label>Documento Interno</label><p>📄 <b>${sDocTipo}: ${sDocNum}</b></p></div>` : ''}
+                    ${d.protocolo ? `<div class="info-group" style="background:#d0e8ff; padding:10px; border-radius:4px;"><label>Protocolo 156</label><p>🔢 <b>${sProt}</b></p></div>` : ''}
+                    ${d.expediente ? `<div class="info-group" style="background:#f5cd79; padding:10px; border-radius:4px;"><label>Expediente (Legis)</label><p>📄 <b>${sExp}</b></p></div>` : ''}
                     ${(d.data_agendada || d.horario_agendado) ? `<div class="info-group" style="background:#e8f0ff; padding:10px; border-radius:4px;"><label>Data e Horário</label><p>📅 ${dataApresentacao}   ⏰ ${horaFormatada || '--:--'}</p></div>` : ''}
-                    ${d.secretaria ? `<div class="info-group"><label>Secretaria</label><p>🏢 ${d.secretaria}</p></div>` : ''}
-                    ${(d.rua || d.bairro) ? `<div class="info-group"><label>Endereço</label><p>${d.rua}, ${d.numero} - ${d.bairro} <button class="btn-foto" style="background:#3498db; margin-left:10px;" onclick="abrirMapa('${ruaSegura}','${d.numero}','${bairroSeguro}')">📍 Mapa</button></p></div>` : ''}
+                    ${d.secretaria ? `<div class="info-group"><label>Secretaria</label><p>🏢 ${sSec}</p></div>` : ''}
+                    ${(d.rua || d.bairro) ? `<div class="info-group"><label>Endereço</label><p>${sRua}${sNum ? ', '+sNum : ''} ${sBairro ? '- '+sBairro : ''} <button class="btn-foto" style="background:#3498db; margin-left:10px;" onclick="abrirMapa('${ruaSegura}','${sNum}','${bairroSeguro}')">📍 Mapa</button></p></div>` : ''}
                     
                     <div class="info-group">
                         <label>Descrição</label>
                         <div style="background:#f8fafc; padding:12px; border:1px solid #e2e8f0; border-radius:4px; font-size:14px; white-space:pre-wrap; margin-top:5px; position:relative;">
-                            ${d.descricao || 'Sem descrição.'}
-                            ${d.descricao ? `<button class="btn-micro" style="position:absolute; top:8px; right:8px; width:auto; padding:4px 8px; height:auto; font-size:11px; font-weight:bold;" onclick="copiarDescricao()">📋 Copiar</button>` : ''}
+                            ${sDesc || 'Sem descrição.'}
+                            ${sDesc ? `<button class="btn-micro" style="position:absolute; top:8px; right:8px; width:auto; padding:4px 8px; height:auto; font-size:11px; font-weight:bold;" onclick="copiarDescricao()">📋 Copiar</button>` : ''}
                         </div>
                     </div>
 
                     <div class="info-group" style="background:#f0f7e6; padding:10px; border-left:4px solid #27ae60; border-radius:4px;">
-                        <label>Dados do Solicitante</label><p>👤 ${d.solicitante_nome || 'Não informado'}</p><p>📞 ${d.solicitante_tel || 'Não informado'}</p>
+                        <label>Dados do Solicitante</label><p>👤 ${sSolic}</p><p>📞 ${sTel}</p>
                     </div>
 
                     <div class="info-group" style="background:#f9f9f9; padding:10px; border-radius:4px; margin-top:10px;">
-                        <label>Aberto por</label><p>✍️ <b>${d.criador || 'Desconhecido'}</b> em ${tempoRelativo(d.criado_em)}</p>
+                        <label>Aberto por</label><p>✍️ <b>${sCriador}</b> em ${tempoRelativo(d.criado_em)}</p>
                     </div>
 
                     <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
@@ -642,11 +670,11 @@
                                 </optgroup>
                             </select>
                         </div>
-                        <div class="form-group"><label>Corrigir Assunto</label><input type="text" id="editAssunto" value="${d.assunto || ''}" ${bloqueado}></div>
-                        <div class="form-group"><label>Corrigir Descrição</label><textarea id="editDescricao" rows="3" ${bloqueado}>${d.descricao || ''}</textarea></div>
+                        <div class="form-group"><label>Corrigir Assunto</label><input type="text" id="editAssunto" value="${sAssunto}" ${bloqueado}></div>
+                        <div class="form-group"><label>Corrigir Descrição</label><textarea id="editDescricao" rows="3" ${bloqueado}>${sDesc}</textarea></div>
                         <div class="form-row">
-                            <div class="form-group"><label>Corrigir Nome (Solicitante)</label><input type="text" id="editNomeSol" value="${d.solicitante_nome || ''}" ${bloqueado}></div>
-                            <div class="form-group"><label>Corrigir Telefone</label><input type="text" id="editTelSol" value="${d.solicitante_tel || ''}" ${bloqueado}></div>
+                            <div class="form-group"><label>Corrigir Nome (Solicitante)</label><input type="text" id="editNomeSol" value="${sSolic}" ${bloqueado}></div>
+                            <div class="form-group"><label>Corrigir Telefone</label><input type="text" id="editTelSol" value="${sTel}" ${bloqueado}></div>
                         </div>
                     </div>
 
@@ -699,7 +727,7 @@
                             <input type="text" id="editSecretariaOutra" placeholder="Digite o nome da secretaria..." style="display:none; margin-top:8px;" ${bloqueado}>
                         </div>
 
-                        <div class="form-group"><label>Providências / Ações Tomadas</label><textarea id="editProvidencias" rows="2" placeholder="O que já foi feito?" ${bloqueado}>${d.providencias || ''}</textarea></div>
+                        <div class="form-group"><label>Providências / Ações Tomadas</label><textarea id="editProvidencias" rows="2" placeholder="O que já foi feito?" ${bloqueado}>${sProv}</textarea></div>
 
                         <div class="form-group">
                             <label>Status Manual</label>
@@ -734,12 +762,12 @@
                                     <option value="Sessão Solene" ${d.doc_tipo==='Sessão Solene'?'selected':''}>Sessão Solene</option>
                                 </select>
                             </div>
-                            <div class="form-group" style="margin-bottom:0;"><label>Doc. Interno (Número)</label><input type="text" id="editDocNumero" value="${d.doc_numero || ''}" placeholder="Ex: 3900/2026" ${bloqueado}></div>
+                            <div class="form-group" style="margin-bottom:0;"><label>Doc. Interno (Número)</label><input type="text" id="editDocNumero" value="${sDocNum}" placeholder="Ex: 3900/2026" ${bloqueado}></div>
                         </div>
                         
-                        <div class="form-group"><label>Protocolo 156</label><input type="text" id="editProtocolo" value="${d.protocolo || ''}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher" ${bloqueado}></div>
-                        <div class="form-group"><label>Expediente (Legis)</label><input type="text" id="editExpediente" value="${d.expediente || ''}" placeholder="Ex: Exp. 5149" ${bloqueado}></div>
-                        <div class="form-group"><label>Observações Internas (Equipe)</label><textarea id="editObservacoes" rows="2" placeholder="Anotações que só a equipe vê..." ${bloqueado}>${d.observacoes_internas || ''}</textarea></div>
+                        <div class="form-group"><label>Protocolo 156</label><input type="text" id="editProtocolo" value="${sProt}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher" ${bloqueado}></div>
+                        <div class="form-group"><label>Expediente (Legis)</label><input type="text" id="editExpediente" value="${sExp}" placeholder="Ex: Exp. 5149" ${bloqueado}></div>
+                        <div class="form-group"><label>Observações Internas (Equipe)</label><textarea id="editObservacoes" rows="2" placeholder="Anotações que só a equipe vê..." ${bloqueado}>${sObs}</textarea></div>
                         <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:4px;"><label>Link Direto do Legis 🔗</label><input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo..." ${bloqueado}></div>
                     </div>
 
@@ -1066,6 +1094,20 @@
             } catch (e) { alert('Erro: ' + e.message); } 
             finally { btn.disabled = false; setTimeout(() => { prog.style.display = 'none'; }, 3000); }
         }
+
+        // --- PROTEÇÃO DE SESSÃO (TIMEOUT DE 30 MINUTOS) ---
+        let sessionTimeout;
+        function resetarSessao() {
+            clearTimeout(sessionTimeout);
+            sessionTimeout = setTimeout(() => {
+                alert("Sessão expirada por inatividade. Por segurança, faça login novamente.");
+                document.getElementById('btnLogout').click();
+            }, 30 * 60 * 1000);
+        }
+        document.addEventListener('mousemove', resetarSessao);
+        document.addEventListener('keypress', resetarSessao);
+        document.addEventListener('click', resetarSessao);
+        resetarSessao();
 
         inicializarSistema();
     </script>
