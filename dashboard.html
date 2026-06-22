@@ -619,9 +619,12 @@
             document.querySelectorAll('[data-criado]').forEach(el => { el.textContent = '🕐 Aberto ' + tempoRelativo(el.getAttribute('data-criado')); });
         }, 30000);
 
-        async function carregarDemandas() {
+       async function carregarDemandas() {
             const { data, error } = await db.from('demandas').select('*').order('criado_em', { ascending: false });
-            if (!error) { todasDemandas = data || []; renderDemandas(); }
+            if (!error) { 
+                todasDemandas = data || []; 
+                window.filtrar(filtroAtual); // Pinta o botão memorizado e renderiza
+            }
         }
 
         window.assumirDemanda = async function(id, btnElement) {
