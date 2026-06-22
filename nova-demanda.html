@@ -576,7 +576,6 @@ if (match156) {
         // Remove da descrição para não ficar duplicado
         parsed.desc = parsed.desc.replace(match156Desc[0], '').trim();
     }
-}
 
                 let matchBairro = parsed.desc.match(/bairro\s+([^,.]+)/i);
                 if (matchBairro) parsed.bairro = matchBairro[1].trim();
