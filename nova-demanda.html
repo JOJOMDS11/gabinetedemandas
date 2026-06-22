@@ -558,6 +558,17 @@
                     return;
                 }
 
+                // Coluna de assunto/demanda (tamanho médio, com palavras-chave típicas de demanda)
+                if (cell.length > 10 && cell.length <= 50 && !parsed.assunto) {
+                    const temPalavraAssunto = cell.match(/visita|conserto|reparo|solicitação|pedido|requerimento|providência|erosão|calçada|asfalto|iluminação|limpeza|poda|bueiro|reunião|agenda|demanda|cortesia|disposição|informação/i);
+                    if (temPalavraAssunto) {
+                        let assuntoCell = cell.charAt(0).toUpperCase() + cell.slice(1);
+                        if (assuntoCell.length > 65) assuntoCell = assuntoCell.substring(0, 65).trim() + '...';
+                        parsed.assunto = assuntoCell;
+                        return;
+                    }
+                }
+
                 // Solicitante
                 if (cell.length > 2 && cell.length <= 40 && !cell.match(/\d/) && !parsed.nome) {
                     parsed.nome = cell; return;
@@ -565,20 +576,23 @@
             });
 
             // Extração avançada DENTRO da descrição
-           let match156 = texto.match(/156\s*20\d{2}\/\d+/i);
-if (match156) {
-    parsed.protocolo = match156[0];
-} else {
-    // Se não pegou no texto todo, tenta buscar dentro da descrição caso ela tenha sido preenchida
-    let match156Desc = (parsed.desc || "").match(/156\s*20\d{2}\/\d+/i);
-    if(match156Desc) {
-        parsed.protocolo = match156Desc[0];
-        // Remove da descrição para não ficar duplicado
-        parsed.desc = parsed.desc.replace(match156Desc[0], '').trim();
-    }
+            let match156 = texto.match(/156\s*20\d{2}\/\d+/i);
+            if (match156) {
+                parsed.protocolo = match156[0];
+            } else {
+                // Se não pegou no texto todo, tenta buscar dentro da descrição caso ela tenha sido preenchida
+                let match156Desc = (parsed.desc || "").match(/156\s*20\d{2}\/\d+/i);
+                if(match156Desc) {
+                    parsed.protocolo = match156Desc[0];
+                    // Remove da descrição para não ficar duplicado
+                    parsed.desc = parsed.desc.replace(match156Desc[0], '').trim();
+                }
+            }
 
+            // Extração do bairro e geração do assunto (sempre executa, independente do protocolo)
+            if (parsed.desc) {
                 let matchBairro = parsed.desc.match(/bairro\s+([^,.]+)/i);
-                if (matchBairro) parsed.bairro = matchBairro[1].trim();
+                if (matchBairro && !parsed.bairro) parsed.bairro = matchBairro[1].trim();
 
                 let assuntoInteligente = parsed.desc.split('\n')[0];
                 assuntoInteligente = assuntoInteligente.replace(/^(solicita|requer|pede|encaminha|solicitamos)(mos)?\s+(a|o|as|os|que|para|uma|um)\s+/i, '');
@@ -632,6 +646,16 @@ if (match156) {
                         selectStatus.value = opt.value;
                     }
                 });
+
+                // Se o status importado é Pendente ou similar, marca o checkbox do Daniel
+                // para que o status NÃO seja convertido automaticamente para Aprovada
+                const statusQueExigemAprovacao = ['Pendente', 'Aberta', 'Aguardando', 'Aguardando Aprovação'];
+                const checkDaniel = document.getElementById('checkAprovacaoDaniel');
+                if (statusQueExigemAprovacao.map(s => s.toLowerCase()).includes(parsed.status.toLowerCase())) {
+                    checkDaniel.checked = true;
+                } else {
+                    checkDaniel.checked = false;
+                }
             }
 
             adaptarFormulario();
@@ -792,11 +816,11 @@ if (match156) {
                     } else {
                         statusInicial = 'Pendente'; 
                     }
-                }
 
-                if (usuarioLogado !== 'Daniel' && !document.getElementById('checkAprovacaoDaniel').checked) {
-                    if (['Pendente', 'Aberta', 'Aguardando', 'Aguardando Aprovação'].includes(statusInicial)) {
-                        statusInicial = 'Aprovada';
+                    if (usuarioLogado !== 'Daniel' && !document.getElementById('checkAprovacaoDaniel').checked) {
+                        if (['Pendente', 'Aberta', 'Aguardando', 'Aguardando Aprovação'].includes(statusInicial)) {
+                            statusInicial = 'Aprovada';
+                        }
                     }
                 }
 
