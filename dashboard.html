@@ -243,18 +243,81 @@
             console.error('❌ Este navegador não suporta Service Worker.');
         }
 
-        // Chave pública VAPID (usada para inscrever este aparelho no Push real).
-        // A chave privada correspondente fica só na Edge Function, nunca aqui.
-        const VAPID_PUBLIC_KEY = 'BKpSVEN9NzySiKfUsN1xwmOX_pyr9wJZvmKvrJo836ZrdV_S0ooNGkakEn38QXfbQTr5GkgIxNTEnx1xWVZ6THo';
+       // ================= FUNÇÕES DE WEB PUSH DEFINITIVO =================
+        const PUBLIC_VAPID_KEY = 'BKpSVEN9NzySiKfUsN1xwmOX_pyr9wJZvmKvrJo836ZrdV_S0ooNGkakEn38QXfbQTr5GkgIxNTEnx1xWVZ6THo';
 
-        function urlBase64ToUint8Array(base64String) {
+        function urlB64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-            const rawData = atob(base64);
+            const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
             const outputArray = new Uint8Array(rawData.length);
-            for (let i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
             return outputArray;
         }
+
+        async function ativarAvisosPush() {
+            try {
+                // 1. Pede permissão direta (sem async antes para não bloquear no telemóvel)
+                const permissao = await Notification.requestPermission();
+                if (permissao !== 'granted') {
+                    alert("❌ O telemóvel bloqueou. Precisas de permitir as notificações nas definições da App.");
+                    return;
+                }
+
+                // 2. Espera o Service Worker
+                const swRegistration = await navigator.serviceWorker.ready;
+                
+                // 3. Inscreve o aparelho no Google/Apple
+                const applicationServerKey = urlB64ToUint8Array(PUBLIC_VAPID_KEY);
+                const subscription = await swRegistration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: applicationServerKey
+                });
+                
+                const subJson = subscription.toJSON();
+                
+                // 4. Salva a inscrição na tua tabela no Supabase
+                const { error } = await db.from('push_subscriptions').insert([{
+                    usuario: usuarioLogado,
+                    endpoint: subJson.endpoint,
+                    p256dh: subJson.keys.p256dh,
+                    auth: subJson.keys.auth
+                }]);
+
+                if (error) {
+                    console.error("Erro Supabase:", error);
+                    alert("⚠️ Erro ao salvar a inscrição no banco de dados.");
+                    return;
+                }
+
+                alert("✅ Sucesso! Vais receber avisos mesmo com a app fechada.");
+                
+                const btnSino = document.querySelector('.btn-sino');
+                if(btnSino) btnSino.style.display = 'none';
+
+            } catch (err) {
+                console.error("Erro Push:", err);
+                alert("⚠️ Erro ao registar dispositivo.");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(async () => {
+                // Se não tiver permissão de notificação, cria o botão Laranja "Ativar"
+                if (Notification.permission !== 'granted') {
+                    const btnNotif = document.createElement('button');
+                    btnNotif.className = 'btn-sino';
+                    btnNotif.innerHTML = '🔔 Ativar';
+                    // IMPORTANTE: Disparo direto no onclick
+                    btnNotif.onclick = ativarAvisosPush;
+                    
+                    const navbarActions = document.querySelector('.navbar-actions');
+                    if(navbarActions) navbarActions.prepend(btnNotif);
+                }
+            }, 1500); 
+        });
 
         // Inscreve este aparelho para receber Push DE VERDADE (funciona mesmo
         // com o site/app fechado) e salva a inscrição no banco, vinculada ao
