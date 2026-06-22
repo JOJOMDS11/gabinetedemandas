@@ -131,6 +131,7 @@
                 <div class="kpi-titulo">Finalizadas</div>
                 <div class="kpi-valor" id="kpiConcluidas">0</div>
             </div>
+            <!-- Novo KPI: Tempo de Resolução -->
             <div class="kpi-card tempo fixo">
                 <div class="kpi-titulo">Tempo Méd. Resolução</div>
                 <div class="kpi-valor" id="kpiTempo">--</div>
@@ -375,7 +376,7 @@
         window.mudarPaginaLista = function(direcao) { paginaAtualLista += direcao; renderizarListaNaTela(); }
 
         // ==========================================
-        // RENDERIZADOR DE LISTAS HTML LIMPAS
+        // RENDERIZADOR DE LISTAS HTML LIMPAS (Sem Medalhas)
         // ==========================================
         function renderListaHTML(containerId, dadosObj, tipoGrafico) {
             const container = document.getElementById(containerId);
@@ -387,11 +388,10 @@
             
             container.innerHTML = chaves.map((k, index) => {
                 const val = dadosObj[k];
-                // Adiciona a medalhinha nos 3 primeiros
-                let rank = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : '🔹'));
+                // Mostra a posição em número (Ex: 1., 2., 3.) para um visual mais sério
                 return `
                     <div class="data-item" onclick="lidarCliqueLista('${k}', '${tipoGrafico}')">
-                        <span style="font-weight:600; color:#334155;">${rank} ${k}</span>
+                        <span style="font-weight:600; color:#334155;">${index + 1}. ${k}</span>
                         <span style="font-weight:800; color:#0f172a; font-size:16px;">${val}</span>
                     </div>
                 `;
@@ -468,11 +468,15 @@
             });
 
             // 3. Equipe (Lista Limpa HTML)
-            const equipe = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
-            const equipeCounts = {}; equipe.forEach(n => equipeCounts[n] = 0);
+            // A lógica aqui vasculha ativamente o array de responsáveis e adiciona +1 para cada pessoa na demanda.
+            const equipeCounts = {}; 
             demandasMesAtual.forEach(d => {
                 const resps = d.responsaveis || [];
-                resps.forEach(r => { if (equipeCounts[r] !== undefined) equipeCounts[r]++; });
+                resps.forEach(r => { 
+                    if (r) {
+                        equipeCounts[r] = (equipeCounts[r] || 0) + 1;
+                    }
+                });
             });
             const objEquipe = {}; 
             Object.keys(equipeCounts).forEach(k => { if(equipeCounts[k] > 0) objEquipe[k] = equipeCounts[k] });
