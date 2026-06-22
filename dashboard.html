@@ -83,7 +83,6 @@
         .btn-acao.laranja { background: #e67e22; }
         .btn-acao.cinza { background: #95a5a6; }
         
-        .btn-pdf-card { background: #c0392b; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; position: absolute; bottom: 8px; right: 8px; z-index: 2;}
         .paginacao { display: flex; justify-content: center; gap: 8px; margin-top: 25px; flex-wrap: wrap; }
         .page-btn { padding: 7px 12px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .page-btn.ativo { background: #185199; color: white; }
@@ -529,7 +528,17 @@
                 } else {
                     mediaTag = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: #e2e8f0; position:relative; overflow:hidden;"><img src="https://i.imgur.com/coryuD6.png" style="position:absolute; width:120%; height:auto; opacity:0.04; top:50%; left:50%; transform:translate(-50%, -50%);"><span style="font-size:11px; font-weight:bold; color:#64748b; z-index:1; letter-spacing:1px; text-transform:uppercase;">Registro Interno</span></div>`;
                 }
-                if (demanda.pdf_url) mediaTag += `<a href="ver-demanda.html?id=${demanda.id}" class="btn-pdf-card" onclick="event.stopPropagation()">📄 PDF Anexado</a>`;
+                
+                // NOVIDADE: Links Rápidos sobre a Foto
+                let quickLinks = '';
+                const isLegisSafe = demanda.link_legis && (demanda.link_legis.startsWith('http://') || demanda.link_legis.startsWith('https://'));
+                if (demanda.pdf_url || isLegisSafe) {
+                    quickLinks += `<div style="position:absolute; bottom:8px; right:8px; display:flex; gap:5px; z-index:2;">`;
+                    if (isLegisSafe) quickLinks += `<a href="${DOMPurify.sanitize(demanda.link_legis)}" target="_blank" onclick="event.stopPropagation()" style="background:#f39c12; color:white; padding:6px 10px; border-radius:4px; text-decoration:none; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3);">🔗 Legis</a>`;
+                    if (demanda.pdf_url) quickLinks += `<a href="${demanda.pdf_url}" target="_blank" onclick="event.stopPropagation()" style="background:#c0392b; color:white; padding:6px 10px; border-radius:4px; text-decoration:none; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3);">📄 Ver PDF</a>`;
+                    quickLinks += `</div>`;
+                }
+                mediaTag += quickLinks;
 
                 let badgeClass = 'badge-Pendente';
                 if (demanda.status === 'Em Andamento') badgeClass = 'badge-Andamento';
@@ -586,7 +595,7 @@
                                 <div class="info">👥 Cuidando: <b>${cuindoTxt}</b></div>
                                 ${sProt ? `<div class="info" style="color:#0984e3; font-weight:bold;">🔢 156: ${sProt}</div>` : ''}
                                 ${sPdp ? `<div class="info" style="color:#f39c12; font-weight:bold;">📋 PDP: ${sPdp}</div>` : ''}
-                                ${sExp || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${sExp || 'Anexado'}</div>` : ''}
+                                ${sExp ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${sExp}</div>` : ''}
                                 ${tempoCard}
                                 <div class="acoes-card">${btnPrincipal}</div>
                             </div>
