@@ -471,7 +471,11 @@
             const euEstouCuidando = responsaveis.includes(usuarioLogado);
             const encerrada = ['Concluída', 'Arquivada', 'Rejeitada'].includes(d.status);
             const isAtualBloqueado = tiposProjetos.includes(d.tipo_solicitacao);
-
+// NOVA BLINDAGEM DO LINK LEGIS
+            let linkLegisSeguro = '';
+            if (d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'))) {
+                linkLegisSeguro = `<a href="${DOMPurify.sanitize(d.link_legis)}" target="_blank" class="btn-link" style="background:#f39c12; color:white; border-color:#e67e22;">🔗 Ver Legis Anexado</a>`;
+            }
             let badgeClass = 'badge-Pendente';
             if (d.status === 'Em Andamento') badgeClass = 'badge-Andamento';
             if (d.status === 'Aguardando Aprovação') badgeClass = 'badge-Aguardando';
@@ -583,9 +587,9 @@
                 <div class="box">
                     <h2>Detalhes <span class="badge ${badgeClass}">${d.status}</span> ${seloAprovado}</h2>
 
-                    <div class="links-externos">
+                   <div class="links-externos">
                         <button class="btn-link" style="background:#9b59b6; color:white; border-color:#8e44ad;" onclick="copiarResumo()">📋 Copiar Resumo</button>
-                        ${d.link_legis ? `<a href="${d.link_legis}" target="_blank" class="btn-link" style="background:#f39c12; color:white; border-color:#e67e22;">🔗 Ver Legis Anexado</a>` : ''}
+                        ${linkLegisSeguro}
                     </div>
 
                     ${d.pdf_url ? `
