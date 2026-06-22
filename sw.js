@@ -98,41 +98,25 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Notificações Push (se implementado)
-self.addEventListener('push', (event) => {
-  console.log('🔔 Notificação recebida:', event.data?.text());
-  const data = event.data?.json() || {};
-  const options = {
-    body: data.body || 'Nova notificação do Gabinete',
-    icon: 'https://i.imgur.com/coryuD6.png',
-    badge: 'https://i.imgur.com/coryuD6.png',
-    tag: data.tag || 'gabinete-notif',
-    requireInteraction: data.urgente ? true : false,
-    actions: [
-      {
-        action: 'open',
-        title: '📂 Abrir'
-      },
-      {
-        action: 'close',
-        title: '✕ Fechar'
-      }
-    ]
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'Gabinete 360', options)
-  );
+self.addEventListener('push', function(event) {
+    if (event.data) {
+        const data = event.data.json();
+        const options = {
+            body: data.body,
+            icon: 'https://i.imgur.com/coryuD6.png',
+            badge: 'https://i.imgur.com/coryuD6.png',
+            vibrate: [200, 100, 500, 100, 200],
+            requireInteraction: data.urgente || false,
+            data: { url: 'https://jojomds11.github.io/dashboard.html' }
+        };
+        event.waitUntil(self.registration.showNotification(data.title, options));
+    }
 });
 
-// Ação ao clicar na notificação
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  
-  if (event.action === 'close') {
-    return;
-  }
-
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    event.waitUntil(clients.openWindow(event.notification.data.url));
+});
   // Abre ou traz para frente a aba
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
