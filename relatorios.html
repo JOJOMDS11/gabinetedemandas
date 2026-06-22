@@ -7,6 +7,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
@@ -53,7 +54,6 @@
         .lista-info strong { color: #1e293b; font-size: 15px; display: block; margin-bottom: 4px;}
         .lista-info span { font-size: 13px; color: #64748b; display: inline-block; margin-right: 15px;}
         
-        /* Modificado para nova aba */
         .btn-ver-demanda { background: #3b82f6; color: white; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; transition: 0.2s;}
         .btn-ver-demanda:hover { background: #2563eb; }
         
@@ -62,7 +62,7 @@
         .paginacao button:disabled { opacity: 0.4; cursor: not-allowed; }
         .paginacao button:hover:not(:disabled) { background: #cbd5e1; }
 
-        /* Gráficos */
+        /* Gráficos e Listas Ranqueadas */
         .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
         
@@ -70,6 +70,21 @@
         .chart-card h3 { font-size: 16px; font-weight: 600; color: #334155; margin-bottom: 20px; display: flex; justify-content: space-between;}
         .chart-card h3 span { font-size: 12px; color: #94a3b8; font-weight: 400; background: #f8fafc; padding: 4px 8px; border-radius: 4px;}
         .chart-container { position: relative; height: 300px; width: 100%; }
+
+        /* Estilo para as Listas de Bairros e Equipe */
+        .data-list { display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; padding-right: 5px;}
+        .data-list::-webkit-scrollbar { width: 6px; }
+        .data-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .data-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f8fafc; padding: 12px 16px; border-radius: 8px;
+            cursor: pointer; transition: 0.2s; border: 1px solid #e2e8f0;
+            position: relative; overflow: hidden;
+        }
+        .data-item:hover { border-color: #3b82f6; transform: translateX(4px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .data-name { font-weight: 600; color: #334155; z-index: 2; position: relative; font-size: 13px;}
+        .data-value { font-weight: 800; color: #0f172a; font-size: 16px; z-index: 2; position: relative; }
+        .data-bg { position: absolute; left: 0; top: 0; bottom: 0; z-index: 1; opacity: 0.25; border-radius: 0 8px 8px 0; transition: width 0.5s ease-out; }
 
         #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);}
         .spinner { border: 4px solid #e2e8f0; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 16px;}
@@ -92,7 +107,7 @@
         <div class="page-header">
             <div>
                 <h2>Desempenho do Gabinete</h2>
-                <p>Clique nos cartões ou diretamente nos gráficos para listar as demandas e bairros.</p>
+                <p>Números sempre visíveis. Clique em qualquer item/gráfico para listar as demandas detalhadas.</p>
             </div>
             <div class="filtros-topo">
                 <select id="filtroMes" class="select-mes" onchange="aplicarFiltroMes()">
@@ -121,7 +136,6 @@
             </div>
         </div>
 
-        <!-- Lista Pagina Interativa -->
         <div class="secao-lista" id="secaoLista">
             <h3><span id="tituloLista">Lista de Demandas</span> <button class="btn-fechar-lista" onclick="fecharLista()">✕ Fechar</button></h3>
             <div id="containerItensLista"></div>
@@ -137,22 +151,28 @@
                 <h3>Distribuição de Situação <span>Clicável</span></h3>
                 <div class="chart-container"><canvas id="graficoStatus"></canvas></div>
             </div>
-            <div class="chart-card">
-                <h3>Top 10 Bairros Atendidos <span>Clicável</span></h3>
-                <div class="chart-container"><canvas id="graficoBairros"></canvas></div>
-            </div>
-            <div class="chart-card">
-                <h3>Carga de Trabalho (Equipe) <span>Clicável</span></h3>
-                <div class="chart-container"><canvas id="graficoEquipe"></canvas></div>
-            </div>
+            
             <div class="chart-card">
                 <h3>Top Categorias Exigidas <span>Clicável</span></h3>
                 <div class="chart-container"><canvas id="graficoCategorias"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>Carga de Trabalho (Equipe) <span>Clicável</span></h3>
+                <div class="data-list" id="listaEquipe"></div>
+            </div>
+            
+            <div class="chart-card">
+                <h3>Top 10 Bairros Atendidos <span>Clicável</span></h3>
+                <div class="data-list" id="listaBairros"></div>
             </div>
         </div>
     </div>
 
     <script>
+        // Registra o Plugin Globalmente para forçar a exibição dos números nos gráficos
+        Chart.register(ChartDataLabels);
+
         let db;
         let todasDemandasRAW = []; 
         let demandasMesAtual = []; 
@@ -161,12 +181,10 @@
         let paginaAtualLista = 1;
         const itensPorPagina = 5;
 
-        let chartStatus, chartEquipe, chartCat, chartBairros;
+        let chartStatus, chartCat;
 
         const arrayAbertas = ['Aberta', 'Pendente', 'Aguardando', 'Aguardando Aprovação'];
         const arrayConcluidas = ['Concluída', 'Atendido', 'Resolvido', 'Arquivada', 'Rejeitada'];
-        
-        // Paleta de Cores Fortes
         const paletaCores = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#64748b'];
 
         async function conectarBanco() {
@@ -217,7 +235,7 @@
             if (valorMes === 'todos') demandasMesAtual = [...todasDemandasRAW];
             else demandasMesAtual = todasDemandasRAW.filter(d => d.criado_em && d.criado_em.startsWith(valorMes));
             atualizarKPIs();
-            desenharGraficos();
+            desenharDashboards();
         }
 
         function atualizarKPIs() {
@@ -249,6 +267,15 @@
             iniciarListaNaTela(`Filtro: ${tituloKpi} (${filtrado.length})`, filtrado);
         }
 
+        window.lidarCliqueLista = function(label, tipo) {
+            document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
+            let filtrado = [];
+            if (tipo === 'equipe') filtrado = demandasMesAtual.filter(d => (d.responsaveis || []).includes(label));
+            else if (tipo === 'bairro') filtrado = demandasMesAtual.filter(d => (d.bairro || '').trim().toUpperCase() === label);
+            
+            iniciarListaNaTela(`Filtro: ${label} (${filtrado.length})`, filtrado);
+        }
+
         function lidarCliqueGrafico(evt, elements, chart, tipoGrafico) {
             if (!elements || elements.length === 0) return;
             const index = elements[0].index;
@@ -257,17 +284,10 @@
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
             let filtrado = [];
 
-            if (tipoGrafico === 'status') {
-                filtrado = demandasMesAtual.filter(d => d.status === label);
-            } else if (tipoGrafico === 'bairro') {
-                filtrado = demandasMesAtual.filter(d => (d.bairro || '').trim().toUpperCase() === label);
-            } else if (tipoGrafico === 'equipe') {
-                filtrado = demandasMesAtual.filter(d => (d.responsaveis || []).includes(label));
-            } else if (tipoGrafico === 'categoria') {
-                filtrado = demandasMesAtual.filter(d => (d.tipo_solicitacao || 'Sem categoria') === label);
-            }
+            if (tipoGrafico === 'status') filtrado = demandasMesAtual.filter(d => d.status === label);
+            else if (tipoGrafico === 'categoria') filtrado = demandasMesAtual.filter(d => (d.tipo_solicitacao || 'Sem categoria') === label);
 
-            iniciarListaNaTela(`Resultado do Gráfico: ${label} (${filtrado.length})`, filtrado);
+            iniciarListaNaTela(`Resultado: ${label} (${filtrado.length})`, filtrado);
         }
 
         function iniciarListaNaTela(titulo, lista) {
@@ -277,8 +297,6 @@
             document.getElementById('tituloLista').textContent = titulo;
             listaExibicao.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
             renderizarListaNaTela();
-            
-            // Scroll suave para a lista
             document.getElementById('secaoLista').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
@@ -291,10 +309,8 @@
             const container = document.getElementById('containerItensLista');
             if (listaExibicao.length === 0) {
                 container.innerHTML = '<p style="color:#64748b; padding:20px 0; text-align:center;">Nenhum registro encontrado.</p>';
-                document.getElementById('btnListaAnt').disabled = true;
-                document.getElementById('btnListaProx').disabled = true;
-                document.getElementById('infoPaginaLista').textContent = 'Pág 0 de 0';
-                return;
+                document.getElementById('btnListaAnt').disabled = true; document.getElementById('btnListaProx').disabled = true;
+                document.getElementById('infoPaginaLista').textContent = 'Pág 0 de 0'; return;
             }
 
             const totalPags = Math.ceil(listaExibicao.length / itensPorPagina);
@@ -314,7 +330,6 @@
                             <span>${bairroTxt}</span>
                             <span style="color:${statusColor}; font-weight:bold;">${d.status}</span>
                         </div>
-                        <!-- AQUI ESTÁ O target="_blank" PARA ABRIR EM NOVA ABA -->
                         <a href="ver-demanda.html?id=${d.id}" class="btn-ver-demanda" target="_blank">Abrir Detalhes 🔗</a>
                     </div>
                 `;
@@ -328,23 +343,46 @@
         window.mudarPaginaLista = function(direcao) { paginaAtualLista += direcao; renderizarListaNaTela(); }
 
         // ==========================================
-        // GRÁFICOS CHART.JS (Com Interação e Nomes Visíveis)
+        // RENDERIZADOR DE LISTAS HTML (Bairros e Equipe)
         // ==========================================
-        function desenharGraficos() {
+        function renderListaHTML(containerId, dadosObj, tipoGrafico, corBg) {
+            const container = document.getElementById(containerId);
+            const chaves = Object.keys(dadosObj).sort((a, b) => dadosObj[b] - dadosObj[a]); // Ordena do maior pro menor
+            
+            if(chaves.length === 0) {
+                container.innerHTML = '<p style="color:#94a3b8; text-align:center; margin-top:20px;">Sem registros.</p>'; return;
+            }
+
+            const maxVal = dadosObj[chaves[0]]; // Pega o maior número para calcular a % da barra de fundo
+            
+            container.innerHTML = chaves.map(k => {
+                const val = dadosObj[k];
+                const pct = maxVal > 0 ? (val / maxVal) * 100 : 0;
+                return `
+                    <div class="data-item" onclick="lidarCliqueLista('${k}', '${tipoGrafico}')">
+                        <div class="data-bg" style="width: ${pct}%; background-color: ${corBg};"></div>
+                        <span class="data-name">${k}</span>
+                        <span class="data-value">${val}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==========================================
+        // GRÁFICOS CHART.JS E ATUALIZAÇÃO GERAL
+        // ==========================================
+        function desenharDashboards() {
             Chart.defaults.font.family = "'Inter', sans-serif";
-            Chart.defaults.color = '#64748b';
-
+            
             if(chartStatus) chartStatus.destroy();
-            if(chartEquipe) chartEquipe.destroy();
             if(chartCat) chartCat.destroy();
-            if(chartBairros) chartBairros.destroy();
 
-            // Interação visual do mouse
             const hoverCursor = (e, el) => { e.native.target.style.cursor = el[0] ? 'pointer' : 'default'; };
 
-            // 1. Status (Doughnut)
+            // 1. Status (Doughnut com Números Visíveis)
             const statusCounts = {};
             demandasMesAtual.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
+            
             chartStatus = new Chart(document.getElementById('graficoStatus'), {
                 type: 'doughnut',
                 data: {
@@ -356,67 +394,21 @@
                     }]
                 },
                 options: { 
-                    responsive: true, maintainAspectRatio: false, cutout: '65%', 
-                    plugins: { legend: { position: 'right' } },
+                    responsive: true, maintainAspectRatio: false, cutout: '60%', 
+                    plugins: { 
+                        legend: { position: 'right' },
+                        datalabels: { // Configuração para o número aparecer DENTRO do gráfico
+                            color: '#ffffff',
+                            font: { weight: '800', size: 14 },
+                            formatter: (val) => val > 0 ? val : ''
+                        }
+                    },
                     onHover: hoverCursor,
                     onClick: (evt, elements, chart) => lidarCliqueGrafico(evt, elements, chart, 'status')
                 }
             });
 
-            // 2. Bairros (Barras Horizontais com Nomes e Cores Diferentes)
-            const bairroCounts = {};
-            demandasMesAtual.forEach(d => {
-                if(d.bairro && d.bairro.trim() !== '') {
-                    const b = d.bairro.trim().toUpperCase();
-                    bairroCounts[b] = (bairroCounts[b] || 0) + 1;
-                }
-            });
-            const topBairros = Object.keys(bairroCounts).sort((a, b) => bairroCounts[b] - bairroCounts[a]).slice(0, 10);
-            
-            chartBairros = new Chart(document.getElementById('graficoBairros'), {
-                type: 'bar',
-                data: {
-                    labels: topBairros,
-                    datasets: [{
-                        label: 'Demandas no Bairro',
-                        data: topBairros.map(k => bairroCounts[k]),
-                        backgroundColor: paletaCores, // Uma cor pra cada barra de bairro
-                        borderRadius: 4
-                    }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, indexAxis: 'y', 
-                    plugins: { legend: { display: false } },
-                    onHover: hoverCursor,
-                    onClick: (evt, elements, chart) => lidarCliqueGrafico(evt, elements, chart, 'bairro')
-                }
-            });
-
-            // 3. Equipe (Nomes e Barras limpas)
-            const equipe = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
-            const equipeCounts = {}; equipe.forEach(n => equipeCounts[n] = 0);
-            demandasMesAtual.forEach(d => {
-                const resps = d.responsaveis || [];
-                resps.forEach(r => { if (equipeCounts[r] !== undefined) equipeCounts[r]++; });
-            });
-            const labelsEquipe = Object.keys(equipeCounts).filter(k => equipeCounts[k] > 0);
-            
-            chartEquipe = new Chart(document.getElementById('graficoEquipe'), {
-                type: 'bar',
-                data: {
-                    labels: labelsEquipe,
-                    datasets: [{ label: 'Executando', data: labelsEquipe.map(k => equipeCounts[k]), backgroundColor: '#3b82f6', borderRadius: 6 }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, indexAxis: 'y', // Barra deitada, fácil de ler o nome
-                    plugins: { legend: { display: false } },
-                    scales: { x: { display: false } }, // Remove a régua de baixo para focar só no Nome e na Barra
-                    onHover: hoverCursor,
-                    onClick: (evt, elements, chart) => lidarCliqueGrafico(evt, elements, chart, 'equipe')
-                }
-            });
-
-            // 4. Categorias
+            // 2. Categorias (Barra com Números no Final)
             const catCounts = {};
             demandasMesAtual.forEach(d => { let t = d.tipo_solicitacao || 'Sem categoria'; catCounts[t] = (catCounts[t] || 0) + 1; });
             const sortedCats = Object.keys(catCounts).sort((a, b) => catCounts[b] - catCounts[a]).slice(0,8); 
@@ -425,15 +417,49 @@
                 type: 'bar',
                 data: {
                     labels: sortedCats,
-                    datasets: [{ label: 'Volume', data: sortedCats.map(k => catCounts[k]), backgroundColor: '#10b981', borderRadius: 4 }]
+                    datasets: [{ data: sortedCats.map(k => catCounts[k]), backgroundColor: '#10b981', borderRadius: 4 }]
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, indexAxis: 'y', 
-                    plugins: { legend: { display: false } },
+                    layout: { padding: { right: 30 } }, // Dá um espacinho pro número caber fora da barra
+                    plugins: { 
+                        legend: { display: false },
+                        datalabels: { // Coloca o número no FINAL da barra
+                            color: '#0f172a',
+                            anchor: 'end', align: 'right',
+                            font: { weight: '800', size: 12 },
+                            formatter: (val) => val > 0 ? val : ''
+                        }
+                    },
+                    scales: { x: { display: false }, y: { grid: { display: false } } }, // Esconde as linhas de fundo pra ficar limpo
                     onHover: hoverCursor,
                     onClick: (evt, elements, chart) => lidarCliqueGrafico(evt, elements, chart, 'categoria')
                 }
             });
+
+            // 3. Equipe (Lista HTML com fundo preenchido)
+            const equipe = ['Daniel', 'João Pedro', 'Alemão', 'Antonio', 'Luana', 'Débora'];
+            const equipeCounts = {}; equipe.forEach(n => equipeCounts[n] = 0);
+            demandasMesAtual.forEach(d => {
+                const resps = d.responsaveis || [];
+                resps.forEach(r => { if (equipeCounts[r] !== undefined) equipeCounts[r]++; });
+            });
+            const objEquipe = {}; // Remove quem tem 0
+            Object.keys(equipeCounts).forEach(k => { if(equipeCounts[k] > 0) objEquipe[k] = equipeCounts[k] });
+            renderListaHTML('listaEquipe', objEquipe, 'equipe', '#3b82f6');
+
+            // 4. Bairros (Lista HTML Top 10)
+            const bairroCounts = {};
+            demandasMesAtual.forEach(d => {
+                if(d.bairro && d.bairro.trim() !== '') {
+                    const b = d.bairro.trim().toUpperCase();
+                    bairroCounts[b] = (bairroCounts[b] || 0) + 1;
+                }
+            });
+            const topBairros = Object.keys(bairroCounts).sort((a, b) => bairroCounts[b] - bairroCounts[a]).slice(0, 10);
+            const objBairros = {};
+            topBairros.forEach(b => objBairros[b] = bairroCounts[b]);
+            renderListaHTML('listaBairros', objBairros, 'bairro', '#8b5cf6');
         }
 
         window.gerarBackupJSON = function() {
