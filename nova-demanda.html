@@ -710,7 +710,7 @@
             
             arquivoPdfSelecionado = file;
             const box = document.getElementById('pdfPreviewBox');
-            box.innerHTML = `Documento: ${file.name} <button type="button" onclick="removerPdfPreview()">✕</button>`;
+            box.innerHTML = `Documento: ${DOMPurify.sanitize(file.name)} <button type="button" onclick="removerPdfPreview()">✕</button>`;
             box.style.display = 'flex';
             this.value = ''; 
         });
