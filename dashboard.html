@@ -134,17 +134,24 @@
             </select>
         </div>
 
-        <div class="filtros">
-            <button class="filtro-btn ativo" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
-            <button class="filtro-btn" data-status="Aberta" onclick="filtrar('Aberta')">Abertas / Pendentes</button>
-            <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">Andamento</button>
-            <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação</button>
+       <div class="container">
+        <!-- FILTROS NO TOPO -->
+        <div class="filtros" style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #ddd;">
+            <button class="filtro-btn ativo" data-status="Todas" onclick="filtrar('Todas')">Todas <span id="count-Todas" style="font-size:10px; background:#eee; padding:2px 6px; border-radius:10px; color:#333;">0</span></button>
+            <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Aberta" onclick="filtrar('Aberta')">Abertas/Pendentes <span id="count-Aberta" style="font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">Andamento <span id="count-Em Andamento" style="font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Aguardando execução da secretaria" onclick="filtrar('Aguardando execução da secretaria')">🏢 Exec. Secretaria <span id="count-Sec" style="font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="156 Pedido" onclick="filtrar('156 Pedido')">156 Pedido <span id="count-156 Pedido" style="font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
             <button class="filtro-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas</button>
-            <button class="filtro-btn" data-status="156 Pedido" onclick="filtrar('156 Pedido')">156 Pedido</button>
             <button class="filtro-btn" data-status="Aguardando Exp" onclick="filtrar('Aguardando Exp')">Exp Legis</button>
-            <button class="filtro-btn" data-status="Concluída" onclick="filtrar('Concluída')">Concluídas / Resolv.</button>
+            <button class="filtro-btn" data-status="Concluída" onclick="filtrar('Concluída')">Concluídas</button>
             <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
-            <button class="filtro-btn" data-status="Rejeitada" onclick="filtrar('Rejeitada')">❌ Rejeitadas</button>
+        </div>
+
+        <div class="header-section">
+            <h2 class="text-primary">Painel de Demandas</h2>
+            <button class="btn-nova" onclick="window.location.href='nova-demanda.html'">+ Nova Demanda</button>
         </div>
 
         <div class="cards-grid" id="demandas">A carregar...</div>
