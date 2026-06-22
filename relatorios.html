@@ -53,10 +53,10 @@
         
         .lista-item { border-bottom: 1px solid #f1f5f9; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; gap: 15px;}
         .lista-item:last-child { border-bottom: none; }
-        .lista-info strong { color: #1e293b; font-size: 15px; display: block; margin-bottom: 4px;}
-        .lista-info span { font-size: 13px; color: #64748b; display: inline-block; margin-right: 15px;}
+        .lista-info strong { color: #1e293b; font-size: 16px; display: block; margin-bottom: 8px;}
+        .lista-info .detalhe-tag { display: inline-flex; align-items: center; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #475569; margin-right: 8px; margin-bottom: 6px;}
         
-        .btn-ver-demanda { background: #3b82f6; color: white; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; transition: 0.2s;}
+        .btn-ver-demanda { background: #3b82f6; color: white; text-decoration: none; padding: 10px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; white-space: nowrap; transition: 0.2s;}
         .btn-ver-demanda:hover { background: #2563eb; }
         
         .paginacao { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9;}
@@ -82,6 +82,10 @@
             padding: 12px 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: 0.2s;
         }
         .data-item:hover { background: #f8fafc; padding-left: 15px; }
+
+        /* Grid Especial para Bairros Full Width */
+        .bairros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; max-height: unset; overflow-y: visible;}
+        .bairros-grid .data-item { border: 1px solid #f1f5f9; border-radius: 8px; }
 
         #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);}
         .spinner { border: 4px solid #e2e8f0; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 16px;}
@@ -131,7 +135,6 @@
                 <div class="kpi-titulo">Finalizadas</div>
                 <div class="kpi-valor" id="kpiConcluidas">0</div>
             </div>
-            <!-- Novo KPI: Tempo de Resolução -->
             <div class="kpi-card tempo fixo">
                 <div class="kpi-titulo">Tempo Méd. Resolução</div>
                 <div class="kpi-valor" id="kpiTempo">--</div>
@@ -160,13 +163,18 @@
             </div>
 
             <div class="chart-card">
-                <h3>Ranking da Equipe (Executores) <span>Clicável</span></h3>
+                <h3>Responsáveis (Ordem) <span>Clicável</span></h3>
+                <div class="data-list" id="listaOrdem"></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>Executores (Cuidando) <span>Clicável</span></h3>
                 <div class="data-list" id="listaEquipe"></div>
             </div>
             
-            <div class="chart-card">
-                <h3>Top 10 Bairros Atendidos <span>Clicável</span></h3>
-                <div class="data-list" id="listaBairros"></div>
+            <div class="chart-card" style="grid-column: 1 / -1;">
+                <h3>Top Bairros Atendidos <span>Clicável</span></h3>
+                <div class="data-list bairros-grid" id="listaBairros"></div>
             </div>
         </div>
     </div>
@@ -248,13 +256,12 @@
                 else if (arrayConcluidas.includes(d.status)) {
                     concluidas++;
                     
-                    // Cálculo do Tempo de Resolução
                     let dataFim = null;
                     if (d.historico) {
                         const histFim = d.historico.slice().reverse().find(h => arrayConcluidas.includes(h.status));
                         if (histFim && histFim.data) dataFim = new Date(histFim.data);
                     }
-                    if (!dataFim) dataFim = new Date(d.criado_em); // fallback
+                    if (!dataFim) dataFim = new Date(d.criado_em); 
                     
                     if (d.criado_em) {
                         const diff = dataFim - new Date(d.criado_em);
@@ -269,7 +276,6 @@
             document.getElementById('kpiAndamento').textContent = andamento;
             document.getElementById('kpiConcluidas').textContent = concluidas;
 
-            // Insere a Média de Tempo na Tela
             if (qtdResolvidas > 0) {
                 const mediaHoras = totalTempoMs / qtdResolvidas / (1000 * 60 * 60);
                 if (mediaHoras >= 24) {
@@ -279,9 +285,7 @@
                 } else {
                     document.getElementById('kpiTempo').textContent = `${Math.floor(mediaHoras)}h`;
                 }
-            } else {
-                document.getElementById('kpiTempo').textContent = '--';
-            }
+            } else { document.getElementById('kpiTempo').textContent = '--'; }
         }
 
         // ==========================================
@@ -303,8 +307,17 @@
         window.lidarCliqueLista = function(label, tipo) {
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
             let filtrado = [];
-            if (tipo === 'equipe') filtrado = demandasMesAtual.filter(d => (d.responsaveis || []).includes(label));
-            else if (tipo === 'bairro') filtrado = demandasMesAtual.filter(d => (d.bairro || '').trim().toUpperCase() === label);
+            
+            if (tipo === 'equipe') {
+                filtrado = demandasMesAtual.filter(d => {
+                    let resps = Array.isArray(d.responsaveis) ? d.responsaveis : (typeof d.responsaveis === 'string' ? [d.responsaveis] : []);
+                    return resps.includes(label);
+                });
+            } else if (tipo === 'ordem') {
+                filtrado = demandasMesAtual.filter(d => d.responsavel_ordem === label);
+            } else if (tipo === 'bairro') {
+                filtrado = demandasMesAtual.filter(d => (d.bairro || '').trim().toUpperCase() === label);
+            }
             
             iniciarListaNaTela(`Filtro: ${label} (${filtrado.length})`, filtrado);
         }
@@ -352,16 +365,29 @@
 
             container.innerHTML = recorte.map(d => {
                 const dataFormat = d.criado_em ? new Date(d.criado_em).toLocaleDateString('pt-BR') : '--';
-                const bairroTxt = d.bairro ? `📍 ${d.bairro}` : '📍 N/A';
+                const bairroTxt = d.bairro ? d.bairro : 'N/A';
                 const statusColor = arrayConcluidas.includes(d.status) ? '#10b981' : (arrayAbertas.includes(d.status) ? '#ef4444' : '#f59e0b');
+                
+                // Tratamento seguro para mostrar Equipe/Ordem nos Detalhes rápidos
+                let executorStr = 'Ninguém';
+                if (Array.isArray(d.responsaveis) && d.responsaveis.length > 0) executorStr = d.responsaveis.join(', ');
+                else if (typeof d.responsaveis === 'string' && d.responsaveis !== '') executorStr = d.responsaveis;
+                
+                let ordemStr = d.responsavel_ordem || 'Sem Resp.';
 
                 return `
                     <div class="lista-item">
-                        <div class="lista-info">
+                        <div class="lista-info" style="flex:1;">
                             <strong>${d.assunto}</strong>
-                            <span>📅 ${dataFormat}</span>
-                            <span>${bairroTxt}</span>
-                            <span style="color:${statusColor}; font-weight:bold;">${d.status}</span>
+                            <div style="margin-bottom: 8px;">
+                                <span class="detalhe-tag">📅 ${dataFormat}</span>
+                                <span class="detalhe-tag" style="background:#e0f2fe; color:#1e40af;">📍 Bairro: ${bairroTxt}</span>
+                            </div>
+                            <div>
+                                <span class="detalhe-tag" style="background:#fce7f3; color:#be185d;">✍️ Ordem: ${ordemStr}</span>
+                                <span class="detalhe-tag" style="background:#f3e8ff; color:#7e22ce;">👥 Cuidando: ${executorStr}</span>
+                                <span class="detalhe-tag" style="background:white; color:${statusColor}; border:1px solid ${statusColor};">🚨 ${d.status}</span>
+                            </div>
                         </div>
                         <a href="ver-demanda.html?id=${d.id}" class="btn-ver-demanda" target="_blank">Abrir Detalhes 🔗</a>
                     </div>
@@ -376,7 +402,7 @@
         window.mudarPaginaLista = function(direcao) { paginaAtualLista += direcao; renderizarListaNaTela(); }
 
         // ==========================================
-        // RENDERIZADOR DE LISTAS HTML LIMPAS (Sem Medalhas)
+        // RENDERIZADOR DE LISTAS HTML LIMPAS
         // ==========================================
         function renderListaHTML(containerId, dadosObj, tipoGrafico) {
             const container = document.getElementById(containerId);
@@ -388,7 +414,6 @@
             
             container.innerHTML = chaves.map((k, index) => {
                 const val = dadosObj[k];
-                // Mostra a posição em número (Ex: 1., 2., 3.) para um visual mais sério
                 return `
                     <div class="data-item" onclick="lidarCliqueLista('${k}', '${tipoGrafico}')">
                         <span style="font-weight:600; color:#334155;">${index + 1}. ${k}</span>
@@ -409,7 +434,7 @@
 
             const hoverCursor = (e, el) => { e.native.target.style.cursor = el[0] ? 'pointer' : 'default'; };
 
-            // 1. Status (Doughnut com Números Visíveis)
+            // 1. Status (Doughnut)
             const statusCounts = {};
             demandasMesAtual.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
             
@@ -427,18 +452,14 @@
                     responsive: true, maintainAspectRatio: false, cutout: '60%', 
                     plugins: { 
                         legend: { position: 'right' },
-                        datalabels: { 
-                            color: '#ffffff',
-                            font: { weight: '800', size: 14 },
-                            formatter: (val) => val > 0 ? val : ''
-                        }
+                        datalabels: { color: '#ffffff', font: { weight: '800', size: 14 }, formatter: (val) => val > 0 ? val : '' }
                     },
                     onHover: hoverCursor,
                     onClick: (evt, elements, chart) => lidarCliqueGrafico(evt, elements, chart, 'status')
                 }
             });
 
-            // 2. Categorias (Barra com Números no Final)
+            // 2. Categorias
             const catCounts = {};
             demandasMesAtual.forEach(d => { let t = d.tipo_solicitacao || 'Sem categoria'; catCounts[t] = (catCounts[t] || 0) + 1; });
             const sortedCats = Object.keys(catCounts).sort((a, b) => catCounts[b] - catCounts[a]).slice(0,8); 
@@ -454,12 +475,7 @@
                     layout: { padding: { right: 30 } }, 
                     plugins: { 
                         legend: { display: false },
-                        datalabels: { 
-                            color: '#0f172a',
-                            anchor: 'end', align: 'right',
-                            font: { weight: '800', size: 12 },
-                            formatter: (val) => val > 0 ? val : ''
-                        }
+                        datalabels: { color: '#0f172a', anchor: 'end', align: 'right', font: { weight: '800', size: 12 }, formatter: (val) => val > 0 ? val : '' }
                     },
                     scales: { x: { display: false }, y: { grid: { display: false } } }, 
                     onHover: hoverCursor,
@@ -467,22 +483,29 @@
                 }
             });
 
-            // 3. Equipe (Lista Limpa HTML)
-            // A lógica aqui vasculha ativamente o array de responsáveis e adiciona +1 para cada pessoa na demanda.
+            // 3. ABA NOVA: Responsáveis pela Ordem
+            const ordemCounts = {}; 
+            demandasMesAtual.forEach(d => {
+                const r = d.responsavel_ordem;
+                if (r && r.trim() !== '') { ordemCounts[r] = (ordemCounts[r] || 0) + 1; }
+            });
+            renderListaHTML('listaOrdem', ordemCounts, 'ordem');
+
+            // 4. Executores (Tratamento seguro para Strings e Arrays)
             const equipeCounts = {}; 
             demandasMesAtual.forEach(d => {
-                const resps = d.responsaveis || [];
+                let resps = [];
+                if (Array.isArray(d.responsaveis)) resps = d.responsaveis;
+                else if (typeof d.responsaveis === 'string') {
+                    try { resps = JSON.parse(d.responsaveis); } catch(e) { resps = [d.responsaveis]; }
+                }
                 resps.forEach(r => { 
-                    if (r) {
-                        equipeCounts[r] = (equipeCounts[r] || 0) + 1;
-                    }
+                    if (r && r.trim() !== '') { equipeCounts[r] = (equipeCounts[r] || 0) + 1; }
                 });
             });
-            const objEquipe = {}; 
-            Object.keys(equipeCounts).forEach(k => { if(equipeCounts[k] > 0) objEquipe[k] = equipeCounts[k] });
-            renderListaHTML('listaEquipe', objEquipe, 'equipe');
+            renderListaHTML('listaEquipe', equipeCounts, 'equipe');
 
-            // 4. Bairros (Lista Limpa HTML Top 10)
+            // 5. Bairros (Lista Limpa HTML Top 10)
             const bairroCounts = {};
             demandasMesAtual.forEach(d => {
                 if(d.bairro && d.bairro.trim() !== '') {
