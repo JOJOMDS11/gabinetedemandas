@@ -236,12 +236,6 @@
         const tiposDemandasLivre = ['DEMANDA (GERAL)', 'DEMANDA EXTERNA'];
         const tiposLegis = ['INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
 
-        let usuarioLogado = localStorage.getItem('usuarioLogado');
-        let authToken = localStorage.getItem('authToken'); 
-
-        if (!usuarioLogado) window.location.href = 'index.html';
-        document.getElementById('nomeUsuario').textContent = usuarioLogado; 
-
         document.getElementById('btnLogout').addEventListener('click', () => {
             localStorage.removeItem('usuarioLogado');
             localStorage.removeItem('authToken');
