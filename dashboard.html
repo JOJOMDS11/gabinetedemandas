@@ -442,20 +442,27 @@ async function inscreverPushReal() {
                     
                     if(navbarActions) navbarActions.prepend(btnNotif);
                 } else {
-                    // Permissão já concedida: mostra um botão de TESTE para confirmar
-                    // que a exibição da notificação funciona neste dispositivo/navegador
-                    const btnTeste = document.createElement('button');
-                    btnTeste.className = 'btn-sino';
-                    btnTeste.style.background = '#185199';
-                    btnTeste.innerHTML = '🔔 ';
-                    btnTeste.title = "Enviar notificação de teste";
-                    btnTeste.onclick = function() {
-                        mostrarNotificacaoCelular('🔔 Teste Gabinete 360', 'Se você está vendo isso, a notificação local funciona neste aparelho.');
+                 btnTeste.onclick = async function() {
+                        const payload = {
+                          title: "Nova Demanda Recebida!",
+                          body: "Isso é um teste real via VAPID. Clique para abrir o dashboard.",
+                          url: "/dashboard.html" 
+                        };
+
+                        try {
+                          // Aqui usamos "db" em vez de "supabase"
+                          const { data, error } = await db.functions.invoke('send-push', {
+                            body: { payload }
+                          });
+
+                          if (error) throw error;
+                          console.log('Push real disparado via Edge Function!', data);
+                          alert('Notificação de teste enviada! Veja no celular do Daniel se chegou.');
+                        } catch (err) {
+                          console.error('Erro ao chamar a Edge Function send-push:', err);
+                          alert('Erro ao enviar teste de notificação.');
+                        }
                     };
-                    if(navbarActions) navbarActions.prepend(btnTeste);
-                }
-            }, 1000); 
-        });
 
         async function inicializarSistema() {
             try {
