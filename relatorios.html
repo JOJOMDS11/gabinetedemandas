@@ -8,8 +8,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <!-- Biblioteca para Exportar Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <!-- 🔒 DOMPurify (Prevenção contra XSS) -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
@@ -30,14 +31,12 @@
         .btn-export:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);}
         .btn-excel { background: #16a34a; } .btn-excel:hover { background: #15803d; }
 
-        /* Alertas Automáticos */
         #containerAlertas { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .alerta-box { padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px; border-left: 5px solid; animation: slideIn 0.5s ease;}
         @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .alerta-critico { background: #fef2f2; color: #991b1b; border-left-color: #ef4444; }
         .alerta-aviso { background: #fffbeb; color: #854d0e; border-left-color: #f59e0b; }
 
-        /* Barra de Filtros Avançados */
         .filtros-avancados { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; margin-bottom: 30px; display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;}
         .filtro-item { display: flex; flex-direction: column; flex: 1; min-width: 180px; }
         .filtro-item label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; }
@@ -46,13 +45,11 @@
         .btn-reset { background: #e2e8f0; color: #475569; padding: 10px 15px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; font-size: 13px; height: 39px;}
         .btn-reset:hover { background: #cbd5e1; }
 
-        /* KPIs */
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .kpi-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; border-left: 4px solid #cbd5e1; cursor: pointer; transition: 0.2s; position: relative;}
         .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         .kpi-card.ativo { background: #f0f9ff; border-left-color: #3b82f6; }
         
-        /* Cores Inteligentes dos KPIs */
         .kpi-card.total { border-left-color: #3b82f6; }
         .kpi-card.abertas { border-left-color: #f59e0b; }
         .kpi-card.concluidas { border-left-color: #10b981; }
@@ -63,7 +60,6 @@
         .kpi-titulo { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
         .kpi-valor { font-size: 28px; font-weight: 800; margin-top: 8px; color: #0f172a; line-height: 1; }
 
-        /* Lista Oculta */
         .secao-lista { background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px solid #3b82f6; display: none; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1);}
         .secao-lista h3 { font-size: 16px; color: #0f172a; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
         .btn-fechar-lista { background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold;}
@@ -78,7 +74,6 @@
         .paginacao button:disabled { opacity: 0.4; cursor: not-allowed; }
         .paginacao button:hover:not(:disabled) { background: #cbd5e1; }
 
-        /* Gráficos e Tabelas */
         .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
         .chart-card { background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;}
@@ -87,18 +82,15 @@
         .chart-card h3 span { font-size: 12px; color: #94a3b8; font-weight: 400; background: #f8fafc; padding: 4px 8px; border-radius: 4px;}
         .chart-container { position: relative; height: 300px; width: 100%; }
 
-        /* Listas Minimalistas (Sem gráficos) - COMO VOCÊ PEDIU */
         .data-list { display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; padding-right: 5px;}
         .data-list::-webkit-scrollbar { width: 6px; }
         .data-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .data-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: 0.2s; }
         .data-item:hover { background: #f8fafc; padding-left: 15px; }
 
-        /* Grid Especial para Bairros Full Width */
         .bairros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; max-height: unset; overflow-y: visible;}
         .bairros-grid .data-item { border: 1px solid #f1f5f9; border-radius: 8px; }
 
-        /* Tabela Bonita para Secretarias */
         .data-table-container { max-height: 350px; overflow-y: auto; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .data-table th { background: #f8fafc; color: #475569; font-weight: 700; padding: 10px; text-align: left; position: sticky; top: 0; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; font-size: 11px;}
@@ -154,9 +146,9 @@
                 <label>🚦 Status Atual</label>
                 <select id="filtroStatus" onchange="aplicarFiltros()">
                     <option value="todos">Todos os Status</option>
-                    <option value="abertas_pendentes">Abertas / Pendentes</option>
-                    <option value="em_execucao">Em Andamento / Aprovadas</option>
-                    <option value="concluidas">Finalizadas / Arquivadas</option>
+                    <option value="abertas_pendentes">Pendentes / Aprovação</option>
+                    <option value="em_execucao">Andamento / Solicitados / Secretaria</option>
+                    <option value="concluidas">Concluídas / Arquivadas / Rejeitadas</option>
                 </select>
             </div>
             <button class="btn-reset" onclick="resetarFiltros()">↻ Limpar</button>
@@ -170,7 +162,7 @@
                 <div class="kpi-titulo">Taxa de Conclusão</div><div class="kpi-valor" id="kpiTaxa" style="color: #6d28d9;">0%</div>
             </div>
             <div class="kpi-card abertas" onclick="abrirListaKPI('abertas', 'Aguardando Início', this)">
-                <div class="kpi-titulo">Abertas / Pendentes</div><div class="kpi-valor" id="kpiAbertas">0</div>
+                <div class="kpi-titulo">Pendentes / Aprovação</div><div class="kpi-valor" id="kpiAbertas">0</div>
             </div>
             <div class="kpi-card atrasadas" onclick="abrirListaKPI('atrasadas', 'Atrasadas (> 30 dias)', this)">
                 <div class="kpi-titulo">Atrasadas (> 30 dias)</div><div class="kpi-valor" id="kpiAtrasadas" style="color: #dc2626;">0</div>
@@ -195,13 +187,11 @@
 
         <div class="charts-grid">
             
-            <!-- Gráfico de Tendência (Novo) -->
             <div class="chart-card full-width">
                 <h3>Tendência de Abertura <span>Últimos 6 Meses</span></h3>
                 <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
             </div>
 
-            <!-- Tabela de Eficiência de Secretarias (Novo) -->
             <div class="chart-card full-width">
                 <h3>Eficiência por Secretaria/Órgão <span>Ranking de Execução</span></h3>
                 <div class="data-table-container">
@@ -222,7 +212,6 @@
                 <div class="chart-container"><canvas id="graficoCategorias"></canvas></div>
             </div>
 
-            <!-- Listas Limpas que a Claude tentou tirar e nós devolvemos! -->
             <div class="chart-card">
                 <h3>Responsáveis (Ordem) <span>Clicável</span></h3>
                 <div class="data-list" id="listaOrdem"></div>
@@ -250,11 +239,11 @@
         let paginaAtualLista = 1;
         const itensPorPagina = 5;
 
-        // Instâncias Gráficos
         let chartStatus, chartCat, chartTendencia;
 
-        const arrayAbertas = ['Aberta', 'Pendente', 'Aguardando', 'Aguardando Aprovação'];
-        const arrayConcluidas = ['Concluída', 'Atendido', 'Resolvido', 'Arquivada', 'Rejeitada'];
+        // Novo Funil de Status
+        const arrayAbertas = ['Pendente', 'Aguardando Aprovação'];
+        const arrayConcluidas = ['Concluída', 'Arquivada', 'Rejeitada'];
         const paletaCores = ['#1a365d', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#ef4444', '#64748b', '#d946ef'];
 
         const secretariasOficiais = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
@@ -286,9 +275,6 @@
             document.getElementById('loading').style.display = 'none';
         }
 
-        // ==========================================
-        // FILTROS AVANÇADOS E RECALCULO
-        // ==========================================
         function popularFiltrosIniciais() {
             const selMes = document.getElementById('filtroMes');
             const selSec = document.getElementById('filtroSec');
@@ -307,7 +293,7 @@
             });
 
             Array.from(secSet).sort().forEach(s => {
-                selSec.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`);
+                selSec.insertAdjacentHTML('beforeend', `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`);
             });
         }
 
@@ -354,9 +340,6 @@
             desenharDashboards();
         }
 
-        // ==========================================
-        // CÁLCULOS INTELIGENTES (SLA, ATRASOS, TAXAS)
-        // ==========================================
         function calcularDias(dataBase) {
             if (!dataBase) return 0;
             return Math.floor((Date.now() - new Date(dataBase)) / (1000 * 60 * 60 * 24));
@@ -429,9 +412,6 @@
             container.innerHTML = html;
         }
 
-        // ==========================================
-        // LISTAS HTML E TABELAS RANQUEADAS
-        // ==========================================
         function montarTabelaSecretarias() {
             const tbody = document.getElementById('tabelaSecretarias');
             const mapSecs = {};
@@ -467,7 +447,7 @@
                 let corTaxa = taxa > 75 ? '#16a34a' : (taxa > 40 ? '#d97706' : '#dc2626');
 
                 return `<tr>
-                    <td><b>${k}</b></td><td style="text-align:center">${s.total}</td>
+                    <td><b>${DOMPurify.sanitize(k)}</b></td><td style="text-align:center">${s.total}</td>
                     <td style="text-align:center">${s.concluidas}</td>
                     <td class="tb-taxa" style="color:${corTaxa}; text-align:center;">${taxa}%</td>
                     <td style="text-align:center">${tempoStr}</td>
@@ -475,9 +455,6 @@
             }).join('');
         }
 
-        // ==========================================
-        // RENDERIZADOR DE LISTAS HTML LIMPAS (No Emojis, No Bar Charts)
-        // ==========================================
         function renderListaHTML(containerId, dadosObj, tipoGrafico) {
             const container = document.getElementById(containerId);
             const chaves = Object.keys(dadosObj).sort((a, b) => dadosObj[b] - dadosObj[a]); 
@@ -489,17 +466,14 @@
             container.innerHTML = chaves.map((k, index) => {
                 const val = dadosObj[k];
                 return `
-                    <div class="data-item" onclick="lidarCliqueLista('${k}', '${tipoGrafico}')">
-                        <span style="font-weight:600; color:#334155;">${index + 1}. ${k}</span>
+                    <div class="data-item" onclick="lidarCliqueLista('${DOMPurify.sanitize(k)}', '${tipoGrafico}')">
+                        <span style="font-weight:600; color:#334155;">${index + 1}. ${DOMPurify.sanitize(k)}</span>
                         <span style="font-weight:800; color:#0f172a; font-size:16px;">${val}</span>
                     </div>
                 `;
             }).join('');
         }
 
-        // ==========================================
-        // DRILL DOWN E PAGINAÇÃO (LISTAS CLICÁVEIS)
-        // ==========================================
         window.abrirListaKPI = function(tipo, tituloKpi, btnCard) {
             if(btnCard && btnCard.classList.contains('fixo')) return;
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
@@ -572,15 +546,15 @@
 
             container.innerHTML = recorte.map(d => {
                 const dataF = d.criado_em ? new Date(d.criado_em).toLocaleDateString('pt-BR') : '--';
-                const bairroTxt = d.bairro ? d.bairro : 'N/A';
+                const bairroTxt = d.bairro ? DOMPurify.sanitize(d.bairro) : 'N/A';
                 const sColor = arrayConcluidas.includes(d.status) ? '#10b981' : (arrayAbertas.includes(d.status) ? '#ef4444' : '#f59e0b');
-                let execStr = (d.responsaveis && d.responsaveis.length>0) ? d.responsaveis.join(', ') : 'Ninguém';
-                let ordemStr = d.responsavel_ordem || 'Sem Resp.';
+                let execStr = (d.responsaveis && d.responsaveis.length>0) ? DOMPurify.sanitize(d.responsaveis.join(', ')) : 'Ninguém';
+                let ordemStr = d.responsavel_ordem ? DOMPurify.sanitize(d.responsavel_ordem) : 'Sem Resp.';
                 
                 return `
                     <div class="lista-item">
                         <div class="lista-info" style="flex:1;">
-                            <strong>${d.assunto}</strong>
+                            <strong>${DOMPurify.sanitize(d.assunto)}</strong>
                             <div style="margin-bottom: 8px;">
                                 <span class="detalhe-tag">📅 ${dataF}</span>
                                 <span class="detalhe-tag" style="background:#e0f2fe; color:#1e40af;">📍 Bairro: ${bairroTxt}</span>
@@ -588,7 +562,7 @@
                             <div>
                                 <span class="detalhe-tag" style="background:#fce7f3; color:#be185d;">✍️ Ordem: ${ordemStr}</span>
                                 <span class="detalhe-tag" style="background:#f3e8ff; color:#7e22ce;">👥 Cuidando: ${execStr}</span>
-                                <span class="detalhe-tag" style="background:white; color:${sColor}; border:1px solid ${sColor};">🚨 ${d.status}</span>
+                                <span class="detalhe-tag" style="background:white; color:${sColor}; border:1px solid ${sColor};">🚨 ${DOMPurify.sanitize(d.status)}</span>
                             </div>
                         </div>
                         <a href="ver-demanda.html?id=${d.id}" class="btn-ver-demanda" target="_blank">Abrir Detalhes 🔗</a>
@@ -602,9 +576,6 @@
 
         window.mudarPaginaLista = function(direcao) { paginaAtualLista += direcao; renderizarListaNaTela(); }
 
-        // ==========================================
-        // GRÁFICOS E EXPORTAÇÃO EXCEL
-        // ==========================================
         function desenharDashboards() {
             Chart.defaults.font.family = "'Inter', sans-serif";
             const hoverCursor = (e, el) => { e.native.target.style.cursor = el[0] ? 'pointer' : 'default'; };
@@ -615,7 +586,6 @@
 
             montarTabelaSecretarias();
 
-            // 1. Tendência (Linha) - Agrupa os 6 meses mais recentes
             const mapMeses = {};
             demandasFiltradas.forEach(d => {
                 if(d.criado_em) { const m = d.criado_em.substring(0,7); mapMeses[m] = (mapMeses[m] || 0) + 1; }
@@ -628,7 +598,6 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title:{display:true, text:'Tendência'} }, scales: { y: { beginAtZero: true } } }
             });
 
-            // 2. Status
             const statusCounts = {}; demandasFiltradas.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
             chartStatus = new Chart(document.getElementById('graficoStatus'), {
                 type: 'doughnut',
@@ -636,7 +605,6 @@
                 options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'right' }, title:{display:true, text:'Situação'}, datalabels: { color: '#ffffff', font: { weight: '800' }, formatter: val => val } }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
             });
 
-            // 3. Categorias
             const catCounts = {}; demandasFiltradas.forEach(d => { let t = d.tipo_solicitacao || 'Sem categoria'; catCounts[t] = (catCounts[t] || 0) + 1; });
             const sCats = Object.keys(catCounts).sort((a,b)=>catCounts[b]-catCounts[a]).slice(0,6);
             chartCat = new Chart(document.getElementById('graficoCategorias'), {
@@ -645,7 +613,6 @@
                 options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, title:{display:true, text:'Tipos'}, datalabels: { anchor: 'end', align: 'right', font: { weight: 'bold' } } }, scales: { x:{display:false} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
             });
 
-            // 4. Responsáveis pela Ordem (Listagem Limpa)
             const ordemCounts = {}; 
             demandasFiltradas.forEach(d => {
                 const r = d.responsavel_ordem;
@@ -653,7 +620,6 @@
             });
             renderListaHTML('listaOrdem', ordemCounts, 'ordem');
 
-            // 5. Executores Cuidando (Listagem Limpa)
             const equipeCounts = {}; 
             demandasFiltradas.forEach(d => {
                 let resps = [];
@@ -667,7 +633,6 @@
             });
             renderListaHTML('listaEquipe', equipeCounts, 'equipe');
 
-            // 6. Bairros (Lista Limpa HTML Top 10)
             const bairroCounts = {};
             demandasFiltradas.forEach(d => {
                 if(d.bairro && d.bairro.trim() !== '') {
@@ -684,7 +649,6 @@
         window.exportarExcel = function() {
             if (demandasFiltradas.length === 0) return alert("Nenhum dado para exportar.");
             
-            // Tratamento e formatação bonita para o Excel
             const dadosLimpos = demandasFiltradas.map(d => ({
                 'Nº Demanda': d.numero_demanda || '',
                 'Abertura': d.criado_em ? new Date(d.criado_em).toLocaleDateString('pt-BR') : '',
