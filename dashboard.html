@@ -528,7 +528,27 @@
         const apelidos = {
             'daniel': ['daniel', 'daniel daudt']
         };
+function atualizarContadores() {
+            let counts = {
+                'Todas': todasDemandas.filter(d => !['Arquivada', 'Rejeitada'].includes(d.status)).length,
+                'Aguardando Aprovação': 0, 'Aberta': 0, 'Em Andamento': 0, 'Sec': 0, '156 Pedido': 0
+            };
 
+            todasDemandas.forEach(d => {
+                if (d.status === 'Aguardando Aprovação') counts['Aguardando Aprovação']++;
+                if (d.status === 'Aberta' || d.status === 'Pendente') counts['Aberta']++;
+                if (d.status === 'Em Andamento') counts['Em Andamento']++;
+                if (d.status === 'Aguardando execução da secretaria') counts['Sec']++;
+                if (d.status === '156 Pedido') counts['156 Pedido']++;
+            });
+
+            document.getElementById('count-Todas').textContent = counts['Todas'];
+            document.getElementById('count-Aguardando Aprovação').textContent = counts['Aguardando Aprovação'];
+            document.getElementById('count-Aberta').textContent = counts['Aberta'];
+            document.getElementById('count-Em Andamento').textContent = counts['Em Andamento'];
+            document.getElementById('count-Sec').textContent = counts['Sec'];
+            document.getElementById('count-156 Pedido').textContent = counts['156 Pedido'];
+        }
         function renderDemandas() {
             const container = document.getElementById('demandas');
             const pagContainer = document.getElementById('paginacaoContainer');
