@@ -313,7 +313,7 @@
                 if(['Visto', 'Solicitado pela equipe', 'Edição'].includes(h.status)) cor = 'azul';
 
                 let texto = `Status alterado para <b>${h.status}</b> por ${h.autor}`;
-                if (h.status === 'Visto') texto = `👀 Visualizado e Visto por <b>${h.autor}</b>`;
+                if (h.status === 'Visto') texto = ` Visualizado e Visto por <b>${h.autor}</b>`;
                 if (h.status === 'Solicitado pela equipe') texto = `🙋 Demanda solicitada por <b>${h.autor}</b> (equipe)`;
                 if (h.status === 'Edição') texto = `✏️ <b>${h.autor}</b> editou: ${h.detalhes}`;
 
@@ -478,7 +478,7 @@
                 let temVisto = false;
                 if (d.historico) { temVisto = d.historico.some(h => h.status === 'Visto'); }
                 if (!temVisto && usuarioLogado === 'Daniel') { btnAprovacao = `<button style="background:#3498db; color:white; flex:1;" onclick="darVisto(this)">👀 Dar Visto (Marcar Ciente)</button>`; }
-                if (temVisto) { seloAprovado = `<span class="aprovado-daniel" style="background:#3498db;">Visto pelo Daniel 👀</span>`; }
+                if (temVisto) { seloAprovado = `<span class="aprovado-daniel" style="background:#3498db;">Visto pelo Daniel </span>`; }
             }
 
             let htmlFotos = ''; let mediaIndex = d.pdf_url ? 1 : 0; 
