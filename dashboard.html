@@ -371,7 +371,7 @@
             }
         }
 
-        async function inicializarSistema() {
+      async function inicializarSistema() {
             try {
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
@@ -385,6 +385,33 @@
                         }
                     }
                 );
+
+                
+                (async () => {
+                    try {
+                        const agora = new Date().toISOString();
+                        // Salva o acesso atual do usuário logado
+                        await db.from('ultimo_acesso').upsert(
+                            { usuario: usuarioLogado, acessado_em: agora },
+                            { onConflict: 'usuario' }
+                        );
+                        
+                        const { data: acessos } = await db
+                            .from('ultimo_acesso')
+                            .select('usuario, acessado_em')
+                            .order('acessado_em', { ascending: false });
+                        
+                        if (acessos && acessos.length > 0) {
+                            const linhas = acessos.map(a => {
+                                const dt = new Date(a.acessado_em);
+                                const fmt = dt.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+                                return `<span style="margin-right:12px;">👤 <b>${a.usuario}</b>: ${fmt}</span>`;
+                            }).join('');
+                            const faixa = document.getElementById('faixaUltimoAcesso');
+                            if (faixa) faixa.innerHTML = '🕐 Último acesso: ' + linhas;
+                        }
+                    } catch(e) { console.warn('Último acesso:', e); }
+                })();
 
                 await carregarDemandas();
 
