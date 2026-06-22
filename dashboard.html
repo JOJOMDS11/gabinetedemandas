@@ -6,6 +6,7 @@
     <title>Gabinete Daniel Daudt - Demandas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
+    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#185199">
     <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
@@ -26,8 +27,8 @@
         .btn-sino { background: #e67e22; color: white; border: none; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; animation: pulse 2s infinite; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         
         @media (max-width: 600px) {
-            .user-name-span { display: none; } /* Esconde "👤 João Pedro" no mobile */
-            .brand-text { display: none; } /* Esconde "Gabinete Daniel" no mobile */
+            .user-name-span { display: none; }
+            .brand-text { display: none; }
         }
 
         .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; }
@@ -136,23 +137,30 @@
         </div>
 
        <div class="container">
+        <!-- FILTROS NO TOPO -->
         <div class="filtros" style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #ddd;">
             <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas <span id="count-Todas" style="font-size:10px; background:#eee; padding:2px 6px; border-radius:10px; color:#333;">0</span></button>
             <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
             <button class="filtro-btn ativo" data-status="Aberta" onclick="filtrar('Aberta')">Abertas/Pendentes <span id="count-Aberta" style="font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            
+            <!-- ✅ APROVADAS REPOSICIONADO -->
+            <button class="filtro-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas <span id="count-Aprovada" style="font-size:10px; background:#27ae60; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+
             <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">Andamento <span id="count-Em Andamento" style="font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="Aguardando execução da secretaria" onclick="filtrar('Aguardando execução da secretaria')">🏢 Exec. Secretaria <span id="count-Sec" style="font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
             <button class="filtro-btn" data-status="156 Pedido" onclick="filtrar('156 Pedido')">156 Pedido <span id="count-156 Pedido" style="font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas</button>
             <button class="filtro-btn" data-status="Aguardando Exp" onclick="filtrar('Aguardando Exp')">Exp Legis</button>
             <button class="filtro-btn" data-status="Concluída" onclick="filtrar('Concluída')">Concluídas</button>
             <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
+            
+            <!-- 🏢 EXEC SEC REPOSICIONADO -->
+            <button class="filtro-btn" data-status="Aguardando execução da secretaria" onclick="filtrar('Aguardando execução da secretaria')">🏢 Exec. Secretaria <span id="count-Sec" style="font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
         </div>
 
         <div class="cards-grid" id="demandas">A carregar...</div>
         <div class="paginacao" id="paginacaoContainer"></div>
     </div>
 
+    <!-- Modal de Autenticação Segura -->
     <div class="modal-overlay" id="modalSenhaSegura">
         <div class="modal-box">
             <h3>🔐 Exclusão de Registro</h3>
@@ -166,6 +174,7 @@
         </div>
     </div>
 
+    <!-- Modal de Gerenciamento de Secretarias -->
     <div class="modal-overlay" id="modalSecretarias">
         <div class="modal-box" style="max-width: 420px; text-align: left;">
             <h3 style="text-align:center;">⚙️ Gerenciar Secretarias</h3>
@@ -465,14 +474,14 @@
                      if (payload.eventType === 'INSERT') {
                           todasDemandas.unshift(payload.new);
                           
-                          // 1. Avisa o Daniel via Push Real (Backend) não importa quem criou a demanda
-                          if (['Pendente', 'Aberta', 'Aguardando Aprovação'].includes(payload.new.status)) {
+                          // AVISA VIA PUSH: Garantimos que o 'Aguardando' simples também vai chamar o Edge Function
+                          if (['Pendente', 'Aberta', 'Aguardando Aprovação', 'Aguardando'].includes(payload.new.status)) {
                               let assuntoCurto = payload.new.assunto;
                               if(assuntoCurto.length > 35) assuntoCurto = assuntoCurto.substring(0, 35) + '...';
                               
                               const pushPayload = {
                                 title: "🔔 Gabinete Daniel",
-                                body: `Nova demanda para aprovação - ${assuntoCurto}`,
+                                body: `Nova demanda: ${assuntoCurto}`,
                                 url: "/dashboard.html"
                               };
 
@@ -481,25 +490,28 @@
                               }).catch(err => console.error('Erro ao chamar push real:', err));
                           }
                           
-                          // 2. Mantém a notificação local caso o próprio Daniel esteja com a tela aberta
+                          // MANTÉM A NOTIFICAÇÃO LOCAL caso o usuário esteja no painel
                           if (usuarioLogado === 'Daniel') {
-                              if (['Pendente', 'Aberta', 'Aguardando Aprovação'].includes(payload.new.status)) {
+                              if (['Pendente', 'Aberta', 'Aguardando Aprovação', 'Aguardando'].includes(payload.new.status)) {
                                   let assuntoCurto = payload.new.assunto;
                                   if(assuntoCurto.length > 35) assuntoCurto = assuntoCurto.substring(0, 35) + '...';
-                                  mostrarNotificacaoCelular("🔔 Gabinete Daniel", `Daniel, nova demanda para aprovação - ${assuntoCurto}`);
+                                  mostrarNotificacaoCelular("🔔 Gabinete Daniel", `Nova demanda para aprovação: ${assuntoCurto}`);
                               }
                           }
                       }
                        else if (payload.eventType === 'UPDATE') {
                           const idx = todasDemandas.findIndex(d => d.id === payload.new.id);
-                          if (idx !== -1) todasDemandas[idx] = payload.new;
+                          if (idx !== -1) {
+                              todasDemandas[idx] = payload.new;
+                          } else {
+                              todasDemandas.unshift(payload.new);
+                          }
                           
                           if (payload.new.status === 'Aprovada' && payload.old.status !== 'Aprovada') {
                               const ehCriador = payload.new.criador === usuarioLogado;
                               const estaCuidando = (payload.new.responsaveis || []).includes(usuarioLogado);
                               if (usuarioLogado !== 'Daniel' && (ehCriador || estaCuidando)) {
                                   mostrarNotificacaoCelular("✅ Demanda Aprovada", `O Daniel aprovou: ${payload.new.assunto}`);
-                                  setTimeout(() => location.reload(), 1500);
                               }
                           }
                       } else if (payload.eventType === 'DELETE') {
@@ -507,6 +519,9 @@
                       }
                       
                       todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+                      
+                      // CRUCIAL PARA O AUTO-REFRESH (garante a atualização instantânea)
+                      atualizarContadores();
                       renderDemandas();
                   })
                   .subscribe((status, err) => {
@@ -618,12 +633,13 @@
         function atualizarContadores() {
             let counts = {
                 'Todas': todasDemandas.filter(d => !['Arquivada', 'Rejeitada'].includes(d.status)).length,
-                'Aguardando Aprovação': 0, 'Aberta': 0, 'Em Andamento': 0, 'Sec': 0, '156 Pedido': 0
+                'Aguardando Aprovação': 0, 'Aberta': 0, 'Em Andamento': 0, 'Sec': 0, '156 Pedido': 0, 'Aprovada': 0
             };
 
             todasDemandas.forEach(d => {
-                if (d.status === 'Aguardando Aprovação') counts['Aguardando Aprovação']++;
+                if (d.status === 'Aguardando Aprovação' || d.status === 'Aguardando') counts['Aguardando Aprovação']++;
                 if (d.status === 'Aberta' || d.status === 'Pendente') counts['Aberta']++;
+                if (d.status === 'Aprovada') counts['Aprovada']++; // Nova contagem adicionada
                 if (d.status === 'Em Andamento') counts['Em Andamento']++;
                 if (d.status === 'Aguardando execução da secretaria') counts['Sec']++;
                 if (d.status === '156 Pedido') counts['156 Pedido']++;
@@ -632,6 +648,7 @@
             document.getElementById('count-Todas').textContent = counts['Todas'];
             document.getElementById('count-Aguardando Aprovação').textContent = counts['Aguardando Aprovação'];
             document.getElementById('count-Aberta').textContent = counts['Aberta'];
+            document.getElementById('count-Aprovada').textContent = counts['Aprovada']; // Aplicando na tela
             document.getElementById('count-Em Andamento').textContent = counts['Em Andamento'];
             document.getElementById('count-Sec').textContent = counts['Sec'];
             document.getElementById('count-156 Pedido').textContent = counts['156 Pedido'];
@@ -826,7 +843,11 @@
 
         async function carregarDemandas() {
             const { data, error } = await db.from('demandas').select('*').order('criado_em', { ascending: false });
-            if (!error) { todasDemandas = data || []; renderDemandas(); }
+            if (!error) { 
+                todasDemandas = data || []; 
+                atualizarContadores(); // Chamada crítica para os números não virem zerados de início
+                renderDemandas(); 
+            }
         }
 
         window.assumirDemanda = async function(id, btnElement) {
