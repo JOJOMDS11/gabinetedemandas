@@ -120,7 +120,6 @@
                     </optgroup>
                 </select>
 
-                <!-- Controle de Agenda -->
                 <div style="margin-top: 15px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #1a365d; font-size: 13px; margin-bottom: 0; text-transform: none;">
                         <input type="checkbox" id="is_agenda_toggle" onchange="toggleDiaEvento()" style="width: 16px; height: 16px;">
@@ -273,7 +272,7 @@
         <div class="box-aprovacao" id="blocoAprovacaoSmart">
             <label>
                 <input type="checkbox" id="checkAprovacaoDaniel" checked>
-                <span>Requerer aprovação direta do Mandatário (Notificação Mobile)</span>
+                <span>Requerer aprovação direta do Daniel Daudt (Notificação Mobile)</span>
             </label>
         </div>
 
@@ -295,8 +294,7 @@
 
         const secretariasPadrao = [
             'CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE',
-            'Secretaria Geral de Governo - SGG', 'Secretaria Municipal de Habitação - SEMHAB',
-            'Secretaria Municipal de Proteção Animal - SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'
+            'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'
         ].sort();
 
         async function carregarSecretarias() {
@@ -391,7 +389,6 @@
             const minutos = String(agora.getMinutes()).padStart(2, '0');
             const segundos = String(agora.getSeconds()).padStart(2, '0');
             
-            // Padrão Brasileiro: DiaMesAnoHorarioSegundos
             return `${dia}${mes}${ano}${horas}${minutos}${segundos}`;
         }
 
@@ -475,103 +472,126 @@
 
             const tiposConhecidos = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO', 'DEMANDA (GERAL)', 'DEMANDA EXTERNA', 'INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
             const statusConhecidos = ['156 Pedido', 'Aberta', 'Aguardando', 'Aguardando Aprovação', 'Aguardando execução da secretaria', 'Aguardando Exp', 'Aprovada', 'Arquivada', 'Atendido', 'Concluída', 'Em Andamento', 'Pendente', 'Rejeitada', 'Resolvido', 'Sem Legis'];
+            const secOficiais = [
+                'CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE',
+                'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'
+            ];
 
-            // Limpa quebras de linha extras e processa as células
             const celulas = texto.split('\t');
+            let restantes = [];
 
             celulas.forEach(c => {
                 let cell = c.trim();
                 if(!cell || cell === '-' || cell === 'S/N') return;
 
-                // Captura de Data (BR)
                 if (cell.match(/^\d{2}\/\d{2}\/\d{2,4}$/)) {
-                    let p = cell.split('/');
-                    let ano = p[2].length === 2 ? '20' + p[2] : p[2];
-                    parsed.data = `${ano}-${p[1]}-${p[0]}`;
-                    return;
+                    let p = cell.split('/'); let ano = p[2].length === 2 ? '20' + p[2] : p[2];
+                    parsed.data = `${ano}-${p[1]}-${p[0]}`; return;
                 }
                 
-                // Documentos Internos (Requerimento, Memo, PDP, etc)
-                if (cell.match(/^[A-Za-zÀ-ÿ]+\s*\d+\/\d{4}$/i)) {
-                    let docMatch = cell.match(/^([A-Za-zÀ-ÿ]+)\s*(\d+\/\d{4})$/i);
-                    if (docMatch) {
-                        parsed.doc_numero = docMatch[2];
-                        let prefix = docMatch[1].toUpperCase();
-                        if(prefix === 'REQ' || prefix === 'REQUERIMENTO') parsed.doc_tipo = 'Requerimento';
-                        else if(prefix === 'MEMO' || prefix === 'MEMORANDO') parsed.doc_tipo = 'Memorando';
-                        else if(prefix === 'PDP') parsed.doc_tipo = 'PDP';
-                        else if(prefix === 'SESSÃO' || prefix === 'SESSÃO SOLENE') parsed.doc_tipo = 'Sessão Solene';
-                        else parsed.doc_tipo = 'Ofício';
-                    }
+                let docMatch = cell.match(/^([A-Za-zÀ-ÿ]+)[\s-]*(\d+\/\d{4})$/i);
+                if (docMatch) {
+                    parsed.doc_numero = docMatch[2];
+                    let prefix = docMatch[1].toUpperCase();
+                    if(prefix.includes('REQ')) parsed.doc_tipo = 'Requerimento';
+                    else if(prefix.includes('MEM')) parsed.doc_tipo = 'Memorando';
+                    else if(prefix.includes('PDP')) parsed.doc_tipo = 'PDP';
+                    else if(prefix.includes('SESS')) parsed.doc_tipo = 'Sessão Solene';
+                    else parsed.doc_tipo = 'Ofício';
                     return;
                 }
 
-                // Responsável (Nome Equipe)
                 let matchedNome = nomesEquipe.find(n => n.toLowerCase() === cell.toLowerCase());
                 if (matchedNome) { parsed.resp = matchedNome; return; }
 
-                // Tipo de Solicitação
                 let matchedTipo = tiposConhecidos.find(t => t.toUpperCase() === cell.toUpperCase());
                 if (matchedTipo) { parsed.tipo = matchedTipo; return; }
 
-                // Status
                 let matchedStatus = statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase());
                 if (matchedStatus) { parsed.status = matchedStatus; return; }
 
-                // Expediente
                 if (cell.toLowerCase().includes('exp.') || cell.toLowerCase().includes('expediente')) {
                     parsed.expediente = cell; return;
                 }
 
-                // Secretaria / Órgão
-                if (cell.match(/^SEM[A-Z]+$/i) || ['OBRAS', 'SAÚDE', 'EDUCAÇÃO', 'FAZENDA', 'OUVIDORIA', 'CEPOM', 'GABINETE', 'PREFEITURA'].includes(cell.toUpperCase()) || cell.toUpperCase().includes('HABITAÇÃO') || cell.toUpperCase().includes('SEMHAB') || cell.toUpperCase().includes('SEMPA') || cell.toUpperCase().includes('PROTEÇÃO ANIMAL') || cell.toUpperCase().includes('SGG') || cell.toUpperCase().includes('GERAL DE GOVERNO')) {
-                    if (!parsed.secretaria) { parsed.secretaria = cell; return; }
-                }
-
-                // Endereço (Separa Rua e Número inteligentemente)
-                let matchEnd = cell.match(/^(Rua|Av|Avenida|Travessa|Beco|Estrada|Rodovia)\s+([^,]+)(?:[,\s]+(?:n[ºo]?\s*)?(\d+|s\/?n))?/i);
-                if (matchEnd) {
-                    let ruaLimpa = matchEnd[1] + ' ' + matchEnd[2];
-                    parsed.rua = ruaLimpa.trim();
-                    if (matchEnd[3]) parsed.numero = matchEnd[3].trim();
-                    return;
-                }
-
-                // Bairro isolado
-                if (cell.match(/^Bairro\s+(.+)/i)) {
-                    parsed.bairro = cell.match(/^Bairro\s+(.+)/i)[1].trim(); return;
-                }
-
-                // Solicitante (Se for texto curto e não tiver número)
-                if (cell.length > 2 && cell.length < 35 && !cell.match(/\d/) && !parsed.nome && cell.toLowerCase() !== 'ver detalhes' && cell.toLowerCase() !== 'ver mais') {
-                    parsed.nome = cell; return;
-                }
-
-                // Telefone (Garante extração limpa)
-                let telMatch = cell.match(/(\+?55)?\s*\(?0?51\)?[\s-]?9?\d{4}[-.\s]?\d{4}/);
-                if (telMatch) {
-                    parsed.tel = telMatch[0].trim(); return;
-                }
-
-                // Impedir que números soltos (como IDs ou protocolos quebrados) virem Assunto
-                if (cell.match(/^\d+$/)) {
-                    if (parsed.rua && !parsed.numero) parsed.numero = cell; // Se rua existe sem num, aloca como num
-                    return; // Pula a inserção na descrição
-                }
-
-                // Protocolo 156
                 if (cell.match(/156\s*20\d{2}\/\d+/)) {
                     parsed.protocolo = cell.match(/156\s*20\d{2}\/\d+/)[0]; return;
                 }
 
-                // O que sobrar, concatena na descrição
-                if (cell.length > 3 && cell.toLowerCase() !== 'ver detalhes' && cell.toLowerCase() !== 'ver mais') {
-                    if(parsed.desc) parsed.desc += '\n' + cell;
-                    else parsed.desc = cell;
+                let isSecretaria = false;
+                for(let s of secOficiais) {
+                    if (cell.toUpperCase().startsWith(s)) { 
+                        if (s === 'SEMHAB') parsed.secretaria = 'Secretaria Municipal de Habitação - SEMHAB';
+                        else if (s === 'SEMPA') parsed.secretaria = 'Secretaria Municipal de Proteção Animal - SEMPA';
+                        else if (s === 'SGG') parsed.secretaria = 'Secretaria Geral de Governo - SGG';
+                        else parsed.secretaria = s; 
+                        isSecretaria = true; break; 
+                    }
+                }
+                if (isSecretaria) return;
+                if (cell.toUpperCase().includes('GERAL DE GOVERNO')) { parsed.secretaria = 'Secretaria Geral de Governo - SGG'; return; }
+                if (cell.toUpperCase().includes('PROTEÇÃO ANIMAL')) { parsed.secretaria = 'Secretaria Municipal de Proteção Animal - SEMPA'; return; }
+                if (cell.toUpperCase().includes('HABITAÇÃO')) { parsed.secretaria = 'Secretaria Municipal de Habitação - SEMHAB'; return; }
+
+                let justDigits = cell.replace(/\D/g, '');
+                if (justDigits.length >= 8 && justDigits.length <= 13 && !cell.match(/[a-zA-Z]{3,}/)) {
+                    parsed.tel = cell; return; 
+                }
+
+                let matchEnd = cell.match(/^(Rua|Av\.?|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)\s+([^,]+)(?:[,\s]+(?:n[ºo]?\s*)?(\d+|s\/?n))?/i);
+                if (matchEnd) {
+                    parsed.rua = matchEnd[1] + ' ' + matchEnd[2].trim();
+                    if (matchEnd[3]) parsed.numero = matchEnd[3].trim();
+                    return;
+                }
+
+                if (cell.match(/^Bairro\s+(.+)/i)) {
+                    parsed.bairro = cell.match(/^Bairro\s+(.+)/i)[1].trim(); return;
+                }
+
+                restantes.push(cell);
+            });
+
+            restantes.sort((a, b) => b.length - a.length);
+
+            restantes.forEach(cell => {
+                if (cell.length > 40) {
+                    parsed.desc = parsed.desc ? parsed.desc + '\n' + cell : cell;
+                } else if (!parsed.nome && !cell.match(/\d/) && cell.length > 2 && cell.length <= 40) {
+                    const bairrosSL = ['CENTRO', 'FEITORIA', 'CAMPINA', 'SCHARLAU', 'SANTOS DUMONT', 'RIO DOS SINOS', 'VICENTINA', 'SÃO JOSÉ', 'SÃO MIGUEL', 'CRISTO REI', 'FIÃO', 'DUQUE DE CAXIAS', 'JARDIM AMÉRICA', 'FAZENDA SÃO BORJA', 'PINHEIRO'];
+                    if (bairrosSL.includes(cell.toUpperCase())) {
+                        parsed.bairro = cell;
+                    } else {
+                        parsed.nome = cell;
+                    }
+                } else {
+                    let m = cell.match(/^([^,]+)(?:[,\s]+(?:n[ºo]?\s*)?(\d+|s\/?n))$/i);
+                    if (m && !parsed.rua && cell.match(/[a-zA-Z]/)) {
+                        parsed.rua = m[1].trim();
+                        parsed.numero = m[2].trim();
+                    } else {
+                        parsed.desc = parsed.desc ? parsed.desc + '\n' + cell : cell;
+                    }
                 }
             });
 
-            // Aplica os dados nos campos
+            if (parsed.desc && !parsed.assunto) {
+                let assuntoInteligente = parsed.desc.split('\n')[0];
+                assuntoInteligente = assuntoInteligente.replace(/^(solicita|requer|pede|encaminha|solicitamos)(mos)?\s+(a|o|as|os|que|para|uma|um)\s+/i, '');
+                assuntoInteligente = assuntoInteligente.replace(/^(solicita|requer|pede|encaminha)\s+/i, '');
+                if(assuntoInteligente.length > 0) assuntoInteligente = assuntoInteligente.charAt(0).toUpperCase() + assuntoInteligente.slice(1);
+
+                const cortes = [" na rua", " na av", " na travessa", " no bairro", " em via", " especificamente", " ao longo", " defronte", " em frente", ", conforme", " no município", ", no"];
+                for (let corte of cortes) {
+                    let idx = assuntoInteligente.toLowerCase().indexOf(corte);
+                    if (idx > 0) assuntoInteligente = assuntoInteligente.substring(0, idx);
+                }
+
+                assuntoInteligente = assuntoInteligente.replace(/[,.-]+$/, '').trim();
+                if (assuntoInteligente.length > 65) assuntoInteligente = assuntoInteligente.substring(0, 65).trim() + '...';
+                parsed.assunto = assuntoInteligente;
+            }
+
             if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo.toUpperCase();
             if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
             if(parsed.resp) document.getElementById('responsavel_ordem').value = parsed.resp;
@@ -598,6 +618,8 @@
             if(parsed.rua) document.getElementById('rua').value = parsed.rua;
             if(parsed.numero) document.getElementById('numero').value = parsed.numero;
             if(parsed.bairro) document.getElementById('bairro').value = parsed.bairro;
+            if(parsed.assunto) document.getElementById('assunto').value = parsed.assunto;
+            if(parsed.desc) document.getElementById('descricao').value = parsed.desc;
             
             if(parsed.status) {
                 const selectStatus = document.getElementById('status_forcado');
@@ -606,26 +628,6 @@
                         selectStatus.value = opt.value;
                     }
                 });
-            }
-
-            if(parsed.desc) {
-                document.getElementById('descricao').value = parsed.desc;
-                
-                // Gera Assunto Inteligente
-                let assuntoInteligente = parsed.desc.split('\n')[0];
-                assuntoInteligente = assuntoInteligente.replace(/^(solicita|requer|pede|encaminha|solicitamos)(mos)?\s+(a|o|as|os|que|para|uma|um)\s+/i, '');
-                assuntoInteligente = assuntoInteligente.replace(/^(solicita|requer|pede|encaminha)\s+/i, '');
-                if(assuntoInteligente.length > 0) assuntoInteligente = assuntoInteligente.charAt(0).toUpperCase() + assuntoInteligente.slice(1);
-
-                const cortes = [" na rua", " na av", " na travessa", " no bairro", " em via", " especificamente", " ao longo", " defronte", " em frente", ", conforme", " no município", ", no"];
-                for (let corte of cortes) {
-                    let idx = assuntoInteligente.toLowerCase().indexOf(corte);
-                    if (idx > 0) assuntoInteligente = assuntoInteligente.substring(0, idx);
-                }
-
-                assuntoInteligente = assuntoInteligente.replace(/[,.-]+$/, '').trim();
-                if (assuntoInteligente.length > 65) assuntoInteligente = assuntoInteligente.substring(0, 65).trim() + '...';
-                document.getElementById('assunto').value = assuntoInteligente;
             }
 
             adaptarFormulario();
@@ -723,11 +725,9 @@
             const responsavel_ordem = document.getElementById('responsavel_ordem').value; 
             const numero_demanda = montarNumeroDemanda();
             
-            // Verifica o Modo Agenda
             const isAgenda = document.getElementById('is_agenda_toggle').checked;
             const dia_evento = document.getElementById('dia_evento').value || null;
             
-            // Se o modo agenda estiver ativado, a data do evento sobrepõe a data da ocorrência para controle
             const data_agendada = isAgenda && dia_evento ? dia_evento : (document.getElementById('data_agendada').value || null);
             const horario_agendado = document.getElementById('horario_agendado').value || null;
             
@@ -792,12 +792,6 @@
 
                 if (usuarioLogado !== 'Daniel' && !document.getElementById('checkAprovacaoDaniel').checked) {
                     if (['Pendente', 'Aberta', 'Aguardando', 'Aguardando Aprovação'].includes(statusInicial)) {
-                        statusInicial = 'Aprovada';
-                    }
-                }
-
-                if (['Pendente', 'Aberta', 'Aguardando', 'Aguardando Aprovação'].includes(statusInicial)) {
-                    if (doc_numero || expediente) {
                         statusInicial = 'Aprovada';
                     }
                 }
