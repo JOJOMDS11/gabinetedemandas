@@ -408,27 +408,28 @@
                                 if (['Pendente', 'Aberta', 'Aguardando Aprovação', 'Aguardando'].includes(payload.new.status)) {
                                     const assuntoCurto = payload.new.assunto?.length > 35 ? payload.new.assunto.substring(0, 35) + '...' : payload.new.assunto;
                                     
-                                    // AQUI FOI ADICIONADO O NOME DO SOLICITANTE E DO RESPONSÁVEL
                                     const quemAbriu = payload.new.criador || 'Equipe';
                                     const solicitante = payload.new.solicitante_nome ? ` de ${payload.new.solicitante_nome}` : '';
                                     const corpoNotificacao = `Aberta por ${quemAbriu}${solicitante}\nAssunto: ${assuntoCurto}`;
+                                    
+                                    // AQUI: URL dinâmico com o ID
+                                    const linkDemanda = `/ver-demanda.html?id=${payload.new.id}`;
 
                                     db.functions.invoke('send-push', {
                                         body: {
                                             payload: {
                                                 title: '🔔 Nova demanda',
                                                 body: corpoNotificacao,
-                                                url: '/dashboard.html'
+                                                url: linkDemanda 
                                             },
                                             targetUsers: ['Daniel']
                                         }
                                     }).catch(err => console.error('Erro push:', err));
 
                                     if (usuarioLogado === 'Daniel') {
-                                        mostrarNotificacaoCelular('🔔 Nova demanda', corpoNotificacao);
+                                        mostrarNotificacaoCelular('🔔 Nova demanda', corpoNotificacao, linkDemanda);
                                     }
                                 }
-                            }
 
                             else if (payload.eventType === 'UPDATE') {
                                 const idx = todasDemandas.findIndex(d => d.id === payload.new.id);
@@ -444,28 +445,30 @@
                                     contadoresNovas[payload.new.status]++;
                                 }
 
-                                if (payload.new.status === 'Aprovada' && statusAntigo !== 'Aprovada') {
+                              if (payload.new.status === 'Aprovada' && statusAntigo !== 'Aprovada') {
                                     let interessados = [payload.new.criador, ...(payload.new.responsaveis || [])].filter(x => x && x !== 'Daniel');
                                     interessados = [...new Set(interessados)];
 
                                     if (interessados.length > 0) {
+                                        // AQUI: URL dinâmico com o ID
+                                        const linkDemanda = `/ver-demanda.html?id=${payload.new.id}`;
+
                                         db.functions.invoke('send-push', {
                                             body: {
                                                 payload: {
                                                     title: '✅ Demanda Aprovada',
                                                     body: `O Daniel aprovou: ${payload.new.assunto}`,
-                                                    url: '/dashboard.html'
+                                                    url: linkDemanda
                                                 },
                                                 targetUsers: interessados
                                             }
                                         }).catch(err => console.error('Erro push:', err));
 
                                         if (interessados.includes(usuarioLogado)) {
-                                            mostrarNotificacaoCelular('✅ Demanda Aprovada', `O Daniel aprovou: ${payload.new.assunto}`);
+                                            mostrarNotificacaoCelular('✅ Demanda Aprovada', `O Daniel aprovou: ${payload.new.assunto}`, linkDemanda);
                                         }
                                     }
                                 }
-                            }
 
                             else if (payload.eventType === 'DELETE') {
                                 todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id);
