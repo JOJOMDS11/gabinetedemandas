@@ -71,21 +71,16 @@
                 <label style="color: #475569; font-size: 12px; border: none; padding: 0; margin-bottom: 6px;">Status da Demanda</label>
                 <select id="status_forcado" onchange="verificarCheckboxAprovacao()">
                     <option value="">Automático (Gerado pelo Sistema)</option>
-                    <option value="156 Pedido">156 Pedido</option>
-                    <option value="Aberta">Aberta</option>
-                    <option value="Aguardando">Aguardando</option>
-                    <option value="Aguardando Aprovação">Aguardando Aprovação</option>
-                    <option value="Aguardando execução da secretaria">Aguardando execução da secretaria</option>
-                    <option value="Aguardando Exp">Aguardando Exp</option>
-                    <option value="Aprovada">Aprovada</option>
-                    <option value="Arquivada">Arquivada</option>
-                    <option value="Atendido">Atendido</option>
-                    <option value="Concluída">Concluída</option>
-                    <option value="Em Andamento">Em Andamento</option>
-                    <option value="Pendente">Pendente</option>
-                    <option value="Rejeitada">Rejeitada</option>
-                    <option value="Resolvido">Resolvido</option>
-                    <option value="Sem Legis">Sem Legis</option>
+                    <option value="Pendente">📥 Pendente (Triagem)</option>
+                    <option value="Aguardando Aprovação">⏳ Aguardando Aprovação</option>
+                    <option value="Aprovada">✅ Aprovada (Liberada)</option>
+                    <option value="Em Andamento">🏃 Em Andamento</option>
+                    <option value="156 Solicitado">🔢 156 Solicitado</option>
+                    <option value="Expediente (Legis) Gerado">📄 Expediente (Legis) Gerado</option>
+                    <option value="Aguardando Exec. Secretaria">🏢 Aguardando Exec. Secretaria</option>
+                    <option value="Concluída">🏁 Concluída</option>
+                    <option value="Rejeitada">❌ Rejeitada</option>
+                    <option value="Arquivada">📦 Arquivada</option>
                 </select>
             </div>
         </div>
@@ -470,7 +465,7 @@
             const exp = document.getElementById('expediente').value;
             const check = document.getElementById('checkAprovacaoDaniel');
             
-            if (link || exp || ['aprovada', 'concluída', 'arquivada', 'rejeitada', 'pendente', 'aberta', 'em andamento', '156 pedido'].includes(status)) {
+            if (link || exp || ['aprovada', 'concluída', 'arquivada', 'rejeitada', 'em andamento', '156 solicitado', 'expediente (legis) gerado', 'aguardando exec. secretaria'].includes(status)) {
                 check.checked = false;
             } else {
                 check.checked = true;
@@ -487,7 +482,7 @@
             let parsed = { data: '', resp: '', status: '', tipo: '', doc_tipo: '', doc_numero: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '', rua: '', numero: '', bairro: '', link_legis: '' };
 
             const tiposConhecidos = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO', 'DEMANDA (GERAL)', 'DEMANDA EXTERNA', 'INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
-            const statusConhecidos = ['156 Pedido', 'Aberta', 'Aguardando', 'Aguardando Aprovação', 'Aguardando execução da secretaria', 'Aguardando Exp', 'Aprovada', 'Arquivada', 'Atendido', 'Concluída', 'Em Andamento', 'Pendente', 'Rejeitada', 'Resolvido', 'Sem Legis'];
+            const statusConhecidos = ['Pendente', 'Aguardando Aprovação', 'Aprovada', 'Em Andamento', '156 Solicitado', 'Expediente (Legis) Gerado', 'Aguardando Exec. Secretaria', 'Concluída', 'Rejeitada', 'Arquivada', 'Aberta', 'Aguardando', 'Resolvido', 'Atendido'];
             
             const celulas = texto.split('\t');
 
@@ -529,9 +524,14 @@
                 let matchedTipo = tiposConhecidos.find(t => t.toUpperCase() === cell.toUpperCase());
                 if (matchedTipo) { parsed.tipo = matchedTipo; return; }
 
-                // Status
+                // Status Inteligente (Converte os antigos para os novos)
                 let matchedStatus = statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase());
-                if (matchedStatus) { parsed.status = matchedStatus; return; }
+                if (matchedStatus) { 
+                    if (['Aberta', 'Aguardando'].includes(matchedStatus)) parsed.status = 'Pendente';
+                    else if (['Atendido', 'Resolvido'].includes(matchedStatus)) parsed.status = 'Concluída';
+                    else parsed.status = matchedStatus;
+                    return; 
+                }
 
                 // Expediente
                 if (cell.toLowerCase().includes('exp.') || cell.toLowerCase().includes('expediente')) {
