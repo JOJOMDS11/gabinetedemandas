@@ -638,21 +638,33 @@
                       atualizarContadores();
                       renderDemandas();
                   })
-                  .subscribe((status, err) => {
-                      if (status === 'SUBSCRIBED') {
-                          console.log('✅ Realtime conectado: avisos automáticos vão funcionar.');
-                      } else if (status === 'CHANNEL_ERROR') {
-                          console.error('❌ Realtime com ERRO ao conectar (provável causa das notificações não chegarem). Detalhe:', err);
-                      } else if (status === 'TIMED_OUT') {
-                          console.error('❌ Realtime demorou demais para conectar (timeout).');
-                      } else if (status === 'CLOSED') {
-                          console.warn('⚠️ Canal Realtime fechado.');
-                      }
-                  });
-             catch (err) 
-                document.getElementById('demandas').innerHTML = '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
-            }
-        }
+              })
+.subscribe((status, err) => {
+    if (status === 'SUBSCRIBED') {
+        console.log('✅ Realtime conectado: avisos automáticos vão funcionar.');
+    } else if (status === 'CHANNEL_ERROR') {
+        console.error(
+            '❌ Realtime com ERRO ao conectar.',
+            err
+        );
+    } else if (status === 'TIMED_OUT') {
+        console.error(
+            '❌ Realtime timeout.'
+        );
+    } else if (status === 'CLOSED') {
+        console.warn(
+            '⚠️ Canal Realtime fechado.'
+        );
+    }
+});
+
+} catch (err) {
+    console.error('Erro ao inicializar:', err);
+
+    document.getElementById('demandas').innerHTML =
+        '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
+}
+}
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
