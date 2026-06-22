@@ -6,7 +6,6 @@
     <title>Gabinete Daniel Daudt - Demandas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#185199">
     <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
@@ -139,7 +138,6 @@
         </div>
 
        <div class="container">
-        <!-- FILTROS NO TOPO -->
         <div class="filtros" style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #ddd;">
             <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
             <button class="filtro-btn ativo" data-status="Aberta" onclick="filtrar('Aberta')">Abertas/Pendentes <span id="count-Aberta" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
@@ -157,7 +155,6 @@
         <div class="paginacao" id="paginacaoContainer"></div>
     </div>
 
-    <!-- Modal de Autenticação Segura -->
     <div class="modal-overlay" id="modalSenhaSegura">
         <div class="modal-box">
             <h3>🔐 Exclusão de Registro</h3>
@@ -171,7 +168,6 @@
         </div>
     </div>
 
-    <!-- Modal de Gerenciamento de Secretarias -->
     <div class="modal-overlay" id="modalSecretarias">
         <div class="modal-box" style="max-width: 420px; text-align: left;">
             <h3 style="text-align:center;">⚙️ Gerenciar Secretarias</h3>
@@ -375,155 +371,189 @@
         }
 
       async function inicializarSistema() {
-            try {
-                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
-                const config = await res.json();
+    try {
+        const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
+        const config = await res.json();
 
-                db = supabase.createClient(
-                    config.supabaseUrl,
-                    config.supabaseKey,
-                    {
-                        global: {
-                            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+        db = supabase.createClient(
+            config.supabaseUrl,
+            config.supabaseKey,
+            {
+                global: {
+                    headers: authToken
+                        ? { Authorization: `Bearer ${authToken}` }
+                        : {}
+                }
+            }
+        );
+
+        await carregarDemandas();
+
+        if (Notification.permission === 'granted') {
+            inscreverPushReal();
+        }
+
+        db.channel('dashboard-live')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'demandas'
+                },
+                async (payload) => {
+
+                    if (payload.eventType === 'INSERT') {
+                        todasDemandas.unshift(payload.new);
+
+                        if (
+                            payload.new.status !== filtroAtual &&
+                            contadoresNovas[payload.new.status] !== undefined
+                        ) {
+                            contadoresNovas[payload.new.status]++;
+                        }
+
+                        if (
+                            ['Pendente', 'Aberta', 'Aguardando Aprovação', 'Aguardando']
+                                .includes(payload.new.status)
+                        ) {
+                            const assuntoCurto =
+                                payload.new.assunto?.length > 35
+                                    ? payload.new.assunto.substring(0, 35) + '...'
+                                    : payload.new.assunto;
+
+                            db.functions
+                                .invoke('send-push', {
+                                    body: {
+                                        payload: {
+                                            title: '🔔 Gabinete Daniel',
+                                            body: `Nova demanda para aprovação: ${assuntoCurto}`,
+                                            url: '/dashboard.html'
+                                        },
+                                        targetUsers: ['Daniel']
+                                    }
+                                })
+                                .catch(err =>
+                                    console.error('Erro push:', err)
+                                );
+
+                            if (usuarioLogado === 'Daniel') {
+                                mostrarNotificacaoCelular(
+                                    '🔔 Gabinete Daniel',
+                                    `Nova demanda para aprovação: ${assuntoCurto}`
+                                );
+                            }
                         }
                     }
-                );
 
-                
-                (async () => {
-                    try {
-                        const agora = new Date().toISOString();
-                        // Salva o acesso atual do usuário logado
-                        await db.from('ultimo_acesso').upsert(
-                            { usuario: usuarioLogado, acessado_em: agora },
-                            { onConflict: 'usuario' }
+                    else if (payload.eventType === 'UPDATE') {
+                        const idx = todasDemandas.findIndex(
+                            d => d.id === payload.new.id
                         );
-                        
-                        const { data: acessos } = await db
-                            .from('ultimo_acesso')
-                            .select('usuario, acessado_em')
-                            .order('acessado_em', { ascending: false });
-                        
-                        if (acessos && acessos.length > 0) {
-                            const linhas = acessos.map(a => {
-                                const dt = new Date(a.acessado_em);
-                                const fmt = dt.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
-                                return `<span style="margin-right:12px;">👤 <b>${a.usuario}</b>: ${fmt}</span>`;
-                            }).join('');
-                            const faixa = document.getElementById('faixaUltimoAcesso');
-                            if (faixa) faixa.innerHTML = '🕐 Último acesso: ' + linhas;
+
+                        const statusAntigo =
+                            idx !== -1
+                                ? todasDemandas[idx].status
+                                : payload.old?.status;
+
+                        if (idx !== -1) {
+                            todasDemandas[idx] = payload.new;
+                        } else {
+                            todasDemandas.unshift(payload.new);
                         }
-                    } catch(e) { console.warn('Último acesso:', e); }
-                })();
 
-                await carregarDemandas();
+                        if (
+                            payload.new.status !== statusAntigo &&
+                            payload.new.status !== filtroAtual &&
+                            contadoresNovas[payload.new.status] !== undefined
+                        ) {
+                            contadoresNovas[payload.new.status]++;
+                        }
 
-                if (Notification.permission === 'granted') {
-                    inscreverPushReal();
-                }
+                        if (
+                            payload.new.status === 'Aprovada' &&
+                            statusAntigo !== 'Aprovada'
+                        ) {
+                            let interessados = [
+                                payload.new.criador,
+                                ...(payload.new.responsaveis || [])
+                            ]
+                                .filter(x => x && x !== 'Daniel');
 
-                db.channel('dashboard-live')
-                    .on(
-                        'postgres_changes',
-                        { event: '*', schema: 'public', table: 'demandas' },
-                        async (payload) => {
+                            interessados = [...new Set(interessados)];
 
-                            if (payload.eventType === 'INSERT') {
-                                todasDemandas.unshift(payload.new);
-
-                                if (payload.new.status !== filtroAtual && contadoresNovas[payload.new.status] !== undefined) {
-                                    contadoresNovas[payload.new.status]++;
-                                }
-
-                                if (['Pendente', 'Aberta', 'Aguardando Aprovação', 'Aguardando'].includes(payload.new.status)) {
-                                    const assuntoCurto = payload.new.assunto?.length > 35 ? payload.new.assunto.substring(0, 35) + '...' : payload.new.assunto;
-                                    
-                                    const quemAbriu = payload.new.criador || 'Equipe';
-                                    const solicitante = payload.new.solicitante_nome ? ` (De: ${payload.new.solicitante_nome})` : '';
-                                    const corpoNotificacao = `Aberto por: ${quemAbriu}${solicitante}\nAssunto: ${assuntoCurto}`;
-                                    
-                                    const linkDemanda = `/ver-demanda.html?id=${payload.new.id}`;
-
-                                    db.functions.invoke('send-push', {
+                            if (interessados.length > 0) {
+                                db.functions
+                                    .invoke('send-push', {
                                         body: {
                                             payload: {
-                                                title: '🔔 Nova demanda',
-                                                body: corpoNotificacao,
-                                                url: linkDemanda 
+                                                title: '✅ Demanda Aprovada',
+                                                body: `O Daniel aprovou: ${payload.new.assunto}`,
+                                                url: '/dashboard.html'
                                             },
-                                            targetUsers: ['Daniel']
+                                            targetUsers: interessados
                                         }
-                                    }).catch(err => console.error('Erro push:', err));
+                                    })
+                                    .catch(err =>
+                                        console.error('Erro push:', err)
+                                    );
 
-                                    if (usuarioLogado === 'Daniel') {
-                                        mostrarNotificacaoCelular('🔔 Nova demanda', corpoNotificacao, linkDemanda);
-                                    }
+                                if (
+                                    interessados.includes(usuarioLogado)
+                                ) {
+                                    mostrarNotificacaoCelular(
+                                        '✅ Demanda Aprovada',
+                                        `O Daniel aprovou: ${payload.new.assunto}`
+                                    );
                                 }
                             }
-                            else if (payload.eventType === 'UPDATE') {
-                                const idx = todasDemandas.findIndex(d => d.id === payload.new.id);
-                                const statusAntigo = idx !== -1 ? todasDemandas[idx].status : payload.old?.status;
-
-                                if (idx !== -1) {
-                                    todasDemandas[idx] = payload.new;
-                                } else {
-                                    todasDemandas.unshift(payload.new);
-                                }
-
-                                if (payload.new.status !== statusAntigo && payload.new.status !== filtroAtual && contadoresNovas[payload.new.status] !== undefined) {
-                                    contadoresNovas[payload.new.status]++;
-                                }
-
-                              if (payload.new.status === 'Aprovada' && statusAntigo !== 'Aprovada') {
-                                    let interessados = [payload.new.criador, ...(payload.new.responsaveis || [])].filter(x => x && x !== 'Daniel');
-                                    interessados = [...new Set(interessados)];
-
-                                    if (interessados.length > 0) {
-                                        const linkDemanda = `/ver-demanda.html?id=${payload.new.id}`;
-
-                                        db.functions.invoke('send-push', {
-                                            body: {
-                                                payload: {
-                                                    title: '✅ Demanda Aprovada',
-                                                    body: `O Daniel aprovou: ${payload.new.assunto}`,
-                                                    url: linkDemanda
-                                                },
-                                                targetUsers: interessados
-                                            }
-                                        }).catch(err => console.error('Erro push:', err));
-
-                                        if (interessados.includes(usuarioLogado)) {
-                                            mostrarNotificacaoCelular('✅ Demanda Aprovada', `O Daniel aprovou: ${payload.new.assunto}`, linkDemanda);
-                                        }
-                                    }
-                                }
-                            }
-                            else if (payload.eventType === 'DELETE') {
-                                todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id);
-                            }
-
-                            todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
-                            atualizarContadores();
-                            renderDemandas();
                         }
-                    )
-                    .subscribe((status, err) => {
-                        if (status === 'SUBSCRIBED') {
-                            console.log('✅ Realtime conectado: avisos automáticos vão funcionar.');
-                        } else if (status === 'CHANNEL_ERROR') {
-                            console.error('❌ Realtime com ERRO ao conectar.', err);
-                        } else if (status === 'TIMED_OUT') {
-                            console.error('❌ Realtime timeout.');
-                        } else if (status === 'CLOSED') {
-                            console.warn('⚠️ Canal Realtime fechado.');
-                        }
-                    });
+                    }
 
-            } catch (err) {
-                console.error('Erro ao inicializar:', err);
-                document.getElementById('demandas').innerHTML = '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
-            }
-        }
+                    else if (payload.eventType === 'DELETE') {
+                        todasDemandas =
+                            todasDemandas.filter(
+                                d => d.id !== payload.old.id
+                            );
+                    }
+
+                    todasDemandas.sort(
+                        (a, b) =>
+                            new Date(b.criado_em) -
+                            new Date(a.criado_em)
+                    );
+
+                    atualizarContadores();
+                    renderDemandas();
+                }
+            )
+            .subscribe((status, err) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('✅ Realtime conectado: avisos automáticos vão funcionar.');
+                } else if (status === 'CHANNEL_ERROR') {
+                    console.error(
+                        '❌ Realtime com ERRO ao conectar.',
+                        err
+                    );
+                } else if (status === 'TIMED_OUT') {
+                    console.error(
+                        '❌ Realtime timeout.'
+                    );
+                } else if (status === 'CLOSED') {
+                    console.warn(
+                        '⚠️ Canal Realtime fechado.'
+                    );
+                }
+            });
+
+    } catch (err) {
+        console.error('Erro ao inicializar:', err);
+
+        document.getElementById('demandas').innerHTML =
+            '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
+    }
+}
+
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
