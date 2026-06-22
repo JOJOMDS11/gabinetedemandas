@@ -8,87 +8,86 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background-color: #f8fafc; color: #0f172a; padding-bottom: 50px; }
         
-        .navbar { background: #ffffff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100;}
-        .navbar h1 { font-size: 18px; font-weight: 800; color: #0f172a; }
-        .btn-voltar { background: #f1f5f9; color: #334155; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: 0.2s; }
-        .btn-voltar:hover { background: #e2e8f0; }
+        .navbar { background: #1a365d; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100;}
+        .navbar h1 { font-size: 18px; font-weight: 800; color: white; }
+        .btn-voltar { background: rgba(255,255,255,0.1); color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2);}
+        .btn-voltar:hover { background: rgba(255,255,255,0.2); }
 
-        .container { max-width: 1300px; margin: 40px auto 0; padding: 0 20px; }
+        .container { max-width: 1350px; margin: 30px auto 0; padding: 0 20px; }
         
-        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;}
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
         .page-header h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px;}
         
-        .filtros-topo { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .select-mes { padding: 10px 15px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; font-weight: 600; color: #334155; background: white; outline: none; cursor: pointer; }
-        
-        .btn-backup { background: #0f172a; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;}
-        .btn-backup:hover { background: #334155; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);}
+        .btn-export { background: #0f172a; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px;}
+        .btn-export:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);}
+        .btn-excel { background: #16a34a; } .btn-excel:hover { background: #15803d; }
 
-        /* KPIs Clicáveis */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .kpi-card { background: #ffffff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
-        .kpi-card:hover { transform: translateY(-3px); border-color: #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .kpi-card.ativo { border-color: #3b82f6; background: #f0f9ff; }
-        .kpi-card.fixo { cursor: default; } .kpi-card.fixo:hover { transform: none; border-color: transparent; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
-        
-        .kpi-titulo { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; pointer-events: none;}
-        .kpi-valor { font-size: 34px; font-weight: 800; margin-top: 8px; line-height: 1; pointer-events: none;}
-        
-        .kpi-card.total .kpi-valor { color: #334155; }
-        .kpi-card.abertas .kpi-valor { color: #ef4444; }
-        .kpi-card.andamento .kpi-valor { color: #f59e0b; }
-        .kpi-card.concluidas .kpi-valor { color: #10b981; }
-        .kpi-card.tempo .kpi-valor { color: #8b5cf6; }
+        /* Alertas Automáticos */
+        #containerAlertas { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .alerta-box { padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px; border-left: 5px solid; animation: slideIn 0.5s ease;}
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .alerta-critico { background: #fef2f2; color: #991b1b; border-left-color: #ef4444; }
+        .alerta-aviso { background: #fffbeb; color: #854d0e; border-left-color: #f59e0b; }
 
-        /* Lista de Demandas (Paginação) */
-        .secao-lista { background: white; border-radius: 16px; padding: 25px; margin-bottom: 30px; border: 1px solid #3b82f6; display: none; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1);}
-        .secao-lista h3 { font-size: 18px; color: #0f172a; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
-        .btn-fechar-lista { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold;}
-        
-        .lista-item { border-bottom: 1px solid #f1f5f9; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; gap: 15px;}
-        .lista-item:last-child { border-bottom: none; }
-        .lista-info strong { color: #1e293b; font-size: 16px; display: block; margin-bottom: 8px;}
-        .lista-info .detalhe-tag { display: inline-flex; align-items: center; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #475569; margin-right: 8px; margin-bottom: 6px;}
-        
-        .btn-ver-demanda { background: #3b82f6; color: white; text-decoration: none; padding: 10px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; white-space: nowrap; transition: 0.2s;}
-        .btn-ver-demanda:hover { background: #2563eb; }
-        
-        .paginacao { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9;}
-        .paginacao button { background: #e2e8f0; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; color: #334155; cursor: pointer; transition: 0.2s;}
-        .paginacao button:disabled { opacity: 0.4; cursor: not-allowed; }
-        .paginacao button:hover:not(:disabled) { background: #cbd5e1; }
+        /* Barra de Filtros Avançados */
+        .filtros-avancados { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; margin-bottom: 30px; display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;}
+        .filtro-item { display: flex; flex-direction: column; flex: 1; min-width: 180px; }
+        .filtro-item label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; }
+        .filtro-item input, .filtro-item select { padding: 10px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; color: #334155; outline: none; transition: 0.2s; background: #f8fafc;}
+        .filtro-item input:focus, .filtro-item select:focus { border-color: #3b82f6; background: white; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);}
+        .btn-reset { background: #e2e8f0; color: #475569; padding: 10px 15px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; font-size: 13px; height: 39px;}
+        .btn-reset:hover { background: #cbd5e1; }
 
-        /* Gráficos e Listas Ranqueadas */
+        /* KPIs */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .kpi-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; border-left: 4px solid #cbd5e1; cursor: pointer; transition: 0.2s; position: relative;}
+        .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        /* Cores Inteligentes dos KPIs */
+        .kpi-card.total { border-left-color: #3b82f6; }
+        .kpi-card.abertas { border-left-color: #f59e0b; }
+        .kpi-card.concluidas { border-left-color: #10b981; }
+        .kpi-card.atrasadas { border-left-color: #ef4444; }
+        .kpi-card.taxa { border-left-color: #8b5cf6; }
+        .kpi-card.espera { border-left-color: #64748b; }
+
+        .kpi-titulo { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-valor { font-size: 28px; font-weight: 800; margin-top: 8px; color: #0f172a; line-height: 1; }
+
+        /* Lista Oculta */
+        .secao-lista { background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px solid #3b82f6; display: none; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1);}
+        .secao-lista h3 { font-size: 16px; color: #0f172a; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+        .btn-fechar-lista { background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold;}
+        .lista-item { border-bottom: 1px solid #f1f5f9; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; gap: 15px;}
+        .lista-info strong { color: #1e293b; font-size: 14px; display: block; margin-bottom: 6px;}
+        .detalhe-tag { display: inline-flex; align-items: center; background: #f1f5f9; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; color: #475569; margin-right: 6px; margin-bottom: 4px;}
+        .btn-ver-demanda { background: #3b82f6; color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; white-space: nowrap; transition: 0.2s;}
+
+        /* Gráficos e Tabelas */
         .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
-        
-        .chart-card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;}
-        .chart-card h3 { font-size: 16px; font-weight: 600; color: #334155; margin-bottom: 20px; display: flex; justify-content: space-between;}
-        .chart-card h3 span { font-size: 12px; color: #94a3b8; font-weight: 400; background: #f8fafc; padding: 4px 8px; border-radius: 4px;}
+        .chart-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;}
+        .chart-card.full-width { grid-column: 1 / -1; }
+        .chart-card h3 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;}
         .chart-container { position: relative; height: 300px; width: 100%; }
 
-        /* Listas Minimalistas (Sem gráficos) */
-        .data-list { display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; padding-right: 5px;}
-        .data-list::-webkit-scrollbar { width: 6px; }
-        .data-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .data-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: 0.2s;
-        }
-        .data-item:hover { background: #f8fafc; padding-left: 15px; }
+        /* Tabela Bonita para Secretarias */
+        .data-table-container { max-height: 350px; overflow-y: auto; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table th { background: #f8fafc; color: #475569; font-weight: 700; padding: 10px; text-align: left; position: sticky; top: 0; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; font-size: 11px;}
+        .data-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; color: #334155; font-weight: 500; }
+        .data-table tr:hover { background: #f0f9ff; }
+        .tb-taxa { font-weight: 800; color: #0f172a; }
 
-        /* Grid Especial para Bairros Full Width */
-        .bairros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; max-height: unset; overflow-y: visible;}
-        .bairros-grid .data-item { border: 1px solid #f1f5f9; border-radius: 8px; }
-
-        #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);}
-        .spinner { border: 4px solid #e2e8f0; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 16px;}
+        #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center;}
+        .spinner { border: 4px solid #e2e8f0; border-top: 4px solid #1a365d; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 16px;}
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -96,86 +95,116 @@
 
     <div id="loading">
         <div class="spinner"></div>
-        <h2 style="color: #0f172a; font-weight: 800;">Processando Intelligence...</h2>
+        <h2 style="color: #1a365d; font-weight: 800;">Processando Intelligence...</h2>
     </div>
 
     <div class="navbar">
-        <h1>📊 Analytics Interativo</h1>
-        <a href="dashboard.html" class="btn-voltar">Voltar ao Painel</a>
+        <h1>📊 Gabinete Analytics PRO</h1>
+        <a href="dashboard.html" class="btn-voltar">← Voltar ao Painel</a>
     </div>
 
     <div class="container">
         <div class="page-header">
             <div>
-                <h2>Desempenho do Gabinete</h2>
-                <p>Números sempre visíveis. Clique em qualquer item/gráfico para listar as demandas detalhadas.</p>
+                <h2>Visão Estratégica do Gabinete</h2>
+                <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Acompanhamento de eficiência, gargalos e execução da equipe.</p>
             </div>
-            <div class="filtros-topo">
-                <select id="filtroMes" class="select-mes" onchange="aplicarFiltroMes()">
-                    <option value="todos">📅 Todo o Período</option>
-                </select>
-                <button class="btn-backup" onclick="gerarBackupJSON()">📥 Backup Seguro JSON</button>
+            <div>
+                <button class="btn-export btn-excel" onclick="exportarExcel()">📊 Exportar Planilha Excel</button>
+                <button class="btn-export" onclick="gerarBackupJSON()">📥 Baixar JSON do Banco</button>
             </div>
         </div>
 
+        <div id="containerAlertas"></div>
+
+        <div class="filtros-avancados">
+            <div class="filtro-item" style="flex: 2;">
+                <label>🔍 Busca Rápida</label>
+                <input type="text" id="filtroBusca" placeholder="Pesquisar por assunto ou local..." oninput="debounceFiltros()">
+            </div>
+            <div class="filtro-item">
+                <label>📅 Mês de Abertura</label>
+                <select id="filtroMes" onchange="aplicarFiltros()"><option value="todos">Todo o Período</option></select>
+            </div>
+            <div class="filtro-item">
+                <label>🏢 Secretaria / Órgão</label>
+                <select id="filtroSec" onchange="aplicarFiltros()"><option value="todas">Todas as Secretarias</option></select>
+            </div>
+            <div class="filtro-item">
+                <label>🚦 Status Atual</label>
+                <select id="filtroStatus" onchange="aplicarFiltros()">
+                    <option value="todos">Todos os Status</option>
+                    <option value="abertas_pendentes">Abertas / Pendentes</option>
+                    <option value="em_execucao">Em Andamento / Aprovadas</option>
+                    <option value="concluidas">Finalizadas / Arquivadas</option>
+                </select>
+            </div>
+            <button class="btn-reset" onclick="resetarFiltros()">↻ Limpar</button>
+        </div>
+
         <div class="kpi-grid">
-            <div class="kpi-card total" onclick="abrirListaKPI('todas', 'Todo o Período', this)">
-                <div class="kpi-titulo">Volume Total</div>
-                <div class="kpi-valor" id="kpiTotal">0</div>
+            <div class="kpi-card total" onclick="abrirListaKPI('todas', 'Volume Total', this)">
+                <div class="kpi-titulo">Total Filtrado</div><div class="kpi-valor" id="kpiTotal">0</div>
             </div>
-            <div class="kpi-card abertas" onclick="abrirListaKPI('abertas', 'Abertas / Pendentes', this)">
-                <div class="kpi-titulo">Abertas / Pendentes</div>
-                <div class="kpi-valor" id="kpiAbertas">0</div>
+            <div class="kpi-card taxa" onclick="abrirListaKPI('concluidas', 'Concluídas com Sucesso', this)">
+                <div class="kpi-titulo">Taxa de Conclusão</div><div class="kpi-valor" id="kpiTaxa" style="color: #6d28d9;">0%</div>
             </div>
-            <div class="kpi-card andamento" onclick="abrirListaKPI('andamento', 'Sendo Executadas', this)">
-                <div class="kpi-titulo">Sendo Executadas</div>
-                <div class="kpi-valor" id="kpiAndamento">0</div>
+            <div class="kpi-card abertas" onclick="abrirListaKPI('abertas', 'Aguardando Início', this)">
+                <div class="kpi-titulo">Abertas / Pendentes</div><div class="kpi-valor" id="kpiAbertas">0</div>
             </div>
-            <div class="kpi-card concluidas" onclick="abrirListaKPI('concluidas', 'Finalizadas', this)">
-                <div class="kpi-titulo">Finalizadas</div>
-                <div class="kpi-valor" id="kpiConcluidas">0</div>
+            <div class="kpi-card atrasadas" onclick="abrirListaKPI('atrasadas', 'Atrasadas (> 30 dias)', this)">
+                <div class="kpi-titulo">Atrasadas (> 30 dias)</div><div class="kpi-valor" id="kpiAtrasadas" style="color: #dc2626;">0</div>
             </div>
-            <div class="kpi-card tempo fixo">
-                <div class="kpi-titulo">Tempo Méd. Resolução</div>
-                <div class="kpi-valor" id="kpiTempo">--</div>
+            <div class="kpi-card espera fixo">
+                <div class="kpi-titulo">Espera Máxima</div><div class="kpi-valor" id="kpiEsperaMax">--</div>
+            </div>
+            <div class="kpi-card concluidas fixo">
+                <div class="kpi-titulo">Tempo Méd. Resolução</div><div class="kpi-valor" id="kpiTempo">--</div>
             </div>
         </div>
 
         <div class="secao-lista" id="secaoLista">
-            <h3><span id="tituloLista">Lista de Demandas</span> <button class="btn-fechar-lista" onclick="fecharLista()">✕ Fechar</button></h3>
-            <div id="containerItensLista"></div>
-            <div class="paginacao">
-                <button id="btnListaAnt" onclick="mudarPaginaLista(-1)">❮ Anterior</button>
-                <span id="infoPaginaLista" style="font-size:14px; font-weight:bold; color:#64748b;">Pág 1</span>
-                <button id="btnListaProx" onclick="mudarPaginaLista(1)">Próxima ❯</button>
-            </div>
+            <h3><span id="tituloLista">Lista de Demandas</span> <button class="btn-fechar-lista" onclick="fecharLista()">✕ Fechar Detalhamento</button></h3>
+            <div id="containerItensLista" style="max-height: 400px; overflow-y: auto;"></div>
         </div>
 
         <div class="charts-grid">
+            
+            <div class="chart-card full-width">
+                <h3>Tendência de Abertura <span>Últimos 6 Meses</span></h3>
+                <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h3>Eficiência por Secretaria/Órgão <span>Ranking de Execução</span></h3>
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead><tr><th>Secretaria</th><th>Demandas</th><th>Concluídas</th><th>Taxa Resol.</th><th>T. Médio Resolução</th></tr></thead>
+                        <tbody id="tabelaSecretarias"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="chart-card">
-                <h3>Distribuição de Situação <span>Clicável</span></h3>
+                <h3>Distribuição de Situação</h3>
                 <div class="chart-container"><canvas id="graficoStatus"></canvas></div>
             </div>
             
             <div class="chart-card">
-                <h3>Top Categorias Exigidas <span>Clicável</span></h3>
+                <h3>Tipos de Solicitações (Gargalos)</h3>
                 <div class="chart-container"><canvas id="graficoCategorias"></canvas></div>
             </div>
 
             <div class="chart-card">
-                <h3>Responsáveis (Ordem) <span>Clicável</span></h3>
-                <div class="data-list" id="listaOrdem"></div>
+                <h3>Quem Deu a Ordem (Gestores)</h3>
+                <div class="chart-container"><canvas id="graficoOrdem"></canvas></div>
             </div>
 
             <div class="chart-card">
-                <h3>Executores (Cuidando) <span>Clicável</span></h3>
-                <div class="data-list" id="listaEquipe"></div>
+                <h3>Equipe Executando (Carga Operacional)</h3>
+                <div class="chart-container"><canvas id="graficoEquipe"></canvas></div>
             </div>
             
-            <div class="chart-card" style="grid-column: 1 / -1;">
-                <h3>Top Bairros Atendidos <span>Clicável</span></h3>
-                <div class="data-list bairros-grid" id="listaBairros"></div>
-            </div>
         </div>
     </div>
 
@@ -184,17 +213,17 @@
 
         let db;
         let todasDemandasRAW = []; 
-        let demandasMesAtual = []; 
-
+        let demandasFiltradas = []; 
         let listaExibicao = [];
-        let paginaAtualLista = 1;
-        const itensPorPagina = 5;
 
-        let chartStatus, chartCat;
+        // Instâncias Gráficos
+        let chartStatus, chartCat, chartTendencia, chartEquipe, chartOrdem;
 
         const arrayAbertas = ['Aberta', 'Pendente', 'Aguardando', 'Aguardando Aprovação'];
         const arrayConcluidas = ['Concluída', 'Atendido', 'Resolvido', 'Arquivada', 'Rejeitada'];
-        const paletaCores = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#64748b'];
+        const paletaCores = ['#1a365d', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#ef4444', '#64748b', '#d946ef'];
+
+        const secretariasOficiais = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
 
         async function conectarBanco() {
             try {
@@ -217,45 +246,103 @@
             const { data, error } = await db.from('demandas').select('*');
             if (!error) {
                 todasDemandasRAW = data || [];
-                popularSelectMeses();
-                aplicarFiltroMes(); 
+                popularFiltrosIniciais();
+                aplicarFiltros(); 
             }
             document.getElementById('loading').style.display = 'none';
         }
 
-        function popularSelectMeses() {
-            const select = document.getElementById('filtroMes');
+        // ==========================================
+        // FILTROS AVANÇADOS E RECALCULO
+        // ==========================================
+        function popularFiltrosIniciais() {
+            const selMes = document.getElementById('filtroMes');
+            const selSec = document.getElementById('filtroSec');
             const mesesSet = new Set();
-            todasDemandasRAW.forEach(d => { if(d.criado_em) mesesSet.add(d.criado_em.substring(0, 7)); });
-            const mesesArray = Array.from(mesesSet).sort().reverse(); 
-            const nomesMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-            mesesArray.forEach(ma => {
-                const ano = ma.split('-')[0];
-                const mes = parseInt(ma.split('-')[1]) - 1;
-                const opt = document.createElement('option');
-                opt.value = ma; opt.textContent = `📅 ${nomesMeses[mes]} ${ano}`;
-                select.appendChild(opt);
+            const secSet = new Set(secretariasOficiais);
+
+            todasDemandasRAW.forEach(d => { 
+                if(d.criado_em) mesesSet.add(d.criado_em.substring(0, 7)); 
+                if(d.secretaria && d.secretaria.trim() !== '') secSet.add(d.secretaria.trim());
+            });
+
+            Array.from(mesesSet).sort().reverse().forEach(ma => {
+                const parts = ma.split('-');
+                const nomesMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                selMes.insertAdjacentHTML('beforeend', `<option value="${ma}">${nomesMeses[parseInt(parts[1])-1]} ${parts[0]}</option>`);
+            });
+
+            Array.from(secSet).sort().forEach(s => {
+                selSec.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`);
             });
         }
 
-        window.aplicarFiltroMes = function() {
-            const valorMes = document.getElementById('filtroMes').value;
-            fecharLista(); 
-            if (valorMes === 'todos') demandasMesAtual = [...todasDemandasRAW];
-            else demandasMesAtual = todasDemandasRAW.filter(d => d.criado_em && d.criado_em.startsWith(valorMes));
+        let debounceTimeout;
+        function debounceFiltros() { clearTimeout(debounceTimeout); debounceTimeout = setTimeout(aplicarFiltros, 400); }
+
+        window.resetarFiltros = function() {
+            document.getElementById('filtroBusca').value = '';
+            document.getElementById('filtroMes').value = 'todos';
+            document.getElementById('filtroSec').value = 'todas';
+            document.getElementById('filtroStatus').value = 'todos';
+            fecharLista();
+            aplicarFiltros();
+        }
+
+        window.aplicarFiltros = function() {
+            fecharLista();
+            const vBusca = document.getElementById('filtroBusca').value.toLowerCase().trim();
+            const vMes = document.getElementById('filtroMes').value;
+            const vSec = document.getElementById('filtroSec').value;
+            const vStat = document.getElementById('filtroStatus').value;
+
+            demandasFiltradas = todasDemandasRAW.filter(d => {
+                let passaBusca = true, passaMes = true, passaSec = true, passaStat = true;
+
+                if (vBusca) {
+                    passaBusca = (d.assunto||'').toLowerCase().includes(vBusca) || 
+                                 (d.bairro||'').toLowerCase().includes(vBusca) ||
+                                 (d.solicitante_nome||'').toLowerCase().includes(vBusca) ||
+                                 (d.numero_demanda||'').toLowerCase().includes(vBusca);
+                }
+                if (vMes !== 'todos') passaMes = d.criado_em && d.criado_em.startsWith(vMes);
+                if (vSec !== 'todas') passaSec = d.secretaria && d.secretaria.trim() === vSec;
+                
+                if (vStat === 'abertas_pendentes') passaStat = arrayAbertas.includes(d.status);
+                else if (vStat === 'concluidas') passaStat = arrayConcluidas.includes(d.status);
+                else if (vStat === 'em_execucao') passaStat = !arrayAbertas.includes(d.status) && !arrayConcluidas.includes(d.status);
+
+                return passaBusca && passaMes && passaSec && passaStat;
+            });
+
+            gerarAlertas();
             atualizarKPIs();
             desenharDashboards();
         }
 
+        // ==========================================
+        // CÁLCULOS INTELIGENTES (SLA, ATRASOS, TAXAS)
+        // ==========================================
+        function calcularDias(dataBase) {
+            if (!dataBase) return 0;
+            return Math.floor((Date.now() - new Date(dataBase)) / (1000 * 60 * 60 * 24));
+        }
+
         function atualizarKPIs() {
-            let abertas = 0, andamento = 0, concluidas = 0;
+            let abertas = 0, andamento = 0, concluidas = 0, atrasadas = 0, esperaMax = 0;
             let totalTempoMs = 0, qtdResolvidas = 0;
 
-            demandasMesAtual.forEach(d => {
-                if (arrayAbertas.includes(d.status)) abertas++;
-                else if (arrayConcluidas.includes(d.status)) {
+            demandasFiltradas.forEach(d => {
+                const isEncerrada = arrayConcluidas.includes(d.status);
+                const diasAberto = calcularDias(d.criado_em);
+
+                if (arrayAbertas.includes(d.status)) {
+                    abertas++;
+                    if (diasAberto > 30) atrasadas++;
+                    if (diasAberto > esperaMax) esperaMax = diasAberto;
+                }
+                else if (isEncerrada) {
                     concluidas++;
-                    
                     let dataFim = null;
                     if (d.historico) {
                         const histFim = d.historico.slice().reverse().find(h => arrayConcluidas.includes(h.status));
@@ -268,81 +355,151 @@
                         if (diff > 0) { totalTempoMs += diff; qtdResolvidas++; }
                     }
                 }
-                else andamento++;
+                else {
+                    andamento++;
+                    if (diasAberto > 30) atrasadas++;
+                    if (diasAberto > esperaMax) esperaMax = diasAberto;
+                }
             });
 
-            document.getElementById('kpiTotal').textContent = demandasMesAtual.length;
+            const taxa = demandasFiltradas.length > 0 ? Math.round((concluidas / demandasFiltradas.length) * 100) : 0;
+
+            document.getElementById('kpiTotal').textContent = demandasFiltradas.length;
             document.getElementById('kpiAbertas').textContent = abertas;
-            document.getElementById('kpiAndamento').textContent = andamento;
-            document.getElementById('kpiConcluidas').textContent = concluidas;
+            document.getElementById('kpiAtrasadas').textContent = atrasadas;
+            document.getElementById('kpiTaxa').textContent = taxa + '%';
+            document.getElementById('kpiEsperaMax').textContent = esperaMax > 0 ? `${esperaMax} dias` : '--';
 
             if (qtdResolvidas > 0) {
                 const mediaHoras = totalTempoMs / qtdResolvidas / (1000 * 60 * 60);
-                if (mediaHoras >= 24) {
-                    const dias = Math.floor(mediaHoras / 24);
-                    const horasRestantes = Math.floor(mediaHoras % 24);
-                    document.getElementById('kpiTempo').textContent = `${dias}d ${horasRestantes}h`;
-                } else {
-                    document.getElementById('kpiTempo').textContent = `${Math.floor(mediaHoras)}h`;
-                }
+                if (mediaHoras >= 24) document.getElementById('kpiTempo').textContent = `${Math.floor(mediaHoras / 24)}d ${Math.floor(mediaHoras % 24)}h`;
+                else document.getElementById('kpiTempo').textContent = `${Math.floor(mediaHoras)}h`;
             } else { document.getElementById('kpiTempo').textContent = '--'; }
         }
 
+        function gerarAlertas() {
+            const container = document.getElementById('containerAlertas');
+            let numAtrasadas = 0;
+            let naoAtribuidas = 0;
+
+            demandasFiltradas.forEach(d => {
+                if(!arrayConcluidas.includes(d.status)) {
+                    if (calcularDias(d.criado_em) > 30) numAtrasadas++;
+                    if (!d.responsaveis || d.responsaveis.length === 0) naoAtribuidas++;
+                }
+            });
+
+            let html = '';
+            if (numAtrasadas > 0) html += `<div class="alerta-box alerta-critico">🚨 ${numAtrasadas} demandas estão atrasadas há mais de 30 dias. Recomendamos ação imediata.</div>`;
+            if (naoAtribuidas > 0) html += `<div class="alerta-box alerta-aviso">⚠️ ${naoAtribuidas} demandas em andamento não possuem nenhum executor atribuído da equipe.</div>`;
+            container.innerHTML = html;
+        }
+
         // ==========================================
-        // LÓGICA DE CLIQUE E LISTA
+        // LISTAS HTML E TABELAS RANQUEADAS
+        // ==========================================
+        function montarTabelaSecretarias() {
+            const tbody = document.getElementById('tabelaSecretarias');
+            const mapSecs = {};
+
+            demandasFiltradas.forEach(d => {
+                const sec = d.secretaria && d.secretaria.trim() !== '' ? d.secretaria.trim() : 'Não Atribuída';
+                if(!mapSecs[sec]) mapSecs[sec] = { total: 0, concluidas: 0, somaTempo: 0, qtdComTempo: 0 };
+                
+                mapSecs[sec].total++;
+                if(arrayConcluidas.includes(d.status)) {
+                    mapSecs[sec].concluidas++;
+                    if(d.criado_em) {
+                        let dataFim = new Date(d.criado_em);
+                        if (d.historico) { const h = d.historico.slice().reverse().find(x => arrayConcluidas.includes(x.status)); if (h && h.data) dataFim = new Date(h.data); }
+                        const ms = dataFim - new Date(d.criado_em);
+                        if(ms > 0) { mapSecs[sec].somaTempo += ms; mapSecs[sec].qtdComTempo++; }
+                    }
+                }
+            });
+
+            const keysSort = Object.keys(mapSecs).sort((a,b) => mapSecs[b].total - mapSecs[a].total);
+            
+            if(keysSort.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Nenhum dado.</td></tr>'; return; }
+
+            tbody.innerHTML = keysSort.map(k => {
+                const s = mapSecs[k];
+                const taxa = s.total > 0 ? Math.round((s.concluidas / s.total) * 100) : 0;
+                let tempoStr = '--';
+                if(s.qtdComTempo > 0) {
+                    const h = s.somaTempo / s.qtdComTempo / 3600000;
+                    tempoStr = h >= 24 ? `${Math.floor(h/24)}d ${Math.floor(h%24)}h` : `${Math.floor(h)}h`;
+                }
+                let corTaxa = taxa > 75 ? '#16a34a' : (taxa > 40 ? '#d97706' : '#dc2626');
+
+                return `<tr>
+                    <td><b>${k}</b></td><td style="text-align:center">${s.total}</td>
+                    <td style="text-align:center">${s.concluidas}</td>
+                    <td class="tb-taxa" style="color:${corTaxa}; text-align:center;">${taxa}%</td>
+                    <td style="text-align:center">${tempoStr}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ==========================================
+        // DRILL DOWN (LISTAS CLICÁVEIS)
         // ==========================================
         window.abrirListaKPI = function(tipo, tituloKpi, btnCard) {
+            if(btnCard && btnCard.classList.contains('fixo')) return;
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
             if(btnCard) btnCard.classList.add('ativo');
 
-            let filtrado = [];
-            if (tipo === 'todas') filtrado = [...demandasMesAtual];
-            else if (tipo === 'abertas') filtrado = demandasMesAtual.filter(d => arrayAbertas.includes(d.status));
-            else if (tipo === 'concluidas') filtrado = demandasMesAtual.filter(d => arrayConcluidas.includes(d.status));
-            else if (tipo === 'andamento') filtrado = demandasMesAtual.filter(d => !arrayAbertas.includes(d.status) && !arrayConcluidas.includes(d.status));
+            let f = [];
+            if (tipo === 'todas') f = [...demandasFiltradas];
+            else if (tipo === 'abertas') f = demandasFiltradas.filter(d => arrayAbertas.includes(d.status));
+            else if (tipo === 'concluidas') f = demandasFiltradas.filter(d => arrayConcluidas.includes(d.status));
+            else if (tipo === 'atrasadas') f = demandasFiltradas.filter(d => !arrayConcluidas.includes(d.status) && calcularDias(d.criado_em) > 30);
 
-            iniciarListaNaTela(`Filtro: ${tituloKpi} (${filtrado.length})`, filtrado);
+            iniciarListaNaTela(`Detalhamento: ${tituloKpi} (${f.length})`, f);
         }
 
-        window.lidarCliqueLista = function(label, tipo) {
-            document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
-            let filtrado = [];
-            
-            if (tipo === 'equipe') {
-                filtrado = demandasMesAtual.filter(d => {
-                    let resps = Array.isArray(d.responsaveis) ? d.responsaveis : (typeof d.responsaveis === 'string' ? [d.responsaveis] : []);
-                    return resps.includes(label);
-                });
-            } else if (tipo === 'ordem') {
-                filtrado = demandasMesAtual.filter(d => d.responsavel_ordem === label);
-            } else if (tipo === 'bairro') {
-                filtrado = demandasMesAtual.filter(d => (d.bairro || '').trim().toUpperCase() === label);
-            }
-            
-            iniciarListaNaTela(`Filtro: ${label} (${filtrado.length})`, filtrado);
-        }
-
-        function lidarCliqueGrafico(evt, elements, chart, tipoGrafico) {
+        function lidarCliqueGrafico(evt, elements, chart) {
             if (!elements || elements.length === 0) return;
-            const index = elements[0].index;
-            const label = chart.data.labels[index];
+            const label = chart.data.labels[elements[0].index];
+            const tituloG = chart.options.plugins.title.text;
             
-            document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
-            let filtrado = [];
+            let f = [];
+            if(tituloG.includes('Situação')) f = demandasFiltradas.filter(d => d.status === label);
+            else if(tituloG.includes('Tipos')) f = demandasFiltradas.filter(d => (d.tipo_solicitacao || 'Sem categoria') === label);
+            else if(tituloG.includes('Equipe')) f = demandasFiltradas.filter(d => (d.responsaveis || []).includes(label));
+            else if(tituloG.includes('Ordem')) f = demandasFiltradas.filter(d => (d.responsavel_ordem || 'Sem Resp.') === label);
 
-            if (tipoGrafico === 'status') filtrado = demandasMesAtual.filter(d => d.status === label);
-            else if (tipoGrafico === 'categoria') filtrado = demandasMesAtual.filter(d => (d.tipo_solicitacao || 'Sem categoria') === label);
-
-            iniciarListaNaTela(`Resultado: ${label} (${filtrado.length})`, filtrado);
+            iniciarListaNaTela(`Resultado: ${label} (${f.length})`, f);
         }
 
         function iniciarListaNaTela(titulo, lista) {
-            listaExibicao = lista;
-            paginaAtualLista = 1;
+            listaExibicao = lista.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
             document.getElementById('secaoLista').style.display = 'block';
             document.getElementById('tituloLista').textContent = titulo;
-            listaExibicao.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
-            renderizarListaNaTela();
+            
+            const container = document.getElementById('containerItensLista');
+            if (listaExibicao.length === 0) {
+                container.innerHTML = '<p style="color:#64748b; padding:20px 0; text-align:center;">Nenhum registro.</p>'; return;
+            }
+
+            container.innerHTML = listaExibicao.map(d => {
+                const dataF = d.criado_em ? new Date(d.criado_em).toLocaleDateString('pt-BR') : '--';
+                const sColor = arrayConcluidas.includes(d.status) ? '#10b981' : (arrayAbertas.includes(d.status) ? '#ef4444' : '#f59e0b');
+                let execStr = (d.responsaveis && d.responsaveis.length>0) ? d.responsaveis.join(', ') : 'Ninguém';
+                return `
+                    <div class="lista-item">
+                        <div class="lista-info" style="flex:1;">
+                            <strong>${d.assunto}</strong>
+                            <div>
+                                <span class="detalhe-tag">📅 ${dataF}</span>
+                                <span class="detalhe-tag" style="background:#f3e8ff; color:#7e22ce;">👥 Cuidando: ${execStr}</span>
+                                <span class="detalhe-tag" style="background:white; color:${sColor}; border:1px solid ${sColor};">🚨 ${d.status}</span>
+                            </div>
+                        </div>
+                        <a href="ver-demanda.html?id=${d.id}" class="btn-ver-demanda" target="_blank">Abrir Detalhes 🔗</a>
+                    </div>`;
+            }).join('');
+
             document.getElementById('secaoLista').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
@@ -351,172 +508,95 @@
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
         }
 
-        function renderizarListaNaTela() {
-            const container = document.getElementById('containerItensLista');
-            if (listaExibicao.length === 0) {
-                container.innerHTML = '<p style="color:#64748b; padding:20px 0; text-align:center;">Nenhum registro encontrado.</p>';
-                document.getElementById('btnListaAnt').disabled = true; document.getElementById('btnListaProx').disabled = true;
-                document.getElementById('infoPaginaLista').textContent = 'Pág 0 de 0'; return;
-            }
-
-            const totalPags = Math.ceil(listaExibicao.length / itensPorPagina);
-            const inicio = (paginaAtualLista - 1) * itensPorPagina;
-            const recorte = listaExibicao.slice(inicio, inicio + itensPorPagina);
-
-            container.innerHTML = recorte.map(d => {
-                const dataFormat = d.criado_em ? new Date(d.criado_em).toLocaleDateString('pt-BR') : '--';
-                const bairroTxt = d.bairro ? d.bairro : 'N/A';
-                const statusColor = arrayConcluidas.includes(d.status) ? '#10b981' : (arrayAbertas.includes(d.status) ? '#ef4444' : '#f59e0b');
-                
-                // Tratamento seguro para mostrar Equipe/Ordem nos Detalhes rápidos
-                let executorStr = 'Ninguém';
-                if (Array.isArray(d.responsaveis) && d.responsaveis.length > 0) executorStr = d.responsaveis.join(', ');
-                else if (typeof d.responsaveis === 'string' && d.responsaveis !== '') executorStr = d.responsaveis;
-                
-                let ordemStr = d.responsavel_ordem || 'Sem Resp.';
-
-                return `
-                    <div class="lista-item">
-                        <div class="lista-info" style="flex:1;">
-                            <strong>${d.assunto}</strong>
-                            <div style="margin-bottom: 8px;">
-                                <span class="detalhe-tag">📅 ${dataFormat}</span>
-                                <span class="detalhe-tag" style="background:#e0f2fe; color:#1e40af;">📍 Bairro: ${bairroTxt}</span>
-                            </div>
-                            <div>
-                                <span class="detalhe-tag" style="background:#fce7f3; color:#be185d;">✍️ Ordem: ${ordemStr}</span>
-                                <span class="detalhe-tag" style="background:#f3e8ff; color:#7e22ce;">👥 Cuidando: ${executorStr}</span>
-                                <span class="detalhe-tag" style="background:white; color:${statusColor}; border:1px solid ${statusColor};">🚨 ${d.status}</span>
-                            </div>
-                        </div>
-                        <a href="ver-demanda.html?id=${d.id}" class="btn-ver-demanda" target="_blank">Abrir Detalhes 🔗</a>
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('infoPaginaLista').textContent = `Pág ${paginaAtualLista} de ${totalPags}`;
-            document.getElementById('btnListaAnt').disabled = paginaAtualLista === 1;
-            document.getElementById('btnListaProx').disabled = paginaAtualLista >= totalPags;
-        }
-
-        window.mudarPaginaLista = function(direcao) { paginaAtualLista += direcao; renderizarListaNaTela(); }
-
         // ==========================================
-        // RENDERIZADOR DE LISTAS HTML LIMPAS
-        // ==========================================
-        function renderListaHTML(containerId, dadosObj, tipoGrafico) {
-            const container = document.getElementById(containerId);
-            const chaves = Object.keys(dadosObj).sort((a, b) => dadosObj[b] - dadosObj[a]); 
-            
-            if(chaves.length === 0) {
-                container.innerHTML = '<p style="color:#94a3b8; text-align:center; margin-top:20px;">Sem registros.</p>'; return;
-            }
-            
-            container.innerHTML = chaves.map((k, index) => {
-                const val = dadosObj[k];
-                return `
-                    <div class="data-item" onclick="lidarCliqueLista('${k}', '${tipoGrafico}')">
-                        <span style="font-weight:600; color:#334155;">${index + 1}. ${k}</span>
-                        <span style="font-weight:800; color:#0f172a; font-size:16px;">${val}</span>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // ==========================================
-        // GRÁFICOS CHART.JS E ATUALIZAÇÃO GERAL
+        // GRÁFICOS E EXPORTAÇÃO EXCEL
         // ==========================================
         function desenharDashboards() {
             Chart.defaults.font.family = "'Inter', sans-serif";
-            
-            if(chartStatus) chartStatus.destroy();
-            if(chartCat) chartCat.destroy();
-
             const hoverCursor = (e, el) => { e.native.target.style.cursor = el[0] ? 'pointer' : 'default'; };
 
-            // 1. Status (Doughnut)
-            const statusCounts = {};
-            demandasMesAtual.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
+            if(chartTendencia) chartTendencia.destroy();
+            if(chartStatus) chartStatus.destroy();
+            if(chartCat) chartCat.destroy();
+            if(chartEquipe) chartEquipe.destroy();
+            if(chartOrdem) chartOrdem.destroy();
+
+            montarTabelaSecretarias();
+
+            // 1. Tendência (Linha) - Agrupa os 6 meses mais recentes
+            const mapMeses = {};
+            demandasFiltradas.forEach(d => {
+                if(d.criado_em) { const m = d.criado_em.substring(0,7); mapMeses[m] = (mapMeses[m] || 0) + 1; }
+            });
+            const ultimos6 = Object.keys(mapMeses).sort().slice(-6);
             
+            chartTendencia = new Chart(document.getElementById('graficoTendencia'), {
+                type: 'line',
+                data: { labels: ultimos6, datasets: [{ label: 'Demandas Abertas', data: ultimos6.map(m => mapMeses[m]), borderColor: '#1a365d', backgroundColor: 'rgba(26, 54, 93, 0.1)', borderWidth: 3, tension: 0.3, fill: true, pointRadius: 5, pointHoverRadius: 8 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title:{display:true, text:'Tendência'} }, scales: { y: { beginAtZero: true } } }
+            });
+
+            // 2. Status
+            const statusCounts = {}; demandasFiltradas.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
             chartStatus = new Chart(document.getElementById('graficoStatus'), {
                 type: 'doughnut',
-                data: {
-                    labels: Object.keys(statusCounts),
-                    datasets: [{
-                        data: Object.values(statusCounts),
-                        backgroundColor: paletaCores,
-                        borderWidth: 2, borderColor: '#ffffff'
-                    }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, cutout: '60%', 
-                    plugins: { 
-                        legend: { position: 'right' },
-                        datalabels: { color: '#ffffff', font: { weight: '800', size: 14 }, formatter: (val) => val > 0 ? val : '' }
-                    },
-                    onHover: hoverCursor,
-                    onClick: (evt, elements, chart) => lidarCliqueGrafico(evt, elements, chart, 'status')
-                }
+                data: { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: paletaCores, borderWidth: 2, borderColor: '#ffffff' }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'right' }, title:{display:true, text:'Situação'}, datalabels: { color: '#ffffff', font: { weight: '800' }, formatter: val => val } }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
             });
 
-            // 2. Categorias
-            const catCounts = {};
-            demandasMesAtual.forEach(d => { let t = d.tipo_solicitacao || 'Sem categoria'; catCounts[t] = (catCounts[t] || 0) + 1; });
-            const sortedCats = Object.keys(catCounts).sort((a, b) => catCounts[b] - catCounts[a]).slice(0,8); 
-            
+            // 3. Categorias
+            const catCounts = {}; demandasFiltradas.forEach(d => { let t = d.tipo_solicitacao || 'Sem categoria'; catCounts[t] = (catCounts[t] || 0) + 1; });
+            const sCats = Object.keys(catCounts).sort((a,b)=>catCounts[b]-catCounts[a]).slice(0,6);
             chartCat = new Chart(document.getElementById('graficoCategorias'), {
                 type: 'bar',
-                data: {
-                    labels: sortedCats,
-                    datasets: [{ data: sortedCats.map(k => catCounts[k]), backgroundColor: '#10b981', borderRadius: 4 }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, indexAxis: 'y', 
-                    layout: { padding: { right: 30 } }, 
-                    plugins: { 
-                        legend: { display: false },
-                        datalabels: { color: '#0f172a', anchor: 'end', align: 'right', font: { weight: '800', size: 12 }, formatter: (val) => val > 0 ? val : '' }
-                    },
-                    scales: { x: { display: false }, y: { grid: { display: false } } }, 
-                    onHover: hoverCursor,
-                    onClick: (evt, elements, chart) => lidarCliqueGrafico(evt, elements, chart, 'categoria')
-                }
+                data: { labels: sCats, datasets: [{ data: sCats.map(k => catCounts[k]), backgroundColor: '#10b981', borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, title:{display:true, text:'Tipos'}, datalabels: { anchor: 'end', align: 'right', font: { weight: 'bold' } } }, scales: { x:{display:false} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
             });
 
-            // 3. ABA NOVA: Responsáveis pela Ordem
-            const ordemCounts = {}; 
-            demandasMesAtual.forEach(d => {
-                const r = d.responsavel_ordem;
-                if (r && r.trim() !== '') { ordemCounts[r] = (ordemCounts[r] || 0) + 1; }
+            // 4. Equipe (Cuidando)
+            const eqCounts = {}; demandasFiltradas.forEach(d => { (d.responsaveis||[]).forEach(r => { if(r) eqCounts[r] = (eqCounts[r] || 0) + 1; }); });
+            const sEq = Object.keys(eqCounts).sort((a,b)=>eqCounts[b]-eqCounts[a]);
+            chartEquipe = new Chart(document.getElementById('graficoEquipe'), {
+                type: 'bar',
+                data: { labels: sEq, datasets: [{ data: sEq.map(k => eqCounts[k]), backgroundColor: '#3b82f6', borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title:{display:true, text:'Equipe'}, datalabels: { anchor: 'end', align: 'top', font: { weight: 'bold' } } }, scales: { y:{beginAtZero:true, grid:{display:false}} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
             });
-            renderListaHTML('listaOrdem', ordemCounts, 'ordem');
 
-            // 4. Executores (Tratamento seguro para Strings e Arrays)
-            const equipeCounts = {}; 
-            demandasMesAtual.forEach(d => {
-                let resps = [];
-                if (Array.isArray(d.responsaveis)) resps = d.responsaveis;
-                else if (typeof d.responsaveis === 'string') {
-                    try { resps = JSON.parse(d.responsaveis); } catch(e) { resps = [d.responsaveis]; }
-                }
-                resps.forEach(r => { 
-                    if (r && r.trim() !== '') { equipeCounts[r] = (equipeCounts[r] || 0) + 1; }
-                });
+            // 5. Ordem (Dono)
+            const ordCounts = {}; demandasFiltradas.forEach(d => { let r = d.responsavel_ordem || 'Sem Resp.'; ordCounts[r] = (ordCounts[r] || 0) + 1; });
+            const sOrd = Object.keys(ordCounts).sort((a,b)=>ordCounts[b]-ordCounts[a]);
+            chartOrdem = new Chart(document.getElementById('graficoOrdem'), {
+                type: 'bar',
+                data: { labels: sOrd, datasets: [{ data: sOrd.map(k => ordCounts[k]), backgroundColor: '#8b5cf6', borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title:{display:true, text:'Ordem'}, datalabels: { anchor: 'end', align: 'top', font: { weight: 'bold' } } }, scales: { y:{beginAtZero:true, grid:{display:false}} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
             });
-            renderListaHTML('listaEquipe', equipeCounts, 'equipe');
+        }
 
-            // 5. Bairros (Lista Limpa HTML Top 10)
-            const bairroCounts = {};
-            demandasMesAtual.forEach(d => {
-                if(d.bairro && d.bairro.trim() !== '') {
-                    const b = d.bairro.trim().toUpperCase();
-                    bairroCounts[b] = (bairroCounts[b] || 0) + 1;
-                }
-            });
-            const topBairros = Object.keys(bairroCounts).sort((a, b) => bairroCounts[b] - bairroCounts[a]).slice(0, 10);
-            const objBairros = {};
-            topBairros.forEach(b => objBairros[b] = bairroCounts[b]);
-            renderListaHTML('listaBairros', objBairros, 'bairro');
+        window.exportarExcel = function() {
+            if (demandasFiltradas.length === 0) return alert("Nenhum dado para exportar.");
+            
+            // Tratamento e formatação bonita para o Excel
+            const dadosLimpos = demandasFiltradas.map(d => ({
+                'Nº Demanda': d.numero_demanda || '',
+                'Abertura': d.criado_em ? new Date(d.criado_em).toLocaleDateString('pt-BR') : '',
+                'Natureza': d.tipo_solicitacao || '',
+                'Assunto': d.assunto || '',
+                'Status': d.status || '',
+                'Secretaria': d.secretaria || '',
+                'Responsável Ordem': d.responsavel_ordem || '',
+                'Executores': Array.isArray(d.responsaveis) ? d.responsaveis.join(', ') : '',
+                'Solicitante': d.solicitante_nome || '',
+                'Telefone': d.solicitante_tel || '',
+                'Bairro': d.bairro || '',
+                'Protocolo 156': d.protocolo || '',
+                'Expediente Legis': d.expediente || '',
+                'Doc Interno': d.doc_numero ? `${d.doc_tipo || 'Doc'} ${d.doc_numero}` : ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(dadosLimpos);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Relatório Geral");
+            XLSX.writeFile(wb, `Relatorio_Gabinete_${new Date().toISOString().split('T')[0]}.xlsx`);
         }
 
         window.gerarBackupJSON = function() {
@@ -524,11 +604,9 @@
             const dataStr = JSON.stringify(todasDemandasRAW, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `Backup_Gabinete_COMPLETO_${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-            URL.revokeObjectURL(url);
+            const link = document.createElement('a'); link.href = url;
+            link.download = `Backup_DB_COMPLETO_${new Date().toISOString().split('T')[0]}.json`;
+            link.click(); URL.revokeObjectURL(url);
         }
 
         conectarBanco();
