@@ -31,6 +31,11 @@
         .error, .success { font-size: 14px; margin-top: 15px; text-align: center; display: none; padding: 10px; border-radius: 4px; font-weight: bold; }
         .error { background: #ffe5e5; color: #c0392b; }
         .success { background: #e2f8c5; color: #185199; }
+        
+        .acessos-recentes { margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+        .acessos-recentes h4 { font-size: 12px; color: #777; text-transform: uppercase; margin-bottom: 10px; text-align: center; }
+        .acesso-item { font-size: 13px; color: #555; display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #f0f0f0; }
+        .acesso-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
@@ -49,11 +54,16 @@
                 <label for="senha">Senha</label>
                 <input type="password" id="senha" placeholder="******" required>
             </div>
-            <button type="submit" id="btnAcessar" class="btn-login" disabled>Verificando acesso...</button>
+            <button type="submit" id="btnAcessar" class="btn-login" disabled>Conectando ao sistema...</button>
             <button type="button" id="btnInstalarApp" class="btn-instalar">📲 Instalar Aplicativo</button>
             <div class="error" id="erro"></div>
             <div class="success" id="sucesso"></div>
         </form>
+        
+        <div class="acessos-recentes" id="blocoAcessos" style="display:none;">
+            <h4>Últimos Acessos ao Sistema</h4>
+            <div id="listaAcessos"></div>
+        </div>
     </div>
 
     <script>
@@ -67,59 +77,99 @@
             'Débora': 'debora@gabinete.interno'
         };
 
-        // LÓGICA DE ORDENAÇÃO DO LOGIN
-        function carregarListaUsuarios() {
-            const nomes = Object.keys(emailsSinteticos);
-            const select = document.getElementById('usuario');
-            
-            const historico = nomes.map(nome => {
-                const timeStr = localStorage.getItem('loginTime_' + nome);
-                return { nome, time: timeStr ? new Date(timeStr) : null };
-            });
-
-            // Ordena: Primeiro os mais recentes, depois ordem alfabética
-            historico.sort((a, b) => {
-                if (a.time && b.time) return b.time - a.time;
-                if (a.time) return -1;
-                if (b.time) return 1;
-                return a.nome.localeCompare(b.nome);
-            });
-
-            select.innerHTML = '<option value="">Selecione seu nome</option>';
-            historico.forEach(u => {
-                let label = u.nome;
-                if (u.time) {
-                    const dataFormatada = u.time.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' ' + u.time.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-                    label += ` (Último: ${dataFormatada})`;
-                }
-                select.innerHTML += `<option value="${u.nome}">${label}</option>`;
-            });
-
-            // Pré-seleciona o último usuário que logou neste aparelho
-            const ultimoUsuario = localStorage.getItem('ultimoUsuarioLogadoLocal');
-            if (ultimoUsuario) select.value = ultimoUsuario;
-        }
-
         async function inicializarSistema() {
-            carregarListaUsuarios();
             try {
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
                 
+                // Redireciona se já estiver logado
                 const { data: { session } } = await db.auth.getSession();
                 if (session && localStorage.getItem('usuarioLogado')) {
                     window.location.replace('dashboard.html');
                     return;
                 }
                 
+                await carregarAcessosDoBanco();
+                
                 const btn = document.getElementById('btnAcessar');
                 btn.textContent = 'Acessar Sistema';
                 btn.disabled = false;
             } catch (err) {
-                document.getElementById('erro').textContent = 'Erro de comunicação com o servidor.';
+                document.getElementById('erro').textContent = 'Erro de comunicação com o servidor. Verifique sua internet.';
                 document.getElementById('erro').style.display = 'block';
+                // Fallback caso o banco não responda
+                popularSelectComNomesBasicos();
             }
+        }
+
+        async function carregarAcessosDoBanco() {
+            try {
+                const { data: acessos } = await db.from('ultimo_acesso').select('usuario, acessado_em').order('acessado_em', { ascending: false });
+                const select = document.getElementById('usuario');
+                select.innerHTML = '<option value="">Selecione seu nome</option>';
+                
+                const nomesParaProcessar = Object.keys(emailsSinteticos);
+                let htmlAcessos = '';
+                
+                if (acessos && acessos.length > 0) {
+                    // Ordena a lista de nomes baseada no último acesso no banco
+                    const nomesOrdenados = [];
+                    const acessosMap = {};
+                    
+                    acessos.forEach(a => {
+                        if (nomesParaProcessar.includes(a.usuario)) {
+                            if (!nomesOrdenados.includes(a.usuario)) {
+                                nomesOrdenados.push(a.usuario);
+                                acessosMap[a.usuario] = new Date(a.acessado_em);
+                            }
+                        }
+                    });
+                    
+                    // Adiciona os nomes que nunca logaram no final
+                    nomesParaProcessar.forEach(n => {
+                        if (!nomesOrdenados.includes(n)) nomesOrdenados.push(n);
+                    });
+
+                    // Popula o select e a lista visual
+                    nomesOrdenados.forEach(nome => {
+                        if (acessosMap[nome]) {
+                            const dt = acessosMap[nome];
+                            const dataFormatada = dt.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' às ' + dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+                            select.innerHTML += `<option value="${nome}">${nome} (Último: ${dataFormatada})</option>`;
+                            htmlAcessos += `<div class="acesso-item"><span>👤 ${nome}</span><span>${dataFormatada}</span></div>`;
+                        } else {
+                            select.innerHTML += `<option value="${nome}">${nome}</option>`;
+                        }
+                    });
+                    
+                    document.getElementById('listaAcessos').innerHTML = htmlAcessos;
+                    document.getElementById('blocoAcessos').style.display = 'block';
+
+                } else {
+                    popularSelectComNomesBasicos();
+                }
+
+                // Seleciona o último usuário que logou nesta máquina especificamente
+                const ultimoUsuario = localStorage.getItem('ultimoUsuarioLogadoLocal');
+                if (ultimoUsuario) {
+                    Array.from(select.options).forEach(opt => {
+                        if(opt.value === ultimoUsuario) select.value = ultimoUsuario;
+                    });
+                }
+
+            } catch (e) {
+                console.error(e);
+                popularSelectComNomesBasicos();
+            }
+        }
+
+        function popularSelectComNomesBasicos() {
+            const select = document.getElementById('usuario');
+            select.innerHTML = '<option value="">Selecione seu nome</option>';
+            Object.keys(emailsSinteticos).sort().forEach(nome => {
+                select.innerHTML += `<option value="${nome}">${nome}</option>`;
+            });
         }
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -130,23 +180,31 @@
             const btn = document.getElementById('btnAcessar');
             
             erroEl.style.display = 'none'; 
-            if (!usuario) { erroEl.textContent = 'Selecione seu nome.'; erroEl.style.display = 'block'; return; }
+            if (!usuario) { erroEl.textContent = 'Selecione seu nome na lista.'; erroEl.style.display = 'block'; return; }
             
             btn.textContent = 'Autenticando...'; btn.disabled = true;
 
             try {
                 const { data, error } = await db.auth.signInWithPassword({ email: emailsSinteticos[usuario], password: senha });
                 if (error) {
-                    erroEl.textContent = 'Senha incorreta.'; erroEl.style.display = 'block';
+                    erroEl.textContent = 'Senha incorreta. Tente novamente.'; erroEl.style.display = 'block';
                 } else {
                     localStorage.setItem('usuarioLogado', usuario);
-                    // Salva o horário do login
-                    localStorage.setItem('loginTime_' + usuario, new Date().toISOString());
                     localStorage.setItem('ultimoUsuarioLogadoLocal', usuario);
+                    
+                    // Registra no banco o momento do login
+                    try {
+                        const agora = new Date().toISOString();
+                        await db.from('ultimo_acesso').upsert(
+                            { usuario: usuario, acessado_em: agora },
+                            { onConflict: 'usuario' }
+                        );
+                    } catch(errBanco) { console.error('Erro ao registrar login:', errBanco); }
+
                     window.location.replace('dashboard.html');
                 }
             } catch (error) {
-                erroEl.textContent = 'Falha no sistema.'; erroEl.style.display = 'block';
+                erroEl.textContent = 'Falha crítica no sistema de login.'; erroEl.style.display = 'block';
             } finally {
                 btn.textContent = 'Acessar Sistema'; btn.disabled = false;
             }
@@ -154,7 +212,7 @@
 
         inicializarSistema();
 
-        // PWA Install
+        // PWA Install Prompt
         let promptDeInstalacao;
         const btnInstalarApp = document.getElementById('btnInstalarApp');
         window.addEventListener('beforeinstallprompt', (e) => {
