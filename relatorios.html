@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <!-- Biblioteca para Exportar Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
     <style>
@@ -49,6 +50,7 @@
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .kpi-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; border-left: 4px solid #cbd5e1; cursor: pointer; transition: 0.2s; position: relative;}
         .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .kpi-card.ativo { background: #f0f9ff; border-left-color: #3b82f6; }
         
         /* Cores Inteligentes dos KPIs */
         .kpi-card.total { border-left-color: #3b82f6; }
@@ -69,14 +71,32 @@
         .lista-info strong { color: #1e293b; font-size: 14px; display: block; margin-bottom: 6px;}
         .detalhe-tag { display: inline-flex; align-items: center; background: #f1f5f9; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; color: #475569; margin-right: 6px; margin-bottom: 4px;}
         .btn-ver-demanda { background: #3b82f6; color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; white-space: nowrap; transition: 0.2s;}
+        .btn-ver-demanda:hover { background: #2563eb; }
+
+        .paginacao { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9;}
+        .paginacao button { background: #e2e8f0; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; color: #334155; cursor: pointer; transition: 0.2s;}
+        .paginacao button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .paginacao button:hover:not(:disabled) { background: #cbd5e1; }
 
         /* Gráficos e Tabelas */
         .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
-        .chart-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;}
+        .chart-card { background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;}
         .chart-card.full-width { grid-column: 1 / -1; }
         .chart-card h3 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;}
+        .chart-card h3 span { font-size: 12px; color: #94a3b8; font-weight: 400; background: #f8fafc; padding: 4px 8px; border-radius: 4px;}
         .chart-container { position: relative; height: 300px; width: 100%; }
+
+        /* Listas Minimalistas (Sem gráficos) - COMO VOCÊ PEDIU */
+        .data-list { display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; padding-right: 5px;}
+        .data-list::-webkit-scrollbar { width: 6px; }
+        .data-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .data-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: 0.2s; }
+        .data-item:hover { background: #f8fafc; padding-left: 15px; }
+
+        /* Grid Especial para Bairros Full Width */
+        .bairros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; max-height: unset; overflow-y: visible;}
+        .bairros-grid .data-item { border: 1px solid #f1f5f9; border-radius: 8px; }
 
         /* Tabela Bonita para Secretarias */
         .data-table-container { max-height: 350px; overflow-y: auto; }
@@ -166,15 +186,22 @@
         <div class="secao-lista" id="secaoLista">
             <h3><span id="tituloLista">Lista de Demandas</span> <button class="btn-fechar-lista" onclick="fecharLista()">✕ Fechar Detalhamento</button></h3>
             <div id="containerItensLista" style="max-height: 400px; overflow-y: auto;"></div>
+            <div class="paginacao">
+                <button id="btnListaAnt" onclick="mudarPaginaLista(-1)">❮ Anterior</button>
+                <span id="infoPaginaLista" style="font-size:14px; font-weight:bold; color:#64748b;">Pág 1</span>
+                <button id="btnListaProx" onclick="mudarPaginaLista(1)">Próxima ❯</button>
+            </div>
         </div>
 
         <div class="charts-grid">
             
+            <!-- Gráfico de Tendência (Novo) -->
             <div class="chart-card full-width">
                 <h3>Tendência de Abertura <span>Últimos 6 Meses</span></h3>
                 <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
             </div>
 
+            <!-- Tabela de Eficiência de Secretarias (Novo) -->
             <div class="chart-card full-width">
                 <h3>Eficiência por Secretaria/Órgão <span>Ranking de Execução</span></h3>
                 <div class="data-table-container">
@@ -195,16 +222,21 @@
                 <div class="chart-container"><canvas id="graficoCategorias"></canvas></div>
             </div>
 
+            <!-- Listas Limpas que a Claude tentou tirar e nós devolvemos! -->
             <div class="chart-card">
-                <h3>Quem Deu a Ordem (Gestores)</h3>
-                <div class="chart-container"><canvas id="graficoOrdem"></canvas></div>
+                <h3>Responsáveis (Ordem) <span>Clicável</span></h3>
+                <div class="data-list" id="listaOrdem"></div>
             </div>
 
             <div class="chart-card">
-                <h3>Equipe Executando (Carga Operacional)</h3>
-                <div class="chart-container"><canvas id="graficoEquipe"></canvas></div>
+                <h3>Executores (Cuidando) <span>Clicável</span></h3>
+                <div class="data-list" id="listaEquipe"></div>
             </div>
             
+            <div class="chart-card full-width">
+                <h3>Top Bairros Atendidos <span>Clicável</span></h3>
+                <div class="data-list bairros-grid" id="listaBairros"></div>
+            </div>
         </div>
     </div>
 
@@ -215,9 +247,11 @@
         let todasDemandasRAW = []; 
         let demandasFiltradas = []; 
         let listaExibicao = [];
+        let paginaAtualLista = 1;
+        const itensPorPagina = 5;
 
         // Instâncias Gráficos
-        let chartStatus, chartCat, chartTendencia, chartEquipe, chartOrdem;
+        let chartStatus, chartCat, chartTendencia;
 
         const arrayAbertas = ['Aberta', 'Pendente', 'Aguardando', 'Aguardando Aprovação'];
         const arrayConcluidas = ['Concluída', 'Atendido', 'Resolvido', 'Arquivada', 'Rejeitada'];
@@ -442,7 +476,29 @@
         }
 
         // ==========================================
-        // DRILL DOWN (LISTAS CLICÁVEIS)
+        // RENDERIZADOR DE LISTAS HTML LIMPAS (No Emojis, No Bar Charts)
+        // ==========================================
+        function renderListaHTML(containerId, dadosObj, tipoGrafico) {
+            const container = document.getElementById(containerId);
+            const chaves = Object.keys(dadosObj).sort((a, b) => dadosObj[b] - dadosObj[a]); 
+            
+            if(chaves.length === 0) {
+                container.innerHTML = '<p style="color:#94a3b8; text-align:center; margin-top:20px;">Sem registros.</p>'; return;
+            }
+            
+            container.innerHTML = chaves.map((k, index) => {
+                const val = dadosObj[k];
+                return `
+                    <div class="data-item" onclick="lidarCliqueLista('${k}', '${tipoGrafico}')">
+                        <span style="font-weight:600; color:#334155;">${index + 1}. ${k}</span>
+                        <span style="font-weight:800; color:#0f172a; font-size:16px;">${val}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==========================================
+        // DRILL DOWN E PAGINAÇÃO (LISTAS CLICÁVEIS)
         // ==========================================
         window.abrirListaKPI = function(tipo, tituloKpi, btnCard) {
             if(btnCard && btnCard.classList.contains('fixo')) return;
@@ -458,6 +514,24 @@
             iniciarListaNaTela(`Detalhamento: ${tituloKpi} (${f.length})`, f);
         }
 
+        window.lidarCliqueLista = function(label, tipo) {
+            document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
+            let filtrado = [];
+            
+            if (tipo === 'equipe') {
+                filtrado = demandasFiltradas.filter(d => {
+                    let resps = Array.isArray(d.responsaveis) ? d.responsaveis : (typeof d.responsaveis === 'string' ? [d.responsaveis] : []);
+                    return resps.includes(label);
+                });
+            } else if (tipo === 'ordem') {
+                filtrado = demandasFiltradas.filter(d => d.responsavel_ordem === label);
+            } else if (tipo === 'bairro') {
+                filtrado = demandasFiltradas.filter(d => (d.bairro || '').trim().toUpperCase() === label);
+            }
+            
+            iniciarListaNaTela(`Filtro: ${label} (${filtrado.length})`, filtrado);
+        }
+
         function lidarCliqueGrafico(evt, elements, chart) {
             if (!elements || elements.length === 0) return;
             const label = chart.data.labels[elements[0].index];
@@ -466,32 +540,53 @@
             let f = [];
             if(tituloG.includes('Situação')) f = demandasFiltradas.filter(d => d.status === label);
             else if(tituloG.includes('Tipos')) f = demandasFiltradas.filter(d => (d.tipo_solicitacao || 'Sem categoria') === label);
-            else if(tituloG.includes('Equipe')) f = demandasFiltradas.filter(d => (d.responsaveis || []).includes(label));
-            else if(tituloG.includes('Ordem')) f = demandasFiltradas.filter(d => (d.responsavel_ordem || 'Sem Resp.') === label);
 
             iniciarListaNaTela(`Resultado: ${label} (${f.length})`, f);
         }
 
         function iniciarListaNaTela(titulo, lista) {
             listaExibicao = lista.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+            paginaAtualLista = 1;
             document.getElementById('secaoLista').style.display = 'block';
             document.getElementById('tituloLista').textContent = titulo;
-            
+            renderizarListaNaTela();
+            document.getElementById('secaoLista').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        window.fecharLista = function() {
+            document.getElementById('secaoLista').style.display = 'none';
+            document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
+        }
+
+        function renderizarListaNaTela() {
             const container = document.getElementById('containerItensLista');
             if (listaExibicao.length === 0) {
-                container.innerHTML = '<p style="color:#64748b; padding:20px 0; text-align:center;">Nenhum registro.</p>'; return;
+                container.innerHTML = '<p style="color:#64748b; padding:20px 0; text-align:center;">Nenhum registro.</p>'; 
+                document.getElementById('btnListaAnt').disabled = true; document.getElementById('btnListaProx').disabled = true;
+                document.getElementById('infoPaginaLista').textContent = 'Pág 0 de 0'; return;
             }
 
-            container.innerHTML = listaExibicao.map(d => {
+            const totalPags = Math.ceil(listaExibicao.length / itensPorPagina);
+            const inicio = (paginaAtualLista - 1) * itensPorPagina;
+            const recorte = listaExibicao.slice(inicio, inicio + itensPorPagina);
+
+            container.innerHTML = recorte.map(d => {
                 const dataF = d.criado_em ? new Date(d.criado_em).toLocaleDateString('pt-BR') : '--';
+                const bairroTxt = d.bairro ? d.bairro : 'N/A';
                 const sColor = arrayConcluidas.includes(d.status) ? '#10b981' : (arrayAbertas.includes(d.status) ? '#ef4444' : '#f59e0b');
                 let execStr = (d.responsaveis && d.responsaveis.length>0) ? d.responsaveis.join(', ') : 'Ninguém';
+                let ordemStr = d.responsavel_ordem || 'Sem Resp.';
+                
                 return `
                     <div class="lista-item">
                         <div class="lista-info" style="flex:1;">
                             <strong>${d.assunto}</strong>
-                            <div>
+                            <div style="margin-bottom: 8px;">
                                 <span class="detalhe-tag">📅 ${dataF}</span>
+                                <span class="detalhe-tag" style="background:#e0f2fe; color:#1e40af;">📍 Bairro: ${bairroTxt}</span>
+                            </div>
+                            <div>
+                                <span class="detalhe-tag" style="background:#fce7f3; color:#be185d;">✍️ Ordem: ${ordemStr}</span>
                                 <span class="detalhe-tag" style="background:#f3e8ff; color:#7e22ce;">👥 Cuidando: ${execStr}</span>
                                 <span class="detalhe-tag" style="background:white; color:${sColor}; border:1px solid ${sColor};">🚨 ${d.status}</span>
                             </div>
@@ -500,13 +595,12 @@
                     </div>`;
             }).join('');
 
-            document.getElementById('secaoLista').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('infoPaginaLista').textContent = `Pág ${paginaAtualLista} de ${totalPags}`;
+            document.getElementById('btnListaAnt').disabled = paginaAtualLista === 1;
+            document.getElementById('btnListaProx').disabled = paginaAtualLista >= totalPags;
         }
 
-        window.fecharLista = function() {
-            document.getElementById('secaoLista').style.display = 'none';
-            document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
-        }
+        window.mudarPaginaLista = function(direcao) { paginaAtualLista += direcao; renderizarListaNaTela(); }
 
         // ==========================================
         // GRÁFICOS E EXPORTAÇÃO EXCEL
@@ -518,8 +612,6 @@
             if(chartTendencia) chartTendencia.destroy();
             if(chartStatus) chartStatus.destroy();
             if(chartCat) chartCat.destroy();
-            if(chartEquipe) chartEquipe.destroy();
-            if(chartOrdem) chartOrdem.destroy();
 
             montarTabelaSecretarias();
 
@@ -553,23 +645,40 @@
                 options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, title:{display:true, text:'Tipos'}, datalabels: { anchor: 'end', align: 'right', font: { weight: 'bold' } } }, scales: { x:{display:false} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
             });
 
-            // 4. Equipe (Cuidando)
-            const eqCounts = {}; demandasFiltradas.forEach(d => { (d.responsaveis||[]).forEach(r => { if(r) eqCounts[r] = (eqCounts[r] || 0) + 1; }); });
-            const sEq = Object.keys(eqCounts).sort((a,b)=>eqCounts[b]-eqCounts[a]);
-            chartEquipe = new Chart(document.getElementById('graficoEquipe'), {
-                type: 'bar',
-                data: { labels: sEq, datasets: [{ data: sEq.map(k => eqCounts[k]), backgroundColor: '#3b82f6', borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title:{display:true, text:'Equipe'}, datalabels: { anchor: 'end', align: 'top', font: { weight: 'bold' } } }, scales: { y:{beginAtZero:true, grid:{display:false}} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
+            // 4. Responsáveis pela Ordem (Listagem Limpa)
+            const ordemCounts = {}; 
+            demandasFiltradas.forEach(d => {
+                const r = d.responsavel_ordem;
+                if (r && r.trim() !== '') { ordemCounts[r] = (ordemCounts[r] || 0) + 1; }
             });
+            renderListaHTML('listaOrdem', ordemCounts, 'ordem');
 
-            // 5. Ordem (Dono)
-            const ordCounts = {}; demandasFiltradas.forEach(d => { let r = d.responsavel_ordem || 'Sem Resp.'; ordCounts[r] = (ordCounts[r] || 0) + 1; });
-            const sOrd = Object.keys(ordCounts).sort((a,b)=>ordCounts[b]-ordCounts[a]);
-            chartOrdem = new Chart(document.getElementById('graficoOrdem'), {
-                type: 'bar',
-                data: { labels: sOrd, datasets: [{ data: sOrd.map(k => ordCounts[k]), backgroundColor: '#8b5cf6', borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title:{display:true, text:'Ordem'}, datalabels: { anchor: 'end', align: 'top', font: { weight: 'bold' } } }, scales: { y:{beginAtZero:true, grid:{display:false}} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
+            // 5. Executores Cuidando (Listagem Limpa)
+            const equipeCounts = {}; 
+            demandasFiltradas.forEach(d => {
+                let resps = [];
+                if (Array.isArray(d.responsaveis)) resps = d.responsaveis;
+                else if (typeof d.responsaveis === 'string') {
+                    try { resps = JSON.parse(d.responsaveis); } catch(e) { resps = [d.responsaveis]; }
+                }
+                resps.forEach(r => { 
+                    if (r && r.trim() !== '') { equipeCounts[r] = (equipeCounts[r] || 0) + 1; }
+                });
             });
+            renderListaHTML('listaEquipe', equipeCounts, 'equipe');
+
+            // 6. Bairros (Lista Limpa HTML Top 10)
+            const bairroCounts = {};
+            demandasFiltradas.forEach(d => {
+                if(d.bairro && d.bairro.trim() !== '') {
+                    const b = d.bairro.trim().toUpperCase();
+                    bairroCounts[b] = (bairroCounts[b] || 0) + 1;
+                }
+            });
+            const topBairros = Object.keys(bairroCounts).sort((a, b) => bairroCounts[b] - bairroCounts[a]).slice(0, 10);
+            const objBairros = {};
+            topBairros.forEach(b => objBairros[b] = bairroCounts[b]);
+            renderListaHTML('listaBairros', objBairros, 'bairro');
         }
 
         window.exportarExcel = function() {
