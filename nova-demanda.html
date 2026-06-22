@@ -478,17 +478,18 @@
             ];
 
             const celulas = texto.split('\t');
-            let restantes = [];
 
             celulas.forEach(c => {
                 let cell = c.trim();
-                if(!cell || cell === '-' || cell === 'S/N') return;
+                if(!cell || cell === '-' || cell === 'S/N' || cell.toLowerCase() === 'ver detalhes') return;
 
+                // Captura de Data
                 if (cell.match(/^\d{2}\/\d{2}\/\d{2,4}$/)) {
                     let p = cell.split('/'); let ano = p[2].length === 2 ? '20' + p[2] : p[2];
                     parsed.data = `${ano}-${p[1]}-${p[0]}`; return;
                 }
                 
+                // Documentos Internos
                 let docMatch = cell.match(/^([A-Za-zÀ-ÿ]+)[\s-]*(\d+\/\d{4})$/i);
                 if (docMatch) {
                     parsed.doc_numero = docMatch[2];
@@ -501,23 +502,29 @@
                     return;
                 }
 
+                // Equipe
                 let matchedNome = nomesEquipe.find(n => n.toLowerCase() === cell.toLowerCase());
                 if (matchedNome) { parsed.resp = matchedNome; return; }
 
+                // Tipo Solicitação
                 let matchedTipo = tiposConhecidos.find(t => t.toUpperCase() === cell.toUpperCase());
                 if (matchedTipo) { parsed.tipo = matchedTipo; return; }
 
+                // Status
                 let matchedStatus = statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase());
                 if (matchedStatus) { parsed.status = matchedStatus; return; }
 
+                // Expediente
                 if (cell.toLowerCase().includes('exp.') || cell.toLowerCase().includes('expediente')) {
                     parsed.expediente = cell; return;
                 }
 
-                if (cell.match(/156\s*20\d{2}\/\d+/)) {
-                    parsed.protocolo = cell.match(/156\s*20\d{2}\/\d+/)[0]; return;
+                // 156 isolado
+                if (cell.match(/^156\s*20\d{2}\/\d+$/)) {
+                    parsed.protocolo = cell.match(/^156\s*20\d{2}\/\d+$/)[0]; return;
                 }
 
+                // Secretarias
                 let isSecretaria = false;
                 for(let s of secOficiais) {
                     if (cell.toUpperCase().startsWith(s)) { 
@@ -533,49 +540,44 @@
                 if (cell.toUpperCase().includes('PROTEÇÃO ANIMAL')) { parsed.secretaria = 'Secretaria Municipal de Proteção Animal - SEMPA'; return; }
                 if (cell.toUpperCase().includes('HABITAÇÃO')) { parsed.secretaria = 'Secretaria Municipal de Habitação - SEMHAB'; return; }
 
+                // Tratamento blindado de Telefones (resolve o "(51.) 998.618.999")
                 let justDigits = cell.replace(/\D/g, '');
-                if (justDigits.length >= 8 && justDigits.length <= 13 && !cell.match(/[a-zA-Z]{3,}/)) {
-                    parsed.tel = cell; return; 
+                if (justDigits.length >= 8 && justDigits.length <= 13 && !cell.match(/[a-zA-Z]{4,}/)) {
+                    if(justDigits.length === 11) parsed.tel = `(${justDigits.substring(0,2)}) ${justDigits.substring(2,7)}-${justDigits.substring(7)}`;
+                    else if(justDigits.length === 10) parsed.tel = `(${justDigits.substring(0,2)}) ${justDigits.substring(2,6)}-${justDigits.substring(6)}`;
+                    else parsed.tel = cell.trim();
+                    return; 
                 }
 
-                let matchEnd = cell.match(/^(Rua|Av\.?|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)\s+([^,]+)(?:[,\s]+(?:n[ºo]?\s*)?(\d+|s\/?n))?/i);
-                if (matchEnd) {
-                    parsed.rua = matchEnd[1] + ' ' + matchEnd[2].trim();
-                    if (matchEnd[3]) parsed.numero = matchEnd[3].trim();
+                // Ignora IDs ou Contadores
+                if (cell.match(/^\d{1,5}$/)) return;
+
+                // A coluna gigantesca é a descrição da demanda
+                if (cell.length > 50) {
+                    parsed.desc = parsed.desc ? parsed.desc + '\n' + cell : cell;
                     return;
                 }
 
-                if (cell.match(/^Bairro\s+(.+)/i)) {
-                    parsed.bairro = cell.match(/^Bairro\s+(.+)/i)[1].trim(); return;
-                }
-
-                restantes.push(cell);
-            });
-
-            restantes.sort((a, b) => b.length - a.length);
-
-            restantes.forEach(cell => {
-                if (cell.length > 40) {
-                    parsed.desc = parsed.desc ? parsed.desc + '\n' + cell : cell;
-                } else if (!parsed.nome && !cell.match(/\d/) && cell.length > 2 && cell.length <= 40) {
-                    const bairrosSL = ['CENTRO', 'FEITORIA', 'CAMPINA', 'SCHARLAU', 'SANTOS DUMONT', 'RIO DOS SINOS', 'VICENTINA', 'SÃO JOSÉ', 'SÃO MIGUEL', 'CRISTO REI', 'FIÃO', 'DUQUE DE CAXIAS', 'JARDIM AMÉRICA', 'FAZENDA SÃO BORJA', 'PINHEIRO'];
-                    if (bairrosSL.includes(cell.toUpperCase())) {
-                        parsed.bairro = cell;
-                    } else {
-                        parsed.nome = cell;
-                    }
-                } else {
-                    let m = cell.match(/^([^,]+)(?:[,\s]+(?:n[ºo]?\s*)?(\d+|s\/?n))$/i);
-                    if (m && !parsed.rua && cell.match(/[a-zA-Z]/)) {
-                        parsed.rua = m[1].trim();
-                        parsed.numero = m[2].trim();
-                    } else {
-                        parsed.desc = parsed.desc ? parsed.desc + '\n' + cell : cell;
-                    }
+                // Solicitante
+                if (cell.length > 2 && cell.length <= 40 && !cell.match(/\d/) && !parsed.nome) {
+                    parsed.nome = cell; return;
                 }
             });
 
-            if (parsed.desc && !parsed.assunto) {
+            // Extração avançada DENTRO da descrição
+            if (parsed.desc) {
+                let match156 = parsed.desc.match(/protocolo\s*(156\s*20\d{2}\/\d+)/i);
+                if (match156) parsed.protocolo = match156[1];
+
+                let matchRua = parsed.desc.match(/(Rua|Av\.?|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)\s+([^,]+)(?:[,.-]\s*(?:n[ºo]?\s*)?(\d+|s\/?n))?/i);
+                if (matchRua) {
+                    parsed.rua = matchRua[1] + ' ' + matchRua[2].trim();
+                    if (matchRua[3]) parsed.numero = matchRua[3].trim();
+                }
+
+                let matchBairro = parsed.desc.match(/bairro\s+([^,.]+)/i);
+                if (matchBairro) parsed.bairro = matchBairro[1].trim();
+
                 let assuntoInteligente = parsed.desc.split('\n')[0];
                 assuntoInteligente = assuntoInteligente.replace(/^(solicita|requer|pede|encaminha|solicitamos)(mos)?\s+(a|o|as|os|que|para|uma|um)\s+/i, '');
                 assuntoInteligente = assuntoInteligente.replace(/^(solicita|requer|pede|encaminha)\s+/i, '');
