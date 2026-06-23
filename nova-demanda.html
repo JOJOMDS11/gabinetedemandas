@@ -38,8 +38,10 @@
         .box-importacao:focus-within { border-color: #1a365d; background: #ffffff; box-shadow: 0 4px 12px rgba(26, 54, 93, 0.05); }
         .box-importacao label { color: #1a365d; font-size: 14px; margin-bottom: 10px; display: block; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;}
         .box-importacao textarea { border: 1px solid #e2e8f0; resize: none; text-align: left; padding: 12px; line-height: 1.6; font-family: 'Courier New', monospace; font-size: 13px; background: #ffffff;}
-        .box-importacao-copy-btn { background: #475569; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; margin-top: 12px; text-transform: uppercase; width: 100%; transition: 0.2s;}
+        .box-importacao-copy-btn { background: #475569; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; text-transform: uppercase; width: 100%; transition: 0.2s;}
         .box-importacao-copy-btn:hover { background: #334155; }
+        .btn-magico-texto { background: #3b82f6; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; text-transform: uppercase; width: 100%; transition: 0.2s; margin-top: 8px;}
+        .btn-magico-texto:hover { background: #2563eb; }
         
         .secao-tecnica { background: #ffffff; padding: 20px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 20px; }
         .secao-tecnica h3 { color:#1a365d; font-size:14px; margin-bottom:15px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;}
@@ -63,9 +65,13 @@
     <div class="container">
         
         <div class="box-importacao">
-            <label>Importação de Dados (Planilha)</label>
-            <textarea id="textoMagico" rows="2" placeholder="Cole os dados da planilha aqui..." oninput="executarMagia()"></textarea>
-            <button type="button" class="box-importacao-copy-btn" onclick="copiarTextoMagico()">Copiar Dados Estruturados</button>
+            <label>Importação Mágica (Planilha ou Texto Livre)</label>
+            <textarea id="textoMagico" rows="3" placeholder="Cole aqui os dados da planilha OU o texto inteiro de um PDF/Word..."></textarea>
+            
+            <div style="display:flex; gap:10px; margin-top:12px;">
+                <button type="button" class="box-importacao-copy-btn" onclick="executarMagiaPlanilha()">📊 Extrair de Planilha</button>
+                <button type="button" class="btn-magico-texto" onclick="extrairDeTextoLivre()" style="margin-top:0;">🪄 Extrair de Texto (PDF)</button>
+            </div>
             
             <div style="margin-top: 20px;">
                 <label style="color: #475569; font-size: 12px; border: none; padding: 0; margin-bottom: 6px;">Status da Demanda</label>
@@ -245,7 +251,6 @@
                 <label>Anotações Restritas</label>
                 <textarea id="observacoes" rows="2" placeholder="Informações de uso exclusivo da equipe interna."></textarea>
             </div>
-            <!-- NOVIDADE: Botão Dinâmico de Acessar Legis -->
             <div class="form-group">
                 <label>URL Sistema Legislativo</label>
                 <div style="display:flex; gap:8px;">
@@ -299,7 +304,6 @@
             'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'
         ].sort();
 
-        // Bairros Conhecidos para extração inteligente
         const bairrosSL = ['CENTRO', 'FEITORIA', 'CAMPINA', 'SCHARLAU', 'SANTOS DUMONT', 'RIO DOS SINOS', 'VICENTINA', 'SÃO JOSÉ', 'SÃO MIGUEL', 'CRISTO REI', 'FIÃO', 'DUQUE DE CAXIAS', 'JARDIM AMÉRICA', 'FAZENDA SÃO BORJA', 'PINHEIRO', 'RIO BRANCO', 'SANTA TEREZA', 'POMBAL', 'ARROIO DA MANTEIGA', 'BOA VISTA', 'MORRO DO ESPELHO', 'PADRE REUS', 'PASSO DOS FERREIROS', 'CAMPESTRE', 'JARDIM LUCIANA', 'COHAB'];
 
         async function carregarSecretarias() {
@@ -343,7 +347,6 @@
             bloco.style.display = isChecked ? 'block' : 'none';
         }
 
-        // NOVIDADE: Atualiza o botão de acessar o Legis na mesma hora que o usuário digita
         window.atualizarLinkLegisNovaDemanda = function() {
             const input = document.getElementById('link_legis');
             const btn = document.getElementById('btnAcessarLegisNova');
@@ -364,14 +367,6 @@
         window.addEventListener('beforeunload', function(e) {
             if (formularioAlterado) { e.preventDefault(); e.returnValue = ''; return ''; }
         });
-
-        window.copiarTextoMagico = function() {
-            const textarea = document.getElementById('textoMagico');
-            if (!textarea.value.trim()) { alert('Área vazia. Importe os dados primeiro.'); return; }
-            textarea.select();
-            document.execCommand('copy');
-            alert('Dados copiados para a área de transferência.');
-        }
 
         window.preencherDataHojeSeVazio = function(input) {
             if (input.value) return;
@@ -493,10 +488,11 @@
             }
         }
 
-        function executarMagia() {
+        // --- FUNÇÃO 1: EXTRAIR DE PLANILHA EXCEL (ANTIGA MAGIA) ---
+        window.executarMagiaPlanilha = function() {
             const textarea = document.getElementById('textoMagico');
             const texto = textarea.value;
-            if (!texto.trim()) return;
+            if (!texto.trim()) return alert("Cole os dados da planilha na caixa primeiro!");
 
             limparFormulario();
 
@@ -511,20 +507,17 @@
                 let cell = c.trim();
                 if(!cell || cell === '-' || cell === 'S/N' || cell.toLowerCase() === 'ver detalhes') return;
 
-                // Captura Link do Legis
                 if (cell.match(/https?:\/\/[^\s]+/i) || cell.includes('camarasaoleopoldo.rs.gov.br')) {
                     let matchLink = cell.match(/https?:\/\/[^\s]+/i);
                     parsed.link_legis = matchLink ? matchLink[0] : cell.trim();
                     return;
                 }
 
-                // Captura Data
                 if (cell.match(/^\d{2}\/\d{2}\/\d{2,4}$/)) {
                     let p = cell.split('/'); let ano = p[2].length === 2 ? '20' + p[2] : p[2];
                     parsed.data = `${ano}-${p[1]}-${p[0]}`; return;
                 }
                 
-                // Documentos Internos (Memo, Requerimento, PDP, etc)
                 let docMatch = cell.match(/^([A-Za-zÀ-ÿ]+)[\s-]*(\d+\/\d{4})$/i);
                 if (docMatch) {
                     parsed.doc_numero = docMatch[2];
@@ -537,15 +530,12 @@
                     return;
                 }
 
-                // Equipe
                 let matchedNome = nomesEquipe.find(n => n.toLowerCase() === cell.toLowerCase());
                 if (matchedNome) { parsed.resp = matchedNome; return; }
 
-                // Tipo Solicitação
                 let matchedTipo = tiposConhecidos.find(t => t.toUpperCase() === cell.toUpperCase());
                 if (matchedTipo) { parsed.tipo = matchedTipo; return; }
 
-                // Status Inteligente (Converte os antigos para os novos)
                 let matchedStatus = statusConhecidos.find(s => s.toLowerCase() === cell.toLowerCase());
                 if (matchedStatus) { 
                     if (['Aberta', 'Aguardando'].includes(matchedStatus)) parsed.status = 'Pendente';
@@ -554,12 +544,10 @@
                     return; 
                 }
 
-                // Expediente
                 if (cell.toLowerCase().includes('exp.') || cell.toLowerCase().includes('expediente')) {
                     parsed.expediente = cell; return;
                 }
 
-                // Secretarias
                 let isSecretaria = false;
                 for(let s of secretariasPadrao) {
                     if (cell.toUpperCase().startsWith(s)) { 
@@ -572,7 +560,6 @@
                 }
                 if (isSecretaria) return;
 
-                // Tratamento blindado de Telefones
                 let justDigits = cell.replace(/\D/g, '');
                 if (justDigits.length >= 8 && justDigits.length <= 13 && !cell.match(/[a-zA-Z]{4,}/)) {
                     if(justDigits.length === 11) parsed.tel = `(${justDigits.substring(0,2)}) ${justDigits.substring(2,7)}-${justDigits.substring(7)}`;
@@ -581,25 +568,19 @@
                     return; 
                 }
 
-                // Ignora IDs/Números soltos (para não sujar nome ou assunto)
                 if (cell.match(/^\d{1,6}$/)) return;
 
-                // Descrição da Demanda (Geralmente é o texto mais longo)
                 if (cell.length > 50) {
                     parsed.desc = parsed.desc ? parsed.desc + '\n' + cell : cell;
                     return;
                 }
 
-                // Solicitante (Texto curto, sem números)
                 if (cell.length > 2 && cell.length <= 40 && !cell.match(/\d/) && !parsed.nome) {
                     parsed.nome = cell; return;
                 }
             });
 
-            // Extração de Endereço, Protocolo e Resumo DE DENTRO DA DESCRIÇÃO
             if (parsed.desc) {
-                
-                // 1. Extrai Protocolo (Ex: "protocolo 156 2026/7537" ou "protocolo MEIO AMBIENTE 2026/1466")
                 let matchProt = parsed.desc.match(/protocolo\s+([A-Za-z0-9\s]+\s*20\d{2}\/\d+(?:\s*Vol\.?\s*\d+)?)/i);
                 if(matchProt) {
                     parsed.protocolo = matchProt[1].trim();
@@ -612,7 +593,6 @@
                     }
                 }
 
-                // 2. Extrai Rua e Número ("Ruas Porto Camargo e Ferrabraz" ou "Rua Edmundo Félix, nº 301")
                 let matchRua = parsed.desc.match(/(?:Rua|Ruas|Av\.?|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)\s+([^,.-]+)(?:[,.-]\s*(?:n[ºo]?\s*)?(\d+|s\/?n))?/i);
                 if (matchRua) {
                     let prefix = matchRua[0].match(/^(Ruas|Rua|Av\.?|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)/i)[0];
@@ -621,7 +601,6 @@
                     else parsed.numero = 'S/N';
                 }
 
-                // 3. Extrai Bairro ("bairro Campina" ou cruza com lista)
                 let matchBairro = parsed.desc.match(/(?:bairro|b\.)\s+([A-Za-zÀ-ÿ\s]+?)(?:,|\.| no | na | em | protocolo |$)/i);
                 if (matchBairro) {
                     parsed.bairro = matchBairro[1].trim();
@@ -632,14 +611,10 @@
                     }
                 }
 
-                // 4. Assunto Resumido Perfeito
                 let primeiraLinha = parsed.desc.split('\n')[0];
                 let assuntoInteligente = primeiraLinha;
                 assuntoInteligente = assuntoInteligente.replace(/^(solicita|requer|pede|encaminha|solicitamos)(mos)?\s+(a|o|as|os|que|para|uma|um|de)?\s*/i, '');
-                
-                if(assuntoInteligente.length > 0) {
-                    assuntoInteligente = assuntoInteligente.charAt(0).toUpperCase() + assuntoInteligente.slice(1);
-                }
+                if(assuntoInteligente.length > 0) assuntoInteligente = assuntoInteligente.charAt(0).toUpperCase() + assuntoInteligente.slice(1);
 
                 const cortes = [" na rua", " nas ruas", " na av", " na travessa", " no bairro", " em via", " especificamente", " especial", " ao longo", " defronte", " em frente", ", conforme", " no município", ", no ", " n°", " nº", " numero", " número", " em razão", " devido a", ", situada"];
                 for (let corte of cortes) {
@@ -652,23 +627,79 @@
                 parsed.assunto = assuntoInteligente || 'Demanda sem título';
             }
 
-            // --- NOVA REGRA INTELIGENTE DO FUNIL (UPGRADE DE STATUS) ---
             if (!parsed.status || ['Pendente', 'Aguardando Aprovação', 'Aberta', 'Aguardando'].includes(parsed.status)) {
-                if (parsed.expediente || parsed.protocolo) {
-                    parsed.status = 'Aguardando Exec. Secretaria';
+                if (parsed.expediente || parsed.protocolo) { parsed.status = 'Aguardando Exec. Secretaria'; }
+            }
+
+            preencherCampos(parsed);
+            
+            textarea.style.backgroundColor = '#ecfdf5';
+            textarea.value = 'Planilha processada! Verifique os campos e faça os ajustes necessários.';
+            setTimeout(() => { textarea.value = ''; textarea.style.backgroundColor = '#ffffff'; }, 3000);
+        }
+
+        // --- FUNÇÃO 2: EXTRAIR DE TEXTO LIVRE (PDF/WORD) ---
+        window.extrairDeTextoLivre = function() {
+            const textarea = document.getElementById('textoMagico');
+            const texto = textarea.value;
+            if (!texto.trim()) return alert("Cole o texto completo do PDF/Word na caixa primeiro!");
+
+            limparFormulario();
+            let parsed = { data: '', resp: '', status: '', tipo: '', doc_tipo: '', doc_numero: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '', rua: '', numero: '', bairro: '', link_legis: '' };
+
+            // 1. Tipo de Solicitação e Doc Interno[span_5](start_span)[span_5](end_span)[span_6](start_span)[span_6](end_span)
+            if (/pedido de providências/i.test(texto)) { parsed.tipo = 'PEDIDO DE PROVIDÊNCIAS'; parsed.doc_tipo = 'PDP'; }
+            else if (/indicação/i.test(texto)) { parsed.tipo = 'INDICAÇÃO'; }
+            else if (/requerimento/i.test(texto)) { parsed.tipo = 'REQUERIMENTO'; parsed.doc_tipo = 'Requerimento'; }
+            else if (/projeto de lei/i.test(texto)) { parsed.tipo = 'PROJETO DE LEI'; }
+            else if (/moção/i.test(texto)) { parsed.tipo = 'MOÇÃO DE APOIO'; }
+
+            // 2. Extração do Assunto (Puxa tudo depois de "Assunto:" até a próxima quebra grave)[span_7](start_span)[span_7](end_span)[span_8](start_span)[span_8](end_span)
+            let matchAssunto = texto.match(/Assunto:\s*([\s\S]*?)(?=O Vereador|Senhor|Prefeito|\n\n|\r\n\r\n)/i);
+            if (matchAssunto) {
+                let limpo = matchAssunto[1].replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+                parsed.assunto = limpo.charAt(0).toUpperCase() + limpo.slice(1);
+                
+                // Extrai Endereço do próprio assunto se tiver
+                let matchRua = limpo.match(/(?:na\s+)?(?:Rua|Ruas|Av\.?|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)\s+([^,.-]+)/i);
+                if (matchRua) parsed.rua = matchRua[0].replace(/^na\s+/i, '').trim();
+                
+                let matchNum = limpo.match(/n[ºo]?\s*(\d+|s\/?n)/i);
+                if (matchNum) parsed.numero = matchNum[1].trim();
+
+                let matchBairro = limpo.match(/(?:bairro|b\.)\s+([A-Za-zÀ-ÿ\s]+?)(?:,|\.| no | na | em | neste|$)/i);
+                if (matchBairro) parsed.bairro = matchBairro[1].trim();
+                
+                // Reduz o assunto se ficar gigante
+                if (parsed.assunto.length > 100) {
+                    parsed.assunto = parsed.assunto.substring(0, 100).trim() + '...';
                 }
             }
 
-            // Popula os campos do formulário
-            if(parsed.link_legis) {
-                document.getElementById('link_legis').value = parsed.link_legis;
-                atualizarLinkLegisNovaDemanda();
-            }
-            
+            // 3. Verifica se tem protocolo 156 no texto[span_9](start_span)[span_9](end_span)[span_10](start_span)[span_10](end_span)
+            let matchProt = texto.match(/156\s*20\d{2}\/\d+/i);
+            if(matchProt) parsed.protocolo = matchProt[0];
+
+            // 4. Telefone escondido no texto[span_11](start_span)[span_11](end_span)
+            let matchTel = texto.match(/(?:\+55\s*)?\(?\d{2}\)?\s*\d{4,5}-?\d{4}/);
+            if (matchTel) parsed.tel = matchTel[0].trim();
+
+            // 5. Descrição recebe o texto inteiro
+            parsed.desc = texto.trim();
+
+            preencherCampos(parsed);
+
+            textarea.style.backgroundColor = '#eff6ff';
+            textarea.value = 'Texto Livre processado! Verifique a Natureza, Assunto, Rua e Bairro abaixo.';
+            setTimeout(() => { textarea.value = ''; textarea.style.backgroundColor = '#ffffff'; }, 4000);
+        }
+
+        // Helper genérico para as duas magias
+        function preencherCampos(parsed) {
+            if(parsed.link_legis) { document.getElementById('link_legis').value = parsed.link_legis; atualizarLinkLegisNovaDemanda(); }
             if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo.toUpperCase();
             if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
             if(parsed.resp) document.getElementById('responsavel_ordem').value = parsed.resp;
-            
             if(parsed.doc_tipo) document.getElementById('doc_tipo').value = parsed.doc_tipo;
             if(parsed.doc_numero) document.getElementById('doc_numero').value = parsed.doc_numero;
 
@@ -697,22 +728,13 @@
             if(parsed.status) {
                 const selectStatus = document.getElementById('status_forcado');
                 Array.from(selectStatus.options).forEach(opt => {
-                    if(opt.value.toLowerCase() === parsed.status.toLowerCase()) {
-                        selectStatus.value = opt.value;
-                    }
+                    if(opt.value.toLowerCase() === parsed.status.toLowerCase()) { selectStatus.value = opt.value; }
                 });
             }
 
             verificarCheckboxAprovacao();
             adaptarFormulario();
             atualizarNumeroDemanda(); 
-
-            textarea.style.backgroundColor = '#ecfdf5';
-            textarea.value = 'Informações processadas com sucesso.';
-            setTimeout(() => { 
-                textarea.value = ''; 
-                textarea.style.backgroundColor = '#ffffff'; 
-            }, 2000);
         }
 
         function adaptarFormulario() {
