@@ -245,9 +245,13 @@
                 <label>Anotações Restritas</label>
                 <textarea id="observacoes" rows="2" placeholder="Informações de uso exclusivo da equipe interna."></textarea>
             </div>
+            <!-- NOVIDADE: Botão Dinâmico de Acessar Legis -->
             <div class="form-group">
                 <label>URL Sistema Legislativo</label>
-                <input type="url" id="link_legis" placeholder="https://..." oninput="verificarCheckboxAprovacao()">
+                <div style="display:flex; gap:8px;">
+                    <input type="url" id="link_legis" placeholder="https://..." oninput="verificarCheckboxAprovacao(); atualizarLinkLegisNovaDemanda();" style="flex:1;">
+                    <a href="#" id="btnAcessarLegisNova" target="_blank" style="display:none; background:#f39c12; color:white; text-decoration:none; padding: 0 15px; border-radius: 6px; font-weight: bold; font-size: 13px; align-items:center; justify-content:center; white-space:nowrap; border:none; cursor:pointer;">Acessar 🔗</a>
+                </div>
             </div>
         </div>
 
@@ -337,6 +341,19 @@
             const bloco = document.getElementById('bloco_dia_evento');
             const isChecked = document.getElementById('is_agenda_toggle').checked;
             bloco.style.display = isChecked ? 'block' : 'none';
+        }
+
+        // NOVIDADE: Atualiza o botão de acessar o Legis na mesma hora que o usuário digita
+        window.atualizarLinkLegisNovaDemanda = function() {
+            const input = document.getElementById('link_legis');
+            const btn = document.getElementById('btnAcessarLegisNova');
+            const val = input.value.trim();
+            if(val && (val.startsWith('http://') || val.startsWith('https://'))) {
+                btn.href = DOMPurify.sanitize(val);
+                btn.style.display = 'flex';
+            } else {
+                btn.style.display = 'none';
+            }
         }
 
         document.addEventListener('change', function() { formularioAlterado = true; });
@@ -455,6 +472,7 @@
             document.getElementById('is_agenda_toggle').checked = false;
             document.getElementById('dia_evento').value = '';
             toggleDiaEvento();
+            atualizarLinkLegisNovaDemanda();
             
             arquivoPdfSelecionado = null;
             document.getElementById('pdfPreviewBox').style.display = 'none';
@@ -635,7 +653,6 @@
             }
 
             // --- NOVA REGRA INTELIGENTE DO FUNIL (UPGRADE DE STATUS) ---
-            // Se a demanda tem Expediente ou 156, ela já saiu do Gabinete e está na Sec!
             if (!parsed.status || ['Pendente', 'Aguardando Aprovação', 'Aberta', 'Aguardando'].includes(parsed.status)) {
                 if (parsed.expediente || parsed.protocolo) {
                     parsed.status = 'Aguardando Exec. Secretaria';
@@ -643,7 +660,11 @@
             }
 
             // Popula os campos do formulário
-            if(parsed.link_legis) document.getElementById('link_legis').value = parsed.link_legis;
+            if(parsed.link_legis) {
+                document.getElementById('link_legis').value = parsed.link_legis;
+                atualizarLinkLegisNovaDemanda();
+            }
+            
             if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo.toUpperCase();
             if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
             if(parsed.resp) document.getElementById('responsavel_ordem').value = parsed.resp;
