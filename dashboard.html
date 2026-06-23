@@ -433,7 +433,13 @@
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
+        // ================= ORDENAÇÃO ESTÁVEL POR DATA =================
         function dataParaOrdenacao(d) {
+            if (d.data_agendada) {
+                let horaStr = d.horario_agendado ? (d.horario_agendado.length === 5 ? d.horario_agendado + ':00' : d.horario_agendado) : '00:00:00';
+                let dataOficial = new Date(`${d.data_agendada}T${horaStr}`);
+                if (!isNaN(dataOficial.getTime())) return dataOficial.getTime();
+            }
             return new Date(d.criado_em).getTime();
         }
 
@@ -549,7 +555,7 @@
                 });
             }
 
-            // NOVA SUPER BUSCA INTELIGENTE APLICADA AQUI
+            // SUPER BUSCA INTELIGENTE: Pega Protocolos, Expedientes e Textos
             if (termoBusca) {
                 const termos = termoBusca.split(' ').filter(t => t.trim() !== '');
                 lista = lista.filter(d => {
@@ -647,6 +653,7 @@
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${DOMPurify.sanitize(demanda.numero_demanda)}</div>` : '';
                 const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 Aberto ${tempoRelativo(demanda.criado_em)}</div>` : '';
                 
+                // NOVIDADE COMPLETA: Inclusão blindada do bloco de Última Atualização
                 let atualizacaoCard = '';
                 if (demanda.historico && demanda.historico.length > 0) {
                     const ultimaAcao = demanda.historico[demanda.historico.length - 1];
