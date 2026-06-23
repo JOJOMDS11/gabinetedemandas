@@ -205,7 +205,7 @@
 
             <div class="modal-botoes" style="margin-top: 20px;">
                 <button style="background:#e0e0e0; color:#333; flex:0.4; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalWord()">Cancelar</button>
-                <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="gerarEBaixarWord()">⬇️ Baixar Arquivo Word</button>
+                <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="generarEBaixarWord()">⬇️ Baixar Arquivo Word</button>
             </div>
         </div>
     </div>
@@ -247,7 +247,7 @@
         <div class="modal-desc-box">
             <h3>Detalhes da Demanda <button type="button" onclick="fecharModalDescricao()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#c0392b;" title="Fechar">✕</button></h3>
             <div class="modal-desc-content" id="modalDescTexto"></div>
-            <button class="btn-acao azul" style="padding:12px; font-size:14px;" onclick="copiarTextoModal()">📋 Copiar Texto Completo</button>
+            <button class="btn-acao azul" style="padding:12px; font-size:14px;" onclick="copyTextoModal()">📋 Copiar Texto Completo</button>
         </div>
     </div>
 
@@ -434,16 +434,10 @@
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
+        // ================= ORDENAÇÃO POR DATA DE CRIAÇÃO FIXA =================
         function dataParaOrdenacao(d) {
-            const encerrada = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'].includes(d.status);
-            if (encerrada) {
-                return new Date(d.criado_em).getTime();
-            } else {
-                if (d.historico && d.historico.length > 0) {
-                    return new Date(d.historico[d.historico.length-1].data).getTime();
-                }
-                return new Date(d.criado_em).getTime();
-            }
+            // Retorna estritamente a data de criação original para novas ficarem sempre no topo
+            return new Date(d.criado_em).getTime();
         }
 
         function ordenarDemandasData() {
@@ -522,7 +516,7 @@
         }
         
         function atualizarContadores() {
-            const mapId = { 'Aguardando Aprovação': 'count-Aguardando Aprovação', 'Pendente': 'count-Pendente', 'Aprovada': 'count-Aprovada', 'Em Andamento': 'count-Em Andamento', 'Aguardando Exec. Secretaria': 'count-Sec', '156 Solicitado': 'count-156 Solicitado' };
+            const mapId = { 'Aguardando Approvação': 'count-Aguardando Aprovação', 'Pendente': 'count-Pendente', 'Aprovada': 'count-Aprovada', 'Em Andamento': 'count-Em Andamento', 'Aguardando Exec. Secretaria': 'count-Sec', '156 Solicitado': 'count-156 Solicitado' };
             for (const [status, badgeId] of Object.entries(mapId)) {
                 const badge = document.getElementById(badgeId);
                 if (badge) {
@@ -545,7 +539,7 @@
             if (filtroAtual === 'Todas') lista = lista.filter(d => !['Arquivada', 'Rejeitada'].includes(d.status));
             else lista = lista.filter(d => d.status === filtroAtual);
 
-            if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
+            if (catSelecionada === 'Agendas') list = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
 
@@ -646,6 +640,16 @@
 
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${DOMPurify.sanitize(demanda.numero_demanda)}</div>` : '';
                 const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 Aberto ${tempoRelativo(demanda.criado_em)}</div>` : '';
+                
+                // NOVIDADE: Visualização da última atualização em tempo real (Estilo Linha do Tempo)
+                let atualizacaoCard = '';
+                if (demanda.historico && demanda.historico.length > 0) {
+                    const ultimaAcao = demanda.historico[demanda.historico.length - 1];
+                    const sStatus = DOMPurify.sanitize(ultimaAcao.status || '');
+                    const sAutor = DOMPurify.sanitize(ultimaAcao.autor || '');
+                    atualizacaoCard = `<div class="info-tempo" style="color: #1d4ed8; font-weight: 600; margin-top: 2px;" data-atualizado="${ultimaAcao.data}" data-status-txt="${sStatus}" data-autor-txt="${sAutor}">⚡ ${sStatus} por ${sAutor} (${tempoRelativo(ultimaAcao.data)})</div>`;
+                }
+
                 const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
                 return `<div class="demanda-card ${aguardandoDaniel ? 'aguardando-daniel' : ''}" onclick="window.location.href='ver-demanda.html?id=${demanda.id}'">
@@ -673,6 +677,7 @@
                                 ${sPdp ? `<div class="info" style="color:#f39c12; font-weight:bold;">📋 PDP: ${sPdp}</div>` : ''}
                                 ${sExp || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${sExp || 'Anexado'}</div>` : ''}
                                 ${tempoCard}
+                                ${atualizacaoCard}
                                 <div class="acoes-card">${btnPrincipal}</div>
                             </div>
                         </div>`;
@@ -696,6 +701,12 @@
 
         setInterval(() => {
             document.querySelectorAll('[data-criado]').forEach(el => { el.textContent = '🕐 Aberto ' + tempoRelativo(el.getAttribute('data-criado')); });
+            // Atualiza dinamicamente as strings de alteração sem recarregar
+            document.querySelectorAll('[data-atualizado]').forEach(el => {
+                const status = el.getAttribute('data-status-txt');
+                const autor = el.getAttribute('data-autor-txt');
+                el.textContent = `⚡ ${status} por ${autor} (${tempoRelativo(el.getAttribute('data-atualizado'))})`;
+            });
         }, 30000);
 
        async function carregarDemandas() {
@@ -787,7 +798,6 @@
                 `;
             }).join('');
             
-            // As checkboxes já vêm desmarcadas por causa do HTML acima (não coloquei 'checked')
             atualizarContadorWord();
             document.getElementById('modalWord').classList.add('ativo');
         }
