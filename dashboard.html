@@ -101,7 +101,6 @@
         .modal-desc-box h3 { color: #185199; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
 
-        /* Scrollbar customizada para lista do modal Word */
         #listaDemandasWord::-webkit-scrollbar { width: 6px; }
         #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
@@ -173,7 +172,7 @@
     <div class="modal-overlay" id="modalWord">
         <div class="modal-box" style="max-width: 650px; text-align: left; padding: 20px;">
             <h3 style="text-align:center; color:#185199; margin-bottom: 5px;">📄 Gerar Ofício em Word</h3>
-            <p style="text-align:center; color:#666; font-size:12px; margin-bottom: 20px;">O sistema listará abaixo as demandas do seu filtro atual (excluindo as finalizadas).</p>
+            <p style="text-align:center; color:#666; font-size:12px; margin-bottom: 20px;">O sistema listará abaixo as demandas do seu filtro atual (excluindo as finalizadas e as sem protocolo/expediente).</p>
             
             <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
                 <div>
@@ -186,7 +185,10 @@
                 </div>
             </div>
 
-            <p style="font-size:13px; color:#555; margin-bottom:8px; font-weight: bold;">Selecione as demandas para o ofício:</p>
+            <p style="font-size:13px; color:#555; margin-bottom:8px; font-weight: bold; display: flex; justify-content: space-between;">
+                <span>Selecione as demandas para o ofício:</span>
+                <span id="contadorWordBadge" style="background: #185199; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">0 selecionadas</span>
+            </p>
             
             <!-- Campo de busca dentro do modal Word -->
             <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; margin-bottom:10px; font-size:13px; background:#f8fafc;">
@@ -246,7 +248,7 @@
     <script>
         let db;
         let todasDemandas = [];
-        let listaGlobalFiltrada = []; // Usada para o Modal Word
+        let listaGlobalFiltrada = []; 
         
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         let authToken = localStorage.getItem('authToken'); 
@@ -254,7 +256,6 @@
         if (!usuarioLogado) window.location.href = 'index.html';
         document.getElementById('nomeUsuario').textContent = usuarioLogado; 
 
-        // 🧠 Cérebro que lembra a preferência de cada usuário
         let filtroPadrao = localStorage.getItem('filtro_preferido_' + usuarioLogado);
         if (!filtroPadrao) {
             filtroPadrao = (usuarioLogado === 'Daniel') ? 'Aguardando Aprovação' : 'Pendente';
@@ -262,7 +263,7 @@
         let filtroAtual = filtroPadrao;
         
         let paginaAtual = 1;
-        const itensPorPagina = 6; // <-- Alterado para 6 por página
+        const itensPorPagina = 6; 
         let idParaExcluir = null;
 
         let contadoresNovas = {
@@ -288,7 +289,6 @@
             }, 350); 
         });
 
-// ================= FUNÇÕES DE NOTIFICAÇÃO NATIVA E PUSH =================
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
         }
@@ -428,14 +428,11 @@
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
-        // ================= ORDENAÇÃO INTELIGENTE (DATA MAIS RECENTE DE ATUALIZAÇÃO) =================
         function dataParaOrdenacao(d) {
-            const encerrada = ['Concluída', 'Arquivada', 'Rejeitada'].includes(d.status);
+            const encerrada = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'].includes(d.status);
             if (encerrada) {
-                // Se finalizada, ordena pela data de criação original (fixo no histórico)
                 return new Date(d.criado_em).getTime();
             } else {
-                // Se pendente/andamento, ordena pela última atualização no histórico
                 if (d.historico && d.historico.length > 0) {
                     return new Date(d.historico[d.historico.length-1].data).getTime();
                 }
@@ -462,12 +459,17 @@
             
             if (secretarias.length === 0) { lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhuma secretaria cadastrada.</p>'; return; }
             
-            lista.innerHTML = secretarias.map(s => `
+            lista.innerHTML = secretarias.map(s => {
+                const sNomeSafe = DOMPurify.sanitize(s.nome).replace(/'/g, "\\'");
+                return `
                 <div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:8px 10px; border-radius:4px;">
                     <span style="font-size:13px;">${DOMPurify.sanitize(s.nome)}</span>
-                    <button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button>
+                    <div style="display:flex; gap: 5px;">
+                        <button onclick="editarSecretaria(${s.id}, '${sNomeSafe}')" style="background:#f39c12; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;" title="Editar">✏️</button>
+                        <button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;" title="Excluir">🗑️</button>
+                    </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         window.adicionarSecretaria = async function() {
@@ -478,6 +480,16 @@
                 await db.from('secretarias').insert([{ nome }]);
                 input.value = ''; await renderizarListaSecretarias();
             } catch (e) { alert('Erro ao salvar.'); }
+        }
+
+        window.editarSecretaria = async function(id, nomeAtual) {
+            const novoNome = prompt("Editar nome da secretaria/órgão:", nomeAtual);
+            if (novoNome && novoNome.trim() !== "" && novoNome !== nomeAtual) {
+                try {
+                    await db.from('secretarias').update({ nome: novoNome.trim() }).eq('id', id);
+                    await renderizarListaSecretarias();
+                } catch (e) { alert('Erro ao atualizar.'); }
+            }
         }
 
         window.excluirSecretaria = async function(id, btn) {
@@ -524,7 +536,7 @@
 
             let lista = todasDemandas;
             
-            if (filtroAtual === 'Todas') lista = lista.filter(d => d.status !== 'Arquivada' && d.status !== 'Rejeitada');
+            if (filtroAtual === 'Todas') lista = lista.filter(d => !['Arquivada', 'Rejeitada'].includes(d.status));
             else lista = lista.filter(d => d.status === filtroAtual);
 
             if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
@@ -547,7 +559,6 @@
                 });
             }
 
-            // Armazena no escopo global para o botão do Gerar Word enxergar
             listaGlobalFiltrada = lista;
 
             if (lista.length === 0) {
@@ -563,7 +574,7 @@
                 const fotos = (demanda.fotos_urls || []).filter(f => f);
                 const responsaveis = (demanda.responsaveis || []).filter(r => r);
                 const fotoPrincipal = fotos[0] || null;
-                const encerrada = ['Concluída', 'Arquivada', 'Rejeitada'].includes(demanda.status);
+                const encerrada = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'].includes(demanda.status);
                 const euCuido = responsaveis.includes(usuarioLogado);
                 const aguardandoDaniel = (demanda.status === 'Aguardando Aprovação') && usuarioLogado === 'Daniel';
 
@@ -589,7 +600,6 @@
                     mediaTag = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: #e2e8f0; position:relative; overflow:hidden;"><img src="https://i.imgur.com/coryuD6.png" style="position:absolute; width:120%; height:auto; opacity:0.04; top:50%; left:50%; transform:translate(-50%, -50%);"><span style="font-size:11px; font-weight:bold; color:#64748b; z-index:1; letter-spacing:1px; text-transform:uppercase;">Registro Interno</span></div>`;
                 }
                 
-                // NOVIDADE: Links Rápidos sobre a Foto
                 let quickLinks = '';
                 const isLegisSafe = demanda.link_legis && (demanda.link_legis.startsWith('http://') || demanda.link_legis.startsWith('https://'));
                 if (demanda.pdf_url || isLegisSafe) {
@@ -606,7 +616,7 @@
                 if (demanda.status === 'Aprovada') badgeClass = 'badge-Aprovada';
                 if (demanda.status === '156 Solicitado') badgeClass = 'badge-156';
                 if (demanda.status === 'Expediente (Legis) Gerado') badgeClass = 'badge-Exp';
-                if (demanda.status === 'Concluída') badgeClass = 'badge-Concluida';
+                if (['Concluída', 'Resolvido', 'Atendido'].includes(demanda.status)) badgeClass = 'badge-Concluida';
                 if (demanda.status === 'Arquivada') badgeClass = 'badge-Arquivada';
                 if (demanda.status === 'Aguardando Exec. Secretaria') badgeClass = 'badge-Secretaria';
                 if (demanda.status === 'Rejeitada') badgeClass = 'badge-Rejeitada';
@@ -655,7 +665,7 @@
                                 <div class="info">👥 Cuidando: <b>${cuindoTxt}</b></div>
                                 ${sProt ? `<div class="info" style="color:#0984e3; font-weight:bold;">🔢 156: ${sProt}</div>` : ''}
                                 ${sPdp ? `<div class="info" style="color:#f39c12; font-weight:bold;">📋 PDP: ${sPdp}</div>` : ''}
-                                ${sExp ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${sExp}</div>` : ''}
+                                ${sExp || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${sExp || 'Anexado'}</div>` : ''}
                                 ${tempoCard}
                                 <div class="acoes-card">${btnPrincipal}</div>
                             </div>
@@ -687,7 +697,7 @@
             if (!error) { 
                 todasDemandas = data || []; 
                 ordenarDemandasData();
-                window.filtrar(filtroAtual); // Pinta o botão memorizado e renderiza
+                window.filtrar(filtroAtual);
             }
         }
 
@@ -701,28 +711,43 @@
             });
         }
 
+        window.atualizarContadorWord = function() {
+            const qtd = document.querySelectorAll('.check-word-demanda:checked').length;
+            document.getElementById('contadorWordBadge').textContent = `${qtd} selecionada${qtd !== 1 ? 's' : ''}`;
+        }
+
         window.abrirModalWord = function() {
-            // Filtra as demandas tirando as que já finalizaram o ciclo
-            const demandasParaWord = listaGlobalFiltrada.filter(d => !['Concluída', 'Arquivada', 'Rejeitada'].includes(d.status));
+            const statusExcluidos = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
+            
+            const demandasParaWord = listaGlobalFiltrada.filter(d => {
+                const isEncerrada = statusExcluidos.includes(d.status);
+                const temIdentificador = d.expediente || d.protocolo || d.doc_numero;
+                return !isEncerrada && temIdentificador;
+            });
 
             if (demandasParaWord.length === 0) {
-                return alert("Não há demandas abertas/pendentes no filtro atual para gerar o ofício. Mude os filtros na tela principal.");
+                return alert("Não há demandas válidas (com Expediente, Protocolo ou PDP) no filtro atual para gerar o ofício.");
             }
             
             const container = document.getElementById('listaDemandasWord');
-            document.getElementById('buscaModalWord').value = ''; // Limpa a busca anterior
+            document.getElementById('buscaModalWord').value = ''; 
             
             container.innerHTML = demandasParaWord.map(d => {
                 const exp = DOMPurify.sanitize(d.expediente || 'S/Exp');
                 const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : 'S/PDP');
+                const prot = DOMPurify.sanitize(d.protocolo ? '156: ' + d.protocolo : '');
                 const assunto = DOMPurify.sanitize(d.assunto || '');
                 const statusTag = DOMPurify.sanitize(d.status || '');
                 
+                let idText = `${exp} | ${pdp}`;
+                if (prot && !d.doc_numero) idText = `${exp} | ${prot}`;
+                if (exp === 'S/Exp' && pdp === 'S/PDP' && prot) idText = prot;
+
                 return `
                 <label class="label-word-demanda" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
-                    <input type="checkbox" class="check-word-demanda" value="${d.id}" checked style="margin-top:3px; transform: scale(1.2);">
+                    <input type="checkbox" class="check-word-demanda" value="${d.id}" onchange="atualizarContadorWord()" style="margin-top:3px; transform: scale(1.2);">
                     <div style="font-size:13px; color:#333; line-height: 1.4; width:100%;">
-                        <b style="color: #185199;">${exp} | ${pdp}</b> 
+                        <b style="color: #185199;">${idText}</b> 
                         <span style="float:right; font-size:10px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${statusTag}</span><br>
                         <span style="color:#555;">${assunto}</span>
                     </div>
@@ -730,6 +755,7 @@
                 `;
             }).join('');
             
+            atualizarContadorWord();
             document.getElementById('modalWord').classList.add('ativo');
         }
 
@@ -751,7 +777,6 @@
                 if (d) {
                     const exp = DOMPurify.sanitize(d.expediente || '');
                     const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
-                    // Prioriza a descrição completa, se não tiver usa o assunto
                     const desc = DOMPurify.sanitize(d.descricao || d.assunto || '');
 
                     trsHTML += `
@@ -763,7 +788,6 @@
                 }
             });
 
-            // Estrutura HTML que o MS Word lê perfeitamente como DOC
             const htmlString = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
             <head>
@@ -799,7 +823,6 @@
             </body>
             </html>`;
 
-            // O \ufeff força a codificação UTF-8 para manter os acentos no Windows/Word
             const blob = new Blob(['\ufeff', htmlString], {
                 type: 'application/msword'
             });
@@ -808,9 +831,8 @@
             const link = document.createElement('a');
             link.href = url;
             
-            // Ex: Demandas da SEMOB 18062026.doc
             const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
-            const nomeCurtoSec = secNome.split('-').pop().trim(); // Pega a sigla se tiver
+            const nomeCurtoSec = secNome.split('-').pop().trim();
             link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
             
             document.body.appendChild(link);
@@ -868,7 +890,6 @@
         window.fecharModalDescricao = function() { document.getElementById('modalDescOverlay').classList.remove('ativo'); }
         window.copiarTextoModal = function() { copiarTexto(document.getElementById('modalDescTexto').textContent); }
 
-        // --- PROTEÇÃO DE SESSÃO (TIMEOUT DE 30 MINUTOS) ---
         let sessionTimeout;
         function resetarSessao() {
             clearTimeout(sessionTimeout);
