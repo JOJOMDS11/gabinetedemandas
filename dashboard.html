@@ -6,12 +6,10 @@
     <title>Gabinete Daniel Daudt - Demandas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#185199">
     <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
 
-    <!-- 🔒 DOMPurify (Prevenção contra XSS) -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
     <style>
@@ -87,13 +85,12 @@
         .page-btn { padding: 7px 12px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .page-btn.ativo { background: #185199; color: white; }
 
-        /* Estilos dos Botões Micro */
         .btn-micro { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 11px; font-weight: bold; padding: 4px 8px; height: 26px;}
         .btn-micro:hover { background: #e2e8f0; color: #185199; border-color: #185199; }
 
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; padding: 15px;}
         .modal-overlay.ativo { display: flex; flex-direction: column; }
-        .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #c0392b; text-align: center; }
+        .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #c0392b; text-align: center; max-height: 90vh; overflow-y: auto;}
         .modal-box h3 { color: #333; margin-bottom: 15px; }
         .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-size:16px;}
         .modal-botoes { display: flex; gap: 10px; margin-top: 15px;}
@@ -101,6 +98,10 @@
         .modal-desc-box { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 500px; border-top: 4px solid #185199; display: flex; flex-direction: column; max-height: 85vh; text-align: left; }
         .modal-desc-box h3 { color: #185199; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
+
+        /* Scrollbar customizada para lista do modal Word */
+        #listaDemandasWord::-webkit-scrollbar { width: 6px; }
+        #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -121,6 +122,7 @@
         <div class="header-section">
             <h2 class="text-primary">Painel de Demandas</h2>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-nova" style="background-color: #f39c12; color: white;" onclick="abrirModalWord()">📄 Gerar Ofício (Word)</button>
                 <button class="btn-nova" style="background-color: #3b82f6; color: white;" onclick="window.location.href='relatorios.html'">📊 Relatórios BI</button>
                 <button class="btn-nova" onclick="window.location.href='nova-demanda.html'">+ Nova Demanda</button>
             </div>
@@ -165,7 +167,33 @@
         <div class="paginacao" id="paginacaoContainer"></div>
     </div>
 
-    <!-- Modal Autenticação -->
+    <div class="modal-overlay" id="modalWord">
+        <div class="modal-box" style="max-width: 650px; text-align: left; padding: 20px;">
+            <h3 style="text-align:center; color:#185199; margin-bottom: 5px;">📄 Gerar Ofício em Word</h3>
+            <p style="text-align:center; color:#666; font-size:12px; margin-bottom: 20px;">O sistema listará abaixo as demandas do seu filtro atual.</p>
+            
+            <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
+                <div>
+                    <label style="font-size:12px; font-weight:bold; color:#555;">Secretaria Destino:</label>
+                    <input type="text" id="wordSecretaria" placeholder="Ex: Secretaria Municipal de Mobilidade e Obras - SEMOB" style="text-align: left; font-size: 14px;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:bold; color:#555;">Nome do Secretário(a):</label>
+                    <input type="text" id="wordSecretario" placeholder="Ex: Rogel da Silva Corrêa" value="Rogel da Silva Corrêa" style="text-align: left; font-size: 14px;">
+                </div>
+            </div>
+
+            <p style="font-size:13px; color:#555; margin-bottom:8px; font-weight: bold;">Selecione as demandas para o ofício:</p>
+            <div id="listaDemandasWord" class="modal-desc-content" style="max-height: 250px; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px;">
+                </div>
+
+            <div class="modal-botoes" style="margin-top: 20px;">
+                <button style="background:#e0e0e0; color:#333; flex:0.4; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalWord()">Cancelar</button>
+                <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="gerarEBaixarWord()">⬇️ Baixar Arquivo Word</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="modalSenhaSegura">
         <div class="modal-box">
             <h3>🔐 Exclusão de Registro</h3>
@@ -179,7 +207,6 @@
         </div>
     </div>
 
-    <!-- Modal Secretarias -->
     <div class="modal-overlay" id="modalSecretarias">
         <div class="modal-box" style="max-width: 420px; text-align: left;">
             <h3 style="text-align:center;">⚙️ Gerenciar Secretarias</h3>
@@ -197,7 +224,6 @@
         </div>
     </div>
 
-    <!-- Modal Descrição -->
     <div class="modal-overlay" id="modalDescOverlay">
         <div class="modal-desc-box">
             <h3>Detalhes da Demanda <button type="button" onclick="fecharModalDescricao()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#c0392b;" title="Fechar">✕</button></h3>
@@ -207,18 +233,19 @@
     </div>
 
     <script>
-       let db;
+        let db;
         let todasDemandas = [];
+        let listaGlobalFiltrada = []; // Usada para o Modal Word
+        
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         let authToken = localStorage.getItem('authToken'); 
         
         if (!usuarioLogado) window.location.href = 'index.html';
         document.getElementById('nomeUsuario').textContent = usuarioLogado; 
 
-        // 🧠 NOVO: Cérebro que lembra a preferência de cada usuário!
+        // 🧠 Cérebro que lembra a preferência de cada usuário
         let filtroPadrao = localStorage.getItem('filtro_preferido_' + usuarioLogado);
         if (!filtroPadrao) {
-            // Se for o primeiro acesso, o Daniel cai na aprovação, a equipe cai nos pendentes
             filtroPadrao = (usuarioLogado === 'Daniel') ? 'Aguardando Aprovação' : 'Pendente';
         }
         let filtroAtual = filtroPadrao;
@@ -334,7 +361,7 @@
                                     const solicitante = payload.new.solicitante_nome ? ` (De: ${payload.new.solicitante_nome})` : '';
                                     const corpoNotificacao = `Aberto por: ${quemAbriu}${solicitante}\nAssunto: ${assuntoCurto}`;
                                     
-                                    const linkDemanda = `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${payload.new.id}`;
+                                    const linkDemanda = `${window.location.origin}/ver-demanda.html?id=${payload.new.id}`;
 
                                     db.functions.invoke('send-push', {
                                         body: {
@@ -359,7 +386,7 @@
                                     interessados = [...new Set(interessados)];
 
                                     if (interessados.length > 0) {
-                                        const linkDemanda = `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${payload.new.id}`;
+                                        const linkDemanda = `${window.location.origin}/ver-demanda.html?id=${payload.new.id}`;
                                         db.functions.invoke('send-push', {
                                             body: {
                                                 payload: {
@@ -376,8 +403,10 @@
                             else if (payload.eventType === 'DELETE') {
                                 todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id);
                             }
-                            todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
-                            atualizarContadores(); renderDemandas();
+                            
+                            ordenarDemandasData();
+                            atualizarContadores(); 
+                            renderDemandas();
                         }
                     ).subscribe();
 
@@ -387,6 +416,25 @@
         }
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
+
+        // ================= ORDENAÇÃO INTELIGENTE (DATA MAIS RECENTE DE ATUALIZAÇÃO) =================
+        function dataParaOrdenacao(d) {
+            const encerrada = ['Concluída', 'Arquivada', 'Rejeitada'].includes(d.status);
+            if (encerrada) {
+                // Se finalizada, ordena pela data de criação original (fixo no histórico)
+                return new Date(d.criado_em).getTime();
+            } else {
+                // Se pendente/andamento, ordena pela última atualização no histórico
+                if (d.historico && d.historico.length > 0) {
+                    return new Date(d.historico[d.historico.length-1].data).getTime();
+                }
+                return new Date(d.criado_em).getTime();
+            }
+        }
+
+        function ordenarDemandasData() {
+            todasDemandas.sort((a, b) => dataParaOrdenacao(b) - dataParaOrdenacao(a));
+        }
 
         window.abrirGerenciadorSecretarias = async function() {
             document.getElementById('modalSecretarias').classList.add('ativo');
@@ -431,13 +479,11 @@
             filtroAtual = status; 
             paginaAtual = 1;
             
-            // Salva a escolha da pessoa para o dia seguinte
             localStorage.setItem('filtro_preferido_' + usuarioLogado, status);
             
             if (contadoresNovas[status] !== undefined) contadoresNovas[status] = 0;
             if (status === 'Aguardando Exec. Secretaria') contadoresNovas['Aguardando Exec. Secretaria'] = 0;
             
-            // Pinta o botão certo
             document.querySelectorAll('.filtro-btn').forEach(btn => { 
                 btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); 
             });
@@ -489,6 +535,9 @@
                     return (d.assunto || '').toLowerCase().includes(termoBusca) || (d.rua || '').toLowerCase().includes(termoBusca) || (d.bairro || '').toLowerCase().includes(termoBusca) || (d.numero_demanda || '').toLowerCase().includes(termoBusca) || (d.protocolo || '').toLowerCase().includes(termoBusca) || (d.secretaria || '').toLowerCase().includes(termoBusca) || (d.solicitante_nome || '').toLowerCase().includes(termoBusca) || (d.responsavel_ordem || '').toLowerCase().includes(termoBusca) || (dFormat).includes(termoBusca);
                 });
             }
+
+            // Armazena no escopo global para o botão do Gerar Word enxergar
+            listaGlobalFiltrada = lista;
 
             if (lista.length === 0) {
                 container.innerHTML = '<p style="color:#777;grid-column:1/-1;text-align:center;padding:30px;">Nenhuma demanda encontrada com estes filtros.</p>';
@@ -595,7 +644,7 @@
                                 <div class="info">👥 Cuidando: <b>${cuindoTxt}</b></div>
                                 ${sProt ? `<div class="info" style="color:#0984e3; font-weight:bold;">🔢 156: ${sProt}</div>` : ''}
                                 ${sPdp ? `<div class="info" style="color:#f39c12; font-weight:bold;">📋 PDP: ${sPdp}</div>` : ''}
-                                ${sExp ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${sExp}</div>` : ''}
+                                ${sExp || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${sExp || 'Anexado'}</div>` : ''}
                                 ${tempoCard}
                                 <div class="acoes-card">${btnPrincipal}</div>
                             </div>
@@ -623,11 +672,129 @@
         }, 30000);
 
        async function carregarDemandas() {
-            const { data, error } = await db.from('demandas').select('*').order('criado_em', { ascending: false });
+            const { data, error } = await db.from('demandas').select('*');
             if (!error) { 
                 todasDemandas = data || []; 
+                ordenarDemandasData();
                 window.filtrar(filtroAtual); // Pinta o botão memorizado e renderiza
             }
+        }
+
+        // ================= FUNÇÕES DE GERAÇÃO DO WORD =================
+        window.abrirModalWord = function() {
+            if (listaGlobalFiltrada.length === 0) {
+                return alert("Não há demandas no filtro atual para gerar o ofício. Mude os filtros na tela principal.");
+            }
+
+            // Preenche o campo Secretaria com o filtro atual se houver
+            const filtroSec = document.getElementById('buscaGeral').value; // opcional: puxar do filtro
+            
+            const container = document.getElementById('listaDemandasWord');
+            container.innerHTML = listaGlobalFiltrada.map(d => {
+                const exp = DOMPurify.sanitize(d.expediente || 'S/Exp');
+                const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : 'S/PDP');
+                const assunto = DOMPurify.sanitize(d.assunto || '');
+                
+                return `
+                <label style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
+                    <input type="checkbox" class="check-word-demanda" value="${d.id}" checked style="margin-top:3px; transform: scale(1.2);">
+                    <div style="font-size:13px; color:#333; line-height: 1.4;">
+                        <b style="color: #185199;">${exp} | ${pdp}</b><br>
+                        <span style="color:#555;">${assunto}</span>
+                    </div>
+                </label>
+                `;
+            }).join('');
+            
+            document.getElementById('modalWord').classList.add('ativo');
+        }
+
+        window.fecharModalWord = function() {
+            document.getElementById('modalWord').classList.remove('ativo');
+        }
+
+        window.gerarEBaixarWord = function() {
+            const checkboxes = document.querySelectorAll('.check-word-demanda:checked');
+            if (checkboxes.length === 0) return alert("Selecione pelo menos uma demanda!");
+
+            const secNome = document.getElementById('wordSecretaria').value.trim() || 'Secretaria Destino';
+            const secResp = document.getElementById('wordSecretario').value.trim() || 'Secretário(a)';
+            const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            let trsHTML = '';
+            checkboxes.forEach(chk => {
+                const d = listaGlobalFiltrada.find(x => x.id === chk.value);
+                if (d) {
+                    const exp = DOMPurify.sanitize(d.expediente || '');
+                    const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
+                    // Prioriza a descrição completa, se não tiver usa o assunto
+                    const desc = DOMPurify.sanitize(d.descricao || d.assunto || '');
+
+                    trsHTML += `
+                    <tr>
+                        <td style="text-align: center; border: 1px solid black; padding: 5px;">${exp}</td>
+                        <td style="text-align: center; border: 1px solid black; padding: 5px;">${pdp}</td>
+                        <td style="text-align: justify; border: 1px solid black; padding: 5px;">${desc}</td>
+                    </tr>`;
+                }
+            });
+
+            // Estrutura HTML que o MS Word lê perfeitamente como DOC
+            const htmlString = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+                <meta charset='utf-8'>
+                <title>Ofício Demandas</title>
+            </head>
+            <body>
+                <div style="font-family: Arial, sans-serif; font-size: 11pt;">
+                    <br><br>
+                    <table style="width: 100%; border: none; margin-bottom: 20px;">
+                        <tr>
+                            <td style="text-align: left; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">Pedidos de providências</td>
+                            <td style="text-align: right; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">São Leopoldo, ${dataHoje}</td>
+                        </tr>
+                    </table>
+                    <p style="font-weight: bold; margin: 0; font-family: Arial, sans-serif;">Gabinete Vereador Daniel Daudt Schaefer</p>
+                    <p style="margin: 0; font-family: Arial, sans-serif;">Obs.: Demandas da ${DOMPurify.sanitize(secNome)}</p>
+                    <p style="margin: 0; font-family: Arial, sans-serif;">SECRETÁRIO ${DOMPurify.sanitize(secResp)}.</p>
+                    <br><br>
+                    <table border="1" cellspacing="0" cellpadding="5" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt;">
+                        <tr style="background-color: #bfbfbf; font-weight: bold; text-align: center;">
+                            <td width="15%" style="border: 1px solid black; padding: 5px;">EXPEDIENTE</td>
+                            <td width="25%" style="border: 1px solid black; padding: 5px;">PEDIDO DE PROVIDÊNCIAS</td>
+                            <td width="60%" style="border: 1px solid black; padding: 5px;">ASSUNTO/DEMANDA</td>
+                        </tr>
+                        ${trsHTML}
+                    </table>
+                    <br><br><br>
+                    <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">______________________________</p>
+                    <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Luana Costa Dias</p>
+                    <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Chefe de Gabinete</p>
+                </div>
+            </body>
+            </html>`;
+
+            // O \ufeff força a codificação UTF-8 para manter os acentos no Windows/Word
+            const blob = new Blob(['\ufeff', htmlString], {
+                type: 'application/msword'
+            });
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // Ex: Demandas da SEMOB 18062026.doc
+            const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
+            const nomeCurtoSec = secNome.split('-').pop().trim(); // Pega a sigla se tiver
+            link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            fecharModalWord();
         }
 
         window.assumirDemanda = async function(id, btnElement) {
