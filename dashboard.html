@@ -186,16 +186,15 @@
                 </div>
             </div>
 
-            <p style="font-size:13px; color:#555; margin-bottom:8px; font-weight: bold; display: flex; justify-content: space-between;">
+            <p style="font-size:13px; color:#555; margin-bottom:8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
                 <span>Selecione as demandas para o ofício:</span>
-                <span id="contadorWordBadge" style="background: #185199; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">0 selecionadas</span>
+                <span id="contadorWordBadge" onclick="toggleMarcarTodasWord()" style="background: #185199; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s;" title="Clique para Marcar/Desmarcar todas">0 selecionadas</span>
             </p>
             
-            <!-- Campo de busca e filtro de status dentro do modal Word -->
             <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
                 <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="flex:1; min-width:200px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
                 <select id="filtroStatusWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; min-width: 150px;">
-                    <!-- Preenchido via JS (Fixo para mostrar todas as opções independentemente do filtro principal) -->
+                    <!-- Preenchido via JS -->
                 </select>
             </div>
 
@@ -205,7 +204,7 @@
 
             <div class="modal-botoes" style="margin-top: 20px;">
                 <button style="background:#e0e0e0; color:#333; flex:0.4; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalWord()">Cancelar</button>
-                <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="generarEBaixarWord()">⬇️ Baixar Arquivo Word</button>
+                <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="gerarEBaixarWord()">⬇️ Baixar Arquivo Word</button>
             </div>
         </div>
     </div>
@@ -247,7 +246,7 @@
         <div class="modal-desc-box">
             <h3>Detalhes da Demanda <button type="button" onclick="fecharModalDescricao()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#c0392b;" title="Fechar">✕</button></h3>
             <div class="modal-desc-content" id="modalDescTexto"></div>
-            <button class="btn-acao azul" style="padding:12px; font-size:14px;" onclick="copyTextoModal()">📋 Copiar Texto Completo</button>
+            <button class="btn-acao azul" style="padding:12px; font-size:14px;" onclick="copiarTextoModal()">📋 Copiar Texto Completo</button>
         </div>
     </div>
 
@@ -436,7 +435,6 @@
 
         // ================= ORDENAÇÃO POR DATA DE CRIAÇÃO FIXA =================
         function dataParaOrdenacao(d) {
-            // Retorna estritamente a data de criação original para novas ficarem sempre no topo
             return new Date(d.criado_em).getTime();
         }
 
@@ -516,7 +514,7 @@
         }
         
         function atualizarContadores() {
-            const mapId = { 'Aguardando Approvação': 'count-Aguardando Aprovação', 'Pendente': 'count-Pendente', 'Aprovada': 'count-Aprovada', 'Em Andamento': 'count-Em Andamento', 'Aguardando Exec. Secretaria': 'count-Sec', '156 Solicitado': 'count-156 Solicitado' };
+            const mapId = { 'Aguardando Aprovação': 'count-Aguardando Aprovação', 'Pendente': 'count-Pendente', 'Aprovada': 'count-Aprovada', 'Em Andamento': 'count-Em Andamento', 'Aguardando Exec. Secretaria': 'count-Sec', '156 Solicitado': 'count-156 Solicitado' };
             for (const [status, badgeId] of Object.entries(mapId)) {
                 const badge = document.getElementById(badgeId);
                 if (badge) {
@@ -539,7 +537,7 @@
             if (filtroAtual === 'Todas') lista = lista.filter(d => !['Arquivada', 'Rejeitada'].includes(d.status));
             else lista = lista.filter(d => d.status === filtroAtual);
 
-            if (catSelecionada === 'Agendas') list = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
+            if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
 
@@ -641,7 +639,6 @@
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${DOMPurify.sanitize(demanda.numero_demanda)}</div>` : '';
                 const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 Aberto ${tempoRelativo(demanda.criado_em)}</div>` : '';
                 
-                // NOVIDADE: Visualização da última atualização em tempo real (Estilo Linha do Tempo)
                 let atualizacaoCard = '';
                 if (demanda.historico && demanda.historico.length > 0) {
                     const ultimaAcao = demanda.historico[demanda.historico.length - 1];
@@ -701,7 +698,6 @@
 
         setInterval(() => {
             document.querySelectorAll('[data-criado]').forEach(el => { el.textContent = '🕐 Aberto ' + tempoRelativo(el.getAttribute('data-criado')); });
-            // Atualiza dinamicamente as strings de alteração sem recarregar
             document.querySelectorAll('[data-atualizado]').forEach(el => {
                 const status = el.getAttribute('data-status-txt');
                 const autor = el.getAttribute('data-autor-txt');
@@ -739,9 +735,23 @@
             });
         }
 
+        let wordTodasMarcadas = false;
+        
+        window.toggleMarcarTodasWord = function() {
+            const checkboxes = document.querySelectorAll('.check-word-demanda');
+            const visiveis = Array.from(checkboxes).filter(chk => chk.closest('.label-word-demanda').style.display !== 'none');
+            
+            wordTodasMarcadas = !wordTodasMarcadas;
+            visiveis.forEach(chk => chk.checked = wordTodasMarcadas);
+            atualizarContadorWord();
+        }
+
         window.atualizarContadorWord = function() {
             const qtd = document.querySelectorAll('.check-word-demanda:checked').length;
-            document.getElementById('contadorWordBadge').textContent = `${qtd} selecionada${qtd !== 1 ? 's' : ''}`;
+            const badge = document.getElementById('contadorWordBadge');
+            badge.textContent = `${qtd} selecionada${qtd !== 1 ? 's' : ''} (Clique para Inverter)`;
+            if(qtd > 0) { badge.style.background = '#27ae60'; wordTodasMarcadas = true; }
+            else { badge.style.background = '#185199'; wordTodasMarcadas = false; }
         }
 
         window.abrirModalWord = function() {
@@ -798,6 +808,7 @@
                 `;
             }).join('');
             
+            wordTodasMarcadas = false;
             atualizarContadorWord();
             document.getElementById('modalWord').classList.add('ativo');
         }
