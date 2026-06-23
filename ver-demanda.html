@@ -471,11 +471,13 @@
             const euEstouCuidando = responsaveis.includes(usuarioLogado);
             const encerrada = ['Concluída', 'Arquivada', 'Rejeitada'].includes(d.status);
             const isAtualBloqueado = tiposProjetos.includes(d.tipo_solicitacao);
-// NOVA BLINDAGEM DO LINK LEGIS
+
+            // NOVA BLINDAGEM DO LINK LEGIS
             let linkLegisSeguro = '';
             if (d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'))) {
                 linkLegisSeguro = `<a href="${DOMPurify.sanitize(d.link_legis)}" target="_blank" class="btn-link" style="background:#f39c12; color:white; border-color:#e67e22;">🔗 Ver Legis Anexado</a>`;
             }
+
             let badgeClass = 'badge-Pendente';
             if (d.status === 'Em Andamento') badgeClass = 'badge-Andamento';
             if (d.status === 'Aguardando Aprovação') badgeClass = 'badge-Aguardando';
@@ -673,6 +675,11 @@
                             <div class="form-group"><label>Corrigir Nome (Solicitante)</label><input type="text" id="editNomeSol" value="${sSolic}" ${bloqueado}></div>
                             <div class="form-group"><label>Corrigir Telefone</label><input type="text" id="editTelSol" value="${sTel}" ${bloqueado}></div>
                         </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Corrigir Logradouro (Rua)</label><input type="text" id="editRua" value="${sRua}" ${bloqueado}></div>
+                            <div class="form-group"><label>Corrigir Número</label><input type="text" id="editNumero" value="${sNum}" ${bloqueado}></div>
+                        </div>
+                        <div class="form-group"><label>Corrigir Bairro</label><input type="text" id="editBairro" value="${sBairro}" ${bloqueado}></div>
                     </div>
 
                     <div class="bloco-edicao" style="margin-top: 20px;">
@@ -887,6 +894,10 @@
             const telSol = document.getElementById('editTelSol') ? document.getElementById('editTelSol').value.trim() : demandaAtual.solicitante_tel;
             const responsavel_ordem = document.getElementById('editResponsavelOrdem') ? document.getElementById('editResponsavelOrdem').value : demandaAtual.responsavel_ordem;
 
+            const rua = document.getElementById('editRua') ? document.getElementById('editRua').value.trim() : (demandaAtual.rua || '');
+            const numero = document.getElementById('editNumero') ? document.getElementById('editNumero').value.trim() : (demandaAtual.numero || '');
+            const bairro = document.getElementById('editBairro') ? document.getElementById('editBairro').value.trim() : (demandaAtual.bairro || '');
+
             const isAtualBloqueado = tiposProjetos.includes(tipo_solicitacao || demandaAtual.tipo_solicitacao);
             const estaAguardando = (demandaAtual.status === 'Aguardando Aprovação' || demandaAtual.status === 'Pendente');
             
@@ -900,7 +911,8 @@
                 status: statusEdit, doc_tipo: doc_tipo, doc_numero: doc_numero, protocolo: protocolo, expediente: expediente, link_legis: linkLegis,
                 observacoes_internas: observacoes_internas,
                 data_agendada: data_agendada, horario_agendado: horario_agendado, secretaria: secretaria, providencias: providencias,
-                tipo_solicitacao: tipo_solicitacao, assunto: assunto, descricao: descricao, solicitante_nome: nomeSol, solicitante_tel: telSol, responsavel_ordem: responsavel_ordem
+                tipo_solicitacao: tipo_solicitacao, assunto: assunto, descricao: descricao, solicitante_nome: nomeSol, solicitante_tel: telSol, responsavel_ordem: responsavel_ordem,
+                rua: rua, numero: numero, bairro: bairro
             };
             
             const hist = demandaAtual.historico || [];
@@ -912,6 +924,9 @@
             if (secretaria !== demandaAtual.secretaria) alterados.push('Secretaria');
             if (providencias !== demandaAtual.providencias) alterados.push('Providências');
             if (doc_numero !== demandaAtual.doc_numero) alterados.push('Doc. Interno');
+            if (rua !== (demandaAtual.rua || '')) alterados.push('Endereço/Rua');
+            if (numero !== (demandaAtual.numero || '')) alterados.push('Número');
+            if (bairro !== (demandaAtual.bairro || '')) alterados.push('Bairro');
 
             if (alterados.length > 0) {
                 hist.push({ status: 'Edição', autor: usuarioLogado, data: new Date().toISOString(), detalhes: alterados.join(', ') });
