@@ -435,6 +435,7 @@
 
         // ================= ORDENAÇÃO POR DATA DE CRIAÇÃO FIXA =================
         function dataParaOrdenacao(d) {
+            // Retorna estritamente a data de criação original para novas ficarem sempre no topo[span_6](start_span)[span_6](end_span)
             return new Date(d.criado_em).getTime();
         }
 
@@ -537,6 +538,7 @@
             if (filtroAtual === 'Todas') lista = lista.filter(d => !['Arquivada', 'Rejeitada'].includes(d.status));
             else lista = lista.filter(d => d.status === filtroAtual);
 
+            // CORREÇÃO: Variável ajustada de 'list' para 'lista' para evitar quebra do filtro[span_7](start_span)[span_7](end_span)
             if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
@@ -639,6 +641,7 @@
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${DOMPurify.sanitize(demanda.numero_demanda)}</div>` : '';
                 const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 Aberto ${tempoRelativo(demanda.criado_em)}</div>` : '';
                 
+                // NOVIDADE COMPLETA: Inclusão blindada do bloco de Última Atualização (Estilo Linha do Tempo)[span_8](start_span)[span_8](end_span)
                 let atualizacaoCard = '';
                 if (demanda.historico && demanda.historico.length > 0) {
                     const ultimaAcao = demanda.historico[demanda.historico.length - 1];
