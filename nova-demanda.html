@@ -277,6 +277,9 @@
         </div>
     </div>
 
+    <!-- Script de sanitização embutido pra garantir -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+
     <script>
         let db, cloudName, uploadPreset;
         let usuarioLogado = localStorage.getItem('usuarioLogado');
@@ -306,7 +309,7 @@
             } catch (e) { }
 
             select.innerHTML = '<option value="">Selecione a secretaria competente...</option>' +
-                lista.map(s => `<option value="${s}">${s}</option>`).join('') +
+                lista.map(s => `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`).join('') +
                 '<option value="__outra__">Outra (Especificar manualmente)</option>';
         }
 
@@ -629,6 +632,14 @@
                 assuntoInteligente = assuntoInteligente.replace(/[,.-]+$/, '').trim();
                 if (assuntoInteligente.length > 70) assuntoInteligente = assuntoInteligente.substring(0, 70).trim() + '...';
                 parsed.assunto = assuntoInteligente || 'Demanda sem título';
+            }
+
+            // --- NOVA REGRA INTELIGENTE DO FUNIL (UPGRADE DE STATUS) ---
+            // Se a demanda tem Expediente ou 156, ela já saiu do Gabinete e está na Sec!
+            if (!parsed.status || ['Pendente', 'Aguardando Aprovação', 'Aberta', 'Aguardando'].includes(parsed.status)) {
+                if (parsed.expediente || parsed.protocolo) {
+                    parsed.status = 'Aguardando Exec. Secretaria';
+                }
             }
 
             // Popula os campos do formulário
