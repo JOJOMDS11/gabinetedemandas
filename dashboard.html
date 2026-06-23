@@ -131,7 +131,7 @@
         </div>
 
         <div class="filtros-avancados">
-            <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº, data...">
+            <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, 156, expediente, local...">
             
             <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()">
                 <option value="">📁 Filtro: Todas Categorias</option>
@@ -433,9 +433,7 @@
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
-        // ================= ORDENAÇÃO POR DATA DE CRIAÇÃO FIXA =================
         function dataParaOrdenacao(d) {
-            // Retorna estritamente a data de criação original para novas ficarem sempre no topo[span_6](start_span)[span_6](end_span)
             return new Date(d.criado_em).getTime();
         }
 
@@ -538,7 +536,6 @@
             if (filtroAtual === 'Todas') lista = lista.filter(d => !['Arquivada', 'Rejeitada'].includes(d.status));
             else lista = lista.filter(d => d.status === filtroAtual);
 
-            // CORREÇÃO: Variável ajustada de 'list' para 'lista' para evitar quebra do filtro[span_7](start_span)[span_7](end_span)
             if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
             if (catSelecionada === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
@@ -552,10 +549,19 @@
                 });
             }
 
+            // NOVA SUPER BUSCA INTELIGENTE APLICADA AQUI
             if (termoBusca) {
+                const termos = termoBusca.split(' ').filter(t => t.trim() !== '');
                 lista = lista.filter(d => {
                     let dFormat = ''; if(d.data_agendada) dFormat = new Date(d.data_agendada + 'T00:00:00').toLocaleDateString('pt-BR');
-                    return (d.assunto || '').toLowerCase().includes(termoBusca) || (d.rua || '').toLowerCase().includes(termoBusca) || (d.bairro || '').toLowerCase().includes(termoBusca) || (d.numero_demanda || '').toLowerCase().includes(termoBusca) || (d.protocolo || '').toLowerCase().includes(termoBusca) || (d.secretaria || '').toLowerCase().includes(termoBusca) || (d.solicitante_nome || '').toLowerCase().includes(termoBusca) || (d.responsavel_ordem || '').toLowerCase().includes(termoBusca) || (dFormat).includes(termoBusca);
+                    
+                    const textoDemanda = [
+                        d.assunto, d.rua, d.numero, d.bairro, d.numero_demanda, 
+                        d.protocolo, d.expediente, d.doc_tipo, d.doc_numero, 
+                        d.secretaria, d.solicitante_nome, d.responsavel_ordem, dFormat
+                    ].join(' ').toLowerCase();
+                    
+                    return termos.every(t => textoDemanda.includes(t));
                 });
             }
 
@@ -641,7 +647,6 @@
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${DOMPurify.sanitize(demanda.numero_demanda)}</div>` : '';
                 const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 Aberto ${tempoRelativo(demanda.criado_em)}</div>` : '';
                 
-                // NOVIDADE COMPLETA: Inclusão blindada do bloco de Última Atualização (Estilo Linha do Tempo)[span_8](start_span)[span_8](end_span)
                 let atualizacaoCard = '';
                 if (demanda.historico && demanda.historico.length > 0) {
                     const ultimaAcao = demanda.historico[demanda.historico.length - 1];
