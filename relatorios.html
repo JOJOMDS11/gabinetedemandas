@@ -51,11 +51,11 @@
         .kpi-card.ativo { background: #f0f9ff; border-left-color: #3b82f6; }
         
         .kpi-card.total { border-left-color: #3b82f6; }
-        .kpi-card.abertas { border-left-color: #f59e0b; }
-        .kpi-card.concluidas { border-left-color: #10b981; }
-        .kpi-card.atrasadas { border-left-color: #ef4444; }
         .kpi-card.taxa { border-left-color: #8b5cf6; }
+        .kpi-card.abertas { border-left-color: #ef4444; }
+        .kpi-card.atrasadas { border-left-color: #dc2626; }
         .kpi-card.espera { border-left-color: #64748b; }
+        .kpi-card.concluidas { border-left-color: #10b981; }
 
         .kpi-titulo { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
         .kpi-valor { font-size: 28px; font-weight: 800; margin-top: 8px; color: #0f172a; line-height: 1; }
@@ -143,12 +143,26 @@
                 <select id="filtroSec" onchange="aplicarFiltros()"><option value="todas">Todas as Secretarias</option></select>
             </div>
             <div class="filtro-item">
-                <label>🚦 Status Atual</label>
+                <label>🚦 Status / Ciclo Atual</label>
                 <select id="filtroStatus" onchange="aplicarFiltros()">
                     <option value="todos">Todos os Status</option>
-                    <option value="abertas_pendentes">Pendentes / Aprovação</option>
-                    <option value="em_execucao">Andamento / Solicitados / Secretaria</option>
-                    <option value="concluidas">Concluídas / Arquivadas / Rejeitadas</option>
+                    <optgroup label="Super-Blocos de Controle">
+                        <option value="abertas_pendentes">📥 Pendentes / Aprovação</option>
+                        <option value="em_execucao">🏃 Em Execução / Andamento / Secretaria</option>
+                        <option value="concluidas">🏁 Finalizadas / Concluídas</option>
+                    </optgroup>
+                    <optgroup label="Status Específicos do Funil">
+                        <option value="Pendente">📥 Pendente</option>
+                        <option value="Aguardando Aprovação">⏳ Aguardando Aprovação</option>
+                        <option value="Aprovada">✅ Aprovada</option>
+                        <option value="Em Andamento">🏃 Em Andamento</option>
+                        <option value="156 Solicitado">🔢 156 Solicitado</option>
+                        <option value="Expediente (Legis) Gerado">📄 Expediente (Legis) Gerado</option>
+                        <option value="Aguardando Exec. Secretaria">🏢 Aguardando Exec. Secretaria</option>
+                        <option value="Concluída">🏁 Concluída</option>
+                        <option value="Rejeitada">❌ Rejeitada</option>
+                        <option value="Arquivada">📦 Arquivada</option>
+                    </optgroup>
                 </select>
             </div>
             <button class="btn-reset" onclick="resetarFiltros()">↻ Limpar</button>
@@ -241,9 +255,9 @@
 
         let chartStatus, chartCat, chartTendencia;
 
-        // Novo Funil de Status
+        // Novo Funil Inteligente de 10 passos mapeado perfeitamente[span_2](start_span)[span_2](end_span)
         const arrayAbertas = ['Pendente', 'Aguardando Aprovação'];
-        const arrayConcluidas = ['Concluída', 'Arquivada', 'Rejeitada'];
+        const arrayConcluidas = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
         const paletaCores = ['#1a365d', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#ef4444', '#64748b', '#d946ef'];
 
         const secretariasOficiais = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
@@ -328,9 +342,12 @@
                 if (vMes !== 'todos') passaMes = d.criado_em && d.criado_em.startsWith(vMes);
                 if (vSec !== 'todas') passaSec = d.secretaria && d.secretaria.trim() === vSec;
                 
-                if (vStat === 'abertas_pendentes') passaStat = arrayAbertas.includes(d.status);
+                // Validação Inteligente dos Filtros e Buckets
+                if (vStat === 'todos') passaStat = true;
+                else if (vStat === 'abertas_pendentes') passaStat = arrayAbertas.includes(d.status);
                 else if (vStat === 'concluidas') passaStat = arrayConcluidas.includes(d.status);
                 else if (vStat === 'em_execucao') passaStat = !arrayAbertas.includes(d.status) && !arrayConcluidas.includes(d.status);
+                else passaStat = d.status === vStat;
 
                 return passaBusca && passaMes && passaSec && passaStat;
             });
@@ -646,6 +663,7 @@
             renderListaHTML('listaBairros', objBairros, 'bairro');
         }
 
+        // NOVIDADE: Ferramenta Nativa de Backup estruturado de arquivos e dados para Auditoria
         window.exportarExcel = function() {
             if (demandasFiltradas.length === 0) return alert("Nenhum dado para exportar.");
             
@@ -663,7 +681,9 @@
                 'Bairro': d.bairro || '',
                 'Protocolo 156': d.protocolo || '',
                 'Expediente Legis': d.expediente || '',
-                'Doc Interno': d.doc_numero ? `${d.doc_tipo || 'Doc'} ${d.doc_numero}` : ''
+                'Doc Interno': d.doc_numero ? `${d.doc_tipo || 'Doc'} ${d.doc_numero}` : '',
+                'Link do PDF (Anexo)': d.pdf_url || 'Sem PDF',
+                'Links de Fotos (Anexos)': Array.isArray(d.fotos_urls) ? d.fotos_urls.join(' | ') : ''
             }));
 
             const ws = XLSX.utils.json_to_sheet(dadosLimpos);
