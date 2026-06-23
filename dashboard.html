@@ -101,6 +101,7 @@
         .modal-desc-box h3 { color: #185199; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
 
+        /* Scrollbar customizada para lista do modal Word */
         #listaDemandasWord::-webkit-scrollbar { width: 6px; }
         #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
@@ -190,8 +191,13 @@
                 <span id="contadorWordBadge" style="background: #185199; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">0 selecionadas</span>
             </p>
             
-            <!-- Campo de busca dentro do modal Word -->
-            <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; margin-bottom:10px; font-size:13px; background:#f8fafc;">
+            <!-- Campo de busca e filtro de status dentro do modal Word -->
+            <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+                <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="flex:1; min-width:200px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
+                <select id="filtroStatusWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; min-width: 150px;">
+                    <option value="">Todos os Status</option>
+                </select>
+            </div>
 
             <div id="listaDemandasWord" class="modal-desc-content" style="max-height: 250px; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px;">
                 <!-- Preenchido via JS -->
@@ -704,10 +710,21 @@
         // ================= FUNÇÕES DE GERAÇÃO DO WORD =================
         window.filtrarListaWord = function() {
             const termo = document.getElementById('buscaModalWord').value.toLowerCase();
+            const statusFiltro = document.getElementById('filtroStatusWord').value;
             const labels = document.querySelectorAll('.label-word-demanda');
+            
             labels.forEach(lbl => {
                 const texto = lbl.innerText.toLowerCase();
-                lbl.style.display = texto.includes(termo) ? 'flex' : 'none';
+                const statusDaLabel = lbl.getAttribute('data-status');
+                
+                const matchTermo = texto.includes(termo);
+                const matchStatus = statusFiltro === "" || statusDaLabel === statusFiltro;
+                
+                if (matchTermo && matchStatus) {
+                    lbl.style.display = 'flex';
+                } else {
+                    lbl.style.display = 'none';
+                }
             });
         }
 
@@ -729,8 +746,15 @@
                 return alert("Não há demandas válidas (com Expediente, Protocolo ou PDP) no filtro atual para gerar o ofício.");
             }
             
+            // Popula os status dinamicamente em ordem alfabética para o filtro do Word
+            const statusUnicos = [...new Set(demandasParaWord.map(d => d.status))].sort((a, b) => a.localeCompare(b));
+            const selectStatusWord = document.getElementById('filtroStatusWord');
+            selectStatusWord.innerHTML = '<option value="">Todos os Status</option>' + 
+                statusUnicos.map(s => `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`).join('');
+
             const container = document.getElementById('listaDemandasWord');
             document.getElementById('buscaModalWord').value = ''; 
+            selectStatusWord.value = ''; 
             
             container.innerHTML = demandasParaWord.map(d => {
                 const exp = DOMPurify.sanitize(d.expediente || 'S/Exp');
@@ -744,7 +768,7 @@
                 if (exp === 'S/Exp' && pdp === 'S/PDP' && prot) idText = prot;
 
                 return `
-                <label class="label-word-demanda" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
+                <label class="label-word-demanda" data-status="${statusTag}" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
                     <input type="checkbox" class="check-word-demanda" value="${d.id}" onchange="atualizarContadorWord()" style="margin-top:3px; transform: scale(1.2);">
                     <div style="font-size:13px; color:#333; line-height: 1.4; width:100%;">
                         <b style="color: #185199;">${idText}</b> 
@@ -755,6 +779,7 @@
                 `;
             }).join('');
             
+            // As checkboxes já vêm desmarcadas por causa do HTML acima (não coloquei 'checked')
             atualizarContadorWord();
             document.getElementById('modalWord').classList.add('ativo');
         }
