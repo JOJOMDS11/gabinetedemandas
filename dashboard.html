@@ -6,10 +6,12 @@
     <title>Gabinete Daniel Daudt - Demandas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
+    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#185199">
     <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
 
+    <!-- 🔒 DOMPurify (Prevenção contra XSS) -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
     <style>
@@ -167,15 +169,16 @@
         <div class="paginacao" id="paginacaoContainer"></div>
     </div>
 
+    <!-- Modal Gerar Word -->
     <div class="modal-overlay" id="modalWord">
         <div class="modal-box" style="max-width: 650px; text-align: left; padding: 20px;">
             <h3 style="text-align:center; color:#185199; margin-bottom: 5px;">📄 Gerar Ofício em Word</h3>
-            <p style="text-align:center; color:#666; font-size:12px; margin-bottom: 20px;">O sistema listará abaixo as demandas do seu filtro atual.</p>
+            <p style="text-align:center; color:#666; font-size:12px; margin-bottom: 20px;">O sistema listará abaixo as demandas do seu filtro atual (excluindo as finalizadas).</p>
             
             <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#555;">Secretaria Destino:</label>
-                    <input type="text" id="wordSecretaria" placeholder="Ex: Secretaria Municipal de Mobilidade e Obras - SEMOB" style="text-align: left; font-size: 14px;">
+                    <input type="text" id="wordSecretaria" value="Secretaria Municipal de Mobilidade e Obras - SEMOB" placeholder="Ex: Secretaria Municipal de Mobilidade e Obras - SEMOB" style="text-align: left; font-size: 14px;">
                 </div>
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#555;">Nome do Secretário(a):</label>
@@ -184,8 +187,13 @@
             </div>
 
             <p style="font-size:13px; color:#555; margin-bottom:8px; font-weight: bold;">Selecione as demandas para o ofício:</p>
+            
+            <!-- Campo de busca dentro do modal Word -->
+            <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; margin-bottom:10px; font-size:13px; background:#f8fafc;">
+
             <div id="listaDemandasWord" class="modal-desc-content" style="max-height: 250px; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px;">
-                </div>
+                <!-- Preenchido via JS -->
+            </div>
 
             <div class="modal-botoes" style="margin-top: 20px;">
                 <button style="background:#e0e0e0; color:#333; flex:0.4; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalWord()">Cancelar</button>
@@ -194,6 +202,7 @@
         </div>
     </div>
 
+    <!-- Modal Autenticação -->
     <div class="modal-overlay" id="modalSenhaSegura">
         <div class="modal-box">
             <h3>🔐 Exclusão de Registro</h3>
@@ -207,6 +216,7 @@
         </div>
     </div>
 
+    <!-- Modal Secretarias -->
     <div class="modal-overlay" id="modalSecretarias">
         <div class="modal-box" style="max-width: 420px; text-align: left;">
             <h3 style="text-align:center;">⚙️ Gerenciar Secretarias</h3>
@@ -224,6 +234,7 @@
         </div>
     </div>
 
+    <!-- Modal Descrição -->
     <div class="modal-overlay" id="modalDescOverlay">
         <div class="modal-desc-box">
             <h3>Detalhes da Demanda <button type="button" onclick="fecharModalDescricao()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#c0392b;" title="Fechar">✕</button></h3>
@@ -251,7 +262,7 @@
         let filtroAtual = filtroPadrao;
         
         let paginaAtual = 1;
-        const itensPorPagina = 9;
+        const itensPorPagina = 6; // <-- Alterado para 6 por página
         let idParaExcluir = null;
 
         let contadoresNovas = {
@@ -644,7 +655,7 @@
                                 <div class="info">👥 Cuidando: <b>${cuindoTxt}</b></div>
                                 ${sProt ? `<div class="info" style="color:#0984e3; font-weight:bold;">🔢 156: ${sProt}</div>` : ''}
                                 ${sPdp ? `<div class="info" style="color:#f39c12; font-weight:bold;">📋 PDP: ${sPdp}</div>` : ''}
-                                ${sExp || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${sExp || 'Anexado'}</div>` : ''}
+                                ${sExp ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${sExp}</div>` : ''}
                                 ${tempoCard}
                                 <div class="acoes-card">${btnPrincipal}</div>
                             </div>
@@ -681,25 +692,38 @@
         }
 
         // ================= FUNÇÕES DE GERAÇÃO DO WORD =================
-        window.abrirModalWord = function() {
-            if (listaGlobalFiltrada.length === 0) {
-                return alert("Não há demandas no filtro atual para gerar o ofício. Mude os filtros na tela principal.");
-            }
+        window.filtrarListaWord = function() {
+            const termo = document.getElementById('buscaModalWord').value.toLowerCase();
+            const labels = document.querySelectorAll('.label-word-demanda');
+            labels.forEach(lbl => {
+                const texto = lbl.innerText.toLowerCase();
+                lbl.style.display = texto.includes(termo) ? 'flex' : 'none';
+            });
+        }
 
-            // Preenche o campo Secretaria com o filtro atual se houver
-            const filtroSec = document.getElementById('buscaGeral').value; // opcional: puxar do filtro
+        window.abrirModalWord = function() {
+            // Filtra as demandas tirando as que já finalizaram o ciclo
+            const demandasParaWord = listaGlobalFiltrada.filter(d => !['Concluída', 'Arquivada', 'Rejeitada'].includes(d.status));
+
+            if (demandasParaWord.length === 0) {
+                return alert("Não há demandas abertas/pendentes no filtro atual para gerar o ofício. Mude os filtros na tela principal.");
+            }
             
             const container = document.getElementById('listaDemandasWord');
-            container.innerHTML = listaGlobalFiltrada.map(d => {
+            document.getElementById('buscaModalWord').value = ''; // Limpa a busca anterior
+            
+            container.innerHTML = demandasParaWord.map(d => {
                 const exp = DOMPurify.sanitize(d.expediente || 'S/Exp');
                 const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : 'S/PDP');
                 const assunto = DOMPurify.sanitize(d.assunto || '');
+                const statusTag = DOMPurify.sanitize(d.status || '');
                 
                 return `
-                <label style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
+                <label class="label-word-demanda" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
                     <input type="checkbox" class="check-word-demanda" value="${d.id}" checked style="margin-top:3px; transform: scale(1.2);">
-                    <div style="font-size:13px; color:#333; line-height: 1.4;">
-                        <b style="color: #185199;">${exp} | ${pdp}</b><br>
+                    <div style="font-size:13px; color:#333; line-height: 1.4; width:100%;">
+                        <b style="color: #185199;">${exp} | ${pdp}</b> 
+                        <span style="float:right; font-size:10px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${statusTag}</span><br>
                         <span style="color:#555;">${assunto}</span>
                     </div>
                 </label>
