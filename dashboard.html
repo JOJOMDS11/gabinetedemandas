@@ -195,7 +195,7 @@
             <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
                 <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="flex:1; min-width:200px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
                 <select id="filtroStatusWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; min-width: 150px;">
-                    <option value="">Todos os Status</option>
+                    <!-- Preenchido via JS (Fixo para mostrar todas as opções independentemente do filtro principal) -->
                 </select>
             </div>
 
@@ -746,11 +746,19 @@
                 return alert("Não há demandas válidas (com Expediente, Protocolo ou PDP) no filtro atual para gerar o ofício.");
             }
             
-            // Popula os status dinamicamente em ordem alfabética para o filtro do Word
-            const statusUnicos = [...new Set(demandasParaWord.map(d => d.status))].sort((a, b) => a.localeCompare(b));
+            const statusAtivos = [
+                '156 Solicitado',
+                'Aguardando Aprovação',
+                'Aguardando Exec. Secretaria',
+                'Aprovada',
+                'Em Andamento',
+                'Expediente (Legis) Gerado',
+                'Pendente'
+            ];
+
             const selectStatusWord = document.getElementById('filtroStatusWord');
             selectStatusWord.innerHTML = '<option value="">Todos os Status</option>' + 
-                statusUnicos.map(s => `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`).join('');
+                statusAtivos.map(s => `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`).join('');
 
             const container = document.getElementById('listaDemandasWord');
             document.getElementById('buscaModalWord').value = ''; 
