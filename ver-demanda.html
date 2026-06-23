@@ -474,7 +474,8 @@
 
             // NOVA BLINDAGEM DO LINK LEGIS
             let linkLegisSeguro = '';
-            if (d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'))) {
+            const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
+            if (isLegisSafe) {
                 linkLegisSeguro = `<a href="${DOMPurify.sanitize(d.link_legis)}" target="_blank" class="btn-link" style="background:#f39c12; color:white; border-color:#e67e22;">🔗 Ver Legis Anexado</a>`;
             }
 
@@ -767,7 +768,13 @@
                         <div class="form-group"><label>Protocolo 156</label><input type="text" id="editProtocolo" value="${sProt}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher" ${bloqueado}></div>
                         <div class="form-group"><label>Expediente (Legis)</label><input type="text" id="editExpediente" value="${sExp}" placeholder="Ex: Exp. 5149" ${bloqueado}></div>
                         <div class="form-group"><label>Observações Internas (Equipe)</label><textarea id="editObservacoes" rows="2" placeholder="Anotações que só a equipe vê..." ${bloqueado}>${sObs}</textarea></div>
-                        <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:4px;"><label>Link Direto do Legis 🔗</label><input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo..." ${bloqueado}></div>
+                        <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:4px;">
+                            <label>Link Direto do Legis 🔗</label>
+                            <div style="display:flex; gap:8px;">
+                                <input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo..." ${bloqueado}>
+                                ${isLegisSafe ? `<a href="${DOMPurify.sanitize(d.link_legis)}" target="_blank" class="btn-acao laranja" style="flex:none; width:auto; text-decoration:none; display:flex; align-items:center;">Acessar 🔗</a>` : ''}
+                            </div>
+                        </div>
                     </div>
 
                     <div class="botoes">
