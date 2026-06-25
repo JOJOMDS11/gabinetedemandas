@@ -203,7 +203,7 @@
         <div class="charts-grid">
             
             <div class="chart-card full-width">
-                <h3>Tendência de Abertura <span>Últimos 6 Meses (Data Fato)</span></h3>
+                <h3>Tendência de Abertura <span>Últimos 12 Meses (Data Fato)</span></h3>
                 <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
             </div>
 
@@ -274,7 +274,7 @@
 
         const secretariasOficiais = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
 
-        // NOVIDADE: Helper inteligente para puxar sempre a data real do evento primeiro
+        // Helper inteligente para puxar sempre a data real do evento primeiro
         function getMesAnoReal(d) {
             if (d.data_agendada && d.data_agendada.trim() !== '') {
                 return d.data_agendada.substring(0, 7); 
@@ -385,7 +385,7 @@
 
         function calcularDias(dataBase) {
             if (!dataBase) return 0;
-            return Math.floor((Date.now() - new Date(dataBase)) / (1000 * 60 * 60 * 24));
+            return Math.floor((Date.now() - new Date(dataBase).getTime()) / (1000 * 60 * 60 * 24));
         }
 
         function atualizarKPIs() {
@@ -457,7 +457,7 @@
             container.innerHTML = html;
         }
 
-        // NOVIDADE: Lógica de Ordenação Mágica Clicável
+        // Lógica de Ordenação Mágica Clicável
         window.ordenarTabelaSec = function(coluna) {
             if(colSecSort === coluna) {
                 dirSecSort *= -1; // inverte a direção
@@ -560,7 +560,12 @@
             if (tipo === 'todas') f = [...demandasFiltradas];
             else if (tipo === 'abertas') f = demandasFiltradas.filter(d => arrayAbertas.includes(d.status));
             else if (tipo === 'concluidas') f = demandasFiltradas.filter(d => arrayConcluidas.includes(d.status));
-            else if (tipo === 'atrasadas') f = demandasFiltradas.filter(d => !arrayConcluidas.includes(d.status) && calcularDias(d.criado_em) > 30);
+            else if (tipo === 'atrasadas') {
+                f = demandasFiltradas.filter(d => {
+                    const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
+                    return !arrayConcluidas.includes(d.status) && calcularDias(dataInicioBase.toISOString()) > 30;
+                });
+            }
 
             iniciarListaNaTela(`Detalhamento: ${tituloKpi} (${f.length})`, f);
         }
@@ -634,6 +639,10 @@
                 let execStr = (d.responsaveis && d.responsaveis.length>0) ? DOMPurify.sanitize(d.responsaveis.join(', ')) : 'Ninguém';
                 let ordemStr = d.responsavel_ordem ? DOMPurify.sanitize(d.responsavel_ordem) : 'Sem Resp.';
                 
+                // NOVIDADE: Botão do Legis na Lista
+                const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
+                const btnLegis = isLegisSafe ? `<a href="${DOMPurify.sanitize(d.link_legis)}" target="_blank" class="btn-ver-demanda" style="background:#f59e0b; color:white;">🔗 Legis</a>` : '';
+
                 return `
                     <div class="lista-item">
                         <div class="lista-info" style="flex:1;">
@@ -648,7 +657,10 @@
                                 <span class="detalhe-tag" style="background:white; color:${sColor}; border:1px solid ${sColor};">🚨 ${DOMPurify.sanitize(d.status)}</span>
                             </div>
                         </div>
-                        <a href="ver-demanda.html?id=${d.id}" class="btn-ver-demanda" target="_blank">Abrir Detalhes 🔗</a>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            ${btnLegis}
+                            <a href="ver-demanda.html?id=${d.id}" class="btn-ver-demanda" target="_blank">Abrir Detalhes 🔗</a>
+                        </div>
                     </div>`;
             }).join('');
 
@@ -669,23 +681,40 @@
 
             montarTabelaSecretarias();
 
-            // Gráfico Tendência usa Mês/Ano Real da Fato (data_agendada)
+            // Gráfico Tendência com 12 Meses
             const mapMeses = {};
             demandasFiltradas.forEach(d => {
                 const m = getMesAnoReal(d);
                 if(m !== 'Desconhecido') mapMeses[m] = (mapMeses[m] || 0) + 1;
             });
-            const ultimos6 = Object.keys(mapMeses).sort().slice(-6);
+            const ultimos12 = Object.keys(mapMeses).sort().slice(-12);
+            
+            const formatarMesAno = (m) => {
+                const parts = m.split('-');
+                if(parts.length!==2) return m;
+                const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+                return `${meses[parseInt(parts[1])-1]}/${parts[0].substring(2)}`;
+            }
+            const labelsFormatadas = ultimos12.map(formatarMesAno);
             
             chartTendencia = new Chart(document.getElementById('graficoTendencia'), {
                 type: 'line',
-                data: { labels: ultimos6, datasets: [{ label: 'Demandas Abertas', data: ultimos6.map(m => mapMeses[m]), borderColor: '#1a365d', backgroundColor: 'rgba(26, 54, 93, 0.1)', borderWidth: 3, tension: 0.3, fill: true, pointRadius: 5, pointHoverRadius: 8 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title:{display:true, text:'Tendência'} }, scales: { y: { beginAtZero: true } } }
+                data: { labels: labelsFormatadas, datasets: [{ label: 'Volume', data: ultimos12.map(m => mapMeses[m]), borderColor: '#1a365d', backgroundColor: 'rgba(26, 54, 93, 0.1)', borderWidth: 3, tension: 0.3, fill: true, pointRadius: 5, pointHoverRadius: 8 }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: false }, 
+                        title:{display:true, text:'Tendência'},
+                        datalabels: { align: 'top', font: {weight: 'bold'}, color: '#1a365d' }
+                    }, 
+                    scales: { y: { beginAtZero: true } } 
+                }
             });
 
             const statusCounts = {}; demandasFiltradas.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
             
-            // NOVIDADE: Legendas bonitas e explicativas dentro do Gráfico de Pizza
+            // Legendas bonitas e explicativas dentro do Gráfico de Pizza
             chartStatus = new Chart(document.getElementById('graficoStatus'), {
                 type: 'doughnut',
                 data: { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: paletaCores, borderWidth: 2, borderColor: '#ffffff' }] },
@@ -702,19 +731,17 @@
                             textAlign: 'center',
                             formatter: (val, ctx) => {
                                 let label = ctx.chart.data.labels[ctx.dataIndex];
-                                // Encurta os nomes gigantes para caber na fatia
                                 if (label === 'Aguardando Exec. Secretaria') label = 'Sec.';
                                 if (label === 'Expediente (Legis) Gerado') label = 'Legis';
                                 if (label === 'Aguardando Aprovação') label = 'Aprovar';
                                 if (label === '156 Solicitado') label = '156';
                                 
-                                // Só mostra o texto se a fatia for maior que 4% do total pra n virar borrão
                                 let sum = 0;
                                 ctx.chart.data.datasets[0].data.map(data => { sum += data; });
                                 let perc = (val * 100) / sum;
                                 
-                                if (perc < 4) return val; // Fatia fina: Só o número
-                                return label + '\n' + val; // Fatia normal: Nome em cima, Número embaixo
+                                if (perc < 4) return val; 
+                                return label + '\n' + val; 
                             } 
                         } 
                     }, 
