@@ -248,7 +248,7 @@
                 <div class="data-list" id="listaEquipe"></div>
             </div>
 
-            <!-- NOVOS BLOCOS "ESCONDIDOS" (COLLAPSIBLE) PARA MAIS INTELIGÊNCIA -->
+        
 
             <div class="chart-card full-width">
                 <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoSolicitantes', 'btnToggleSol')">
@@ -304,7 +304,7 @@
 
         const secretariasOficiais = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
 
-        // Helper inteligente para puxar sempre a data real do evento primeiro
+    
         function getMesAnoReal(d) {
             if (d.data_agendada && d.data_agendada.trim() !== '') {
                 return d.data_agendada.substring(0, 7); 
@@ -554,8 +554,7 @@
                 </tr>`;
             }).join('');
         }
-
-        // NOVIDADE: Toggle Function for Collapsible Cards
+        
         window.toggleSecao = function(secaoId, btnId) {
             const secao = document.getElementById(secaoId);
             const btn = document.getElementById(btnId);
@@ -728,7 +727,6 @@
 
             montarTabelaSecretarias();
 
-            // Gráfico Tendência com 12 Meses e Labels em cima
             const mapMeses = {};
             demandasFiltradas.forEach(d => {
                 const m = getMesAnoReal(d);
@@ -836,15 +834,14 @@
             topBairros.forEach(b => objBairros[b] = bairroCounts[b]);
             renderListaHTML('listaBairros', objBairros, 'bairro');
 
-            // NOVIDADE: Solicitantes (Heavy Users) e Gargalos por Secretaria
+        
             const solCounts = {};
             demandasFiltradas.forEach(d => {
                 if(d.solicitante_nome && d.solicitante_nome.trim() !== '' && d.solicitante_nome.toLowerCase() !== 'daniel' && d.solicitante_nome.toLowerCase() !== 'gabinete') {
                     const s = d.solicitante_nome.trim().toUpperCase();
                     solCounts[s] = (solCounts[s] || 0) + 1;
                 }
-            });
-            // Puxa quem pediu 2 ou mais vezes, top 20
+    
             const topSol = Object.keys(solCounts).sort((a,b) => solCounts[b] - solCounts[a]).filter(x => solCounts[x] > 1).slice(0, 20);
             const objSol = {}; topSol.forEach(k => objSol[k] = solCounts[k]);
             renderListaHTML('listaSolicitantes', objSol, 'solicitante');
