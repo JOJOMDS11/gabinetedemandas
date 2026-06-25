@@ -156,23 +156,21 @@
             <input type="text" id="qNome" placeholder="Nome do Solicitante *" required>
             <input type="tel" id="qFone" placeholder="Telefone *" required>
             <input type="text" id="qAssunto" placeholder="Assunto da demanda *" required>
-            <label style="font-size:12px; font-weight:bold; color:#555;">Anexos (Fotos ou PDF):</label>
-            <input type="file" id="qArquivo" accept="image/*,.pdf" multiple style="font-size: 12px; padding: 5px; border: none; margin-bottom: 15px; width: 100%; background: #f8fafc; border-radius: 4px;">
+            <label style="font-size:12px; font-weight:bold; color:#555;">Anexos (Máx. 5 fotos e 1 vídeo ou 1 PDF):</label>
+            <input type="file" id="qArquivo" accept="image/*,video/*,.pdf" multiple style="font-size: 12px; padding: 5px; border: none; margin-bottom: 5px; width: 100%; background: #f8fafc; border-radius: 4px;">
+            <div id="qPreviewArea" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;"></div>
             <textarea id="qDetalhe" placeholder="Detalhamento da demanda..." style="width:100%; height:80px; margin-bottom:15px; padding:10px; border-radius:4px; border:1px solid #ccc; font-size:14px; outline:none; resize:none;"></textarea>
             <label style="font-size:12px; font-weight:bold; color:#555; display: block; margin-bottom: 5px;">Quem vai cuidar?</label>
             <div id="respTagsQuick" class="resp-tags-quick"></div>
-            <div style="display:flex; gap:8px; margin-bottom:15px;">
-                <select id="selectAddRespQuick" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
-                    <option value="">Atribuir executor...</option>
-                    <option value="Alemão">Alemão</option>
-                    <option value="Antonio">Antonio</option>
-                    <option value="Daniel">Daniel</option>
-                    <option value="Débora">Débora</option>
-                    <option value="João Pedro">João Pedro</option>
-                    <option value="Luana">Luana</option>
-                </select>
-                <button type="button" onclick="adicionarRespQuick()" style="background:#27ae60; color:white; border:none; padding:8px 14px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
-            </div>
+            <select id="selectAddRespQuick" onchange="adicionarRespQuick()" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:14px; margin-bottom:15px;">
+                <option value="">Atribuir executor...</option>
+                <option value="Alemão">Alemão</option>
+                <option value="Antonio">Antonio</option>
+                <option value="Daniel">Daniel</option>
+                <option value="Débora">Débora</option>
+                <option value="João Pedro">João Pedro</option>
+                <option value="Luana">Luana</option>
+            </select>
             <div class="modal-botoes">
                 <button style="background:#e0e0e0; color:#333; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalQuick()">Cancelar</button>
                 <button id="btnSalvarQuick" style="background:#e67e22; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="salvarQuick()">Salvar Rápida</button>
@@ -387,6 +385,7 @@
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
         window._respQuickList = [];
+        window._arquivosQuick = [];
 
         window.renderRespTagsQuick = function() {
             const container = document.getElementById('respTagsQuick');
@@ -400,10 +399,11 @@
             const val = sel.value;
             if (!val) return;
             if (!window._respQuickList) window._respQuickList = [];
-            if (window._respQuickList.includes(val)) { sel.value = ''; return; }
-            window._respQuickList.push(val);
+            if (!window._respQuickList.includes(val)) {
+                window._respQuickList.push(val);
+                renderRespTagsQuick();
+            }
             sel.value = '';
-            renderRespTagsQuick();
         }
 
         window.removerRespQuick = function(nome) {
@@ -411,9 +411,59 @@
             renderRespTagsQuick();
         }
 
+        function renderPreviewQuick() {
+            const area = document.getElementById('qPreviewArea');
+            if (!area) return;
+            if (window._arquivosQuick.length === 0) { area.innerHTML = ''; return; }
+            area.innerHTML = window._arquivosQuick.map((f, i) => {
+                const url = URL.createObjectURL(f);
+                const isVid = f.type.startsWith('video/');
+                const isPdf = f.type === 'application/pdf';
+                let thumb = '';
+                if (isPdf) thumb = `<div style="width:50px;height:50px;background:#c0392b;border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:bold;">PDF</div>`;
+                else if (isVid) thumb = `<video src="${url}" style="width:50px;height:50px;object-fit:cover;border-radius:4px;" muted></video>`;
+                else thumb = `<img src="${url}" style="width:50px;height:50px;object-fit:cover;border-radius:4px;">`;
+                return `<div style="position:relative;">${thumb}<button type="button" onclick="removerArquivoQuick(${i})" style="position:absolute;top:-4px;right:-4px;background:#c0392b;color:white;border:none;border-radius:50%;width:16px;height:16px;font-size:10px;cursor:pointer;padding:0;line-height:1;display:flex;align-items:center;justify-content:center;">✕</button></div>`;
+            }).join('');
+        }
+
+        window.removerArquivoQuick = function(idx) {
+            window._arquivosQuick.splice(idx, 1);
+            renderPreviewQuick();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputQ = document.getElementById('qArquivo');
+            if (inputQ) {
+                inputQ.addEventListener('change', function(e) {
+                    const novos = Array.from(e.target.files);
+                    let fotosCount = window._arquivosQuick.filter(f => f.type.startsWith('image/')).length;
+                    let videoCount = window._arquivosQuick.filter(f => f.type.startsWith('video/')).length;
+                    let pdfCount = window._arquivosQuick.filter(f => f.type === 'application/pdf').length;
+                    novos.forEach(file => {
+                        if (file.size > 15 * 1024 * 1024) { alert(`${file.name} excede 15MB.`); return; }
+                        if (file.type === 'application/pdf') {
+                            if (pdfCount >= 1) { alert('Limite de 1 PDF atingido.'); return; }
+                            pdfCount++; window._arquivosQuick.push(file);
+                        } else if (file.type.startsWith('video/')) {
+                            if (videoCount >= 1) { alert('Limite de 1 vídeo atingido.'); return; }
+                            videoCount++; window._arquivosQuick.push(file);
+                        } else if (file.type.startsWith('image/')) {
+                            if (fotosCount >= 5) { alert('Limite de 5 fotos atingido.'); return; }
+                            fotosCount++; window._arquivosQuick.push(file);
+                        }
+                    });
+                    this.value = '';
+                    renderPreviewQuick();
+                });
+            }
+        });
+
         window.abrirModalQuick = function() {
             window._respQuickList = [];
+            window._arquivosQuick = [];
             renderRespTagsQuick();
+            renderPreviewQuick();
             document.getElementById('modalQuick').classList.add('ativo');
         }
 
@@ -440,7 +490,7 @@
             let responsaveis = window._respQuickList ? [...window._respQuickList] : [];
             let fotos_urls = [];
             let pdf_url = null;
-            const files = Array.from(document.getElementById('qArquivo').files);
+            const files = window._arquivosQuick || [];
 
             try {
                 for (let file of files) {
@@ -482,7 +532,7 @@
             try {
                 const { data, error } = await db.from('demandas').insert([novaDemanda]).select();
                 if(!error) {
-                    const notifyUsers = responsaveis.filter(r => r !== usuarioLogado && r !== 'Daniel');
+                    const notifyUsers = responsaveis.filter(r => r !== usuarioLogado);
                     if(notifyUsers.length > 0) {
                         db.functions.invoke('send-push', {
                             body: {
@@ -493,7 +543,7 @@
                     }
                     fecharModalQuick();
                     document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = '';
-                    window._respQuickList = []; renderRespTagsQuick();
+                    window._respQuickList = []; window._arquivosQuick = []; renderRespTagsQuick(); renderPreviewQuick();
                     alert("Demanda Rápida criada com sucesso!");
                 } else { alert("Erro ao salvar no banco. Verifique os dados."); console.error(error); }
             } catch (e) { alert("Erro ao tentar salvar."); }
@@ -799,7 +849,7 @@
 
         window.abrirModalWord = function() {
             const statusExcluidos = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
-            const demandasParaWord = listaGlobalFiltrada.filter(d => {
+            const demandasParaWord = todasDemandas.filter(d => {
                 const isEncerrada = statusExcluidos.includes(d.status);
                 const temIdentificador = d.expediente || d.protocolo || d.doc_numero;
                 return !isEncerrada && temIdentificador;
@@ -854,7 +904,7 @@
 
             let trsHTML = '';
             checkboxes.forEach(chk => {
-                const d = listaGlobalFiltrada.find(x => x.id === chk.value);
+                const d = todasDemandas.find(x => x.id === chk.value);
                 if (d) {
                     const exp = DOMPurify.sanitize(d.expediente || '');
                     const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
@@ -868,19 +918,17 @@
             <head><meta charset='utf-8'><title>Ofício Demandas</title></head>
             <body>
                 <div style="font-family: Arial, sans-serif; font-size: 11pt;">
-                    <br><br>
-                    <table style="width: 100%; border: none; margin-bottom: 20px;">
+                    <table style="width: 100%; border: none; margin-bottom: 10px;">
                         <tr><td style="text-align: left; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">Pedidos de providências</td><td style="text-align: right; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">São Leopoldo, ${dataHoje}</td></tr>
                     </table>
                     <p style="font-weight: bold; margin: 0; font-family: Arial, sans-serif;">Gabinete Vereador Daniel Daudt Schaefer</p>
                     <p style="margin: 0; font-family: Arial, sans-serif;">Obs.: Demandas da ${DOMPurify.sanitize(secNome)}</p>
-                    <p style="margin: 0; font-family: Arial, sans-serif;">SECRETÁRIO ${DOMPurify.sanitize(secResp)}.</p>
-                    <br><br>
+                    <p style="margin: 0 0 12px 0; font-family: Arial, sans-serif;">SECRETÁRIO ${DOMPurify.sanitize(secResp)}.</p>
                     <table border="1" cellspacing="0" cellpadding="5" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt;">
                         <tr style="background-color: #bfbfbf; font-weight: bold; text-align: center;"><td width="15%" style="border: 1px solid black; padding: 5px;">EXPEDIENTE</td><td width="25%" style="border: 1px solid black; padding: 5px;">PEDIDO DE PROVIDÊNCIAS</td><td width="60%" style="border: 1px solid black; padding: 5px;">ASSUNTO/DEMANDA</td></tr>
                         ${trsHTML}
                     </table>
-                    <br><br><br>
+                    <br><br>
                     <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">______________________________</p>
                     <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Luana Costa Dias</p>
                     <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Chefe de Gabinete</p>
