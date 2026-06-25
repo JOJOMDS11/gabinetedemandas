@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    <!-- 🔒 DOMPurify (Prevenção contra XSS) -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
     <style>
@@ -248,8 +247,6 @@
                 <div class="data-list" id="listaEquipe"></div>
             </div>
 
-        
-
             <div class="chart-card full-width">
                 <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoSolicitantes', 'btnToggleSol')">
                     Top Solicitantes (Cidadãos Frequentes) 
@@ -284,6 +281,17 @@
     </div>
 
     <script>
+        // Bloqueio de cliques direitos e atalhos de dev
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', event => {
+            if (event.keyCode === 123 || 
+               (event.ctrlKey && event.shiftKey && event.keyCode === 73) || 
+               (event.ctrlKey && event.shiftKey && event.keyCode === 74) || 
+               (event.ctrlKey && event.keyCode === 85)) {
+                event.preventDefault();
+            }
+        });
+
         Chart.register(ChartDataLabels);
 
         let db;
@@ -304,7 +312,6 @@
 
         const secretariasOficiais = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
 
-    
         function getMesAnoReal(d) {
             if (d.data_agendada && d.data_agendada.trim() !== '') {
                 return d.data_agendada.substring(0, 7); 
@@ -732,7 +739,7 @@
                 const m = getMesAnoReal(d);
                 if(m !== 'Desconhecido') mapMeses[m] = (mapMeses[m] || 0) + 1;
             });
-            const ultimos12 = Object.keys(mapMeses).sort().slice(-12); // Puxa 12 meses
+            const ultimos12 = Object.keys(mapMeses).sort().slice(-12);
             
             const formatarMesAno = (m) => {
                 const parts = m.split('-');
@@ -834,14 +841,13 @@
             topBairros.forEach(b => objBairros[b] = bairroCounts[b]);
             renderListaHTML('listaBairros', objBairros, 'bairro');
 
-        
             const solCounts = {};
             demandasFiltradas.forEach(d => {
                 if(d.solicitante_nome && d.solicitante_nome.trim() !== '' && d.solicitante_nome.toLowerCase() !== 'daniel' && d.solicitante_nome.toLowerCase() !== 'gabinete') {
                     const s = d.solicitante_nome.trim().toUpperCase();
                     solCounts[s] = (solCounts[s] || 0) + 1;
                 }
-    
+            });
             const topSol = Object.keys(solCounts).sort((a,b) => solCounts[b] - solCounts[a]).filter(x => solCounts[x] > 1).slice(0, 20);
             const objSol = {}; topSol.forEach(k => objSol[k] = solCounts[k]);
             renderListaHTML('listaSolicitantes', objSol, 'solicitante');
