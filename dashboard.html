@@ -144,7 +144,27 @@
             <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
         </div>
 
-        <div class="cards-grid" id="demandas"></div>
+        <div style="display:flex; gap:15px; align-items:center; margin-bottom:20px; flex-wrap:wrap; padding:10px; background:#f8fafc; border-radius:6px;">
+            <div style="display:flex; gap:10px; align-items:center;">
+                <label for="filtroPrioridade" style="font-weight:bold; color:#555; font-size:14px;">Prioridade:</label>
+                <select id="filtroPrioridade" onchange="carregarDemandas()" style="padding:6px 10px; border:1px solid #ddd; border-radius:4px; cursor:pointer;">
+                    <option value="">Todas</option>
+                    <option value="Crítica">🔴 Crítica</option>
+                    <option value="Alta">🟠 Alta</option>
+                    <option value="Normal">🟡 Normal</option>
+                    <option value="Baixa">⚪ Baixa</option>
+                </select>
+            </div>
+
+            <div style="display:flex; gap:10px; align-items:center; margin-left:auto;">
+                <input type="checkbox" id="selectTodos" onchange="selecionarTodos()" style="cursor:pointer;">
+                <label for="selectTodos" style="cursor:pointer; font-size:13px; color:#555;">Selecionar Tudo</label>
+                <button id="btnConcluirLote" style="background:#27ae60; color:white; padding:8px 15px; border:none; border-radius:4px; cursor:pointer; display:none; font-weight:bold; font-size:13px;" onclick="concluirEmLote()">
+                    ✅ Concluir (0)
+                </button>
+            </div>
+        </div>
+
         <div class="paginacao" id="paginacaoContainer"></div>
     </div>
 
@@ -637,6 +657,11 @@
                 });
             }
 
+            const filtroPrioridade = document.getElementById('filtroPrioridade')?.value;
+            if (filtroPrioridade) {
+                lista = lista.filter(d => d.prioridade === filtroPrioridade);
+            }
+
             listaGlobalFiltrada = lista;
 
             if (lista.length === 0) {
@@ -730,11 +755,30 @@
 
                 const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-                return `<div class="demanda-card ${aguardandoDaniel ? 'aguardando-daniel' : ''}" onclick="window.location.href='ver-demanda.html?id=${demanda.id}'">
+                const prioridade = demanda.prioridade || 'Normal';
+                let priorityBg = '#fbbf24';
+                let priorityEmoji = '🟡';
+                if (prioridade === 'Crítica') {
+                    priorityBg = '#ef4444';
+                    priorityEmoji = '🔴';
+                } else if (prioridade === 'Alta') {
+                    priorityBg = '#f59e0b';
+                    priorityEmoji = '🟠';
+                } else if (prioridade === 'Baixa') {
+                    priorityBg = '#86efac';
+                    priorityEmoji = '⚪';
+                }
+
+                return `<div style="display:flex; align-items:flex-start; gap:10px;">
+                            <input type="checkbox" class="card-select" data-id="${demanda.id}" onclick="event.stopPropagation(); atualizarContadorLote();" style="margin-top:8px; width:18px; height:18px; cursor:pointer;">
+                            <div class="demanda-card ${aguardandoDaniel ? 'aguardando-daniel' : ''}" onclick="window.location.href='ver-demanda.html?id=${demanda.id}'" style="flex:1;">
                             ${numTag}
                             <div class="demanda-media">${mediaTag}</div>
                             <div class="demanda-conteudo">
-                                <span class="badge ${badgeClass}">${demanda.status}</span>
+                                <div style="display:flex; gap:6px; margin-bottom:8px;">
+                                    <span class="badge ${badgeClass}">${demanda.status}</span>
+                                    <span style="background:${priorityBg}; color:white; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:bold;">${priorityEmoji} ${prioridade}</span>
+                                </div>
                                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:5px;">
                                     <div class="titulo" style="margin-bottom:0;">${sAssunto}</div>
                                     <div style="display:flex; gap:4px; flex-shrink:0;">
@@ -758,6 +802,7 @@
                                 ${atualizacaoCard}
                                 <div class="acoes-card">${btnPrincipal}</div>
                             </div>
+                        </div>
                         </div>`;
             }).join('');
 
@@ -998,6 +1043,40 @@
         }
         document.addEventListener('mousemove', resetarSessao); document.addEventListener('keypress', resetarSessao); document.addEventListener('click', resetarSessao);
         resetarSessao();
+
+        window.selecionarTodos = function() {
+            const checkboxes = document.querySelectorAll('.card-select');
+            const selecionarTodosCheckbox = document.getElementById('selectTodos');
+            checkboxes.forEach(checkbox => { checkbox.checked = selecionarTodosCheckbox.checked; });
+            atualizarContadorLote();
+        };
+
+        window.atualizarContadorLote = function() {
+            const selecionadas = document.querySelectorAll('.card-select:checked').length;
+            const btnLote = document.getElementById('btnConcluirLote');
+            if (selecionadas > 0) {
+                btnLote.style.display = 'block';
+                btnLote.textContent = `✅ Concluir (${selecionadas})`;
+            } else {
+                btnLote.style.display = 'none';
+            }
+        };
+
+        window.concluirEmLote = async function() {
+            const selecionadas = Array.from(document.querySelectorAll('.card-select:checked')).map(cb => cb.getAttribute('data-id'));
+            if (selecionadas.length === 0) {
+                alert('Selecione pelo menos uma demanda');
+                return;
+            }
+            if (!confirm(`Concluir ${selecionadas.length} demanda(s)?`)) return;
+            const { error } = await db.from('demandas').update({ status: 'Concluída', atualizado_em: new Date().toISOString() }).in('id', selecionadas);
+            if (error) {
+                alert('Erro: ' + error.message);
+            } else {
+                document.getElementById('selectTodos').checked = false;
+                carregarDemandas();
+            }
+        };
 
         inicializarSistema();
     </script>
