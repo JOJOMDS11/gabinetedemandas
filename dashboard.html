@@ -6,12 +6,10 @@
     <title>Gabinete Daniel Daudt - Demandas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#185199">
     <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
 
-    <!-- 🔒 DOMPurify (Prevenção contra XSS) -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
     <style>
@@ -169,7 +167,6 @@
         <div class="paginacao" id="paginacaoContainer"></div>
     </div>
 
-    <!-- Modal Gerar Word -->
     <div class="modal-overlay" id="modalWord">
         <div class="modal-box" style="max-width: 650px; text-align: left; padding: 20px;">
             <h3 style="text-align:center; color:#185199; margin-bottom: 5px;">📄 Gerar Ofício em Word</h3>
@@ -194,12 +191,12 @@
             <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
                 <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="flex:1; min-width:200px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
                 <select id="filtroStatusWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; min-width: 150px;">
-                    <!-- Preenchido via JS -->
+                    
                 </select>
             </div>
 
             <div id="listaDemandasWord" class="modal-desc-content" style="max-height: 250px; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px;">
-                <!-- Preenchido via JS -->
+                
             </div>
 
             <div class="modal-botoes" style="margin-top: 20px;">
@@ -209,7 +206,6 @@
         </div>
     </div>
 
-    <!-- Modal Autenticação -->
     <div class="modal-overlay" id="modalSenhaSegura">
         <div class="modal-box">
             <h3>🔐 Exclusão de Registro</h3>
@@ -223,7 +219,6 @@
         </div>
     </div>
 
-    <!-- Modal Secretarias -->
     <div class="modal-overlay" id="modalSecretarias">
         <div class="modal-box" style="max-width: 420px; text-align: left;">
             <h3 style="text-align:center;">⚙️ Gerenciar Secretarias</h3>
@@ -241,7 +236,6 @@
         </div>
     </div>
 
-    <!-- Modal Descrição -->
     <div class="modal-overlay" id="modalDescOverlay">
         <div class="modal-desc-box">
             <h3>Detalhes da Demanda <button type="button" onclick="fecharModalDescricao()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#c0392b;" title="Fechar">✕</button></h3>
@@ -896,7 +890,7 @@
             const link = document.createElement('a');
             link.href = url;
             
-            const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
+            const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\
             const nomeCurtoSec = secNome.split('-').pop().trim();
             link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
             
