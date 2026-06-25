@@ -78,7 +78,7 @@
         @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
         .chart-card { background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;}
         .chart-card.full-width { grid-column: 1 / -1; }
-        .chart-card h3 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;}
+        .chart-card h3 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;}
         .chart-card h3 span { font-size: 12px; color: #94a3b8; font-weight: 400; background: #f8fafc; padding: 4px 8px; border-radius: 4px;}
         .chart-container { position: relative; height: 300px; width: 100%; }
 
@@ -98,6 +98,9 @@
         .data-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; color: #334155; font-weight: 500; cursor: pointer;}
         .data-table tr:hover td { background: #f0f9ff; }
         .tb-taxa { font-weight: 800; color: #0f172a; }
+
+        .btn-toggle-secao { font-size: 11px; background: #e2e8f0; color: #334155; padding: 4px 10px; border-radius: 20px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px;}
+        .btn-toggle-secao:hover { background: #cbd5e1; }
 
         #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center;}
         .spinner { border: 4px solid #e2e8f0; border-top: 4px solid #1a365d; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 16px;}
@@ -244,11 +247,39 @@
                 <h3>Executores (Cuidando) <span>Clicável</span></h3>
                 <div class="data-list" id="listaEquipe"></div>
             </div>
+
+            <!-- NOVOS BLOCOS "ESCONDIDOS" (COLLAPSIBLE) PARA MAIS INTELIGÊNCIA -->
+
+            <div class="chart-card full-width">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoSolicitantes', 'btnToggleSol')">
+                    Top Solicitantes (Cidadãos Frequentes) 
+                    <button class="btn-toggle-secao" id="btnToggleSol">🔽 Mostrar Lista</button>
+                </h3>
+                <div id="secaoSolicitantes" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="data-list bairros-grid" id="listaSolicitantes"></div>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoGargalosSec', 'btnToggleGargalo')">
+                    Raio-X de Atrasos por Secretaria (> 30 dias) 
+                    <button class="btn-toggle-secao" id="btnToggleGargalo" style="background:#fef2f2; color:#dc2626;">🚨 Mostrar Gargalos</button>
+                </h3>
+                <div id="secaoGargalosSec" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="data-list bairros-grid" id="listaGargalosSec"></div>
+                </div>
+            </div>
             
             <div class="chart-card full-width">
-                <h3>Top Bairros Atendidos <span>Clicável</span></h3>
-                <div class="data-list bairros-grid" id="listaBairros"></div>
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoBairros', 'btnToggleBairros')">
+                    Top Bairros Atendidos
+                    <button class="btn-toggle-secao" id="btnToggleBairros">🔽 Mostrar Bairros</button>
+                </h3>
+                <div id="secaoBairros" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="data-list bairros-grid" id="listaBairros"></div>
+                </div>
             </div>
+
         </div>
     </div>
 
@@ -262,9 +293,8 @@
         let paginaAtualLista = 1;
         const itensPorPagina = 5;
 
-        // Variáveis de ordenação da tabela
         let colSecSort = 'total';
-        let dirSecSort = -1; // -1 decrescente, 1 crescente
+        let dirSecSort = -1; 
 
         let chartStatus, chartCat, chartTendencia;
 
@@ -364,9 +394,7 @@
                                  (d.numero_demanda||'').toLowerCase().includes(vBusca);
                 }
                 
-                // MÁGICA: Agora filtra pela data real que o fato aconteceu (Agendada/Retroativa)
                 if (vMes !== 'todos') passaMes = getMesAnoReal(d) === vMes;
-                
                 if (vSec !== 'todas') passaSec = d.secretaria && d.secretaria.trim() === vSec;
                 
                 if (vStat === 'todos') passaStat = true;
@@ -395,7 +423,6 @@
             demandasFiltradas.forEach(d => {
                 const isEncerrada = arrayConcluidas.includes(d.status);
                 
-                // Usa a data original para o cálculo de atraso
                 const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
                 const diasAberto = calcularDias(dataInicioBase.toISOString());
 
@@ -457,15 +484,14 @@
             container.innerHTML = html;
         }
 
-        // Lógica de Ordenação Mágica Clicável
         window.ordenarTabelaSec = function(coluna) {
             if(colSecSort === coluna) {
-                dirSecSort *= -1; // inverte a direção
+                dirSecSort *= -1; 
             } else {
                 colSecSort = coluna;
-                dirSecSort = -1; // Padrão: maior pro menor
+                dirSecSort = -1; 
             }
-            montarTabelaSecretarias(); // Redesenha só a tabela
+            montarTabelaSecretarias(); 
         }
 
         function montarTabelaSecretarias() {
@@ -489,7 +515,6 @@
                 }
             });
 
-            // Converte objeto para Array para poder ordenar fácil
             let secArray = Object.keys(mapSecs).map(k => ({
                 nome: k,
                 total: mapSecs[k].total,
@@ -499,12 +524,10 @@
                 taxa: mapSecs[k].total > 0 ? Math.round((mapSecs[k].concluidas / mapSecs[k].total) * 100) : 0
             }));
 
-            // Ordenação clicável
             secArray.sort((a, b) => {
-                if (colSecSort === 'nome') return a.nome.localeCompare(b.nome) * (dirSecSort * -1); // string
+                if (colSecSort === 'nome') return a.nome.localeCompare(b.nome) * (dirSecSort * -1); 
                 
                 let valA = a[colSecSort]; let valB = b[colSecSort];
-                // Caso especial para tempo
                 if (colSecSort === 'somaTempo') {
                     valA = a.qtdComTempo > 0 ? a.somaTempo/a.qtdComTempo : 0;
                     valB = b.qtdComTempo > 0 ? b.somaTempo/b.qtdComTempo : 0;
@@ -530,6 +553,21 @@
                     <td style="text-align:center">${tempoStr}</td>
                 </tr>`;
             }).join('');
+        }
+
+        // NOVIDADE: Toggle Function for Collapsible Cards
+        window.toggleSecao = function(secaoId, btnId) {
+            const secao = document.getElementById(secaoId);
+            const btn = document.getElementById(btnId);
+            if (secao.style.display === 'none') {
+                secao.style.display = 'block';
+                btn.innerHTML = '🔼 Esconder';
+            } else {
+                secao.style.display = 'none';
+                if(btnId === 'btnToggleGargalo') btn.innerHTML = '🚨 Mostrar Gargalos';
+                else if (btnId === 'btnToggleSol') btn.innerHTML = '🔽 Mostrar Lista';
+                else btn.innerHTML = '🔽 Mostrar Bairros';
+            }
         }
 
         function renderListaHTML(containerId, dadosObj, tipoGrafico) {
@@ -585,6 +623,16 @@
                 filtrado = demandasFiltradas.filter(d => (d.bairro || '').trim().toUpperCase() === label);
             } else if (tipo === 'secretaria') {
                 filtrado = demandasFiltradas.filter(d => (d.secretaria || 'Não Atribuída').trim() === label);
+            } else if (tipo === 'solicitante') {
+                filtrado = demandasFiltradas.filter(d => (d.solicitante_nome || '').trim().toUpperCase() === label);
+            } else if (tipo === 'secretaria_atrasada') {
+                filtrado = demandasFiltradas.filter(d => {
+                    const secMatch = (d.secretaria || 'Sem Secretaria').trim() === label;
+                    const isEncerrada = arrayConcluidas.includes(d.status);
+                    const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
+                    const isAtrasada = calcularDias(dataInicioBase.toISOString()) > 30;
+                    return secMatch && !isEncerrada && isAtrasada;
+                });
             }
             
             iniciarListaNaTela(`Filtro: ${label} (${filtrado.length})`, filtrado);
@@ -639,7 +687,6 @@
                 let execStr = (d.responsaveis && d.responsaveis.length>0) ? DOMPurify.sanitize(d.responsaveis.join(', ')) : 'Ninguém';
                 let ordemStr = d.responsavel_ordem ? DOMPurify.sanitize(d.responsavel_ordem) : 'Sem Resp.';
                 
-                // NOVIDADE: Botão do Legis na Lista
                 const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
                 const btnLegis = isLegisSafe ? `<a href="${DOMPurify.sanitize(d.link_legis)}" target="_blank" class="btn-ver-demanda" style="background:#f59e0b; color:white;">🔗 Legis</a>` : '';
 
@@ -681,13 +728,13 @@
 
             montarTabelaSecretarias();
 
-            // Gráfico Tendência com 12 Meses
+            // Gráfico Tendência com 12 Meses e Labels em cima
             const mapMeses = {};
             demandasFiltradas.forEach(d => {
                 const m = getMesAnoReal(d);
                 if(m !== 'Desconhecido') mapMeses[m] = (mapMeses[m] || 0) + 1;
             });
-            const ultimos12 = Object.keys(mapMeses).sort().slice(-12);
+            const ultimos12 = Object.keys(mapMeses).sort().slice(-12); // Puxa 12 meses
             
             const formatarMesAno = (m) => {
                 const parts = m.split('-');
@@ -714,7 +761,6 @@
 
             const statusCounts = {}; demandasFiltradas.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
             
-            // Legendas bonitas e explicativas dentro do Gráfico de Pizza
             chartStatus = new Chart(document.getElementById('graficoStatus'), {
                 type: 'doughnut',
                 data: { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: paletaCores, borderWidth: 2, borderColor: '#ffffff' }] },
@@ -789,6 +835,32 @@
             const objBairros = {};
             topBairros.forEach(b => objBairros[b] = bairroCounts[b]);
             renderListaHTML('listaBairros', objBairros, 'bairro');
+
+            // NOVIDADE: Solicitantes (Heavy Users) e Gargalos por Secretaria
+            const solCounts = {};
+            demandasFiltradas.forEach(d => {
+                if(d.solicitante_nome && d.solicitante_nome.trim() !== '' && d.solicitante_nome.toLowerCase() !== 'daniel' && d.solicitante_nome.toLowerCase() !== 'gabinete') {
+                    const s = d.solicitante_nome.trim().toUpperCase();
+                    solCounts[s] = (solCounts[s] || 0) + 1;
+                }
+            });
+            // Puxa quem pediu 2 ou mais vezes, top 20
+            const topSol = Object.keys(solCounts).sort((a,b) => solCounts[b] - solCounts[a]).filter(x => solCounts[x] > 1).slice(0, 20);
+            const objSol = {}; topSol.forEach(k => objSol[k] = solCounts[k]);
+            renderListaHTML('listaSolicitantes', objSol, 'solicitante');
+
+            const atrasoCounts = {};
+            demandasFiltradas.forEach(d => {
+                const isEncerrada = arrayConcluidas.includes(d.status);
+                if(!isEncerrada) {
+                    const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
+                    if (calcularDias(dataInicioBase.toISOString()) > 30) {
+                        const sec = (d.secretaria && d.secretaria.trim() !== '') ? d.secretaria.trim() : 'Sem Secretaria';
+                        atrasoCounts[sec] = (atrasoCounts[sec] || 0) + 1;
+                    }
+                }
+            });
+            renderListaHTML('listaGargalosSec', atrasoCounts, 'secretaria_atrasada');
         }
 
         window.exportarExcel = function() {
