@@ -101,7 +101,7 @@
         .modal-desc-box h3 { color: #185199; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
 
-    
+        /* Scrollbar customizada para lista do modal Word */
         #listaDemandasWord::-webkit-scrollbar { width: 6px; }
         #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
@@ -433,7 +433,7 @@
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
-       
+        // ================= ORDENAÇÃO ESTÁVEL POR DATA =================
         function dataParaOrdenacao(d) {
             if (d.data_agendada) {
                 let horaStr = d.horario_agendado ? (d.horario_agendado.length === 5 ? d.horario_agendado + ':00' : d.horario_agendado) : '00:00:00';
@@ -555,7 +555,7 @@
                 });
             }
 
-        
+            // SUPER BUSCA INTELIGENTE: Pega Protocolos, Expedientes e Textos
             if (termoBusca) {
                 const termos = termoBusca.split(' ').filter(t => t.trim() !== '');
                 lista = lista.filter(d => {
@@ -653,7 +653,7 @@
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${DOMPurify.sanitize(demanda.numero_demanda)}</div>` : '';
                 const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 Aberto ${tempoRelativo(demanda.criado_em)}</div>` : '';
                 
-                
+                // NOVIDADE COMPLETA: Inclusão blindada do bloco de Última Atualização
                 let atualizacaoCard = '';
                 if (demanda.historico && demanda.historico.length > 0) {
                     const ultimaAcao = demanda.historico[demanda.historico.length - 1];
@@ -729,7 +729,7 @@
             }
         }
 
-        
+        // ================= FUNÇÕES DE GERAÇÃO DO WORD =================
         window.filtrarListaWord = function() {
             const termo = document.getElementById('buscaModalWord').value.toLowerCase();
             const statusFiltro = document.getElementById('filtroStatusWord').value;
