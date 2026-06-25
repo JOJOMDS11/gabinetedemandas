@@ -83,6 +83,9 @@
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
         #listaDemandasWord::-webkit-scrollbar { width: 6px; }
         #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .resp-tags-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; min-height: 10px; }
+        .resp-tag-quick { background: #e8f0ff; border: 1px solid #185199; color: #185199; padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+        .resp-tag-quick button { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 14px; padding: 0; line-height: 1; }
     </style>
 </head>
 <body>
@@ -157,13 +160,18 @@
             <input type="file" id="qArquivo" accept="image/*,.pdf" multiple style="font-size: 12px; padding: 5px; border: none; margin-bottom: 15px; width: 100%; background: #f8fafc; border-radius: 4px;">
             <textarea id="qDetalhe" placeholder="Detalhamento da demanda..." style="width:100%; height:80px; margin-bottom:15px; padding:10px; border-radius:4px; border:1px solid #ccc; font-size:14px; outline:none; resize:none;"></textarea>
             <label style="font-size:12px; font-weight:bold; color:#555; display: block; margin-bottom: 5px;">Quem vai cuidar?</label>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:15px; font-size:14px;">
-                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Daniel" class="chk-cuidar" style="width:auto; margin:0;"> Daniel</label>
-                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="João Pedro" class="chk-cuidar" style="width:auto; margin:0;"> João Pedro</label>
-                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Alemão" class="chk-cuidar" style="width:auto; margin:0;"> Alemão</label>
-                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Antonio" class="chk-cuidar" style="width:auto; margin:0;"> Antonio</label>
-                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Luana" class="chk-cuidar" style="width:auto; margin:0;"> Luana</label>
-                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Débora" class="chk-cuidar" style="width:auto; margin:0;"> Débora</label>
+            <div id="respTagsQuick" class="resp-tags-quick"></div>
+            <div style="display:flex; gap:8px; margin-bottom:15px;">
+                <select id="selectAddRespQuick" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
+                    <option value="">Atribuir executor...</option>
+                    <option value="Alemão">Alemão</option>
+                    <option value="Antonio">Antonio</option>
+                    <option value="Daniel">Daniel</option>
+                    <option value="Débora">Débora</option>
+                    <option value="João Pedro">João Pedro</option>
+                    <option value="Luana">Luana</option>
+                </select>
+                <button type="button" onclick="adicionarRespQuick()" style="background:#27ae60; color:white; border:none; padding:8px 14px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
             </div>
             <div class="modal-botoes">
                 <button style="background:#e0e0e0; color:#333; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalQuick()">Cancelar</button>
@@ -378,7 +386,37 @@
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
-        window.abrirModalQuick = function() { document.getElementById('modalQuick').classList.add('ativo'); }
+        window._respQuickList = [];
+
+        window.renderRespTagsQuick = function() {
+            const container = document.getElementById('respTagsQuick');
+            if (!container) return;
+            if (window._respQuickList.length === 0) { container.innerHTML = '<span style="color:#999; font-size:12px;">Ninguém selecionado ainda</span>'; return; }
+            container.innerHTML = window._respQuickList.map(r => `<div class="resp-tag-quick">👤 ${DOMPurify.sanitize(r)}<button type="button" onclick="removerRespQuick('${r.replace(/'/g, "\\'")}')">✕</button></div>`).join('');
+        }
+
+        window.adicionarRespQuick = function() {
+            const sel = document.getElementById('selectAddRespQuick');
+            const val = sel.value;
+            if (!val) return;
+            if (!window._respQuickList) window._respQuickList = [];
+            if (window._respQuickList.includes(val)) { sel.value = ''; return; }
+            window._respQuickList.push(val);
+            sel.value = '';
+            renderRespTagsQuick();
+        }
+
+        window.removerRespQuick = function(nome) {
+            window._respQuickList = (window._respQuickList || []).filter(r => r !== nome);
+            renderRespTagsQuick();
+        }
+
+        window.abrirModalQuick = function() {
+            window._respQuickList = [];
+            renderRespTagsQuick();
+            document.getElementById('modalQuick').classList.add('ativo');
+        }
+
         window.fecharModalQuick = function() { document.getElementById('modalQuick').classList.remove('ativo'); }
 
         async function uploadCloudinaryDirect(file) {
@@ -399,7 +437,7 @@
             btn.disabled = true;
             btn.textContent = 'A processar anexos...';
 
-            let responsaveis = Array.from(document.querySelectorAll('.chk-cuidar:checked')).map(cb => cb.value);
+            let responsaveis = window._respQuickList ? [...window._respQuickList] : [];
             let fotos_urls = [];
             let pdf_url = null;
             const files = Array.from(document.getElementById('qArquivo').files);
@@ -452,7 +490,7 @@
                     }
                     fecharModalQuick();
                     document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = '';
-                    document.querySelectorAll('.chk-cuidar').forEach(cb => cb.checked = false);
+                    window._respQuickList = []; renderRespTagsQuick();
                     alert("Demanda Rápida criada com sucesso!");
                 } else { alert("Erro ao salvar no banco. Verifique os dados."); console.error(error); }
             } catch (e) { alert("Erro ao tentar salvar."); }
@@ -730,11 +768,11 @@
             const statusFiltro = document.getElementById('filtroStatusWord').value;
             const labels = document.querySelectorAll('.label-word-demanda');
             labels.forEach(lbl => {
-                const texto = lbl.innerText.toLowerCase();
+                const texto = (lbl.getAttribute('data-texto') || lbl.innerText).toLowerCase();
                 const statusDaLabel = lbl.getAttribute('data-status');
-                const matchTermo = texto.includes(termo);
-                const matchStatus = statusFiltro === "" || statusDaLabel === statusFiltro;
-                if (matchTermo && matchStatus) { lbl.style.display = 'flex'; } else { lbl.style.display = 'none'; }
+                const matchTermo = !termo || texto.includes(termo);
+                const matchStatus = !statusFiltro || statusDaLabel === statusFiltro;
+                lbl.style.display = (matchTermo && matchStatus) ? 'flex' : 'none';
             });
         }
 
@@ -786,7 +824,7 @@
                 if (exp === 'S/Exp' && pdp === 'S/PDP' && prot) idText = prot;
 
                 return `
-                <label class="label-word-demanda" data-status="${statusTag}" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
+                <label class="label-word-demanda" data-status="${statusTag}" data-texto="${DOMPurify.sanitize((idText + ' ' + assunto + ' ' + statusTag).toLowerCase())}" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
                     <input type="checkbox" class="check-word-demanda" value="${d.id}" onchange="atualizarContadorWord()" style="margin-top:3px; transform: scale(1.2);">
                     <div style="font-size:13px; color:#333; line-height: 1.4; width:100%;">
                         <b style="color: #185199;">${idText}</b> 
