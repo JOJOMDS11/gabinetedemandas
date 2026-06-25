@@ -473,7 +473,10 @@
                 criado_em: hoje.toISOString(),
                 data_agendada: hoje.toISOString().split('T')[0],
                 fotos_urls: fotos_urls.length > 0 ? fotos_urls : null,
-                pdf_url: pdf_url
+                pdf_url: pdf_url,
+                rua: '',
+                numero: '',
+                bairro: ''
             };
 
             try {
@@ -764,12 +767,12 @@
         }
 
         window.filtrarListaWord = function() {
-            const termo = document.getElementById('buscaModalWord').value.toLowerCase();
+            const termo = document.getElementById('buscaModalWord').value.toLowerCase().trim();
             const statusFiltro = document.getElementById('filtroStatusWord').value;
             const labels = document.querySelectorAll('.label-word-demanda');
             labels.forEach(lbl => {
-                const texto = (lbl.getAttribute('data-texto') || lbl.innerText).toLowerCase();
-                const statusDaLabel = lbl.getAttribute('data-status');
+                const texto = (lbl.getAttribute('data-texto') || '').toLowerCase();
+                const statusDaLabel = lbl.getAttribute('data-status') || '';
                 const matchTermo = !termo || texto.includes(termo);
                 const matchStatus = !statusFiltro || statusDaLabel === statusFiltro;
                 lbl.style.display = (matchTermo && matchStatus) ? 'flex' : 'none';
@@ -824,7 +827,7 @@
                 if (exp === 'S/Exp' && pdp === 'S/PDP' && prot) idText = prot;
 
                 return `
-                <label class="label-word-demanda" data-status="${statusTag}" data-texto="${DOMPurify.sanitize((idText + ' ' + assunto + ' ' + statusTag).toLowerCase())}" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
+                <label class="label-word-demanda" data-status="${d.status || ''}" data-texto="${(idText + ' ' + (d.assunto || '') + ' ' + (d.status || '')).toLowerCase().replace(/"/g, '&quot;')}" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
                     <input type="checkbox" class="check-word-demanda" value="${d.id}" onchange="atualizarContadorWord()" style="margin-top:3px; transform: scale(1.2);">
                     <div style="font-size:13px; color:#333; line-height: 1.4; width:100%;">
                         <b style="color: #185199;">${idText}</b> 
