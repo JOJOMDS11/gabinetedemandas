@@ -9,13 +9,11 @@
     <meta name="theme-color" content="#185199">
     <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
-
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f2f5; color: #333; }
         .bg-primary { background-color: #185199; }
         .text-primary { color: #185199; }
-        
         .navbar { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; gap: 8px; flex-wrap: nowrap; overflow: hidden; }
         .navbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; font-weight: bold; font-size: 16px; white-space: nowrap; }
         .navbar-brand img { height: 38px; width: 38px; background: white; padding: 2px; border-radius: 6px; object-fit: contain; flex-shrink: 0; }
@@ -23,38 +21,27 @@
         .btn-logout { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.5); padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.2s; white-space: nowrap; display: flex; align-items: center; justify-content: center;}
         .btn-logout:hover { background: rgba(255,255,255,0.1); }
         .btn-sino { background: #e67e22; color: white; border: none; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; animation: pulse 2s infinite; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        
-        @media (max-width: 600px) {
-            .user-name-span { display: none; }
-            .brand-text { display: none; }
-        }
-
+        @media (max-width: 600px) { .user-name-span, .brand-text { display: none; } }
         .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; padding-bottom: 80px; }
         .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; }
-        
         .filtros-avancados { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; }
         .filtros-avancados input:focus, .filtros-avancados select:focus { border-color: #185199; }
         #buscaGeral { flex: 1; min-width: 200px; }
-        
         .filtros { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .filtro-btn { padding: 6px 14px; border: 1px solid #185199; background: white; color: #185199; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 13px; }
         .filtro-btn.ativo { background: #185199; color: white; }
-        
         .realtime-dot { display: inline-block; width: 8px; height: 8px; background: #98ED34; border-radius: 50%; margin-right: 6px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
-        
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .demanda-card { background: white; border-radius: 8px; border: 1px solid #ddd; overflow: hidden; cursor: pointer; transition: transform 0.2s; border-top: 4px solid #185199; display: flex; flex-direction: column; position: relative;}
         .demanda-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
         .demanda-card.aguardando-daniel { border-top-color: #f39c12; box-shadow: 0 0 0 2px #f39c12; }
         .num-demanda { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 2; }
-        
         .demanda-media { height: 180px; background: #eee; position: relative; overflow: hidden; }
         .demanda-media img, .demanda-media video { width: 100%; height: 100%; object-fit: cover; }
         .demanda-conteudo { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
-        
         .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 10px; width: fit-content; }
         .badge-Pendente { background: #ffe5e5; color: #c0392b; }
         .badge-Aguardando { background: #fff3cd; color: #e67e22; border: 1px solid #e67e22; }
@@ -66,11 +53,9 @@
         .badge-Concluida { background: #d4edda; color: #155724; }
         .badge-Rejeitada { background: #c0392b; color: white; }
         .badge-Arquivada { background: #eee; color: #777; }
-
         .titulo { font-size: 15px; font-weight: bold; color: #185199; line-height: 1.3; }
         .info { font-size: 12px; color: #555; margin-bottom: 4px; }
         .info-tempo { font-size: 11px; color: #999; margin-bottom: 4px; font-style: italic; margin-top: 5px; }
-        
         .acoes-card { margin-top: auto; padding-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
         .btn-acao { color: white; border: none; padding: 8px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; flex: 1; min-width: 80px; text-align: center; transition: opacity 0.2s; }
         .btn-acao:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -78,26 +63,21 @@
         .btn-acao.azul { background: #185199; }
         .btn-acao.laranja { background: #e67e22; }
         .btn-acao.cinza { background: #95a5a6; }
-        
         .btn-pdf-card { background: #c0392b; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; position: absolute; bottom: 8px; right: 8px; z-index: 2;}
         .paginacao { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 25px; flex-wrap: wrap; }
         .page-btn { padding: 6px 10px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; min-width: 32px; text-align: center; }
         .page-btn.ativo { background: #185199; color: white; }
         .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
         .btn-micro { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 11px; font-weight: bold; padding: 4px 8px; height: 26px;}
         .btn-micro:hover { background: #e2e8f0; color: #185199; border-color: #185199; }
-
         .fab-quick { position: fixed; bottom: 25px; right: 25px; background: #e67e22; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: none; cursor: pointer; z-index: 1000; transition: transform 0.2s; }
         .fab-quick:hover { transform: scale(1.1); }
-
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; padding: 15px;}
         .modal-overlay.ativo { display: flex; flex-direction: column; }
         .modal-box { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 400px; border-top: 4px solid #c0392b; text-align: center; max-height: 90vh; overflow-y: auto;}
         .modal-box h3 { color: #333; margin-bottom: 15px; }
         .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; text-align: left; font-size:14px;}
         .modal-botoes { display: flex; gap: 10px; margin-top: 15px;}
-
         .modal-desc-box { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 500px; border-top: 4px solid #185199; display: flex; flex-direction: column; max-height: 85vh; text-align: left; }
         .modal-desc-box h3 { color: #185199; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
@@ -131,14 +111,12 @@
 
         <div class="filtros-avancados">
             <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº, data...">
-            
             <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()">
                 <option value="">📁 Filtro: Todas Categorias</option>
                 <option value="Agendas">📅 Agendas e Internos</option>
                 <option value="Demandas">🚧 Demandas (Rua/Externa)</option>
                 <option value="Legislativo">⚖️ Legislativo e Projetos</option>
             </select>
-
             <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()">
                 <option value="">👥 Filtro: Toda a Equipe</option>
                 <option value="Daniel">Daniel</option>
@@ -163,31 +141,30 @@
             <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
         </div>
 
-        <div class="cards-grid" id="demandas">A carregar...</div>
+        <div class="cards-grid" id="demandas"></div>
         <div class="paginacao" id="paginacaoContainer"></div>
     </div>
 
     <button class="fab-quick" onclick="abrirModalQuick()" title="Nova Demanda Rápida">⚡</button>
 
     <div class="modal-overlay" id="modalQuick">
-        <div class="modal-box" style="border-top: 4px solid #e67e22; text-align: left;">
+        <div class="modal-box" style="border-top: 4px solid #e67e22; text-align: left; max-height: 90vh; overflow-y: auto;">
             <h3 style="color:#e67e22; text-align:center;">⚡ Demanda Rápida</h3>
             <input type="text" id="qNome" placeholder="Nome do Solicitante *" required>
             <input type="tel" id="qFone" placeholder="Telefone *" required>
             <input type="text" id="qAssunto" placeholder="Assunto da demanda *" required>
-            <label style="font-size:12px; font-weight:bold; color:#555;">Anexo (Foto/PDF):</label>
-            <input type="file" id="qArquivo" accept="image/*,.pdf" style="font-size: 12px; padding: 5px; border: none;">
+            <label style="font-size:12px; font-weight:bold; color:#555;">Anexos (Fotos ou PDF):</label>
+            <input type="file" id="qArquivo" accept="image/*,.pdf" multiple style="font-size: 12px; padding: 5px; border: none; margin-bottom: 15px; width: 100%; background: #f8fafc; border-radius: 4px;">
             <textarea id="qDetalhe" placeholder="Detalhamento da demanda..." style="width:100%; height:80px; margin-bottom:15px; padding:10px; border-radius:4px; border:1px solid #ccc; font-size:14px; outline:none; resize:none;"></textarea>
-            <label style="font-size:12px; font-weight:bold; color:#555;">Quem vai cuidar?</label>
-            <select id="qCuidar" style="width:100%; padding:10px; border-radius:4px; border:1px solid #ccc; margin-bottom:15px; font-size:14px; outline:none;">
-                <option value="">Selecione a pessoa...</option>
-                <option value="Daniel">Daniel</option>
-                <option value="João Pedro">João Pedro</option>
-                <option value="Alemão">Alemão</option>
-                <option value="Antonio">Antonio</option>
-                <option value="Luana">Luana</option>
-                <option value="Débora">Débora</option>
-            </select>
+            <label style="font-size:12px; font-weight:bold; color:#555; display: block; margin-bottom: 5px;">Quem vai cuidar?</label>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:15px; font-size:14px;">
+                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Daniel" class="chk-cuidar" style="width:auto; margin:0;"> Daniel</label>
+                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="João Pedro" class="chk-cuidar" style="width:auto; margin:0;"> João Pedro</label>
+                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Alemão" class="chk-cuidar" style="width:auto; margin:0;"> Alemão</label>
+                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Antonio" class="chk-cuidar" style="width:auto; margin:0;"> Antonio</label>
+                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Luana" class="chk-cuidar" style="width:auto; margin:0;"> Luana</label>
+                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Débora" class="chk-cuidar" style="width:auto; margin:0;"> Débora</label>
+            </div>
             <div class="modal-botoes">
                 <button style="background:#e0e0e0; color:#333; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalQuick()">Cancelar</button>
                 <button id="btnSalvarQuick" style="background:#e67e22; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="salvarQuick()">Salvar Rápida</button>
@@ -264,17 +241,7 @@
     </div>
 
     <script>
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        document.addEventListener('keydown', event => {
-            if (event.keyCode === 123 || 
-               (event.ctrlKey && event.shiftKey && event.keyCode === 73) || 
-               (event.ctrlKey && event.shiftKey && event.keyCode === 74) || 
-               (event.ctrlKey && event.keyCode === 85)) {
-                event.preventDefault();
-            }
-        });
-
-        let db;
+        let db, cloudName, uploadPreset;
         let todasDemandas = [];
         let listaGlobalFiltrada = []; 
         let usuarioLogado = localStorage.getItem('usuarioLogado');
@@ -351,6 +318,8 @@
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey, { global: { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} } });
+                cloudName = config.cloudinaryName;
+                uploadPreset = config.uploadPreset;
 
                 (async () => {
                     try {
@@ -412,19 +381,44 @@
         window.abrirModalQuick = function() { document.getElementById('modalQuick').classList.add('ativo'); }
         window.fecharModalQuick = function() { document.getElementById('modalQuick').classList.remove('ativo'); }
 
+        async function uploadCloudinaryDirect(file) {
+            const formData = new FormData(); formData.append('file', file); formData.append('upload_preset', uploadPreset);
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, { method: 'POST', body: formData });
+            const data = await res.json(); return data.secure_url;
+        }
+
         window.salvarQuick = async function() {
             const nome = document.getElementById('qNome').value.trim();
             const fone = document.getElementById('qFone').value.trim();
             const assunto = document.getElementById('qAssunto').value.trim();
             const detalhe = document.getElementById('qDetalhe').value.trim();
-            const cuidar = document.getElementById('qCuidar').value;
             
             if(!nome || !fone || !assunto) return alert("Preencha Nome, Fone e Assunto!");
             
-            document.getElementById('btnSalvarQuick').disabled = true;
-            document.getElementById('btnSalvarQuick').textContent = 'A processar...';
+            const btn = document.getElementById('btnSalvarQuick');
+            btn.disabled = true;
+            btn.textContent = 'A processar anexos...';
 
-            let responsaveis = cuidar ? [cuidar] : [];
+            let responsaveis = Array.from(document.querySelectorAll('.chk-cuidar:checked')).map(cb => cb.value);
+            let fotos_urls = [];
+            let pdf_url = null;
+            const files = Array.from(document.getElementById('qArquivo').files);
+
+            try {
+                for (let file of files) {
+                    if (file.type === 'application/pdf') {
+                        if (!pdf_url) pdf_url = await uploadCloudinaryDirect(file);
+                    } else if (file.type.startsWith('image/')) {
+                        fotos_urls.push(await uploadCloudinaryDirect(file));
+                    }
+                }
+            } catch (err) {
+                alert("Erro ao subir anexos: " + err.message);
+                btn.disabled = false; btn.textContent = 'Salvar Rápida'; return;
+            }
+
+            btn.textContent = 'A salvar...';
+
             const hoje = new Date();
             const numGerado = hoje.getDate().toString().padStart(2, '0') + (hoje.getMonth() + 1).toString().padStart(2, '0') + hoje.getFullYear() + hoje.getHours().toString().padStart(2, '0') + hoje.getMinutes().toString().padStart(2, '0') + hoje.getSeconds().toString().padStart(2, '0');
             
@@ -439,28 +433,32 @@
                 tipo_solicitacao: 'DEMANDA (GERAL)',
                 criador: usuarioLogado,
                 criado_em: hoje.toISOString(),
-                data_agendada: hoje.toISOString().split('T')[0]
+                data_agendada: hoje.toISOString().split('T')[0],
+                fotos_urls: fotos_urls.length > 0 ? fotos_urls : null,
+                pdf_url: pdf_url
             };
 
             try {
                 const { data, error } = await db.from('demandas').insert([novaDemanda]).select();
                 if(!error) {
-                    if(cuidar && cuidar !== usuarioLogado && cuidar !== 'Daniel') {
+                    const notifyUsers = responsaveis.filter(r => r !== usuarioLogado && r !== 'Daniel');
+                    if(notifyUsers.length > 0) {
                         db.functions.invoke('send-push', {
                             body: {
                                 payload: { title: '⚡ Demanda Rápida', body: `${usuarioLogado} delegou uma nova demanda rápida: ${assunto}`, url: `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${data[0].id}` },
-                                targetUsers: [cuidar]
+                                targetUsers: notifyUsers
                             }
                         }).catch(()=>{});
                     }
                     fecharModalQuick();
-                    document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qCuidar').value = '';
+                    document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = '';
+                    document.querySelectorAll('.chk-cuidar').forEach(cb => cb.checked = false);
                     alert("Demanda Rápida criada com sucesso!");
-                } else { alert("Erro ao salvar no banco."); }
+                } else { alert("Erro ao salvar no banco. Verifique os dados."); console.error(error); }
             } catch (e) { alert("Erro ao tentar salvar."); }
             
-            document.getElementById('btnSalvarQuick').disabled = false;
-            document.getElementById('btnSalvarQuick').textContent = 'Salvar Rápida';
+            btn.disabled = false;
+            btn.textContent = 'Salvar Rápida';
         }
 
         window.abrirGerenciadorSecretarias = async function() { document.getElementById('modalSecretarias').classList.add('ativo'); await renderizarListaSecretarias(); }
