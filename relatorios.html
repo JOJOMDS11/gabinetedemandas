@@ -93,9 +93,10 @@
 
         .data-table-container { max-height: 350px; overflow-y: auto; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .data-table th { background: #f8fafc; color: #475569; font-weight: 700; padding: 10px; text-align: left; position: sticky; top: 0; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; font-size: 11px;}
-        .data-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; color: #334155; font-weight: 500; }
-        .data-table tr:hover { background: #f0f9ff; }
+        .data-table th { background: #f8fafc; color: #475569; font-weight: 700; padding: 10px; text-align: left; position: sticky; top: 0; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; font-size: 11px; cursor: pointer; transition: background 0.2s;}
+        .data-table th:hover { background: #e2e8f0; }
+        .data-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; color: #334155; font-weight: 500; cursor: pointer;}
+        .data-table tr:hover td { background: #f0f9ff; }
         .tb-taxa { font-weight: 800; color: #0f172a; }
 
         #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center;}
@@ -135,7 +136,7 @@
                 <input type="text" id="filtroBusca" placeholder="Pesquisar por assunto ou local..." oninput="debounceFiltros()">
             </div>
             <div class="filtro-item">
-                <label>📅 Mês de Abertura</label>
+                <label>📅 Mês (Data do Fato)</label>
                 <select id="filtroMes" onchange="aplicarFiltros()"><option value="todos">Todo o Período</option></select>
             </div>
             <div class="filtro-item">
@@ -202,15 +203,23 @@
         <div class="charts-grid">
             
             <div class="chart-card full-width">
-                <h3>Tendência de Abertura <span>Últimos 6 Meses</span></h3>
+                <h3>Tendência de Abertura <span>Últimos 6 Meses (Data Fato)</span></h3>
                 <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
             </div>
 
             <div class="chart-card full-width">
-                <h3>Eficiência por Secretaria/Órgão <span>Ranking de Execução</span></h3>
+                <h3>Eficiência por Secretaria/Órgão <span>Clique no cabeçalho para ordenar, ou na linha para ver demandas</span></h3>
                 <div class="data-table-container">
-                    <table class="data-table">
-                        <thead><tr><th>Secretaria</th><th>Demandas</th><th>Concluídas</th><th>Taxa Resol.</th><th>T. Médio Resolução</th></tr></thead>
+                    <table class="data-table" id="tableSecretariasCompleta">
+                        <thead>
+                            <tr>
+                                <th onclick="ordenarTabelaSec('nome')" title="Ordenar por Nome">Secretaria ↕</th>
+                                <th onclick="ordenarTabelaSec('total')" title="Ordenar por Total" style="text-align:center;">Demandas ↕</th>
+                                <th onclick="ordenarTabelaSec('concluidas')" title="Ordenar por Concluídas" style="text-align:center;">Concluídas ↕</th>
+                                <th onclick="ordenarTabelaSec('taxa')" title="Ordenar por Taxa de Resolução" style="text-align:center;">Taxa Resol. ↕</th>
+                                <th onclick="ordenarTabelaSec('somaTempo')" title="Ordenar por Tempo Médio" style="text-align:center;">T. Médio Resolução ↕</th>
+                            </tr>
+                        </thead>
                         <tbody id="tabelaSecretarias"></tbody>
                     </table>
                 </div>
@@ -253,14 +262,28 @@
         let paginaAtualLista = 1;
         const itensPorPagina = 5;
 
+        // Variáveis de ordenação da tabela
+        let colSecSort = 'total';
+        let dirSecSort = -1; // -1 decrescente, 1 crescente
+
         let chartStatus, chartCat, chartTendencia;
 
-        // Novo Funil Inteligente de 10 passos mapeado perfeitamente[span_2](start_span)[span_2](end_span)
         const arrayAbertas = ['Pendente', 'Aguardando Aprovação'];
         const arrayConcluidas = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
         const paletaCores = ['#1a365d', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#ef4444', '#64748b', '#d946ef'];
 
         const secretariasOficiais = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
+
+        // NOVIDADE: Helper inteligente para puxar sempre a data real do evento primeiro
+        function getMesAnoReal(d) {
+            if (d.data_agendada && d.data_agendada.trim() !== '') {
+                return d.data_agendada.substring(0, 7); 
+            }
+            if (d.criado_em) {
+                return d.criado_em.substring(0, 7);
+            }
+            return 'Desconhecido';
+        }
 
         async function conectarBanco() {
             try {
@@ -296,7 +319,8 @@
             const secSet = new Set(secretariasOficiais);
 
             todasDemandasRAW.forEach(d => { 
-                if(d.criado_em) mesesSet.add(d.criado_em.substring(0, 7)); 
+                const mesAnoReal = getMesAnoReal(d);
+                if(mesAnoReal !== 'Desconhecido') mesesSet.add(mesAnoReal); 
                 if(d.secretaria && d.secretaria.trim() !== '') secSet.add(d.secretaria.trim());
             });
 
@@ -339,10 +363,12 @@
                                  (d.solicitante_nome||'').toLowerCase().includes(vBusca) ||
                                  (d.numero_demanda||'').toLowerCase().includes(vBusca);
                 }
-                if (vMes !== 'todos') passaMes = d.criado_em && d.criado_em.startsWith(vMes);
+                
+                // MÁGICA: Agora filtra pela data real que o fato aconteceu (Agendada/Retroativa)
+                if (vMes !== 'todos') passaMes = getMesAnoReal(d) === vMes;
+                
                 if (vSec !== 'todas') passaSec = d.secretaria && d.secretaria.trim() === vSec;
                 
-                // Validação Inteligente dos Filtros e Buckets
                 if (vStat === 'todos') passaStat = true;
                 else if (vStat === 'abertas_pendentes') passaStat = arrayAbertas.includes(d.status);
                 else if (vStat === 'concluidas') passaStat = arrayConcluidas.includes(d.status);
@@ -368,7 +394,10 @@
 
             demandasFiltradas.forEach(d => {
                 const isEncerrada = arrayConcluidas.includes(d.status);
-                const diasAberto = calcularDias(d.criado_em);
+                
+                // Usa a data original para o cálculo de atraso
+                const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
+                const diasAberto = calcularDias(dataInicioBase.toISOString());
 
                 if (arrayAbertas.includes(d.status)) {
                     abertas++;
@@ -382,12 +411,10 @@
                         const histFim = d.historico.slice().reverse().find(h => arrayConcluidas.includes(h.status));
                         if (histFim && histFim.data) dataFim = new Date(histFim.data);
                     }
-                    if (!dataFim) dataFim = new Date(d.criado_em); 
+                    if (!dataFim) dataFim = new Date(); 
                     
-                    if (d.criado_em) {
-                        const diff = dataFim - new Date(d.criado_em);
-                        if (diff > 0) { totalTempoMs += diff; qtdResolvidas++; }
-                    }
+                    const diff = dataFim - dataInicioBase;
+                    if (diff > 0) { totalTempoMs += diff; qtdResolvidas++; }
                 }
                 else {
                     andamento++;
@@ -418,7 +445,8 @@
 
             demandasFiltradas.forEach(d => {
                 if(!arrayConcluidas.includes(d.status)) {
-                    if (calcularDias(d.criado_em) > 30) numAtrasadas++;
+                    const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
+                    if (calcularDias(dataInicioBase.toISOString()) > 30) numAtrasadas++;
                     if (!d.responsaveis || d.responsaveis.length === 0) naoAtribuidas++;
                 }
             });
@@ -427,6 +455,17 @@
             if (numAtrasadas > 0) html += `<div class="alerta-box alerta-critico">🚨 ${numAtrasadas} demandas estão atrasadas há mais de 30 dias. Recomendamos ação imediata.</div>`;
             if (naoAtribuidas > 0) html += `<div class="alerta-box alerta-aviso">⚠️ ${naoAtribuidas} demandas em andamento não possuem nenhum executor atribuído da equipe.</div>`;
             container.innerHTML = html;
+        }
+
+        // NOVIDADE: Lógica de Ordenação Mágica Clicável
+        window.ordenarTabelaSec = function(coluna) {
+            if(colSecSort === coluna) {
+                dirSecSort *= -1; // inverte a direção
+            } else {
+                colSecSort = coluna;
+                dirSecSort = -1; // Padrão: maior pro menor
+            }
+            montarTabelaSecretarias(); // Redesenha só a tabela
         }
 
         function montarTabelaSecretarias() {
@@ -440,33 +479,54 @@
                 mapSecs[sec].total++;
                 if(arrayConcluidas.includes(d.status)) {
                     mapSecs[sec].concluidas++;
-                    if(d.criado_em) {
-                        let dataFim = new Date(d.criado_em);
-                        if (d.historico) { const h = d.historico.slice().reverse().find(x => arrayConcluidas.includes(x.status)); if (h && h.data) dataFim = new Date(h.data); }
-                        const ms = dataFim - new Date(d.criado_em);
-                        if(ms > 0) { mapSecs[sec].somaTempo += ms; mapSecs[sec].qtdComTempo++; }
-                    }
+                    
+                    const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
+                    let dataFim = new Date();
+                    if (d.historico) { const h = d.historico.slice().reverse().find(x => arrayConcluidas.includes(x.status)); if (h && h.data) dataFim = new Date(h.data); }
+                    
+                    const ms = dataFim - dataInicioBase;
+                    if(ms > 0) { mapSecs[sec].somaTempo += ms; mapSecs[sec].qtdComTempo++; }
                 }
             });
 
-            const keysSort = Object.keys(mapSecs).sort((a,b) => mapSecs[b].total - mapSecs[a].total);
-            
-            if(keysSort.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Nenhum dado.</td></tr>'; return; }
+            // Converte objeto para Array para poder ordenar fácil
+            let secArray = Object.keys(mapSecs).map(k => ({
+                nome: k,
+                total: mapSecs[k].total,
+                concluidas: mapSecs[k].concluidas,
+                somaTempo: mapSecs[k].somaTempo,
+                qtdComTempo: mapSecs[k].qtdComTempo,
+                taxa: mapSecs[k].total > 0 ? Math.round((mapSecs[k].concluidas / mapSecs[k].total) * 100) : 0
+            }));
 
-            tbody.innerHTML = keysSort.map(k => {
-                const s = mapSecs[k];
-                const taxa = s.total > 0 ? Math.round((s.concluidas / s.total) * 100) : 0;
+            // Ordenação clicável
+            secArray.sort((a, b) => {
+                if (colSecSort === 'nome') return a.nome.localeCompare(b.nome) * (dirSecSort * -1); // string
+                
+                let valA = a[colSecSort]; let valB = b[colSecSort];
+                // Caso especial para tempo
+                if (colSecSort === 'somaTempo') {
+                    valA = a.qtdComTempo > 0 ? a.somaTempo/a.qtdComTempo : 0;
+                    valB = b.qtdComTempo > 0 ? b.somaTempo/b.qtdComTempo : 0;
+                }
+                return (valA - valB) * dirSecSort;
+            });
+            
+            if(secArray.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Nenhum dado.</td></tr>'; return; }
+
+            tbody.innerHTML = secArray.map(s => {
                 let tempoStr = '--';
                 if(s.qtdComTempo > 0) {
                     const h = s.somaTempo / s.qtdComTempo / 3600000;
                     tempoStr = h >= 24 ? `${Math.floor(h/24)}d ${Math.floor(h%24)}h` : `${Math.floor(h)}h`;
                 }
-                let corTaxa = taxa > 75 ? '#16a34a' : (taxa > 40 ? '#d97706' : '#dc2626');
+                let corTaxa = s.taxa > 75 ? '#16a34a' : (s.taxa > 40 ? '#d97706' : '#dc2626');
 
-                return `<tr>
-                    <td><b>${DOMPurify.sanitize(k)}</b></td><td style="text-align:center">${s.total}</td>
+                return `<tr onclick="lidarCliqueLista('${DOMPurify.sanitize(s.nome)}', 'secretaria')" title="Clique para ver as demandas desta Secretaria">
+                    <td><b>${DOMPurify.sanitize(s.nome)}</b></td>
+                    <td style="text-align:center">${s.total}</td>
                     <td style="text-align:center">${s.concluidas}</td>
-                    <td class="tb-taxa" style="color:${corTaxa}; text-align:center;">${taxa}%</td>
+                    <td class="tb-taxa" style="color:${corTaxa}; text-align:center;">${s.taxa}%</td>
                     <td style="text-align:center">${tempoStr}</td>
                 </tr>`;
             }).join('');
@@ -518,6 +578,8 @@
                 filtrado = demandasFiltradas.filter(d => d.responsavel_ordem === label);
             } else if (tipo === 'bairro') {
                 filtrado = demandasFiltradas.filter(d => (d.bairro || '').trim().toUpperCase() === label);
+            } else if (tipo === 'secretaria') {
+                filtrado = demandasFiltradas.filter(d => (d.secretaria || 'Não Atribuída').trim() === label);
             }
             
             iniciarListaNaTela(`Filtro: ${label} (${filtrado.length})`, filtrado);
@@ -536,7 +598,11 @@
         }
 
         function iniciarListaNaTela(titulo, lista) {
-            listaExibicao = lista.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+            listaExibicao = lista.sort((a, b) => {
+                const dA = a.data_agendada ? new Date(a.data_agendada + 'T12:00:00').getTime() : new Date(a.criado_em).getTime();
+                const dB = b.data_agendada ? new Date(b.data_agendada + 'T12:00:00').getTime() : new Date(b.criado_em).getTime();
+                return dB - dA;
+            });
             paginaAtualLista = 1;
             document.getElementById('secaoLista').style.display = 'block';
             document.getElementById('tituloLista').textContent = titulo;
@@ -562,7 +628,7 @@
             const recorte = listaExibicao.slice(inicio, inicio + itensPorPagina);
 
             container.innerHTML = recorte.map(d => {
-                const dataF = d.criado_em ? new Date(d.criado_em).toLocaleDateString('pt-BR') : '--';
+                const dataF = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : (d.criado_em ? new Date(d.criado_em).toLocaleDateString('pt-BR') : '--');
                 const bairroTxt = d.bairro ? DOMPurify.sanitize(d.bairro) : 'N/A';
                 const sColor = arrayConcluidas.includes(d.status) ? '#10b981' : (arrayAbertas.includes(d.status) ? '#ef4444' : '#f59e0b');
                 let execStr = (d.responsaveis && d.responsaveis.length>0) ? DOMPurify.sanitize(d.responsaveis.join(', ')) : 'Ninguém';
@@ -603,9 +669,11 @@
 
             montarTabelaSecretarias();
 
+            // Gráfico Tendência usa Mês/Ano Real da Fato (data_agendada)
             const mapMeses = {};
             demandasFiltradas.forEach(d => {
-                if(d.criado_em) { const m = d.criado_em.substring(0,7); mapMeses[m] = (mapMeses[m] || 0) + 1; }
+                const m = getMesAnoReal(d);
+                if(m !== 'Desconhecido') mapMeses[m] = (mapMeses[m] || 0) + 1;
             });
             const ultimos6 = Object.keys(mapMeses).sort().slice(-6);
             
@@ -616,10 +684,43 @@
             });
 
             const statusCounts = {}; demandasFiltradas.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
+            
+            // NOVIDADE: Legendas bonitas e explicativas dentro do Gráfico de Pizza
             chartStatus = new Chart(document.getElementById('graficoStatus'), {
                 type: 'doughnut',
                 data: { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: paletaCores, borderWidth: 2, borderColor: '#ffffff' }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'right' }, title:{display:true, text:'Situação'}, datalabels: { color: '#ffffff', font: { weight: '800' }, formatter: val => val } }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    cutout: '55%', 
+                    plugins: { 
+                        legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } }, 
+                        title:{display:true, text:'Situação'}, 
+                        datalabels: { 
+                            color: '#ffffff', 
+                            font: { weight: '800', size: 10 },
+                            textAlign: 'center',
+                            formatter: (val, ctx) => {
+                                let label = ctx.chart.data.labels[ctx.dataIndex];
+                                // Encurta os nomes gigantes para caber na fatia
+                                if (label === 'Aguardando Exec. Secretaria') label = 'Sec.';
+                                if (label === 'Expediente (Legis) Gerado') label = 'Legis';
+                                if (label === 'Aguardando Aprovação') label = 'Aprovar';
+                                if (label === '156 Solicitado') label = '156';
+                                
+                                // Só mostra o texto se a fatia for maior que 4% do total pra n virar borrão
+                                let sum = 0;
+                                ctx.chart.data.datasets[0].data.map(data => { sum += data; });
+                                let perc = (val * 100) / sum;
+                                
+                                if (perc < 4) return val; // Fatia fina: Só o número
+                                return label + '\n' + val; // Fatia normal: Nome em cima, Número embaixo
+                            } 
+                        } 
+                    }, 
+                    onHover: hoverCursor, 
+                    onClick: lidarCliqueGrafico 
+                }
             });
 
             const catCounts = {}; demandasFiltradas.forEach(d => { let t = d.tipo_solicitacao || 'Sem categoria'; catCounts[t] = (catCounts[t] || 0) + 1; });
@@ -663,13 +764,12 @@
             renderListaHTML('listaBairros', objBairros, 'bairro');
         }
 
-        // NOVIDADE: Ferramenta Nativa de Backup estruturado de arquivos e dados para Auditoria
         window.exportarExcel = function() {
             if (demandasFiltradas.length === 0) return alert("Nenhum dado para exportar.");
             
             const dadosLimpos = demandasFiltradas.map(d => ({
                 'Nº Demanda': d.numero_demanda || '',
-                'Abertura': d.criado_em ? new Date(d.criado_em).toLocaleDateString('pt-BR') : '',
+                'Abertura / Fato': d.data_agendada ? new Date(d.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : (d.criado_em ? new Date(d.criado_em).toLocaleDateString('pt-BR') : ''),
                 'Natureza': d.tipo_solicitacao || '',
                 'Assunto': d.assunto || '',
                 'Status': d.status || '',
