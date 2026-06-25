@@ -286,7 +286,6 @@
         </div>
     </div>
 
-    <!-- Script de sanitização embutido pra garantir -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
     <script>
@@ -488,7 +487,7 @@
             }
         }
 
-        // --- FUNÇÃO 1: EXTRAIR DE PLANILHA EXCEL (ANTIGA MAGIA) ---
+        
         window.executarMagiaPlanilha = function() {
             const textarea = document.getElementById('textoMagico');
             const texto = textarea.value;
@@ -638,7 +637,7 @@
             setTimeout(() => { textarea.value = ''; textarea.style.backgroundColor = '#ffffff'; }, 3000);
         }
 
-        // --- FUNÇÃO 2: EXTRAIR DE TEXTO LIVRE (PDF/WORD) ---
+    
         window.extrairDeTextoLivre = function() {
             const textarea = document.getElementById('textoMagico');
             const texto = textarea.value;
@@ -647,20 +646,20 @@
             limparFormulario();
             let parsed = { data: '', resp: '', status: '', tipo: '', doc_tipo: '', doc_numero: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '', rua: '', numero: '', bairro: '', link_legis: '' };
 
-            // 1. Tipo de Solicitação e Doc Interno[span_5](start_span)[span_5](end_span)[span_6](start_span)[span_6](end_span)
+        
             if (/pedido de providências/i.test(texto)) { parsed.tipo = 'PEDIDO DE PROVIDÊNCIAS'; parsed.doc_tipo = 'PDP'; }
             else if (/indicação/i.test(texto)) { parsed.tipo = 'INDICAÇÃO'; }
             else if (/requerimento/i.test(texto)) { parsed.tipo = 'REQUERIMENTO'; parsed.doc_tipo = 'Requerimento'; }
             else if (/projeto de lei/i.test(texto)) { parsed.tipo = 'PROJETO DE LEI'; }
             else if (/moção/i.test(texto)) { parsed.tipo = 'MOÇÃO DE APOIO'; }
 
-            // 2. Extração do Assunto (Puxa tudo depois de "Assunto:" até a próxima quebra grave)[span_7](start_span)[span_7](end_span)[span_8](start_span)[span_8](end_span)
+
             let matchAssunto = texto.match(/Assunto:\s*([\s\S]*?)(?=O Vereador|Senhor|Prefeito|\n\n|\r\n\r\n)/i);
             if (matchAssunto) {
                 let limpo = matchAssunto[1].replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
                 parsed.assunto = limpo.charAt(0).toUpperCase() + limpo.slice(1);
                 
-                // Extrai Endereço do próprio assunto se tiver
+                
                 let matchRua = limpo.match(/(?:na\s+)?(?:Rua|Ruas|Av\.?|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)\s+([^,.-]+)/i);
                 if (matchRua) parsed.rua = matchRua[0].replace(/^na\s+/i, '').trim();
                 
@@ -670,21 +669,21 @@
                 let matchBairro = limpo.match(/(?:bairro|b\.)\s+([A-Za-zÀ-ÿ\s]+?)(?:,|\.| no | na | em | neste|$)/i);
                 if (matchBairro) parsed.bairro = matchBairro[1].trim();
                 
-                // Reduz o assunto se ficar gigante
+            
                 if (parsed.assunto.length > 100) {
                     parsed.assunto = parsed.assunto.substring(0, 100).trim() + '...';
                 }
             }
 
-            // 3. Verifica se tem protocolo 156 no texto[span_9](start_span)[span_9](end_span)[span_10](start_span)[span_10](end_span)
+            
             let matchProt = texto.match(/156\s*20\d{2}\/\d+/i);
             if(matchProt) parsed.protocolo = matchProt[0];
 
-            // 4. Telefone escondido no texto[span_11](start_span)[span_11](end_span)
+        
             let matchTel = texto.match(/(?:\+55\s*)?\(?\d{2}\)?\s*\d{4,5}-?\d{4}/);
             if (matchTel) parsed.tel = matchTel[0].trim();
 
-            // 5. Descrição recebe o texto inteiro
+        
             parsed.desc = texto.trim();
 
             preencherCampos(parsed);
@@ -694,7 +693,7 @@
             setTimeout(() => { textarea.value = ''; textarea.style.backgroundColor = '#ffffff'; }, 4000);
         }
 
-        // Helper genérico para as duas magias
+    
         function preencherCampos(parsed) {
             if(parsed.link_legis) { document.getElementById('link_legis').value = parsed.link_legis; atualizarLinkLegisNovaDemanda(); }
             if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo.toUpperCase();
