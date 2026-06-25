@@ -11,23 +11,23 @@ self.addEventListener('push', function(event) {
   );
 });
 
-// AQUI ESTÁ O SEGREDO DO CLIQUE:
+
 self.addEventListener('notificationclick', function(event) {
-  event.notification.close(); // Fecha a notificação no telemóvel
+  event.notification.close(); 
   
-  // Pega o URL que passámos lá no dashboard
+  
   const urlToOpen = event.notification.data.url;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(windowClients) {
-      // Se já tiver uma aba aberta com esse URL, apenas foca nela
+      
       for (let i = 0; i < windowClients.length; i++) {
         let client = windowClients[i];
         if (client.url.includes(urlToOpen) && 'focus' in client) {
           return client.focus();
         }
       }
-      // Se não tiver, abre uma aba/janela nova diretamente na demanda
+  
       if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
       }
