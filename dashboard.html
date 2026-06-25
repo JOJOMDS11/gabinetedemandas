@@ -5,13 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gabinete Daniel Daudt - Demandas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#185199">
     <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
-
-    <!-- 🔒 DOMPurify (Prevenção contra XSS) -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
     <style>
@@ -33,7 +29,7 @@
             .brand-text { display: none; }
         }
 
-        .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; padding-bottom: 80px; }
         .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; }
         
@@ -83,25 +79,28 @@
         .btn-acao.laranja { background: #e67e22; }
         .btn-acao.cinza { background: #95a5a6; }
         
-        .paginacao { display: flex; justify-content: center; gap: 8px; margin-top: 25px; flex-wrap: wrap; }
-        .page-btn { padding: 7px 12px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .btn-pdf-card { background: #c0392b; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; position: absolute; bottom: 8px; right: 8px; z-index: 2;}
+        .paginacao { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 25px; flex-wrap: wrap; }
+        .page-btn { padding: 6px 10px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; min-width: 32px; text-align: center; }
         .page-btn.ativo { background: #185199; color: white; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .btn-micro { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 11px; font-weight: bold; padding: 4px 8px; height: 26px;}
         .btn-micro:hover { background: #e2e8f0; color: #185199; border-color: #185199; }
 
+        .fab-quick { position: fixed; bottom: 25px; right: 25px; background: #e67e22; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: none; cursor: pointer; z-index: 1000; transition: transform 0.2s; }
+        .fab-quick:hover { transform: scale(1.1); }
+
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; padding: 15px;}
         .modal-overlay.ativo { display: flex; flex-direction: column; }
-        .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #c0392b; text-align: center; max-height: 90vh; overflow-y: auto;}
+        .modal-box { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 400px; border-top: 4px solid #c0392b; text-align: center; max-height: 90vh; overflow-y: auto;}
         .modal-box h3 { color: #333; margin-bottom: 15px; }
-        .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-size:16px;}
+        .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; text-align: left; font-size:14px;}
         .modal-botoes { display: flex; gap: 10px; margin-top: 15px;}
 
         .modal-desc-box { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 500px; border-top: 4px solid #185199; display: flex; flex-direction: column; max-height: 85vh; text-align: left; }
         .modal-desc-box h3 { color: #185199; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
-
-        /* Scrollbar customizada para lista do modal Word */
         #listaDemandasWord::-webkit-scrollbar { width: 6px; }
         #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
@@ -131,7 +130,7 @@
         </div>
 
         <div class="filtros-avancados">
-            <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, 156, expediente, local...">
+            <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº, data...">
             
             <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()">
                 <option value="">📁 Filtro: Todas Categorias</option>
@@ -141,7 +140,7 @@
             </select>
 
             <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()">
-                <option value="">👥 Filtro: Toda a Equipe (Cuidando/Executando)</option>
+                <option value="">👥 Filtro: Toda a Equipe</option>
                 <option value="Daniel">Daniel</option>
                 <option value="João Pedro">João Pedro</option>
                 <option value="Alemão">Alemão</option>
@@ -151,8 +150,7 @@
             </select>
         </div>
 
-       <div class="container">
-        <div class="filtros" style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #ddd;">
+       <div class="filtros" style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #ddd;">
             <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
             <button class="filtro-btn ativo" data-status="Pendente" onclick="filtrar('Pendente')">📥 Pendentes <span id="count-Pendente" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
             <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="display:none; font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
@@ -169,12 +167,38 @@
         <div class="paginacao" id="paginacaoContainer"></div>
     </div>
 
-    <!-- Modal Gerar Word -->
+    <button class="fab-quick" onclick="abrirModalQuick()" title="Nova Demanda Rápida">⚡</button>
+
+    <div class="modal-overlay" id="modalQuick">
+        <div class="modal-box" style="border-top: 4px solid #e67e22; text-align: left;">
+            <h3 style="color:#e67e22; text-align:center;">⚡ Demanda Rápida</h3>
+            <input type="text" id="qNome" placeholder="Nome do Solicitante *" required>
+            <input type="tel" id="qFone" placeholder="Telefone *" required>
+            <input type="text" id="qAssunto" placeholder="Assunto da demanda *" required>
+            <label style="font-size:12px; font-weight:bold; color:#555;">Anexo (Foto/PDF):</label>
+            <input type="file" id="qArquivo" accept="image/*,.pdf" style="font-size: 12px; padding: 5px; border: none;">
+            <textarea id="qDetalhe" placeholder="Detalhamento da demanda..." style="width:100%; height:80px; margin-bottom:15px; padding:10px; border-radius:4px; border:1px solid #ccc; font-size:14px; outline:none; resize:none;"></textarea>
+            <label style="font-size:12px; font-weight:bold; color:#555;">Quem vai cuidar?</label>
+            <select id="qCuidar" style="width:100%; padding:10px; border-radius:4px; border:1px solid #ccc; margin-bottom:15px; font-size:14px; outline:none;">
+                <option value="">Selecione a pessoa...</option>
+                <option value="Daniel">Daniel</option>
+                <option value="João Pedro">João Pedro</option>
+                <option value="Alemão">Alemão</option>
+                <option value="Antonio">Antonio</option>
+                <option value="Luana">Luana</option>
+                <option value="Débora">Débora</option>
+            </select>
+            <div class="modal-botoes">
+                <button style="background:#e0e0e0; color:#333; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalQuick()">Cancelar</button>
+                <button id="btnSalvarQuick" style="background:#e67e22; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="salvarQuick()">Salvar Rápida</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="modalWord">
         <div class="modal-box" style="max-width: 650px; text-align: left; padding: 20px;">
             <h3 style="text-align:center; color:#185199; margin-bottom: 5px;">📄 Gerar Ofício em Word</h3>
             <p style="text-align:center; color:#666; font-size:12px; margin-bottom: 20px;">O sistema listará abaixo as demandas do seu filtro atual (excluindo as finalizadas e as sem protocolo/expediente).</p>
-            
             <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#555;">Secretaria Destino:</label>
@@ -185,23 +209,15 @@
                     <input type="text" id="wordSecretario" placeholder="Ex: Rogel da Silva Corrêa" value="Rogel da Silva Corrêa" style="text-align: left; font-size: 14px;">
                 </div>
             </div>
-
             <p style="font-size:13px; color:#555; margin-bottom:8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
                 <span>Selecione as demandas para o ofício:</span>
                 <span id="contadorWordBadge" onclick="toggleMarcarTodasWord()" style="background: #185199; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s;" title="Clique para Marcar/Desmarcar todas">0 selecionadas</span>
             </p>
-            
             <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
                 <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="flex:1; min-width:200px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
-                <select id="filtroStatusWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; min-width: 150px;">
-                    <!-- Preenchido via JS -->
-                </select>
+                <select id="filtroStatusWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; min-width: 150px;"></select>
             </div>
-
-            <div id="listaDemandasWord" class="modal-desc-content" style="max-height: 250px; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px;">
-                <!-- Preenchido via JS -->
-            </div>
-
+            <div id="listaDemandasWord" class="modal-desc-content" style="max-height: 250px; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px;"></div>
             <div class="modal-botoes" style="margin-top: 20px;">
                 <button style="background:#e0e0e0; color:#333; flex:0.4; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalWord()">Cancelar</button>
                 <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="gerarEBaixarWord()">⬇️ Baixar Arquivo Word</button>
@@ -209,7 +225,6 @@
         </div>
     </div>
 
-    <!-- Modal Autenticação -->
     <div class="modal-overlay" id="modalSenhaSegura">
         <div class="modal-box">
             <h3>🔐 Exclusão de Registro</h3>
@@ -223,7 +238,6 @@
         </div>
     </div>
 
-    <!-- Modal Secretarias -->
     <div class="modal-overlay" id="modalSecretarias">
         <div class="modal-box" style="max-width: 420px; text-align: left;">
             <h3 style="text-align:center;">⚙️ Gerenciar Secretarias</h3>
@@ -241,7 +255,6 @@
         </div>
     </div>
 
-    <!-- Modal Descrição -->
     <div class="modal-overlay" id="modalDescOverlay">
         <div class="modal-desc-box">
             <h3>Detalhes da Demanda <button type="button" onclick="fecharModalDescricao()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#c0392b;" title="Fechar">✕</button></h3>
@@ -251,10 +264,19 @@
     </div>
 
     <script>
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', event => {
+            if (event.keyCode === 123 || 
+               (event.ctrlKey && event.shiftKey && event.keyCode === 73) || 
+               (event.ctrlKey && event.shiftKey && event.keyCode === 74) || 
+               (event.ctrlKey && event.keyCode === 85)) {
+                event.preventDefault();
+            }
+        });
+
         let db;
         let todasDemandas = [];
         let listaGlobalFiltrada = []; 
-        
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         let authToken = localStorage.getItem('authToken'); 
         
@@ -266,14 +288,10 @@
             filtroPadrao = (usuarioLogado === 'Daniel') ? 'Aguardando Aprovação' : 'Pendente';
         }
         let filtroAtual = filtroPadrao;
-        
         let paginaAtual = 1;
-        const itensPorPagina = 6; 
+        const itensPorPagina = 9;
         let idParaExcluir = null;
-
-        let contadoresNovas = {
-            'Aguardando Aprovação': 0, 'Pendente': 0, 'Aprovada': 0, 'Em Andamento': 0, 'Aguardando Exec. Secretaria': 0, '156 Solicitado': 0
-        };
+        let contadoresNovas = { 'Aguardando Aprovação': 0, 'Pendente': 0, 'Aprovada': 0, 'Em Andamento': 0, 'Aguardando Exec. Secretaria': 0, '156 Solicitado': 0 };
 
         const tiposAgendas = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO'];
         const tiposDemandasLivre = ['DEMANDA (GERAL)', 'DEMANDA EXTERNA'];
@@ -288,16 +306,10 @@
         let debounceTimer;
         document.getElementById('buscaGeral').addEventListener('input', function() {
             clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                mudarPagina(1);
-                renderDemandas();
-            }, 350); 
+            debounceTimer = setTimeout(() => { mudarPagina(1); renderDemandas(); }, 350); 
         });
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
-        }
-
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
         const PUBLIC_VAPID_KEY = 'BKpSVEN9NzySiKfUsN1xwmOX_pyr9wJZvmKvrJo836ZrdV_S0ooNGkakEn38QXfbQTr5GkgIxNTEnx1xWVZ6THo';
 
         function urlB64ToUint8Array(base64String) {
@@ -314,13 +326,9 @@
                 const permissao = await Notification.requestPermission();
                 if (permissao !== 'granted') return alert("❌ Notificações bloqueadas pelo navegador.");
                 const swRegistration = await navigator.serviceWorker.ready;
-                const subscription = await swRegistration.pushManager.subscribe({
-                    userVisibleOnly: true, applicationServerKey: urlB64ToUint8Array(PUBLIC_VAPID_KEY)
-                });
+                const subscription = await swRegistration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToUint8Array(PUBLIC_VAPID_KEY) });
                 const subJson = subscription.toJSON();
-                await db.from('push_subscriptions').upsert({
-                    usuario: usuarioLogado, endpoint: subJson.endpoint, p256dh: subJson.keys.p256dh, auth: subJson.keys.auth
-                }, { onConflict: 'endpoint' });
+                await db.from('push_subscriptions').upsert({ usuario: usuarioLogado, endpoint: subJson.endpoint, p256dh: subJson.keys.p256dh, auth: subJson.keys.auth }, { onConflict: 'endpoint' });
                 alert("✅ Sucesso!");
                 const btnSino = document.querySelector('.btn-sino'); if(btnSino) btnSino.style.display = 'none';
             } catch (err) {}
@@ -342,9 +350,7 @@
             try {
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
-                db = supabase.createClient(config.supabaseUrl, config.supabaseKey, {
-                    global: { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} }
-                });
+                db = supabase.createClient(config.supabaseUrl, config.supabaseKey, { global: { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} } });
 
                 (async () => {
                     try {
@@ -370,25 +376,13 @@
                             if (payload.eventType === 'INSERT') {
                                 todasDemandas.unshift(payload.new);
                                 if (payload.new.status !== filtroAtual && contadoresNovas[payload.new.status] !== undefined) contadoresNovas[payload.new.status]++;
-
                                 if (['Pendente', 'Aguardando Aprovação'].includes(payload.new.status)) {
                                     const assuntoCurto = payload.new.assunto?.length > 35 ? payload.new.assunto.substring(0, 35) + '...' : payload.new.assunto;
                                     const quemAbriu = payload.new.criador || 'Equipe';
                                     const solicitante = payload.new.solicitante_nome ? ` (De: ${payload.new.solicitante_nome})` : '';
                                     const corpoNotificacao = `Aberto por: ${quemAbriu}${solicitante}\nAssunto: ${assuntoCurto}`;
-                                    
-                                    const linkDemanda = `${window.location.origin}/ver-demanda.html?id=${payload.new.id}`;
-
-                                    db.functions.invoke('send-push', {
-                                        body: {
-                                            payload: {
-                                                title: '🔔 Nova demanda',
-                                                body: corpoNotificacao,
-                                                url: linkDemanda 
-                                            },
-                                            targetUsers: ['Daniel']
-                                        }
-                                    }).catch(err => console.error('Erro push:', err));
+                                    const linkDemanda = `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${payload.new.id}`;
+                                    db.functions.invoke('send-push', { body: { payload: { title: '🔔 Nova demanda', body: corpoNotificacao, url: linkDemanda }, targetUsers: ['Daniel'] } }).catch(()=>{});
                                 }
                             }
                             else if (payload.eventType === 'UPDATE') {
@@ -396,62 +390,80 @@
                                 const statusAntigo = idx !== -1 ? todasDemandas[idx].status : payload.old?.status;
                                 if (idx !== -1) todasDemandas[idx] = payload.new; else todasDemandas.unshift(payload.new);
                                 if (payload.new.status !== statusAntigo && payload.new.status !== filtroAtual && contadoresNovas[payload.new.status] !== undefined) contadoresNovas[payload.new.status]++;
-
                                 if (payload.new.status === 'Aprovada' && statusAntigo !== 'Aprovada') {
                                     let interessados = [payload.new.criador, ...(payload.new.responsaveis || [])].filter(x => x && x !== 'Daniel');
                                     interessados = [...new Set(interessados)];
-
                                     if (interessados.length > 0) {
-                                        const linkDemanda = `${window.location.origin}/ver-demanda.html?id=${payload.new.id}`;
-                                        db.functions.invoke('send-push', {
-                                            body: {
-                                                payload: {
-                                                    title: '✅ Demanda Aprovada',
-                                                    body: `O Daniel aprovou: ${payload.new.assunto}`,
-                                                    url: linkDemanda
-                                                },
-                                                targetUsers: interessados
-                                            }
-                                        }).catch(err => console.error('Erro push:', err));
+                                        const linkDemanda = `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${payload.new.id}`;
+                                        db.functions.invoke('send-push', { body: { payload: { title: '✅ Demanda Aprovada', body: `O Daniel aprovou: ${payload.new.assunto}`, url: linkDemanda }, targetUsers: interessados } }).catch(()=>{});
                                     }
                                 }
                             }
-                            else if (payload.eventType === 'DELETE') {
-                                todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id);
-                            }
-                            
-                            ordenarDemandasData();
-                            atualizarContadores(); 
-                            renderDemandas();
+                            else if (payload.eventType === 'DELETE') { todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id); }
+                            todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+                            atualizarContadores(); renderDemandas();
                         }
                     ).subscribe();
-
-            } catch (err) {
-                document.getElementById('demandas').innerHTML = '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>';
-            }
+            } catch (err) { document.getElementById('demandas').innerHTML = '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>'; }
         }
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
-        // ================= ORDENAÇÃO ESTÁVEL POR DATA =================
-        function dataParaOrdenacao(d) {
-            if (d.data_agendada) {
-                let horaStr = d.horario_agendado ? (d.horario_agendado.length === 5 ? d.horario_agendado + ':00' : d.horario_agendado) : '00:00:00';
-                let dataOficial = new Date(`${d.data_agendada}T${horaStr}`);
-                if (!isNaN(dataOficial.getTime())) return dataOficial.getTime();
-            }
-            return new Date(d.criado_em).getTime();
+        window.abrirModalQuick = function() { document.getElementById('modalQuick').classList.add('ativo'); }
+        window.fecharModalQuick = function() { document.getElementById('modalQuick').classList.remove('ativo'); }
+
+        window.salvarQuick = async function() {
+            const nome = document.getElementById('qNome').value.trim();
+            const fone = document.getElementById('qFone').value.trim();
+            const assunto = document.getElementById('qAssunto').value.trim();
+            const detalhe = document.getElementById('qDetalhe').value.trim();
+            const cuidar = document.getElementById('qCuidar').value;
+            
+            if(!nome || !fone || !assunto) return alert("Preencha Nome, Fone e Assunto!");
+            
+            document.getElementById('btnSalvarQuick').disabled = true;
+            document.getElementById('btnSalvarQuick').textContent = 'A processar...';
+
+            let responsaveis = cuidar ? [cuidar] : [];
+            const hoje = new Date();
+            const numGerado = hoje.getDate().toString().padStart(2, '0') + (hoje.getMonth() + 1).toString().padStart(2, '0') + hoje.getFullYear() + hoje.getHours().toString().padStart(2, '0') + hoje.getMinutes().toString().padStart(2, '0') + hoje.getSeconds().toString().padStart(2, '0');
+            
+            const novaDemanda = {
+                numero_demanda: numGerado,
+                solicitante_nome: nome,
+                solicitante_tel: fone,
+                assunto: assunto,
+                descricao: detalhe,
+                responsaveis: responsaveis,
+                status: 'Pendente',
+                tipo_solicitacao: 'DEMANDA (GERAL)',
+                criador: usuarioLogado,
+                criado_em: hoje.toISOString(),
+                data_agendada: hoje.toISOString().split('T')[0]
+            };
+
+            try {
+                const { data, error } = await db.from('demandas').insert([novaDemanda]).select();
+                if(!error) {
+                    if(cuidar && cuidar !== usuarioLogado && cuidar !== 'Daniel') {
+                        db.functions.invoke('send-push', {
+                            body: {
+                                payload: { title: '⚡ Demanda Rápida', body: `${usuarioLogado} delegou uma nova demanda rápida: ${assunto}`, url: `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${data[0].id}` },
+                                targetUsers: [cuidar]
+                            }
+                        }).catch(()=>{});
+                    }
+                    fecharModalQuick();
+                    document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qCuidar').value = '';
+                    alert("Demanda Rápida criada com sucesso!");
+                } else { alert("Erro ao salvar no banco."); }
+            } catch (e) { alert("Erro ao tentar salvar."); }
+            
+            document.getElementById('btnSalvarQuick').disabled = false;
+            document.getElementById('btnSalvarQuick').textContent = 'Salvar Rápida';
         }
 
-        function ordenarDemandasData() {
-            todasDemandas.sort((a, b) => dataParaOrdenacao(b) - dataParaOrdenacao(a));
-        }
-
-        window.abrirGerenciadorSecretarias = async function() {
-            document.getElementById('modalSecretarias').classList.add('ativo');
-            await renderizarListaSecretarias();
-        }
-
+        window.abrirGerenciadorSecretarias = async function() { document.getElementById('modalSecretarias').classList.add('ativo'); await renderizarListaSecretarias(); }
         window.fecharGerenciadorSecretarias = function() { document.getElementById('modalSecretarias').classList.remove('ativo'); }
 
         async function renderizarListaSecretarias() {
@@ -459,40 +471,20 @@
             lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
             const { data, error } = await db.from('secretarias').select('id, nome').order('nome');
             const secretarias = data || [];
-            
             if (secretarias.length === 0) { lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhuma secretaria cadastrada.</p>'; return; }
-            
-            lista.innerHTML = secretarias.map(s => {
-                const sNomeSafe = DOMPurify.sanitize(s.nome).replace(/'/g, "\\'");
-                return `
+            lista.innerHTML = secretarias.map(s => `
                 <div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:8px 10px; border-radius:4px;">
                     <span style="font-size:13px;">${DOMPurify.sanitize(s.nome)}</span>
-                    <div style="display:flex; gap: 5px;">
-                        <button onclick="editarSecretaria(${s.id}, '${sNomeSafe}')" style="background:#f39c12; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;" title="Editar">✏️</button>
-                        <button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;" title="Excluir">🗑️</button>
-                    </div>
+                    <button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button>
                 </div>
-            `}).join('');
+            `).join('');
         }
 
         window.adicionarSecretaria = async function() {
             const input = document.getElementById('inputNovaSecretaria');
             const nome = input.value.trim();
-            if (!nome) return alert('Digite o nome da secretaria!');
-            try {
-                await db.from('secretarias').insert([{ nome }]);
-                input.value = ''; await renderizarListaSecretarias();
-            } catch (e) { alert('Erro ao salvar.'); }
-        }
-
-        window.editarSecretaria = async function(id, nomeAtual) {
-            const novoNome = prompt("Editar nome da secretaria/órgão:", nomeAtual);
-            if (novoNome && novoNome.trim() !== "" && novoNome !== nomeAtual) {
-                try {
-                    await db.from('secretarias').update({ nome: novoNome.trim() }).eq('id', id);
-                    await renderizarListaSecretarias();
-                } catch (e) { alert('Erro ao atualizar.'); }
-            }
+            if (!nome) return alert('Digite o nome!');
+            try { await db.from('secretarias').insert([{ nome }]); input.value = ''; await renderizarListaSecretarias(); } catch (e) { alert('Erro ao salvar.'); }
         }
 
         window.excluirSecretaria = async function(id, btn) {
@@ -502,20 +494,12 @@
         }
 
         window.filtrar = function(status) {
-            filtroAtual = status; 
-            paginaAtual = 1;
-            
+            filtroAtual = status; paginaAtual = 1;
             localStorage.setItem('filtro_preferido_' + usuarioLogado, status);
-            
             if (contadoresNovas[status] !== undefined) contadoresNovas[status] = 0;
             if (status === 'Aguardando Exec. Secretaria') contadoresNovas['Aguardando Exec. Secretaria'] = 0;
-            
-            document.querySelectorAll('.filtro-btn').forEach(btn => { 
-                btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); 
-            });
-            
-            atualizarContadores(); 
-            renderDemandas();
+            document.querySelectorAll('.filtro-btn').forEach(btn => { btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); });
+            atualizarContadores(); renderDemandas();
         }
         
         function atualizarContadores() {
@@ -555,18 +539,11 @@
                 });
             }
 
-            // SUPER BUSCA INTELIGENTE: Pega Protocolos, Expedientes e Textos
             if (termoBusca) {
                 const termos = termoBusca.split(' ').filter(t => t.trim() !== '');
                 lista = lista.filter(d => {
                     let dFormat = ''; if(d.data_agendada) dFormat = new Date(d.data_agendada + 'T00:00:00').toLocaleDateString('pt-BR');
-                    
-                    const textoDemanda = [
-                        d.assunto, d.rua, d.numero, d.bairro, d.numero_demanda, 
-                        d.protocolo, d.expediente, d.doc_tipo, d.doc_numero, 
-                        d.secretaria, d.solicitante_nome, d.responsavel_ordem, dFormat
-                    ].join(' ').toLowerCase();
-                    
+                    const textoDemanda = [d.assunto, d.rua, d.numero, d.bairro, d.numero_demanda, d.protocolo, d.expediente, d.doc_tipo, d.doc_numero, d.secretaria, d.solicitante_nome, d.responsavel_ordem, dFormat].join(' ').toLowerCase();
                     return termos.every(t => textoDemanda.includes(t));
                 });
             }
@@ -579,6 +556,7 @@
             }
 
             const totalPaginas = Math.ceil(lista.length / itensPorPagina);
+            if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
             const inicio = (paginaAtual - 1) * itensPorPagina;
             const paginada = lista.slice(inicio, inicio + itensPorPagina);
 
@@ -653,7 +631,6 @@
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${DOMPurify.sanitize(demanda.numero_demanda)}</div>` : '';
                 const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 Aberto ${tempoRelativo(demanda.criado_em)}</div>` : '';
                 
-                // NOVIDADE COMPLETA: Inclusão blindada do bloco de Última Atualização
                 let atualizacaoCard = '';
                 if (demanda.historico && demanda.historico.length > 0) {
                     const ultimaAcao = demanda.historico[demanda.historico.length - 1];
@@ -687,7 +664,7 @@
                                 <div class="info">👥 Cuidando: <b>${cuindoTxt}</b></div>
                                 ${sProt ? `<div class="info" style="color:#0984e3; font-weight:bold;">🔢 156: ${sProt}</div>` : ''}
                                 ${sPdp ? `<div class="info" style="color:#f39c12; font-weight:bold;">📋 PDP: ${sPdp}</div>` : ''}
-                                ${sExp || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Legis: ${sExp || 'Anexado'}</div>` : ''}
+                                ${sExp || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Expediente: ${sExp || 'Gerado'}</div>` : ''}
                                 ${tempoCard}
                                 ${atualizacaoCard}
                                 <div class="acoes-card">${btnPrincipal}</div>
@@ -696,11 +673,32 @@
             }).join('');
 
             let pagHtml = '';
-            for (let i = 1; i <= totalPaginas; i++) { pagHtml += `<button class="page-btn ${i===paginaAtual?'ativo':''}" onclick="mudarPagina(${i})">Pág ${i}</button>`; }
-            pagContainer.innerHTML = totalPaginas > 1 ? pagHtml : '';
+            if(totalPaginas > 1) {
+                pagHtml += `<button class="page-btn" onclick="mudarPagina(${paginaAtual - 1})" ${paginaAtual === 1 ? 'disabled' : ''}>❮</button>`;
+                let start = Math.max(1, paginaAtual - 2);
+                let end = Math.min(totalPaginas, paginaAtual + 2);
+                if (start > 1) {
+                    pagHtml += `<button class="page-btn" onclick="mudarPagina(1)">1</button>`;
+                    if (start > 2) pagHtml += `<span style="padding: 7px 0; color: #185199; font-weight: bold;">...</span>`;
+                }
+                for (let i = start; i <= end; i++) {
+                    pagHtml += `<button class="page-btn ${i===paginaAtual?'ativo':''}" onclick="mudarPagina(${i})">${i}</button>`;
+                }
+                if (end < totalPaginas) {
+                    if (end < totalPaginas - 1) pagHtml += `<span style="padding: 7px 0; color: #185199; font-weight: bold;">...</span>`;
+                    pagHtml += `<button class="page-btn" onclick="mudarPagina(${totalPaginas})">${totalPaginas}</button>`;
+                }
+                pagHtml += `<button class="page-btn" onclick="mudarPagina(${paginaAtual + 1})" ${paginaAtual === totalPaginas ? 'disabled' : ''}>❯</button>`;
+                pagHtml += `<div style="display:flex; align-items:center; gap:5px; margin-left: 10px;">
+                    <input type="number" id="inputPuloPagina" min="1" max="${totalPaginas}" style="width: 50px; padding: 6px; border: 1px solid #185199; border-radius: 4px; outline: none; font-size: 13px;" placeholder="Ir">
+                    <button class="page-btn" onclick="pularPagina(${totalPaginas})">Ir</button>
+                </div>`;
+            }
+            pagContainer.innerHTML = pagHtml;
         }
 
         window.mudarPagina = function(p) { paginaAtual = p; renderDemandas(); window.scrollTo(0,0); }
+        window.pularPagina = function(max) { const val = parseInt(document.getElementById('inputPuloPagina').value); if(val >= 1 && val <= max) mudarPagina(val); }
 
         function tempoRelativo(dataStr) {
             if (!dataStr) return '';
@@ -724,29 +722,21 @@
             const { data, error } = await db.from('demandas').select('*');
             if (!error) { 
                 todasDemandas = data || []; 
-                ordenarDemandasData();
+                todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
                 window.filtrar(filtroAtual);
             }
         }
 
-        // ================= FUNÇÕES DE GERAÇÃO DO WORD =================
         window.filtrarListaWord = function() {
             const termo = document.getElementById('buscaModalWord').value.toLowerCase();
             const statusFiltro = document.getElementById('filtroStatusWord').value;
             const labels = document.querySelectorAll('.label-word-demanda');
-            
             labels.forEach(lbl => {
                 const texto = lbl.innerText.toLowerCase();
                 const statusDaLabel = lbl.getAttribute('data-status');
-                
                 const matchTermo = texto.includes(termo);
                 const matchStatus = statusFiltro === "" || statusDaLabel === statusFiltro;
-                
-                if (matchTermo && matchStatus) {
-                    lbl.style.display = 'flex';
-                } else {
-                    lbl.style.display = 'none';
-                }
+                if (matchTermo && matchStatus) { lbl.style.display = 'flex'; } else { lbl.style.display = 'none'; }
             });
         }
 
@@ -755,7 +745,6 @@
         window.toggleMarcarTodasWord = function() {
             const checkboxes = document.querySelectorAll('.check-word-demanda');
             const visiveis = Array.from(checkboxes).filter(chk => chk.closest('.label-word-demanda').style.display !== 'none');
-            
             wordTodasMarcadas = !wordTodasMarcadas;
             visiveis.forEach(chk => chk.checked = wordTodasMarcadas);
             atualizarContadorWord();
@@ -771,30 +760,17 @@
 
         window.abrirModalWord = function() {
             const statusExcluidos = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
-            
             const demandasParaWord = listaGlobalFiltrada.filter(d => {
                 const isEncerrada = statusExcluidos.includes(d.status);
                 const temIdentificador = d.expediente || d.protocolo || d.doc_numero;
                 return !isEncerrada && temIdentificador;
             });
 
-            if (demandasParaWord.length === 0) {
-                return alert("Não há demandas válidas (com Expediente, Protocolo ou PDP) no filtro atual para gerar o ofício.");
-            }
+            if (demandasParaWord.length === 0) return alert("Não há demandas válidas no filtro atual para gerar o ofício.");
             
-            const statusAtivos = [
-                '156 Solicitado',
-                'Aguardando Aprovação',
-                'Aguardando Exec. Secretaria',
-                'Aprovada',
-                'Em Andamento',
-                'Expediente (Legis) Gerado',
-                'Pendente'
-            ];
-
+            const statusAtivos = ['156 Solicitado', 'Aguardando Aprovação', 'Aguardando Exec. Secretaria', 'Aprovada', 'Em Andamento', 'Expediente (Legis) Gerado', 'Pendente'];
             const selectStatusWord = document.getElementById('filtroStatusWord');
-            selectStatusWord.innerHTML = '<option value="">Todos os Status</option>' + 
-                statusAtivos.map(s => `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`).join('');
+            selectStatusWord.innerHTML = '<option value="">Todos os Status</option>' + statusAtivos.map(s => `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`).join('');
 
             const container = document.getElementById('listaDemandasWord');
             document.getElementById('buscaModalWord').value = ''; 
@@ -823,14 +799,11 @@
                 `;
             }).join('');
             
-            wordTodasMarcadas = false;
-            atualizarContadorWord();
+            wordTodasMarcadas = false; atualizarContadorWord();
             document.getElementById('modalWord').classList.add('ativo');
         }
 
-        window.fecharModalWord = function() {
-            document.getElementById('modalWord').classList.remove('ativo');
-        }
+        window.fecharModalWord = function() { document.getElementById('modalWord').classList.remove('ativo'); }
 
         window.gerarEBaixarWord = function() {
             const checkboxes = document.querySelectorAll('.check-word-demanda:checked');
@@ -847,41 +820,25 @@
                     const exp = DOMPurify.sanitize(d.expediente || '');
                     const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
                     const desc = DOMPurify.sanitize(d.descricao || d.assunto || '');
-
-                    trsHTML += `
-                    <tr>
-                        <td style="text-align: center; border: 1px solid black; padding: 5px;">${exp}</td>
-                        <td style="text-align: center; border: 1px solid black; padding: 5px;">${pdp}</td>
-                        <td style="text-align: justify; border: 1px solid black; padding: 5px;">${desc}</td>
-                    </tr>`;
+                    trsHTML += `<tr><td style="text-align: center; border: 1px solid black; padding: 5px;">${exp}</td><td style="text-align: center; border: 1px solid black; padding: 5px;">${pdp}</td><td style="text-align: justify; border: 1px solid black; padding: 5px;">${desc}</td></tr>`;
                 }
             });
 
             const htmlString = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head>
-                <meta charset='utf-8'>
-                <title>Ofício Demandas</title>
-            </head>
+            <head><meta charset='utf-8'><title>Ofício Demandas</title></head>
             <body>
                 <div style="font-family: Arial, sans-serif; font-size: 11pt;">
                     <br><br>
                     <table style="width: 100%; border: none; margin-bottom: 20px;">
-                        <tr>
-                            <td style="text-align: left; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">Pedidos de providências</td>
-                            <td style="text-align: right; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">São Leopoldo, ${dataHoje}</td>
-                        </tr>
+                        <tr><td style="text-align: left; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">Pedidos de providências</td><td style="text-align: right; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">São Leopoldo, ${dataHoje}</td></tr>
                     </table>
                     <p style="font-weight: bold; margin: 0; font-family: Arial, sans-serif;">Gabinete Vereador Daniel Daudt Schaefer</p>
                     <p style="margin: 0; font-family: Arial, sans-serif;">Obs.: Demandas da ${DOMPurify.sanitize(secNome)}</p>
                     <p style="margin: 0; font-family: Arial, sans-serif;">SECRETÁRIO ${DOMPurify.sanitize(secResp)}.</p>
                     <br><br>
                     <table border="1" cellspacing="0" cellpadding="5" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt;">
-                        <tr style="background-color: #bfbfbf; font-weight: bold; text-align: center;">
-                            <td width="15%" style="border: 1px solid black; padding: 5px;">EXPEDIENTE</td>
-                            <td width="25%" style="border: 1px solid black; padding: 5px;">PEDIDO DE PROVIDÊNCIAS</td>
-                            <td width="60%" style="border: 1px solid black; padding: 5px;">ASSUNTO/DEMANDA</td>
-                        </tr>
+                        <tr style="background-color: #bfbfbf; font-weight: bold; text-align: center;"><td width="15%" style="border: 1px solid black; padding: 5px;">EXPEDIENTE</td><td width="25%" style="border: 1px solid black; padding: 5px;">PEDIDO DE PROVIDÊNCIAS</td><td width="60%" style="border: 1px solid black; padding: 5px;">ASSUNTO/DEMANDA</td></tr>
                         ${trsHTML}
                     </table>
                     <br><br><br>
@@ -889,26 +846,16 @@
                     <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Luana Costa Dias</p>
                     <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Chefe de Gabinete</p>
                 </div>
-            </body>
-            </html>`;
+            </body></html>`;
 
-            const blob = new Blob(['\ufeff', htmlString], {
-                type: 'application/msword'
-            });
-
+            const blob = new Blob(['\ufeff', htmlString], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            
             const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
             const nomeCurtoSec = secNome.split('-').pop().trim();
             link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            
+            document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
             fecharModalWord();
         }
 
@@ -945,9 +892,7 @@
             finally { btn.textContent = 'Confirmar'; btn.disabled = false; }
         }
 
-        window.copiarTexto = function(texto) {
-            navigator.clipboard.writeText(texto).then(() => { alert('Copiado para a área de transferência!'); }).catch(err => {});
-        }
+        window.copiarTexto = function(texto) { navigator.clipboard.writeText(texto).then(() => { alert('Copiado para a área de transferência!'); }).catch(err => {}); }
 
         window.abrirModalDescricao = function(id) {
             const demanda = todasDemandas.find(d => d.id == id); if (!demanda) return;
@@ -962,14 +907,9 @@
         let sessionTimeout;
         function resetarSessao() {
             clearTimeout(sessionTimeout);
-            sessionTimeout = setTimeout(() => {
-                alert("Sessão expirada por inatividade. Por segurança, faça login novamente.");
-                document.getElementById('btnLogout').click();
-            }, 30 * 60 * 1000);
+            sessionTimeout = setTimeout(() => { alert("Sessão expirada por inatividade. Por segurança, faça login novamente."); document.getElementById('btnLogout').click(); }, 30 * 60 * 1000);
         }
-        document.addEventListener('mousemove', resetarSessao);
-        document.addEventListener('keypress', resetarSessao);
-        document.addEventListener('click', resetarSessao);
+        document.addEventListener('mousemove', resetarSessao); document.addEventListener('keypress', resetarSessao); document.addEventListener('click', resetarSessao);
         resetarSessao();
 
         inicializarSistema();
