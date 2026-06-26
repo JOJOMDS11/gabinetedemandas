@@ -447,7 +447,9 @@
                                 }
                             }
                             else if (payload.eventType === 'DELETE') { todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id); }
-                            lista.sort((a, b) => Number(b.numero_demanda) - Number(a.numero_demanda));
+                            
+                            // Correção principal: ordenando sempre de forma cronológica garantida através da data de criação, substituindo o sort bugado anterior.
+                            todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
                             atualizarContadores(); renderDemandas();
                         }
                     ).subscribe();
@@ -911,6 +913,7 @@
             const { data, error } = await db.from('demandas').select('*').order('criado_em', { ascending: false });
             if (!error) { 
                 todasDemandas = data || []; 
+                // A carga inicial já estava ordenando por criado_em corretamente
                 todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
                 window.filtrar(filtroAtual);
             }
