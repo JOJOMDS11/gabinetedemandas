@@ -222,7 +222,35 @@
             </div>
             <div class="form-group">
                 <label>Bairro</label>
-                <input type="text" id="bairro" placeholder="Bairro da ocorrência">
+                <input type="text" id="bairro" list="listaBairros" placeholder="Bairro da ocorrência">
+                <datalist id="listaBairros">
+                    <option value="ARROIO DA MANTEIGA"></option>
+                    <option value="BOA VISTA"></option>
+                    <option value="CAMPESTRE"></option>
+                    <option value="CAMPINA"></option>
+                    <option value="CENTRO"></option>
+                    <option value="COHAB"></option>
+                    <option value="CRISTO REI"></option>
+                    <option value="DUQUE DE CAXIAS"></option>
+                    <option value="FAZENDA SÃO BORJA"></option>
+                    <option value="FEITORIA"></option>
+                    <option value="FIÃO"></option>
+                    <option value="JARDIM AMÉRICA"></option>
+                    <option value="JARDIM LUCIANA"></option>
+                    <option value="MORRO DO ESPELHO"></option>
+                    <option value="PADRE REUS"></option>
+                    <option value="PASSO DOS FERREIROS"></option>
+                    <option value="PINHEIRO"></option>
+                    <option value="POMBAL"></option>
+                    <option value="RIO BRANCO"></option>
+                    <option value="RIO DOS SINOS"></option>
+                    <option value="SANTA TEREZA"></option>
+                    <option value="SANTOS DUMONT"></option>
+                    <option value="SÃO JOSÉ"></option>
+                    <option value="SÃO MIGUEL"></option>
+                    <option value="SCHARLAU"></option>
+                    <option value="VICENTINA"></option>
+                </datalist>
             </div>
         </div>
 
@@ -246,7 +274,7 @@
                         <option value="Moção">Moção</option>
                         <option value="Ofício">Ofício</option>
                         <option value="Pedido de Informação">Pedido de Informação</option>
-                        <option value="Pedido de Providência">Pedido de Providência</option>
+                        <option value="PDP">Pedido de Providência</option>
                         <option value="Projeto de Decreto Legislativo">Projeto de Decreto Legislativo</option>
                         <option value="Projeto de Lei Complementar do Legislativo">Projeto de Lei Complementar do Legislativo</option>
                         <option value="Projeto de Lei de Vereador">Projeto de Lei de Vereador</option>
@@ -325,13 +353,6 @@
         const secretariasPadrao = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'].sort();
 
         const bairrosSL = ['CENTRO', 'FEITORIA', 'CAMPINA', 'SCHARLAU', 'SANTOS DUMONT', 'RIO DOS SINOS', 'VICENTINA', 'SÃO JOSÉ', 'SÃO MIGUEL', 'CRISTO REI', 'FIÃO', 'DUQUE DE CAXIAS', 'JARDIM AMÉRICA', 'FAZENDA SÃO BORJA', 'PINHEIRO', 'RIO BRANCO', 'SANTA TEREZA', 'POMBAL', 'ARROIO DA MANTEIGA', 'BOA VISTA', 'MORRO DO ESPELHO', 'PADRE REUS', 'PASSO DOS FERREIROS', 'CAMPESTRE', 'JARDIM LUCIANA', 'COHAB'];
-
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('keydown', e => {
-            if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && e.keyCode === 85)) {
-                e.preventDefault();
-            }
-        });
 
         async function carregarSecretarias() {
             const select = document.getElementById('secretaria');
