@@ -523,7 +523,10 @@
                 criado_em: hoje.toISOString(),
                 data_agendada: hoje.toISOString().split('T')[0],
                 fotos_urls: fotos_urls.length > 0 ? fotos_urls : null,
-                pdf_url: pdf_urls.length > 0 ? pdf_urls.join(',') : null
+                pdf_url: pdf_urls.length > 0 ? pdf_urls.join(',') : null,
+                rua: "Não informada",
+                bairro: "Não informado",
+                numero: "S/N"
             };
 
             try {
@@ -593,7 +596,7 @@
             localStorage.setItem('filtro_preferido_' + usuarioLogado, status);
             if (contadoresNovas[status] !== undefined) contadoresNovas[status] = 0;
             if (status === 'Aguardando Exec. Secretaria') contadoresNovas['Aguardando Exec. Secretaria'] = 0;
-            document.querySelectorAll('.stat-btn').forEach(btn => { btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); });
+            document.querySelectorAll('.filtro-btn').forEach(btn => { btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); });
             atualizarContadores(); renderDemandas();
         }
         
@@ -887,7 +890,7 @@
         }, 30000);
 
        async function carregarDemandas() {
-            const { data, error } = await db.from('demandas').select('*');
+            const { data, error } = await db.from('demandas').select('*').order('criado_em', { ascending: false });
             if (!error) { 
                 todasDemandas = data || []; 
                 todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
