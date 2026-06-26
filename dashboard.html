@@ -83,9 +83,6 @@
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
         #listaDemandasWord::-webkit-scrollbar { width: 6px; }
         #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .resp-tags-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; min-height: 10px; }
-        .resp-tag-quick { background: #e8f0ff; border: 1px solid #185199; color: #185199; padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; }
-        .resp-tag-quick button { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 14px; padding: 0; line-height: 1; }
     </style>
 </head>
 <body>
@@ -105,95 +102,47 @@
     <div class="container">
         <div class="header-section">
             <h2 class="text-primary">Painel de Demandas</h2>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <button class="btn-nova" style="background-color: #f39c12; color: white;" onclick="abrirModalWord()">📄 Gerar Ofício (Word)</button>
                 <button class="btn-nova" style="background-color: #3b82f6; color: white;" onclick="window.location.href='relatorios.html'">📊 Relatórios BI</button>
                 <button class="btn-nova" onclick="window.location.href='nova-demanda.html'">+ Nova Demanda</button>
-                <select id="filtroPrioridade" onchange="mudarPagina(1); renderDemandas();" title="Filtrar por prioridade" style="padding:9px 12px; border:2px solid #ddd; border-radius:4px; cursor:pointer; font-size:14px; font-weight:bold; background:white; color:#333; outline:none;">
-                    <option value="">⚡ Prioridade</option>
-                    <option value="Crítica">🔴 Crítica</option>
-                    <option value="Alta">🟠 Alta</option>
-                    <option value="Normal">🟡 Normal</option>
-                    <option value="Baixa">⚪ Baixa</option>
-                </select>
             </div>
         </div>
 
-        <!-- Barra de busca + botão filtros -->
-        <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center; flex-wrap:wrap;">
-            <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº..." style="flex:1; min-width:200px; padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; outline:none;">
-            <button id="btnToggleFiltros" onclick="togglePainelFiltros()" style="display:flex; align-items:center; gap:8px; padding:10px 18px; border:2px solid #185199; background:white; color:#185199; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; white-space:nowrap;">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-                Filtros <span id="badgeFiltrosAtivos" style="display:none; background:#185199; color:white; border-radius:10px; padding:1px 7px; font-size:11px;">0</span>
-            </button>
+        <div class="filtros-avancados">
+            <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº, data...">
+            <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()">
+                <option value="">📁 Filtro: Todas Categorias</option>
+                <option value="Agendas">📅 Agendas e Internos</option>
+                <option value="Demandas">🚧 Demandas (Rua/Externa)</option>
+                <option value="Legislativo">⚖️ Legislativo e Projetos</option>
+            </select>
+            <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()">
+                <option value="">👥 Filtro: Toda a Equipe</option>
+                <option value="Daniel">Daniel</option>
+                <option value="João Pedro">João Pedro</option>
+                <option value="Alemão">Alemão</option>
+                <option value="Antonio">Antonio</option>
+                <option value="Luana">Luana</option>
+                <option value="Débora">Débora</option>
+            </select>
         </div>
 
-        <!-- Painel de filtros colapsável -->
-        <div id="painelFiltros" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin-bottom:16px;">
-
-            <!-- Status -->
-            <div style="margin-bottom:14px;">
-                <div style="font-size:11px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:.8px; margin-bottom:8px;">Status</div>
-                <div style="display:flex; flex-wrap:wrap; gap:7px;">
-                    <button class="filtro-btn ativo" data-status="Pendente" onclick="filtrar('Pendente')">📥 Pendentes <span id="count-Pendente" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-                    <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
-                    <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="display:none; font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-                    <button class="filtro-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas <span id="count-Aprovada" style="display:none; font-size:10px; background:#27ae60; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-                    <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">🏃 Andamento <span id="count-Em Andamento" style="display:none; font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-                    <button class="filtro-btn" data-status="156 Solicitado" onclick="filtrar('156 Solicitado')">🔢 156 Solicitado <span id="count-156 Solicitado" style="display:none; font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-                    <button class="filtro-btn" data-status="Expediente (Legis) Gerado" onclick="filtrar('Expediente (Legis) Gerado')">📄 Exp. Legis</button>
-                    <button class="filtro-btn" data-status="Aguardando Exec. Secretaria" onclick="filtrar('Aguardando Exec. Secretaria')">🏢 Aguard. Secretaria <span id="count-Sec" style="display:none; font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-                    <button class="filtro-btn" data-status="Concluída" onclick="filtrar('Concluída')">🏁 Concluídas</button>
-                    <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
-                </div>
-            </div>
-
-            <!-- Categoria + Responsável -->
-            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
-                <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()" style="flex:1; min-width:180px; padding:9px 12px; border-radius:6px; border:1px solid #ccc; font-size:14px; outline:none;">
-                    <option value="">📁 Todas Categorias</option>
-                    <option value="Agendas">📅 Agendas e Internos</option>
-                    <option value="Demandas">🚧 Demandas (Rua/Externa)</option>
-                    <option value="Legislativo">⚖️ Legislativo e Projetos</option>
-                </select>
-                <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()" style="flex:1; min-width:180px; padding:9px 12px; border-radius:6px; border:1px solid #ccc; font-size:14px; outline:none;">
-                    <option value="">👥 Toda a Equipe</option>
-                    <option value="Daniel">Daniel</option>
-                    <option value="João Pedro">João Pedro</option>
-                    <option value="Alemão">Alemão</option>
-                    <option value="Antonio">Antonio</option>
-                    <option value="Luana">Luana</option>
-                    <option value="Débora">Débora</option>
-                </select>
-            </div>
-
-            <!-- Limpar filtros -->
-            <div style="display:flex; align-items:center; padding-top:12px; border-top:1px solid #e2e8f0;">
-                <button onclick="ativarModoSelecao()" id="btnModoSelecao" style="display:flex; align-items:center; gap:7px; background:#185199; color:white; border:none; padding:8px 16px; border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer;">
-                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                    Selecionar Cards
-                </button>
-                <button onclick="limparTodosFiltros()" style="margin-left:auto; background:none; border:1px solid #ccc; color:#888; padding:7px 14px; border-radius:6px; font-size:13px; cursor:pointer;">✕ Limpar filtros</button>
-            </div>
+       <div class="filtros" style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #ddd;">
+            <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
+            <button class="filtro-btn ativo" data-status="Pendente" onclick="filtrar('Pendente')">📥 Pendentes <span id="count-Pendente" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="display:none; font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas <span id="count-Aprovada" style="display:none; font-size:10px; background:#27ae60; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">🏃 Andamento <span id="count-Em Andamento" style="display:none; font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="156 Solicitado" onclick="filtrar('156 Solicitado')">🔢 156 Solicitado <span id="count-156 Solicitado" style="display:none; font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Expediente (Legis) Gerado" onclick="filtrar('Expediente (Legis) Gerado')">📄 Exp. Legis</button>
+            <button class="filtro-btn" data-status="Aguardando Exec. Secretaria" onclick="filtrar('Aguardando Exec. Secretaria')">🏢 Aguard. Secretaria <span id="count-Sec" style="display:none; font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Concluída" onclick="filtrar('Concluída')">🏁 Concluídas</button>
+            <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
         </div>
 
-        <!-- Barra flutuante de ações em lote (aparece quando cards estão selecionados) -->
-        <div id="barraLote" style="display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:9999; background:#1e293b; color:white; border-radius:14px; padding:12px 20px; box-shadow:0 8px 32px rgba(0,0,0,0.35); display:none; align-items:center; gap:12px; flex-wrap:wrap; min-width:320px; max-width:90vw;">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <input type="checkbox" id="selectTodos" onchange="selecionarTodos()" style="cursor:pointer; width:17px; height:17px; accent-color:#98ED34;">
-                <span id="labelLote" style="font-weight:bold; font-size:14px; white-space:nowrap;">0 selecionadas</span>
-            </div>
-            <div style="width:1px; height:24px; background:rgba(255,255,255,0.2);"></div>
-            <button onclick="loteAcao('Concluída')" style="background:#22c55e; color:white; border:none; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">✅ Concluir</button>
-            <button onclick="loteAcao('Arquivada')" style="background:#64748b; color:white; border:none; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">📦 Arquivar</button>
-            <button onclick="loteAcao('Em Andamento')" style="background:#f59e0b; color:white; border:none; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">🏃 Andamento</button>
-            <button onclick="loteAcao('Aprovada')" style="background:#3b82f6; color:white; border:none; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">✔ Aprovar</button>
-            <div style="width:1px; height:24px; background:rgba(255,255,255,0.2);"></div>
-            <button onclick="desativarModoSelecao()" style="background:none; border:1px solid rgba(255,255,255,0.3); color:rgba(255,255,255,0.7); padding:7px 12px; border-radius:8px; font-size:12px; cursor:pointer;">✕ Cancelar</button>
-        </div>
-
-        <div class="paginacao" id="paginacaoContainer"></div>
         <div class="cards-grid" id="demandas"></div>
+        <div class="paginacao" id="paginacaoContainer"></div>
     </div>
 
     <button class="fab-quick" onclick="abrirModalQuick()" title="Nova Demanda Rápida">⚡</button>
@@ -204,28 +153,18 @@
             <input type="text" id="qNome" placeholder="Nome do Solicitante *" required>
             <input type="tel" id="qFone" placeholder="Telefone *" required>
             <input type="text" id="qAssunto" placeholder="Assunto da demanda *" required>
-            <label style="font-size:12px; font-weight:bold; color:#555;">Anexos (Máx. 5 fotos e 1 vídeo ou 1 PDF):</label>
-            <input type="file" id="qArquivo" accept="image/*,video/*,.pdf" multiple style="font-size: 12px; padding: 5px; border: none; margin-bottom: 5px; width: 100%; background: #f8fafc; border-radius: 4px;">
-            <div id="qPreviewArea" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;"></div>
+            <label style="font-size:12px; font-weight:bold; color:#555;">Anexos (Fotos ou PDF):</label>
+            <input type="file" id="qArquivo" accept="image/*,.pdf" multiple style="font-size: 12px; padding: 5px; border: none; margin-bottom: 15px; width: 100%; background: #f8fafc; border-radius: 4px;">
             <textarea id="qDetalhe" placeholder="Detalhamento da demanda..." style="width:100%; height:80px; margin-bottom:15px; padding:10px; border-radius:4px; border:1px solid #ccc; font-size:14px; outline:none; resize:none;"></textarea>
-            <label style="font-size:12px; font-weight:bold; color:#555; display:block; margin-bottom:5px;">Prioridade:</label>
-            <select id="qPrioridade" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:14px; margin-bottom:15px;">
-                <option value="Normal">🟡 Normal</option>
-                <option value="Alta">🟠 Alta</option>
-                <option value="Crítica">🔴 Crítica</option>
-                <option value="Baixa">⚪ Baixa</option>
-            </select>
             <label style="font-size:12px; font-weight:bold; color:#555; display: block; margin-bottom: 5px;">Quem vai cuidar?</label>
-            <div id="respTagsQuick" class="resp-tags-quick"></div>
-            <select id="selectAddRespQuick" onchange="adicionarRespQuick()" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:14px; margin-bottom:15px;">
-                <option value="">Atribuir executor...</option>
-                <option value="Alemão">Alemão</option>
-                <option value="Antonio">Antonio</option>
-                <option value="Daniel">Daniel</option>
-                <option value="Débora">Débora</option>
-                <option value="João Pedro">João Pedro</option>
-                <option value="Luana">Luana</option>
-            </select>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:15px; font-size:14px;">
+                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Daniel" class="chk-cuidar" style="width:auto; margin:0;"> Daniel</label>
+                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="João Pedro" class="chk-cuidar" style="width:auto; margin:0;"> João Pedro</label>
+                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Alemão" class="chk-cuidar" style="width:auto; margin:0;"> Alemão</label>
+                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Antonio" class="chk-cuidar" style="width:auto; margin:0;"> Antonio</label>
+                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Luana" class="chk-cuidar" style="width:auto; margin:0;"> Luana</label>
+                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Débora" class="chk-cuidar" style="width:auto; margin:0;"> Débora</label>
+            </div>
             <div class="modal-botoes">
                 <button style="background:#e0e0e0; color:#333; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalQuick()">Cancelar</button>
                 <button id="btnSalvarQuick" style="background:#e67e22; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="salvarQuick()">Salvar Rápida</button>
@@ -302,6 +241,16 @@
     </div>
 
     <script>
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', event => {
+            if (event.keyCode === 123 || 
+               (event.ctrlKey && event.shiftKey && event.keyCode === 73) || 
+               (event.ctrlKey && event.shiftKey && event.keyCode === 74) || 
+               (event.ctrlKey && event.keyCode === 85)) {
+                event.preventDefault();
+            }
+        });
+
         let db, cloudName, uploadPreset;
         let todasDemandas = [];
         let listaGlobalFiltrada = []; 
@@ -439,89 +388,7 @@
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
-        window._respQuickList = [];
-        window._arquivosQuick = [];
-
-        window.renderRespTagsQuick = function() {
-            const container = document.getElementById('respTagsQuick');
-            if (!container) return;
-            if (window._respQuickList.length === 0) { container.innerHTML = '<span style="color:#999; font-size:12px;">Ninguém selecionado ainda</span>'; return; }
-            container.innerHTML = window._respQuickList.map(r => `<div class="resp-tag-quick">👤 ${DOMPurify.sanitize(r)}<button type="button" onclick="removerRespQuick('${r.replace(/'/g, "\\'")}')">✕</button></div>`).join('');
-        }
-
-        window.adicionarRespQuick = function() {
-            const sel = document.getElementById('selectAddRespQuick');
-            const val = sel.value;
-            if (!val) return;
-            if (!window._respQuickList) window._respQuickList = [];
-            if (!window._respQuickList.includes(val)) {
-                window._respQuickList.push(val);
-                renderRespTagsQuick();
-            }
-            sel.value = '';
-        }
-
-        window.removerRespQuick = function(nome) {
-            window._respQuickList = (window._respQuickList || []).filter(r => r !== nome);
-            renderRespTagsQuick();
-        }
-
-        function renderPreviewQuick() {
-            const area = document.getElementById('qPreviewArea');
-            if (!area) return;
-            if (window._arquivosQuick.length === 0) { area.innerHTML = ''; return; }
-            area.innerHTML = window._arquivosQuick.map((f, i) => {
-                const url = URL.createObjectURL(f);
-                const isVid = f.type.startsWith('video/');
-                const isPdf = f.type === 'application/pdf';
-                let thumb = '';
-                if (isPdf) thumb = `<div style="width:50px;height:50px;background:#c0392b;border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:bold;">PDF</div>`;
-                else if (isVid) thumb = `<video src="${url}" style="width:50px;height:50px;object-fit:cover;border-radius:4px;" muted></video>`;
-                else thumb = `<img src="${url}" style="width:50px;height:50px;object-fit:cover;border-radius:4px;">`;
-                return `<div style="position:relative;">${thumb}<button type="button" onclick="removerArquivoQuick(${i})" style="position:absolute;top:-4px;right:-4px;background:#c0392b;color:white;border:none;border-radius:50%;width:16px;height:16px;font-size:10px;cursor:pointer;padding:0;line-height:1;display:flex;align-items:center;justify-content:center;">✕</button></div>`;
-            }).join('');
-        }
-
-        window.removerArquivoQuick = function(idx) {
-            window._arquivosQuick.splice(idx, 1);
-            renderPreviewQuick();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const inputQ = document.getElementById('qArquivo');
-            if (inputQ) {
-                inputQ.addEventListener('change', function(e) {
-                    const novos = Array.from(e.target.files);
-                    let fotosCount = window._arquivosQuick.filter(f => f.type.startsWith('image/')).length;
-                    let videoCount = window._arquivosQuick.filter(f => f.type.startsWith('video/')).length;
-                    let pdfCount = window._arquivosQuick.filter(f => f.type === 'application/pdf').length;
-                    novos.forEach(file => {
-                        if (file.size > 15 * 1024 * 1024) { alert(`${file.name} excede 15MB.`); return; }
-                        if (file.type === 'application/pdf') {
-                            if (pdfCount >= 1) { alert('Limite de 1 PDF atingido.'); return; }
-                            pdfCount++; window._arquivosQuick.push(file);
-                        } else if (file.type.startsWith('video/')) {
-                            if (videoCount >= 1) { alert('Limite de 1 vídeo atingido.'); return; }
-                            videoCount++; window._arquivosQuick.push(file);
-                        } else if (file.type.startsWith('image/')) {
-                            if (fotosCount >= 5) { alert('Limite de 5 fotos atingido.'); return; }
-                            fotosCount++; window._arquivosQuick.push(file);
-                        }
-                    });
-                    this.value = '';
-                    renderPreviewQuick();
-                });
-            }
-        });
-
-        window.abrirModalQuick = function() {
-            window._respQuickList = [];
-            window._arquivosQuick = [];
-            renderRespTagsQuick();
-            renderPreviewQuick();
-            document.getElementById('modalQuick').classList.add('ativo');
-        }
-
+        window.abrirModalQuick = function() { document.getElementById('modalQuick').classList.add('ativo'); }
         window.fecharModalQuick = function() { document.getElementById('modalQuick').classList.remove('ativo'); }
 
         async function uploadCloudinaryDirect(file) {
@@ -535,7 +402,6 @@
             const fone = document.getElementById('qFone').value.trim();
             const assunto = document.getElementById('qAssunto').value.trim();
             const detalhe = document.getElementById('qDetalhe').value.trim();
-            const prioridade = document.getElementById('qPrioridade').value || 'Normal';
             
             if(!nome || !fone || !assunto) return alert("Preencha Nome, Fone e Assunto!");
             
@@ -543,15 +409,15 @@
             btn.disabled = true;
             btn.textContent = 'A processar anexos...';
 
-            let responsaveis = window._respQuickList ? [...window._respQuickList] : [];
+            let responsaveis = Array.from(document.querySelectorAll('.chk-cuidar:checked')).map(cb => cb.value);
             let fotos_urls = [];
-            let pdf_url = null;
-            const files = window._arquivosQuick || [];
+            let pdf_urls = [];
+            const files = Array.from(document.getElementById('qArquivo').files);
 
             try {
                 for (let file of files) {
                     if (file.type === 'application/pdf') {
-                        if (!pdf_url) pdf_url = await uploadCloudinaryDirect(file);
+                        pdf_urls.push(await uploadCloudinaryDirect(file));
                     } else if (file.type.startsWith('image/')) {
                         fotos_urls.push(await uploadCloudinaryDirect(file));
                     }
@@ -574,22 +440,18 @@
                 descricao: detalhe,
                 responsaveis: responsaveis,
                 status: 'Pendente',
-                prioridade: prioridade,
                 tipo_solicitacao: 'DEMANDA (GERAL)',
                 criador: usuarioLogado,
                 criado_em: hoje.toISOString(),
                 data_agendada: hoje.toISOString().split('T')[0],
                 fotos_urls: fotos_urls.length > 0 ? fotos_urls : null,
-                pdf_url: pdf_url,
-                rua: '',
-                numero: '',
-                bairro: ''
+                pdf_url: pdf_urls.length > 0 ? pdf_urls.join(',') : null
             };
 
             try {
                 const { data, error } = await db.from('demandas').insert([novaDemanda]).select();
                 if(!error) {
-                    const notifyUsers = responsaveis.filter(r => r !== usuarioLogado);
+                    const notifyUsers = responsaveis.filter(r => r !== usuarioLogado && r !== 'Daniel');
                     if(notifyUsers.length > 0) {
                         db.functions.invoke('send-push', {
                             body: {
@@ -599,8 +461,8 @@
                         }).catch(()=>{});
                     }
                     fecharModalQuick();
-                    document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = ''; document.getElementById('qPrioridade').value = 'Normal';
-                    window._respQuickList = []; window._arquivosQuick = []; renderRespTagsQuick(); renderPreviewQuick();
+                    document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = '';
+                    document.querySelectorAll('.chk-cuidar').forEach(cb => cb.checked = false);
                     alert("Demanda Rápida criada com sucesso!");
                 } else { alert("Erro ao salvar no banco. Verifique os dados."); console.error(error); }
             } catch (e) { alert("Erro ao tentar salvar."); }
@@ -637,34 +499,6 @@
             if (!confirm('Remover esta secretaria da lista?')) return;
             btn.disabled = true;
             try { await db.from('secretarias').delete().eq('id', id); await renderizarListaSecretarias(); } catch (e) { alert('Erro ao excluir.'); btn.disabled = false; }
-        }
-
-        window.togglePainelFiltros = function() {
-            const painel = document.getElementById('painelFiltros');
-            const btn = document.getElementById('btnToggleFiltros');
-            const aberto = painel.style.display !== 'none';
-            painel.style.display = aberto ? 'none' : 'block';
-            btn.style.background = aberto ? 'white' : '#185199';
-            btn.style.color = aberto ? '#185199' : 'white';
-        }
-
-        window.atualizarBadgeFiltros = function() {
-            const badge = document.getElementById('badgeFiltrosAtivos');
-            let count = 0;
-            if (filtroAtual && filtroAtual !== 'Pendente') count++;
-            if (document.getElementById('filtroCategoria')?.value) count++;
-            if (document.getElementById('filtroResp')?.value) count++;
-            if (document.getElementById('filtroPrioridade')?.value) count++;
-            if (count > 0) { badge.textContent = count; badge.style.display = 'inline-block'; }
-            else { badge.style.display = 'none'; }
-        }
-
-        window.limparTodosFiltros = function() {
-            document.getElementById('filtroCategoria').value = '';
-            document.getElementById('filtroResp').value = '';
-            document.getElementById('filtroPrioridade').value = '';
-            document.getElementById('buscaGeral').value = '';
-            window.filtrar('Pendente');
         }
 
         window.filtrar = function(status) {
@@ -722,13 +556,7 @@
                 });
             }
 
-            const filtroPrioridade = document.getElementById('filtroPrioridade')?.value;
-            if (filtroPrioridade) {
-                lista = lista.filter(d => d.prioridade === filtroPrioridade);
-            }
-
             listaGlobalFiltrada = lista;
-            atualizarBadgeFiltros();
 
             if (lista.length === 0) {
                 container.innerHTML = '<p style="color:#777;grid-column:1/-1;text-align:center;padding:30px;">Nenhuma demanda encontrada com estes filtros.</p>';
@@ -744,6 +572,7 @@
                 const fotos = (demanda.fotos_urls || []).filter(f => f);
                 const responsaveis = (demanda.responsaveis || []).filter(r => r);
                 const fotoPrincipal = fotos[0] || null;
+                const primeiroPdf = demanda.pdf_url ? demanda.pdf_url.split(',')[0] : null;
                 const encerrada = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'].includes(demanda.status);
                 const euCuido = responsaveis.includes(usuarioLogado);
                 const aguardandoDaniel = (demanda.status === 'Aguardando Aprovação') && usuarioLogado === 'Daniel';
@@ -764,7 +593,7 @@
                 let mediaTag = '';
                 if (fotoPrincipal) {
                     mediaTag = isVideo(fotoPrincipal) ? `<video src="${fotoPrincipal}" muted loop></video>` : `<img src="${fotoPrincipal}">`;
-                } else if (demanda.pdf_url) {
+                } else if (primeiroPdf) {
                     mediaTag = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: linear-gradient(135deg, #185199, #123e75); color:white;"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-bottom:8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg><span style="font-size:11px; font-weight:bold; letter-spacing: 1px;">DOCUMENTO OFICIAL</span></div>`;
                 } else {
                     mediaTag = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: #e2e8f0; position:relative; overflow:hidden;"><img src="https://i.imgur.com/coryuD6.png" style="position:absolute; width:120%; height:auto; opacity:0.04; top:50%; left:50%; transform:translate(-50%, -50%);"><span style="font-size:11px; font-weight:bold; color:#64748b; z-index:1; letter-spacing:1px; text-transform:uppercase;">Registro Interno</span></div>`;
@@ -772,10 +601,10 @@
                 
                 let quickLinks = '';
                 const isLegisSafe = demanda.link_legis && (demanda.link_legis.startsWith('http://') || demanda.link_legis.startsWith('https://'));
-                if (demanda.pdf_url || isLegisSafe) {
+                if (primeiroPdf || isLegisSafe) {
                     quickLinks += `<div style="position:absolute; bottom:8px; right:8px; display:flex; gap:5px; z-index:2;">`;
                     if (isLegisSafe) quickLinks += `<a href="${DOMPurify.sanitize(demanda.link_legis)}" target="_blank" onclick="event.stopPropagation()" style="background:#f39c12; color:white; padding:6px 10px; border-radius:4px; text-decoration:none; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3);">🔗 Legis</a>`;
-                    if (demanda.pdf_url) quickLinks += `<a href="${demanda.pdf_url}" target="_blank" onclick="event.stopPropagation()" style="background:#c0392b; color:white; padding:6px 10px; border-radius:4px; text-decoration:none; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3);">📄 Ver PDF</a>`;
+                    if (primeiroPdf) quickLinks += `<a href="${primeiroPdf}" target="_blank" onclick="event.stopPropagation()" style="background:#c0392b; color:white; padding:6px 10px; border-radius:4px; text-decoration:none; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3);">📄 Ver PDF</a>`;
                     quickLinks += `</div>`;
                 }
                 mediaTag += quickLinks;
@@ -821,30 +650,11 @@
 
                 const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-                const prioridade = demanda.prioridade || 'Normal';
-                let priorityBg = '#fbbf24';
-                let priorityEmoji = '🟡';
-                if (prioridade === 'Crítica') {
-                    priorityBg = '#ef4444';
-                    priorityEmoji = '🔴';
-                } else if (prioridade === 'Alta') {
-                    priorityBg = '#f59e0b';
-                    priorityEmoji = '🟠';
-                } else if (prioridade === 'Baixa') {
-                    priorityBg = '#86efac';
-                    priorityEmoji = '⚪';
-                }
-
-                return `<div style="display:flex; align-items:flex-start; gap:10px;">
-                            <input type="checkbox" class="card-select" data-id="${demanda.id}" onclick="event.stopPropagation(); atualizarContadorLote();" style="margin-top:8px; width:18px; height:18px; cursor:pointer; display:none; flex-shrink:0; accent-color:#185199;">
-                            <div class="demanda-card ${aguardandoDaniel ? 'aguardando-daniel' : ''}" onclick="window.location.href='ver-demanda.html?id=${demanda.id}'" style="flex:1;">
+                return `<div class="demanda-card ${aguardandoDaniel ? 'aguardando-daniel' : ''}" onclick="window.location.href='ver-demanda.html?id=${demanda.id}'">
                             ${numTag}
                             <div class="demanda-media">${mediaTag}</div>
                             <div class="demanda-conteudo">
-                                <div style="display:flex; gap:6px; margin-bottom:8px;">
-                                    <span class="badge ${badgeClass}">${demanda.status}</span>
-                                    <span style="background:${priorityBg}; color:white; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:bold;">${priorityEmoji} ${prioridade}</span>
-                                </div>
+                                <span class="badge ${badgeClass}">${demanda.status}</span>
                                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:5px;">
                                     <div class="titulo" style="margin-bottom:0;">${sAssunto}</div>
                                     <div style="display:flex; gap:4px; flex-shrink:0;">
@@ -868,7 +678,6 @@
                                 ${atualizacaoCard}
                                 <div class="acoes-card">${btnPrincipal}</div>
                             </div>
-                        </div>
                         </div>`;
             }).join('');
 
@@ -895,10 +704,6 @@
                 </div>`;
             }
             pagContainer.innerHTML = pagHtml;
-            // Se modo seleção estava ativo, mostrar checkboxes nos novos cards
-            if (modoSelecaoAtivo) {
-                document.querySelectorAll('.card-select').forEach(cb => cb.style.display = 'block');
-            }
         }
 
         window.mudarPagina = function(p) { paginaAtual = p; renderDemandas(); window.scrollTo(0,0); }
@@ -932,15 +737,15 @@
         }
 
         window.filtrarListaWord = function() {
-            const termo = document.getElementById('buscaModalWord').value.toLowerCase().trim();
+            const termo = document.getElementById('buscaModalWord').value.toLowerCase();
             const statusFiltro = document.getElementById('filtroStatusWord').value;
             const labels = document.querySelectorAll('.label-word-demanda');
             labels.forEach(lbl => {
-                const texto = (lbl.getAttribute('data-texto') || '').toLowerCase();
-                const statusDaLabel = lbl.getAttribute('data-status') || '';
-                const matchTermo = !termo || texto.includes(termo);
-                const matchStatus = !statusFiltro || statusDaLabel === statusFiltro;
-                lbl.style.display = (matchTermo && matchStatus) ? 'flex' : 'none';
+                const texto = lbl.innerText.toLowerCase();
+                const statusDaLabel = lbl.getAttribute('data-status');
+                const matchTermo = texto.includes(termo);
+                const matchStatus = statusFiltro === "" || statusDaLabel === statusFiltro;
+                if (matchTermo && matchStatus) { lbl.style.display = 'flex'; } else { lbl.style.display = 'none'; }
             });
         }
 
@@ -964,7 +769,7 @@
 
         window.abrirModalWord = function() {
             const statusExcluidos = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
-            const demandasParaWord = todasDemandas.filter(d => {
+            const demandasParaWord = listaGlobalFiltrada.filter(d => {
                 const isEncerrada = statusExcluidos.includes(d.status);
                 const temIdentificador = d.expediente || d.protocolo || d.doc_numero;
                 return !isEncerrada && temIdentificador;
@@ -992,7 +797,7 @@
                 if (exp === 'S/Exp' && pdp === 'S/PDP' && prot) idText = prot;
 
                 return `
-                <label class="label-word-demanda" data-status="${d.status || ''}" data-texto="${(idText + ' ' + (d.assunto || '') + ' ' + (d.status || '')).toLowerCase().replace(/"/g, '&quot;')}" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
+                <label class="label-word-demanda" data-status="${statusTag}" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
                     <input type="checkbox" class="check-word-demanda" value="${d.id}" onchange="atualizarContadorWord()" style="margin-top:3px; transform: scale(1.2);">
                     <div style="font-size:13px; color:#333; line-height: 1.4; width:100%;">
                         <b style="color: #185199;">${idText}</b> 
@@ -1019,7 +824,7 @@
 
             let trsHTML = '';
             checkboxes.forEach(chk => {
-                const d = todasDemandas.find(x => x.id === chk.value);
+                const d = listaGlobalFiltrada.find(x => x.id === chk.value);
                 if (d) {
                     const exp = DOMPurify.sanitize(d.expediente || '');
                     const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
@@ -1033,17 +838,19 @@
             <head><meta charset='utf-8'><title>Ofício Demandas</title></head>
             <body>
                 <div style="font-family: Arial, sans-serif; font-size: 11pt;">
-                    <table style="width: 100%; border: none; margin-bottom: 10px;">
+                    <br><br>
+                    <table style="width: 100%; border: none; margin-bottom: 20px;">
                         <tr><td style="text-align: left; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">Pedidos de providências</td><td style="text-align: right; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">São Leopoldo, ${dataHoje}</td></tr>
                     </table>
                     <p style="font-weight: bold; margin: 0; font-family: Arial, sans-serif;">Gabinete Vereador Daniel Daudt Schaefer</p>
                     <p style="margin: 0; font-family: Arial, sans-serif;">Obs.: Demandas da ${DOMPurify.sanitize(secNome)}</p>
-                    <p style="margin: 0 0 12px 0; font-family: Arial, sans-serif;">SECRETÁRIO ${DOMPurify.sanitize(secResp)}.</p>
+                    <p style="margin: 0; font-family: Arial, sans-serif;">SECRETÁRIO ${DOMPurify.sanitize(secResp)}.</p>
+                    <br><br>
                     <table border="1" cellspacing="0" cellpadding="5" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt;">
                         <tr style="background-color: #bfbfbf; font-weight: bold; text-align: center;"><td width="15%" style="border: 1px solid black; padding: 5px;">EXPEDIENTE</td><td width="25%" style="border: 1px solid black; padding: 5px;">PEDIDO DE PROVIDÊNCIAS</td><td width="60%" style="border: 1px solid black; padding: 5px;">ASSUNTO/DEMANDA</td></tr>
                         ${trsHTML}
                     </table>
-                    <br><br>
+                    <br><br><br>
                     <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">______________________________</p>
                     <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Luana Costa Dias</p>
                     <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Chefe de Gabinete</p>
@@ -1113,52 +920,6 @@
         }
         document.addEventListener('mousemove', resetarSessao); document.addEventListener('keypress', resetarSessao); document.addEventListener('click', resetarSessao);
         resetarSessao();
-
-        let modoSelecaoAtivo = false;
-
-        window.ativarModoSelecao = function() {
-            modoSelecaoAtivo = true;
-            document.querySelectorAll('.card-select').forEach(cb => cb.style.display = 'block');
-            const barra = document.getElementById('barraLote');
-            barra.style.display = 'flex';
-            // Fecha o painel de filtros pra não atrapalhar
-            const painel = document.getElementById('painelFiltros');
-            if (painel.style.display !== 'none') togglePainelFiltros();
-        }
-
-        window.desativarModoSelecao = function() {
-            modoSelecaoAtivo = false;
-            document.querySelectorAll('.card-select').forEach(cb => { cb.style.display = 'none'; cb.checked = false; });
-            document.getElementById('selectTodos').checked = false;
-            document.getElementById('barraLote').style.display = 'none';
-        }
-
-        window.selecionarTodos = function() {
-            const checkboxes = document.querySelectorAll('.card-select');
-            const sel = document.getElementById('selectTodos').checked;
-            checkboxes.forEach(cb => { cb.checked = sel; });
-            atualizarContadorLote();
-        };
-
-        window.atualizarContadorLote = function() {
-            const n = document.querySelectorAll('.card-select:checked').length;
-            const label = document.getElementById('labelLote');
-            if (label) label.textContent = n === 0 ? '0 selecionadas' : `${n} selecionada${n > 1 ? 's' : ''}`;
-        };
-
-        window.loteAcao = async function(novoStatus) {
-            const ids = Array.from(document.querySelectorAll('.card-select:checked')).map(cb => cb.getAttribute('data-id'));
-            if (ids.length === 0) return alert('Selecione pelo menos uma demanda.');
-            const nomes = { 'Concluída': 'Concluir', 'Arquivada': 'Arquivar', 'Em Andamento': 'Mover para Em Andamento', 'Aprovada': 'Aprovar' };
-            if (!confirm(`${nomes[novoStatus] || novoStatus} ${ids.length} demanda(s)?`)) return;
-            const { error } = await db.from('demandas').update({ status: novoStatus, atualizado_em: new Date().toISOString() }).in('id', ids);
-            if (error) { alert('Erro: ' + error.message); return; }
-            desativarModoSelecao();
-            carregarDemandas();
-        };
-
-        // mantém compatibilidade com código antigo que chame concluirEmLote
-        window.concluirEmLote = function() { loteAcao('Concluída'); };
 
         inicializarSistema();
     </script>
