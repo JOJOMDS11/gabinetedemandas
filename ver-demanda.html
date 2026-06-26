@@ -176,18 +176,24 @@
         const adminUsers = ['Daniel', 'João Pedro', 'Luana'];
         const isAdmin = adminUsers.includes(usuarioLogado);
 
-        const secretariasPadrao = [
-            'CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE',
-            'Secretaria Geral de Governo - SGG', 'Secretaria Municipal de Habitação - SEMHAB',
-            'Secretaria Municipal de Proteção Animal - SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'
-        ];
+        const secretariasPadrao = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'Secretaria Geral de Governo - SGG', 'Secretaria Municipal de Habitação - SEMHAB', 'Secretaria Municipal de Proteção Animal - SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
         let listaSecretariasCarregada = secretariasPadrao;
+        let listaBairrosCarregada = [];
 
         async function carregarListaSecretarias() {
             try {
                 const { data, error } = await db.from('secretarias').select('nome').order('nome');
                 if (!error && data && data.length > 0) {
                     listaSecretariasCarregada = data.map(r => r.nome).sort();
+                }
+            } catch (e) { }
+        }
+
+        async function carregarBairros() {
+            try {
+                const { data, error } = await db.from('bairros').select('nome').order('nome');
+                if (!error && data && data.length > 0) { 
+                    listaBairrosCarregada = data.map(r => r.nome).sort(); 
                 }
             } catch (e) { }
         }
@@ -247,6 +253,7 @@
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
                 cloudName = config.cloudinaryName; uploadPreset = config.uploadPreset;
                 await carregarListaSecretarias();
+                await carregarBairros();
                 carregarDemanda();
             } catch (err) {
                 document.getElementById('conteudo').innerHTML = `<h3 style="color:red; grid-column:1/-1;">Erro de conexão.</h3>`;
@@ -699,7 +706,13 @@
                             <div class="form-group"><label>Corrigir Logradouro (Rua)</label><input type="text" id="editRua" value="${sRua}" ${bloqueado}></div>
                             <div class="form-group"><label>Corrigir Número</label><input type="text" id="editNumero" value="${sNum}" ${bloqueado}></div>
                         </div>
-                        <div class="form-group"><label>Corrigir Bairro</label><input type="text" id="editBairro" value="${sBairro}" ${bloqueado}></div>
+                        <div class="form-group">
+                            <label>Corrigir Bairro</label>
+                            <input type="text" id="editBairro" list="listaBairrosEdit" value="${sBairro}" ${bloqueado}>
+                            <datalist id="listaBairrosEdit">
+                                ${listaBairrosCarregada.map(b => `<option value="${DOMPurify.sanitize(b)}"></option>`).join('')}
+                            </datalist>
+                        </div>
                     </div>
 
                     <div class="bloco-edicao" style="margin-top: 20px;">
