@@ -81,9 +81,8 @@
         .modal-desc-box { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 500px; border-top: 4px solid #185199; display: flex; flex-direction: column; max-height: 85vh; text-align: left; }
         .modal-desc-box h3 { color: #185199; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
-        #listaDemandasWord::-webkit-scrollbar { width: 6px; }
-        #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        #barraSelecao { display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#185199; color:white; padding:12px 20px; border-radius:30px; gap:15px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:9999; align-items:center; width: 90%; max-width: 400px; justify-content: space-between; }
+        
+        #barraSelecao { display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#185199; color:white; padding:15px; border-radius:12px; gap:10px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:9999; align-items:center; width: 95%; max-width: 600px; flex-wrap: wrap; justify-content: center; }
     </style>
 </head>
 <body>
@@ -150,11 +149,20 @@
     </div>
 
     <div id="barraSelecao">
-        <span id="qtdSelecionados" style="font-weight:bold; font-size:14px;">0 selecionados</span>
-        <div style="display:flex; gap:8px;">
-            <button onclick="abrirModalWordSelecionados()" style="background:#f39c12; color:white; border:none; padding:8px 12px; border-radius:20px; font-weight:bold; cursor:pointer; font-size:12px;">📄 Gerar Word</button>
-            <button onclick="toggleSelecao()" style="background:transparent; color:white; border:1px solid white; padding:8px 12px; border-radius:20px; cursor:pointer; font-size:12px;">✕ Cancelar</button>
-        </div>
+        <span id="qtdSelecionados" style="font-weight:bold; font-size:14px; width: 100%; text-align: center; margin-bottom: 5px;">0 selecionados</span>
+        <select id="bulkStatusSelect" style="padding:8px 12px; border-radius:6px; font-size:12px; border:none; outline:none; font-weight:bold; color:#185199; cursor:pointer; flex: 1; min-width: 130px;">
+            <option value="">⚡ Mudar Status...</option>
+            <option value="Aprovada">✅ Aprovada</option>
+            <option value="Em Andamento">🏃 Em Andamento</option>
+            <option value="156 Solicitado">🔢 156 Solicitado</option>
+            <option value="Expediente (Legis) Gerado">📄 Exp. Legis</option>
+            <option value="Aguardando Exec. Secretaria">🏢 Aguard. Secretaria</option>
+            <option value="Concluída">🏁 Concluída</option>
+            <option value="Arquivada">📦 Arquivada</option>
+        </select>
+        <button onclick="mudarStatusMassa(this)" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px; flex: 1;">Aplicar</button>
+        <button onclick="abrirModalWordSelecionados()" style="background:#f39c12; color:white; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px; flex: 1;">📄 Gerar Word</button>
+        <button onclick="toggleSelecao()" style="background:transparent; color:white; border:1px solid white; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:12px; flex: 1;">✕ Cancelar</button>
     </div>
 
     <button class="fab-quick" onclick="abrirModalQuick()" title="Nova Demanda Rápida">⚡</button>
@@ -200,7 +208,7 @@
             </div>
             <p style="font-size:13px; color:#555; margin-bottom:8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
                 <span>Selecione as demandas para o ofício:</span>
-                <span id="contadorWordBadge" onclick="toggleMarcarTodasWord()" style="background: #185199; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s;">0 selecionadas</span>
+                <span id="contadorWordBadge" onclick="toggleMarcarTodasWord()" style="background: #185199; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s;" title="Clique para Marcar/Desmarcar todas">0 selecionadas</span>
             </p>
             <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
                 <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="flex:1; min-width:200px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
@@ -340,8 +348,7 @@
                 const navbarActions = document.querySelector('.navbar-actions');
                 if (Notification.permission !== 'granted') {
                     const btnNotif = document.createElement('button');
-                    btnNotif.className = 'btn-sino';
-                    btnNotif.innerHTML = '🔔 Ativar';
+                    btnNotif.className = 'btn-sino'; btnNotif.innerHTML = '🔔 Ativar';
                     btnNotif.onclick = ativarAvisosPush;
                     if(navbarActions) navbarActions.prepend(btnNotif);
                 } 
@@ -489,7 +496,7 @@
                     document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = '';
                     document.querySelectorAll('.chk-cuidar').forEach(cb => cb.checked = false);
                     alert("Demanda Rápida criada com sucesso!");
-                } else { alert("Erro ao salvar no banco. Verifique os dados."); console.error(error); }
+                } else { alert("Erro ao salvar no banco. Verifique os dados."); }
             } catch (e) { alert("Erro ao tentar salvar."); }
             
             btn.disabled = false;
@@ -566,6 +573,36 @@
             else selecionadosWord.add(id);
             document.getElementById('qtdSelecionados').textContent = `${selecionadosWord.size} selecionados`;
             renderDemandas();
+        }
+
+        window.mudarStatusMassa = async function(btn) {
+            const novoStatus = document.getElementById('bulkStatusSelect').value;
+            if(!novoStatus) return alert('Selecione um status primeiro!');
+            if(selecionadosWord.size === 0) return alert('Nenhum card selecionado!');
+            
+            if(!confirm(`Tem certeza que deseja mudar o status de ${selecionadosWord.size} demandas para "${novoStatus}"?`)) return;
+            
+            const textoOriginal = btn.textContent;
+            btn.textContent = '⏳...'; btn.disabled = true;
+
+            try {
+                const promises = Array.from(selecionadosWord).map(async (id) => {
+                    const d = todasDemandas.find(x => x.id === id);
+                    if(d && d.status !== novoStatus) {
+                        const hist = d.historico || [];
+                        hist.push({ status: novoStatus, autor: usuarioLogado, data: new Date().toISOString() });
+                        let updates = { status: novoStatus, historico: hist };
+                        if (novoStatus === 'Arquivada' || novoStatus === 'Rejeitada') updates.fotos_urls = [];
+                        return db.from('demandas').update(updates).eq('id', id);
+                    }
+                });
+                await Promise.all(promises);
+                alert('Status atualizados com sucesso!');
+                window.location.reload();
+            } catch (e) {
+                alert('Erro ao atualizar status em massa.');
+                btn.textContent = textoOriginal; btn.disabled = false;
+            }
         }
         
         function renderDemandas() {
