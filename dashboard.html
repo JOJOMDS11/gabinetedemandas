@@ -25,16 +25,13 @@
         .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; padding-bottom: 80px; }
         .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;}
-        
         .filtros-avancados { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; }
         .filtros-avancados input:focus, .filtros-avancados select:focus { border-color: #185199; }
         #buscaGeral { flex: 1; min-width: 200px; }
-        
         .filtros { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .filtro-btn { padding: 6px 14px; border: 1px solid #185199; background: white; color: #185199; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 13px; }
         .filtro-btn.ativo { background: #185199; color: white; }
-        
         .realtime-dot { display: inline-block; width: 8px; height: 8px; background: #98ED34; border-radius: 50%; margin-right: 6px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
@@ -66,6 +63,7 @@
         .btn-acao.azul { background: #185199; }
         .btn-acao.laranja { background: #e67e22; }
         .btn-acao.cinza { background: #95a5a6; }
+        .btn-pdf-card { background: #c0392b; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; position: absolute; bottom: 8px; right: 8px; z-index: 2;}
         .paginacao { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 25px; flex-wrap: wrap; }
         .page-btn { padding: 6px 10px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; min-width: 32px; text-align: center; }
         .page-btn.ativo { background: #185199; color: white; }
@@ -83,7 +81,8 @@
         .modal-desc-box { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 500px; border-top: 4px solid #185199; display: flex; flex-direction: column; max-height: 85vh; text-align: left; }
         .modal-desc-box h3 { color: #185199; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
-        
+        #listaDemandasWord::-webkit-scrollbar { width: 6px; }
+        #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         #barraSelecao { display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#185199; color:white; padding:15px; border-radius:12px; gap:10px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:9999; align-items:center; width: 95%; max-width: 600px; flex-wrap: wrap; justify-content: center; }
         .select-periodo { padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 11px; font-weight: bold; color: #185199; background: #e2e8f0; outline: none; cursor: pointer; transition: 0.2s; }
         .select-periodo:hover { background: #cbd5e1; }
@@ -108,13 +107,18 @@
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                 <h2 class="text-primary" style="margin: 0;">Painel de Demandas</h2>
                 <button id="btnAtivarSelecao" onclick="toggleSelecao()" style="background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">☑️ Selecionar Cards</button>
-                <select id="filtroPeriodo" class="select-periodo" onchange="mudarPagina(1); renderDemandas()">
-                    <option value="">📅 Todo o Período</option>
-                    <option value="hoje">📅 Apenas Hoje</option>
-                    <option value="7">📅 Últimos 7 dias</option>
-                    <option value="30">📅 Últimos 30 dias</option>
-                    <option value="mes_atual">📅 Este Mês</option>
-                </select>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <select id="filtroPeriodo" class="select-periodo" onchange="verificarFiltroPeriodo()">
+                        <option value="">📅 Todo o Período</option>
+                        <option value="hoje">📅 Apenas Hoje</option>
+                        <option value="7">📅 Últimos 7 dias</option>
+                        <option value="30">📅 Últimos 30 dias</option>
+                        <option value="mes_atual">📅 Este Mês</option>
+                        <option value="custom">📅 Mês Específico...</option>
+                    </select>
+                    <input type="month" id="inputMesCustom" class="select-periodo" style="display:none;" onchange="mudarPagina(1); renderDemandas()">
+                    <button onclick="limparTodosFiltros()" style="background:#e2e8f0; color:#475569; border:1px solid #cbd5e1; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer; transition:0.2s;">🧹 Limpar Filtros</button>
+                </div>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
                 <button class="btn-nova" style="background-color: #f39c12; color: white;" onclick="abrirModalWord()">📄 Gerar Ofício (Word)</button>
@@ -150,16 +154,16 @@
         </div>
 
        <div class="filtros" style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #ddd;">
-            <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
-            <button class="filtro-btn ativo" data-status="Pendente" onclick="filtrar('Pendente')">📥 Pendentes <span id="count-Pendente" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="display:none; font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas <span id="count-Aprovada" style="display:none; font-size:10px; background:#27ae60; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">🏃 Andamento <span id="count-Em Andamento" style="display:none; font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="156 Solicitado" onclick="filtrar('156 Solicitado')">🔢 156 Solicitado <span id="count-156 Solicitado" style="display:none; font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="Expediente (Legis) Gerado" onclick="filtrar('Expediente (Legis) Gerado')">📄 Exp. Legis</button>
-            <button class="filtro-btn" data-status="Aguardando Exec. Secretaria" onclick="filtrar('Aguardando Exec. Secretaria')">🏢 Aguard. Secretaria <span id="count-Sec" style="display:none; font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="Concluída" onclick="filtrar('Concluída')">🏁 Concluídas</button>
-            <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
+            <button class="filtro-btn stat-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
+            <button class="filtro-btn stat-btn ativo" data-status="Pendente" onclick="filtrar('Pendente')">📥 Pendentes <span id="count-Pendente" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn stat-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="display:none; font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn stat-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas <span id="count-Aprovada" style="display:none; font-size:10px; background:#27ae60; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn stat-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">🏃 Andamento <span id="count-Em Andamento" style="display:none; font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn stat-btn" data-status="156 Solicitado" onclick="filtrar('156 Solicitado')">🔢 156 Solicitado <span id="count-156 Solicitado" style="display:none; font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn stat-btn" data-status="Expediente (Legis) Gerado" onclick="filtrar('Expediente (Legis) Gerado')">📄 Exp. Legis</button>
+            <button class="filtro-btn stat-btn" data-status="Aguardando Exec. Secretaria" onclick="filtrar('Aguardando Exec. Secretaria')">🏢 Aguard. Secretaria <span id="count-Sec" style="display:none; font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn stat-btn" data-status="Concluída" onclick="filtrar('Concluída')">🏁 Concluídas</button>
+            <button class="filtro-btn stat-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
         </div>
 
         <div class="cards-grid" id="demandas"></div>
@@ -230,7 +234,7 @@
     <div class="modal-overlay" id="modalWord">
         <div class="modal-box" style="max-width: 650px; text-align: left; padding: 20px;">
             <h3 style="text-align:center; color:#185199; margin-bottom: 5px;">📄 Gerar Ofício em Word</h3>
-            <p style="text-align:center; color:#666; font-size:12px; margin-bottom: 20px;">O sistema listará abaixo as demandas do seu filtro atual (excluindo as finalizadas e as sem protocolo/expediente).</p>
+            <p style="text-align:center; color:#666; font-size:12px; margin-bottom: 20px;">O sistema listará abaixo as demandas do seu banco de dados (excluindo as finalizadas e sem identificador).</p>
             <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#555;">Secretaria Destino:</label>
@@ -249,7 +253,7 @@
                 <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="flex:1; min-width:200px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
                 <select id="filtroStatusWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; min-width: 150px;"></select>
             </div>
-            <div id="listaDemandasWord" style="max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px; white-space: normal; margin-bottom: 15px;"></div>
+            <div id="listaDemandasWord" style="max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px; margin-bottom: 15px;"></div>
             <div class="modal-botoes" style="margin-top: 20px;">
                 <button style="background:#e0e0e0; color:#333; flex:0.4; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalWord()">Cancelar</button>
                 <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="gerarEBaixarWord()">⬇️ Baixar Arquivo Word</button>
@@ -537,7 +541,10 @@
                 criado_em: agora.toISOString(),
                 data_agendada: agora.toISOString().split('T')[0],
                 fotos_urls: fotos_urls.length > 0 ? fotos_urls : null,
-                pdf_url: pdf_urls.length > 0 ? pdf_urls.join(',') : null
+                pdf_url: pdf_urls.length > 0 ? pdf_urls.join(',') : null,
+                rua: '',
+                numero: '',
+                bairro: ''
             };
 
             try {
@@ -607,9 +614,7 @@
             localStorage.setItem('filtro_preferido_' + usuarioLogado, status);
             if (contadoresNovas[status] !== undefined) contadoresNovas[status] = 0;
             if (status === 'Aguardando Exec. Secretaria') contadoresNovas['Aguardando Exec. Secretaria'] = 0;
-            document.querySelectorAll('button[data-status]').forEach(btn => { 
-                btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); 
-            });
+            document.querySelectorAll('.stat-btn').forEach(btn => { btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); });
             atualizarContadores(); renderDemandas();
         }
         
@@ -622,6 +627,30 @@
                     if (count > 0) { badge.textContent = count; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; }
                 }
             }
+        }
+
+        window.verificarFiltroPeriodo = function() {
+            const val = document.getElementById('filtroPeriodo').value;
+            const inputCustom = document.getElementById('inputMesCustom');
+            if (val === 'custom') {
+                inputCustom.style.display = 'inline-block';
+            } else {
+                inputCustom.style.display = 'none';
+                inputCustom.value = '';
+            }
+            mudarPagina(1);
+            renderDemandas();
+        }
+
+        window.limparTodosFiltros = function() {
+            document.getElementById('buscaGeral').value = '';
+            document.getElementById('filtroCategoria').value = '';
+            document.getElementById('filtroResp').value = '';
+            document.getElementById('filtroPrioridade').value = '';
+            document.getElementById('filtroPeriodo').value = '';
+            document.getElementById('inputMesCustom').value = '';
+            document.getElementById('inputMesCustom').style.display = 'none';
+            filtrar('Todas');
         }
 
         window.toggleSelecao = function() {
@@ -747,6 +776,12 @@
                         return dataDemanda >= trintaDias;
                     } else if (periodoSelecionado === 'mes_atual') {
                         return dataDemanda.getMonth() === agora.getMonth() && dataDemanda.getFullYear() === agora.getFullYear();
+                    } else if (periodoSelecionado === 'custom') {
+                        const mesCustom = document.getElementById('inputMesCustom').value;
+                        if (mesCustom) {
+                            const [anoC, mesC] = mesCustom.split('-');
+                            return dataDemanda.getFullYear() === parseInt(anoC) && (dataDemanda.getMonth() + 1) === parseInt(mesC);
+                        }
                     }
                     return true;
                 });
@@ -794,6 +829,14 @@
                 const sExp = DOMPurify.sanitize(demanda.expediente || '');
                 const donoOrdem = demanda.responsavel_ordem ? DOMPurify.sanitize(demanda.responsavel_ordem) : 'Não definido';
                 const cuindoTxt = responsaveis.length > 0 ? DOMPurify.sanitize(responsaveis.join(', ')) : 'Nenhum';
+                
+                const sPrioridade = demanda.prioridade || 'Normal';
+                let badgePrioridade = '';
+                if(sPrioridade === 'Baixa') badgePrioridade = '⚪ Baixa';
+                else if(sPrioridade === 'Normal') badgePrioridade = '🟡 Normal';
+                else if(sPrioridade === 'Alta') badgePrioridade = '🟠 Alta';
+                else if(sPrioridade === 'Crítica') badgePrioridade = '🔴 Crítica';
+                else badgePrioridade = '🟡 ' + DOMPurify.sanitize(sPrioridade);
 
                 let mediaTag = '';
                 if (fotoPrincipal) {
@@ -873,7 +916,10 @@
                             ${numTag}
                             <div class="demanda-media">${mediaTag}</div>
                             <div class="demanda-conteudo">
-                                <span class="badge ${badgeClass}">${demanda.status}</span>
+                                <div>
+                                    <span class="badge ${badgeClass}">${demanda.status}</span>
+                                    <span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; margin-left:4px;">${badgePrioridade}</span>
+                                </div>
                                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:5px;">
                                     <div class="titulo" style="margin-bottom:0;">${sAssunto}</div>
                                     ${!modoSelecao ? `
@@ -989,13 +1035,13 @@
 
         window.abrirModalWord = function() {
             const statusExcluidos = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
-            const demandasParaWord = listaGlobalFiltrada.filter(d => {
+            const demandasParaWord = todasDemandas.filter(d => {
                 const isEncerrada = statusExcluidos.includes(d.status);
                 const temIdentificador = d.expediente || d.protocolo || d.doc_numero;
                 return !isEncerrada && temIdentificador;
             });
 
-            if (demandasParaWord.length === 0) return alert("Não há demandas válidas no filtro atual para gerar o ofício.");
+            if (demandasParaWord.length === 0) return alert("Não há demandas válidas no banco de dados para gerar o ofício.");
             
             const statusAtivos = ['156 Solicitado', 'Aguardando Aprovação', 'Aguardando Exec. Secretaria', 'Aprovada', 'Em Andamento', 'Expediente (Legis) Gerado', 'Pendente'];
             const selectStatusWord = document.getElementById('filtroStatusWord');
@@ -1035,7 +1081,7 @@
 
             let trsHTML = '';
             checkboxes.forEach(chk => {
-                const d = listaGlobalFiltrada.find(x => x.id === chk.value);
+                const d = todasDemandas.find(x => x.id === chk.value);
                 if (d) {
                     const exp = DOMPurify.sanitize(d.expediente || '');
                     const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
@@ -1093,7 +1139,7 @@
             const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
             let trsHTML = '';
             Array.from(selecionadosWord).forEach(id => {
-                const d = listaGlobalFiltrada.find(x => x.id === id) || todasDemandas.find(x => x.id === id);
+                const d = todasDemandas.find(x => x.id === id);
                 if (d) {
                     const exp = DOMPurify.sanitize(d.expediente || '');
                     const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
