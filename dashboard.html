@@ -25,13 +25,16 @@
         .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; padding-bottom: 80px; }
         .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;}
+        
         .filtros-avancados { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; }
         .filtros-avancados input:focus, .filtros-avancados select:focus { border-color: #185199; }
         #buscaGeral { flex: 1; min-width: 200px; }
+        
         .filtros { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .filtro-btn { padding: 6px 14px; border: 1px solid #185199; background: white; color: #185199; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 13px; }
         .filtro-btn.ativo { background: #185199; color: white; }
+        
         .realtime-dot { display: inline-block; width: 8px; height: 8px; background: #98ED34; border-radius: 50%; margin-right: 6px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
@@ -63,6 +66,7 @@
         .btn-acao.azul { background: #185199; }
         .btn-acao.laranja { background: #e67e22; }
         .btn-acao.cinza { background: #95a5a6; }
+        .btn-pdf-card { background: #c0392b; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; position: absolute; bottom: 8px; right: 8px; z-index: 2;}
         .paginacao { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 25px; flex-wrap: wrap; }
         .page-btn { padding: 6px 10px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; min-width: 32px; text-align: center; }
         .page-btn.ativo { background: #185199; color: white; }
@@ -115,19 +119,26 @@
         <div class="filtros-avancados">
             <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº, data...">
             <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()">
-                <option value="">📁 Filtro: Todas Categorias</option>
+                <option value="">📁 Todas Categorias</option>
                 <option value="Agendas">📅 Agendas e Internos</option>
                 <option value="Demandas">🚧 Demandas (Rua/Externa)</option>
                 <option value="Legislativo">⚖️ Legislativo e Projetos</option>
             </select>
             <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()">
-                <option value="">👥 Filtro: Toda a Equipe</option>
+                <option value="">👥 Toda a Equipe</option>
                 <option value="Daniel">Daniel</option>
                 <option value="João Pedro">João Pedro</option>
                 <option value="Alemão">Alemão</option>
                 <option value="Antonio">Antonio</option>
                 <option value="Luana">Luana</option>
                 <option value="Débora">Débora</option>
+            </select>
+            <select id="filtroPrioridade" onchange="mudarPagina(1); renderDemandas()">
+                <option value="">🔴 Prioridade</option>
+                <option value="Baixa">⚪ Baixa</option>
+                <option value="Normal">🟡 Normal</option>
+                <option value="Alta">🟠 Alta</option>
+                <option value="Crítica">🔴 Crítica</option>
             </select>
         </div>
 
@@ -173,9 +184,26 @@
             <input type="text" id="qNome" placeholder="Nome do Solicitante *" required>
             <input type="tel" id="qFone" placeholder="Telefone *" required>
             <input type="text" id="qAssunto" placeholder="Assunto da demanda *" required>
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <select id="qSecretaria" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; outline:none;"></select>
+                <select id="qPrioridade" style="flex:0.6; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; outline:none;">
+                    <option value="Normal">🟡 Normal</option>
+                    <option value="Baixa">⚪ Baixa</option>
+                    <option value="Alta">🟠 Alta</option>
+                    <option value="Crítica">🔴 Crítica</option>
+                </select>
+            </div>
             <label style="font-size:12px; font-weight:bold; color:#555;">Anexos (Fotos ou PDF):</label>
             <input type="file" id="qArquivo" accept="image/*,.pdf" multiple style="font-size: 12px; padding: 5px; border: none; margin-bottom: 15px; width: 100%; background: #f8fafc; border-radius: 4px;">
             <textarea id="qDetalhe" placeholder="Detalhamento da demanda..." style="width:100%; height:80px; margin-bottom:15px; padding:10px; border-radius:4px; border:1px solid #ccc; font-size:14px; outline:none; resize:none;"></textarea>
+            
+            <div style="background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:15px;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:bold; color:#185199; margin-bottom:0;">
+                    <input type="checkbox" id="qAprovacaoDaniel" style="width:16px; height:16px;"> 
+                    Exigir Aprovação (Daniel)
+                </label>
+            </div>
+
             <label style="font-size:12px; font-weight:bold; color:#555; display: block; margin-bottom: 5px;">Quem vai cuidar?</label>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:15px; font-size:14px;">
                 <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" value="Daniel" class="chk-cuidar" style="width:auto; margin:0;"> Daniel</label>
@@ -381,6 +409,7 @@
                 })();
 
                 await carregarDemandas();
+                await carregarListaSecretariasMenuQuick();
 
                 db.channel('dashboard-live')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, async (payload) => {
@@ -418,6 +447,18 @@
             } catch (err) { document.getElementById('demandas').innerHTML = '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>'; }
         }
 
+        async function carregarListaSecretariasMenuQuick() {
+            try {
+                const { data, error } = await db.from('secretarias').select('nome').order('nome');
+                const sel = document.getElementById('qSecretaria');
+                if (!error && data && data.length > 0) {
+                    sel.innerHTML = '<option value="">Opcional: Selecione a Sec.</option>' + data.map(s => `<option value="${DOMPurify.sanitize(s.nome)}">${DOMPurify.sanitize(s.nome)}</option>`).join('');
+                } else {
+                    sel.innerHTML = '<option value="">Opcional: Selecione a Sec.</option>';
+                }
+            } catch (e) { }
+        }
+
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
 
         window.abrirModalQuick = function() { document.getElementById('modalQuick').classList.add('ativo'); }
@@ -434,6 +475,9 @@
             const fone = document.getElementById('qFone').value.trim();
             const assunto = document.getElementById('qAssunto').value.trim();
             const detalhe = document.getElementById('qDetalhe').value.trim();
+            const secretaria = document.getElementById('qSecretaria').value;
+            const prioridade = document.getElementById('qPrioridade').value;
+            const requerAprovacao = document.getElementById('qAprovacaoDaniel').checked;
             
             if(!nome || !fone || !assunto) return alert("Preencha Nome, Fone e Assunto!");
             
@@ -470,8 +514,10 @@
                 solicitante_tel: fone,
                 assunto: assunto,
                 descricao: detalhe,
+                secretaria: secretaria,
+                prioridade: prioridade,
                 responsaveis: responsaveis,
-                status: 'Pendente',
+                status: requerAprovacao ? 'Aguardando Aprovação' : 'Pendente',
                 tipo_solicitacao: 'DEMANDA (GERAL)',
                 criador: usuarioLogado,
                 criado_em: hoje.toISOString(),
@@ -483,6 +529,15 @@
             try {
                 const { data, error } = await db.from('demandas').insert([novaDemanda]).select();
                 if(!error) {
+                    if (requerAprovacao) {
+                        db.functions.invoke('send-push', {
+                            body: {
+                                payload: { title: '🔔 Nova demanda', body: `Aberto por: ${usuarioLogado}\nAssunto: ${assunto}`, url: `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${data[0].id}` },
+                                targetUsers: ['Daniel']
+                            }
+                        }).catch(()=>{});
+                    }
+
                     const notifyUsers = responsaveis.filter(r => r !== usuarioLogado && r !== 'Daniel');
                     if(notifyUsers.length > 0) {
                         db.functions.invoke('send-push', {
@@ -493,10 +548,10 @@
                         }).catch(()=>{});
                     }
                     fecharModalQuick();
-                    document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = '';
+                    document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = ''; document.getElementById('qSecretaria').value = ''; document.getElementById('qPrioridade').value = 'Normal'; document.getElementById('qAprovacaoDaniel').checked = false;
                     document.querySelectorAll('.chk-cuidar').forEach(cb => cb.checked = false);
                     alert("Demanda Rápida criada com sucesso!");
-                } else { alert("Erro ao salvar no banco. Verifique os dados."); }
+                } else { alert("Erro ao salvar no banco. Verifique os dados."); console.error(error); }
             } catch (e) { alert("Erro ao tentar salvar."); }
             
             btn.disabled = false;
@@ -538,7 +593,7 @@
             localStorage.setItem('filtro_preferido_' + usuarioLogado, status);
             if (contadoresNovas[status] !== undefined) contadoresNovas[status] = 0;
             if (status === 'Aguardando Exec. Secretaria') contadoresNovas['Aguardando Exec. Secretaria'] = 0;
-            document.querySelectorAll('.filtro-btn').forEach(btn => { btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); });
+            document.querySelectorAll('.stat-btn').forEach(btn => { btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); });
             atualizarContadores(); renderDemandas();
         }
         
@@ -612,6 +667,7 @@
             const termoBusca = document.getElementById('buscaGeral').value.toLowerCase();
             const respSelecionado = document.getElementById('filtroResp').value;
             const catSelecionada = document.getElementById('filtroCategoria').value;
+            const prioridadeSelecionada = document.getElementById('filtroPrioridade').value;
 
             let lista = todasDemandas;
             
@@ -629,6 +685,10 @@
                     const reps = (d.responsaveis || []); const respOrdem = (d.responsavel_ordem || '');
                     return termosBusca.some(t => reps.some(r => r.toLowerCase().includes(t)) || respOrdem.toLowerCase().includes(t));
                 });
+            }
+
+            if (prioridadeSelecionada) {
+                lista = lista.filter(d => (d.prioridade || 'Normal') === prioridadeSelecionada);
             }
 
             if (termoBusca) {
@@ -844,6 +904,8 @@
                 const statusDaLabel = lbl.getAttribute('data-status') || '';
                 const matchTermo = !termo || texto.includes(termo);
                 const matchStatus = !statusFiltro || statusDaLabel === statusFiltro;
+                
+                // MÁGICA AQUI: Quando dá match, exibe colado, quando não dá, esconde tudo!
                 lbl.style.display = (matchTermo && matchStatus) ? 'flex' : 'none';
             });
         }
@@ -895,7 +957,7 @@
                 if (prot && !d.doc_numero) idText = `${exp} | ${prot}`;
                 if (exp === 'S/Exp' && pdp === 'S/PDP' && prot) idText = prot;
 
-                return `<label class="label-word-demanda" data-status="${statusTag}" data-texto="${(idText + ' ' + (d.assunto || '') + ' ' + statusTag).toLowerCase().replace(/"/g, '')}" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;"><input type="checkbox" class="check-word-demanda" value="${d.id}" onchange="atualizarContadorWord()" style="margin-top:3px; transform: scale(1.2);"><div style="font-size:13px; color:#333; line-height: 1.4; width:100%;"><b style="color: #185199;">${idText}</b> <span style="float:right; font-size:10px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${statusTag}</span><br><span style="color:#555;">${assunto}</span></div></label>`;
+                return `<label class="label-word-demanda" data-status="${statusTag}" data-texto="${(idText + ' ' + (d.assunto || '') + ' ' + statusTag).toLowerCase().replace(/"/g, '')}" style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; padding-bottom:10px; padding-top:10px; border-bottom:1px solid #e2e8f0; background: white; border-radius: 4px;"><input type="checkbox" class="check-word-demanda" value="${d.id}" onchange="atualizarContadorWord()" style="margin-top:3px; margin-left: 10px; transform: scale(1.2);"><div style="font-size:13px; color:#333; line-height: 1.4; width:100%; padding-right: 10px;"><b style="color: #185199;">${idText}</b> <span style="float:right; font-size:10px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${statusTag}</span><br><span style="color:#555;">${assunto}</span></div></label>`;
             }).join('');
             
             wordTodasMarcadas = false; atualizarContadorWord();
