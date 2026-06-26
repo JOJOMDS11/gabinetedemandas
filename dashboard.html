@@ -105,63 +105,74 @@
     <div class="container">
         <div class="header-section">
             <h2 class="text-primary">Painel de Demandas</h2>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                 <button class="btn-nova" style="background-color: #f39c12; color: white;" onclick="abrirModalWord()">📄 Gerar Ofício (Word)</button>
                 <button class="btn-nova" style="background-color: #3b82f6; color: white;" onclick="window.location.href='relatorios.html'">📊 Relatórios BI</button>
                 <button class="btn-nova" onclick="window.location.href='nova-demanda.html'">+ Nova Demanda</button>
-            </div>
-        </div>
-
-        <div class="filtros-avancados">
-            <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº, data...">
-            <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()">
-                <option value="">📁 Filtro: Todas Categorias</option>
-                <option value="Agendas">📅 Agendas e Internos</option>
-                <option value="Demandas">🚧 Demandas (Rua/Externa)</option>
-                <option value="Legislativo">⚖️ Legislativo e Projetos</option>
-            </select>
-            <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()">
-                <option value="">👥 Filtro: Toda a Equipe</option>
-                <option value="Daniel">Daniel</option>
-                <option value="João Pedro">João Pedro</option>
-                <option value="Alemão">Alemão</option>
-                <option value="Antonio">Antonio</option>
-                <option value="Luana">Luana</option>
-                <option value="Débora">Débora</option>
-            </select>
-        </div>
-
-       <div class="filtros" style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #ddd;">
-            <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
-            <button class="filtro-btn ativo" data-status="Pendente" onclick="filtrar('Pendente')">📥 Pendentes <span id="count-Pendente" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="display:none; font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas <span id="count-Aprovada" style="display:none; font-size:10px; background:#27ae60; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">🏃 Andamento <span id="count-Em Andamento" style="display:none; font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="156 Solicitado" onclick="filtrar('156 Solicitado')">🔢 156 Solicitado <span id="count-156 Solicitado" style="display:none; font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="Expediente (Legis) Gerado" onclick="filtrar('Expediente (Legis) Gerado')">📄 Exp. Legis</button>
-            <button class="filtro-btn" data-status="Aguardando Exec. Secretaria" onclick="filtrar('Aguardando Exec. Secretaria')">🏢 Aguard. Secretaria <span id="count-Sec" style="display:none; font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn" data-status="Concluída" onclick="filtrar('Concluída')">🏁 Concluídas</button>
-            <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
-        </div>
-
-        <div style="display:flex; gap:15px; align-items:center; margin-bottom:20px; flex-wrap:wrap; padding:10px; background:#f8fafc; border-radius:6px;">
-            <div style="display:flex; gap:10px; align-items:center;">
-                <label for="filtroPrioridade" style="font-weight:bold; color:#555; font-size:14px;">Prioridade:</label>
-                <select id="filtroPrioridade" onchange="mudarPagina(1); renderDemandas();" style="padding:6px 10px; border:1px solid #ddd; border-radius:4px; cursor:pointer;">
-                    <option value="">Todas</option>
+                <select id="filtroPrioridade" onchange="mudarPagina(1); renderDemandas();" title="Filtrar por prioridade" style="padding:9px 12px; border:2px solid #ddd; border-radius:4px; cursor:pointer; font-size:14px; font-weight:bold; background:white; color:#333; outline:none;">
+                    <option value="">⚡ Prioridade</option>
                     <option value="Crítica">🔴 Crítica</option>
                     <option value="Alta">🟠 Alta</option>
                     <option value="Normal">🟡 Normal</option>
                     <option value="Baixa">⚪ Baixa</option>
                 </select>
             </div>
+        </div>
 
-            <div style="display:flex; gap:10px; align-items:center; margin-left:auto;">
-                <input type="checkbox" id="selectTodos" onchange="selecionarTodos()" style="cursor:pointer;">
+        <!-- Barra de busca + botão filtros -->
+        <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center; flex-wrap:wrap;">
+            <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº..." style="flex:1; min-width:200px; padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; outline:none;">
+            <button id="btnToggleFiltros" onclick="togglePainelFiltros()" style="display:flex; align-items:center; gap:8px; padding:10px 18px; border:2px solid #185199; background:white; color:#185199; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; white-space:nowrap;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+                Filtros <span id="badgeFiltrosAtivos" style="display:none; background:#185199; color:white; border-radius:10px; padding:1px 7px; font-size:11px;">0</span>
+            </button>
+        </div>
+
+        <!-- Painel de filtros colapsável -->
+        <div id="painelFiltros" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin-bottom:16px;">
+
+            <!-- Status -->
+            <div style="margin-bottom:14px;">
+                <div style="font-size:11px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:.8px; margin-bottom:8px;">Status</div>
+                <div style="display:flex; flex-wrap:wrap; gap:7px;">
+                    <button class="filtro-btn ativo" data-status="Pendente" onclick="filtrar('Pendente')">📥 Pendentes <span id="count-Pendente" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+                    <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
+                    <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="display:none; font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+                    <button class="filtro-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas <span id="count-Aprovada" style="display:none; font-size:10px; background:#27ae60; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+                    <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">🏃 Andamento <span id="count-Em Andamento" style="display:none; font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+                    <button class="filtro-btn" data-status="156 Solicitado" onclick="filtrar('156 Solicitado')">🔢 156 Solicitado <span id="count-156 Solicitado" style="display:none; font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+                    <button class="filtro-btn" data-status="Expediente (Legis) Gerado" onclick="filtrar('Expediente (Legis) Gerado')">📄 Exp. Legis</button>
+                    <button class="filtro-btn" data-status="Aguardando Exec. Secretaria" onclick="filtrar('Aguardando Exec. Secretaria')">🏢 Aguard. Secretaria <span id="count-Sec" style="display:none; font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+                    <button class="filtro-btn" data-status="Concluída" onclick="filtrar('Concluída')">🏁 Concluídas</button>
+                    <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
+                </div>
+            </div>
+
+            <!-- Categoria + Responsável -->
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+                <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()" style="flex:1; min-width:180px; padding:9px 12px; border-radius:6px; border:1px solid #ccc; font-size:14px; outline:none;">
+                    <option value="">📁 Todas Categorias</option>
+                    <option value="Agendas">📅 Agendas e Internos</option>
+                    <option value="Demandas">🚧 Demandas (Rua/Externa)</option>
+                    <option value="Legislativo">⚖️ Legislativo e Projetos</option>
+                </select>
+                <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()" style="flex:1; min-width:180px; padding:9px 12px; border-radius:6px; border:1px solid #ccc; font-size:14px; outline:none;">
+                    <option value="">👥 Toda a Equipe</option>
+                    <option value="Daniel">Daniel</option>
+                    <option value="João Pedro">João Pedro</option>
+                    <option value="Alemão">Alemão</option>
+                    <option value="Antonio">Antonio</option>
+                    <option value="Luana">Luana</option>
+                    <option value="Débora">Débora</option>
+                </select>
+            </div>
+
+            <!-- Ações em lote + limpar filtros -->
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding-top:12px; border-top:1px solid #e2e8f0;">
+                <input type="checkbox" id="selectTodos" onchange="selecionarTodos()" style="cursor:pointer; width:16px; height:16px;">
                 <label for="selectTodos" style="cursor:pointer; font-size:13px; color:#555;">Selecionar Tudo</label>
-                <button id="btnConcluirLote" style="background:#27ae60; color:white; padding:8px 15px; border:none; border-radius:4px; cursor:pointer; display:none; font-weight:bold; font-size:13px;" onclick="concluirEmLote()">
-                    ✅ Concluir (0)
-                </button>
+                <button id="btnConcluirLote" style="background:#27ae60; color:white; padding:8px 15px; border:none; border-radius:4px; cursor:pointer; display:none; font-weight:bold; font-size:13px;" onclick="concluirEmLote()">✅ Concluir (0)</button>
+                <button onclick="limparTodosFiltros()" style="margin-left:auto; background:none; border:1px solid #ccc; color:#888; padding:7px 14px; border-radius:6px; font-size:13px; cursor:pointer;">✕ Limpar filtros</button>
             </div>
         </div>
 
@@ -612,6 +623,34 @@
             try { await db.from('secretarias').delete().eq('id', id); await renderizarListaSecretarias(); } catch (e) { alert('Erro ao excluir.'); btn.disabled = false; }
         }
 
+        window.togglePainelFiltros = function() {
+            const painel = document.getElementById('painelFiltros');
+            const btn = document.getElementById('btnToggleFiltros');
+            const aberto = painel.style.display !== 'none';
+            painel.style.display = aberto ? 'none' : 'block';
+            btn.style.background = aberto ? 'white' : '#185199';
+            btn.style.color = aberto ? '#185199' : 'white';
+        }
+
+        window.atualizarBadgeFiltros = function() {
+            const badge = document.getElementById('badgeFiltrosAtivos');
+            let count = 0;
+            if (filtroAtual && filtroAtual !== 'Pendente') count++;
+            if (document.getElementById('filtroCategoria')?.value) count++;
+            if (document.getElementById('filtroResp')?.value) count++;
+            if (document.getElementById('filtroPrioridade')?.value) count++;
+            if (count > 0) { badge.textContent = count; badge.style.display = 'inline-block'; }
+            else { badge.style.display = 'none'; }
+        }
+
+        window.limparTodosFiltros = function() {
+            document.getElementById('filtroCategoria').value = '';
+            document.getElementById('filtroResp').value = '';
+            document.getElementById('filtroPrioridade').value = '';
+            document.getElementById('buscaGeral').value = '';
+            window.filtrar('Pendente');
+        }
+
         window.filtrar = function(status) {
             filtroAtual = status; paginaAtual = 1;
             localStorage.setItem('filtro_preferido_' + usuarioLogado, status);
@@ -673,6 +712,7 @@
             }
 
             listaGlobalFiltrada = lista;
+            atualizarBadgeFiltros();
 
             if (lista.length === 0) {
                 container.innerHTML = '<p style="color:#777;grid-column:1/-1;text-align:center;padding:30px;">Nenhuma demanda encontrada com estes filtros.</p>';
