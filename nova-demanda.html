@@ -314,6 +314,19 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
     <script>
+        const reqLastTime = {};
+        const MAX_REQUESTS_PER_MINUTE = 15;
+        function checkRateLimit(endpoint) {
+            const now = Date.now();
+            if (!reqLastTime[endpoint]) reqLastTime[endpoint] = [];
+            const recentReqs = reqLastTime[endpoint].filter(t => now - t < 60000);
+            if (recentReqs.length >= MAX_REQUESTS_PER_MINUTE) {
+                alert('⏳ Sistema de Segurança: Muitas requisições. Aguarde alguns segundos.');
+                throw new Error('Rate limit exceeded');
+            }
+            reqLastTime[endpoint].push(now);
+        }
+
         let db, cloudName, uploadPreset;
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         let formularioAlterado = false;
@@ -323,21 +336,20 @@
         const tiposAtualBloqueados = ['INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
         const nomesEquipe = ['Alemão', 'Antonio', 'Daniel', 'Débora', 'João Pedro', 'Luana'];
 
-        const secretariasPadrao = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'].sort();
+        let listaSecretariasCarregada = [];
         let listaBairrosCarregada = [];
 
         async function carregarSecretarias() {
             const select = document.getElementById('secretaria');
-            let lista = secretariasPadrao;
             try {
                 const { data, error } = await db.from('secretarias').select('nome').order('nome');
                 if (!error && data && data.length > 0) {
-                    lista = data.map(r => r.nome).sort();
+                    listaSecretariasCarregada = data.map(r => r.nome).sort();
                 }
             } catch (e) { }
 
             select.innerHTML = '<option value="">Selecione a secretaria competente...</option>' +
-                lista.map(s => `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`).join('') +
+                listaSecretariasCarregada.map(s => `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`).join('') +
                 '<option value="__outra__">Outra (Especificar manualmente)</option>';
         }
 
@@ -560,8 +572,8 @@
                 }
 
                 let isSecretaria = false;
-                for(let s of secretariasPadrao) {
-                    if (cell.toUpperCase().startsWith(s)) { 
+                for(let s of listaSecretariasCarregada) {
+                    if (cell.toUpperCase().startsWith(s.toUpperCase())) { 
                         if (s === 'SEMHAB') parsed.secretaria = 'Secretaria Municipal de Habitação - SEMHAB';
                         else if (s === 'SEMPA') parsed.secretaria = 'Secretaria Municipal de Proteção Animal - SEMPA';
                         else if (s === 'SGG') parsed.secretaria = 'Secretaria Geral de Governo - SGG';
@@ -790,6 +802,18 @@
         }
 
         window.enviarDemanda = async function() {
+            checkRateLimit('salvar_dados');
+            
+            const numeroInput = document.getElementById('numero').value.trim() || '';
+            if (numeroInput && isNaN(numeroInput.replace(/\D/g, '')) && numeroInput.toLowerCase() !== 's/n') {
+                const msg = document.getElementById('mensagem');
+                msg.className = 'mensagem erro';
+                msg.textContent = 'O Número do endereço deve conter apenas números ou "S/N".';
+                msg.style.display = 'block';
+                window.scrollTo(0,0);
+                return;
+            }
+
             const tipo_solicitacao = document.getElementById('tipo_solicitacao').value;
             const assunto = document.getElementById('assunto').value.trim();
             const responsavel_ordem = document.getElementById('responsavel_ordem').value; 
@@ -804,7 +828,7 @@
             const providencias = document.getElementById('providencias').value.trim();
 
             const rua = document.getElementById('rua').value.trim() || '';
-            const numero = document.getElementById('numero').value.trim() || '';
+            const numero = numeroInput;
             const bairro = document.getElementById('bairro').value.trim() || '';
             const solicitante_nome = document.getElementById('solicitante_nome').value.trim();
             const solicitante_tel = document.getElementById('solicitante_tel').value.trim();
@@ -892,6 +916,14 @@
                 msg.className = 'mensagem erro'; msg.textContent = 'Erro Interno: ' + e.message; msg.style.display = 'block';
             }
         };
+
+        let sessionTimeout;
+        function resetarSessao() {
+            clearTimeout(sessionTimeout);
+            sessionTimeout = setTimeout(() => { alert("Sessão expirada por inatividade. Por segurança, faça login novamente."); document.getElementById('btnLogout').click(); }, 30 * 60 * 1000);
+        }
+        document.addEventListener('mousemove', resetarSessao); document.addEventListener('keypress', resetarSessao); document.addEventListener('click', resetarSessao);
+        resetarSessao();
 
         inicializarSistema();
         inicializarNumeroDemanda();
