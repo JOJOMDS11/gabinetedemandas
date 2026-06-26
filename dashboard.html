@@ -23,18 +23,15 @@
         .btn-sino { background: #e67e22; color: white; border: none; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; animation: pulse 2s infinite; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         @media (max-width: 600px) { .user-name-span, .brand-text { display: none; } }
         .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; padding-bottom: 80px; }
-        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;}
-        
         .filtros-avancados { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; }
         .filtros-avancados input:focus, .filtros-avancados select:focus { border-color: #185199; }
         #buscaGeral { flex: 1; min-width: 200px; }
-        
         .filtros { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .filtro-btn { padding: 6px 14px; border: 1px solid #185199; background: white; color: #185199; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 13px; }
         .filtro-btn.ativo { background: #185199; color: white; }
-        
         .realtime-dot { display: inline-block; width: 8px; height: 8px; background: #98ED34; border-radius: 50%; margin-right: 6px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
@@ -86,6 +83,7 @@
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
         #listaDemandasWord::-webkit-scrollbar { width: 6px; }
         #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        #barraSelecao { display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#185199; color:white; padding:12px 20px; border-radius:30px; gap:15px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:9999; align-items:center; width: 90%; max-width: 400px; justify-content: space-between; }
     </style>
 </head>
 <body>
@@ -104,8 +102,11 @@
 
     <div class="container">
         <div class="header-section">
-            <h2 class="text-primary">Painel de Demandas</h2>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <h2 class="text-primary" style="margin: 0;">Painel de Demandas</h2>
+                <button id="btnAtivarSelecao" onclick="toggleSelecao()" style="background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">☑️ Selecionar Cards</button>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
                 <button class="btn-nova" style="background-color: #f39c12; color: white;" onclick="abrirModalWord()">📄 Gerar Ofício (Word)</button>
                 <button class="btn-nova" style="background-color: #3b82f6; color: white;" onclick="window.location.href='relatorios.html'">📊 Relatórios BI</button>
                 <button class="btn-nova" onclick="window.location.href='nova-demanda.html'">+ Nova Demanda</button>
@@ -146,6 +147,14 @@
 
         <div class="cards-grid" id="demandas"></div>
         <div class="paginacao" id="paginacaoContainer"></div>
+    </div>
+
+    <div id="barraSelecao">
+        <span id="qtdSelecionados" style="font-weight:bold; font-size:14px;">0 selecionados</span>
+        <div style="display:flex; gap:8px;">
+            <button onclick="abrirModalWordSelecionados()" style="background:#f39c12; color:white; border:none; padding:8px 12px; border-radius:20px; font-weight:bold; cursor:pointer; font-size:12px;">📄 Gerar Word</button>
+            <button onclick="toggleSelecao()" style="background:transparent; color:white; border:1px solid white; padding:8px 12px; border-radius:20px; cursor:pointer; font-size:12px;">✕ Cancelar</button>
+        </div>
     </div>
 
     <button class="fab-quick" onclick="abrirModalQuick()" title="Nova Demanda Rápida">⚡</button>
@@ -191,7 +200,7 @@
             </div>
             <p style="font-size:13px; color:#555; margin-bottom:8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
                 <span>Selecione as demandas para o ofício:</span>
-                <span id="contadorWordBadge" onclick="toggleMarcarTodasWord()" style="background: #185199; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s;" title="Clique para Marcar/Desmarcar todas">0 selecionadas</span>
+                <span id="contadorWordBadge" onclick="toggleMarcarTodasWord()" style="background: #185199; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s;">0 selecionadas</span>
             </p>
             <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
                 <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="flex:1; min-width:200px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
@@ -201,6 +210,26 @@
             <div class="modal-botoes" style="margin-top: 20px;">
                 <button style="background:#e0e0e0; color:#333; flex:0.4; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalWord()">Cancelar</button>
                 <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="gerarEBaixarWord()">⬇️ Baixar Arquivo Word</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalWordSelecionados">
+        <div class="modal-box" style="max-width: 450px; text-align: left; padding: 20px;">
+            <h3 style="text-align:center; color:#185199; margin-bottom: 20px;">📄 Gerar Ofício (Cards Selecionados)</h3>
+            <div style="display:grid; grid-template-columns: 1fr; gap:15px; margin-bottom:20px;">
+                <div>
+                    <label style="font-size:12px; font-weight:bold; color:#555;">Secretaria Destino:</label>
+                    <input type="text" id="wordSecSel" value="Secretaria Municipal de Mobilidade e Obras - SEMOB" style="text-align: left; font-size: 14px;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:bold; color:#555;">Nome do Secretário(a):</label>
+                    <input type="text" id="wordRespSel" value="Rogel da Silva Corrêa" style="text-align: left; font-size: 14px;">
+                </div>
+            </div>
+            <div class="modal-botoes">
+                <button style="background:#e0e0e0; color:#333; flex:0.4; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalWordSelecionados()">Cancelar</button>
+                <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="gerarWordDosSelecionados()">⬇️ Baixar Arquivo Word</button>
             </div>
         </div>
     </div>
@@ -254,10 +283,12 @@
         document.getElementById('nomeUsuario').textContent = usuarioLogado; 
 
         let filtroPadrao = localStorage.getItem('filtro_preferido_' + usuarioLogado);
-        if (!filtroPadrao) {
-            filtroPadrao = (usuarioLogado === 'Daniel') ? 'Aguardando Aprovação' : 'Pendente';
-        }
+        if (!filtroPadrao) { filtroPadrao = (usuarioLogado === 'Daniel') ? 'Aguardando Aprovação' : 'Pendente'; }
+        
         let filtroAtual = filtroPadrao;
+        let modoSelecao = false;
+        let selecionadosWord = new Set();
+        
         let paginaAtual = 1;
         const itensPorPagina = 9;
         let idParaExcluir = null;
@@ -309,7 +340,8 @@
                 const navbarActions = document.querySelector('.navbar-actions');
                 if (Notification.permission !== 'granted') {
                     const btnNotif = document.createElement('button');
-                    btnNotif.className = 'btn-sino'; btnNotif.innerHTML = '🔔 Ativar';
+                    btnNotif.className = 'btn-sino';
+                    btnNotif.innerHTML = '🔔 Ativar';
                     btnNotif.onclick = ativarAvisosPush;
                     if(navbarActions) navbarActions.prepend(btnNotif);
                 } 
@@ -457,7 +489,7 @@
                     document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = '';
                     document.querySelectorAll('.chk-cuidar').forEach(cb => cb.checked = false);
                     alert("Demanda Rápida criada com sucesso!");
-                } else { alert("Erro ao salvar no banco. Verifique os dados."); }
+                } else { alert("Erro ao salvar no banco. Verifique os dados."); console.error(error); }
             } catch (e) { alert("Erro ao tentar salvar."); }
             
             btn.disabled = false;
@@ -512,6 +544,28 @@
                     if (count > 0) { badge.textContent = count; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; }
                 }
             }
+        }
+
+        window.toggleSelecao = function() {
+            modoSelecao = !modoSelecao;
+            selecionadosWord.clear();
+            document.getElementById('barraSelecao').style.display = modoSelecao ? 'flex' : 'none';
+            document.querySelector('.fab-quick').style.display = modoSelecao ? 'none' : 'flex';
+            const btnSel = document.getElementById('btnAtivarSelecao');
+            if (btnSel) {
+                btnSel.style.backgroundColor = modoSelecao ? '#27ae60' : '#e2e8f0';
+                btnSel.style.color = modoSelecao ? 'white' : '#475569';
+                btnSel.textContent = modoSelecao ? 'Cancelar Seleção' : '☑️ Selecionar Cards';
+            }
+            document.getElementById('qtdSelecionados').textContent = `0 selecionados`;
+            renderDemandas();
+        }
+
+        window.toggleCardSelecao = function(id) {
+            if (selecionadosWord.has(id)) selecionadosWord.delete(id);
+            else selecionadosWord.add(id);
+            document.getElementById('qtdSelecionados').textContent = `${selecionadosWord.size} selecionados`;
+            renderDemandas();
         }
         
         function renderDemandas() {
@@ -594,7 +648,7 @@
                 
                 let quickLinks = '';
                 const isLegisSafe = demanda.link_legis && (demanda.link_legis.startsWith('http://') || demanda.link_legis.startsWith('https://'));
-                if (primeiroPdf || isLegisSafe) {
+                if (!modoSelecao && (primeiroPdf || isLegisSafe)) {
                     quickLinks += `<div style="position:absolute; bottom:8px; right:8px; display:flex; gap:5px; z-index:2;">`;
                     if (isLegisSafe) quickLinks += `<a href="${DOMPurify.sanitize(demanda.link_legis)}" target="_blank" onclick="event.stopPropagation()" style="background:#f39c12; color:white; padding:6px 10px; border-radius:4px; text-decoration:none; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3);">🔗 Legis</a>`;
                     if (primeiroPdf) quickLinks += `<a href="${primeiroPdf}" target="_blank" onclick="event.stopPropagation()" style="background:#c0392b; color:white; padding:6px 10px; border-radius:4px; text-decoration:none; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3);">📄 Ver PDF</a>`;
@@ -624,11 +678,13 @@
                 const infoEndereco = sRua ? `<div class="info">📍 ${sRua}${sNum ? ', '+sNum : ''} ${sBairro ? '- '+sBairro : ''}</div>` : '';
 
                 let btnPrincipal = '';
-                if (aguardandoDaniel) btnPrincipal = `<button class="btn-acao verde" onclick="event.stopPropagation(); window.location.href='ver-demanda.html?id=${demanda.id}'">👁️ Ver & Aprovar</button>`;
-                else if (demanda.status === 'Arquivada') btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Arquivada</button><button class="btn-acao" style="background:#c0392b; flex:0.5;" onclick="event.stopPropagation(); solicitarExclusao('${demanda.id}')">🗑️ Excluir</button>`;
-                else if (encerrada) btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Encerrada</button>`;
-                else if (euCuido) btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}', this)">🚪 Deixar de Executar</button>`;
-                else btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}', this)">🙋 Assumir Execução</button>`;
+                if (!modoSelecao) {
+                    if (aguardandoDaniel) btnPrincipal = `<button class="btn-acao verde" onclick="event.stopPropagation(); window.location.href='ver-demanda.html?id=${demanda.id}'">👁️ Ver & Aprovar</button>`;
+                    else if (demanda.status === 'Arquivada') btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Arquivada</button><button class="btn-acao" style="background:#c0392b; flex:0.5;" onclick="event.stopPropagation(); solicitarExclusao('${demanda.id}')">🗑️ Excluir</button>`;
+                    else if (encerrada) btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Encerrada</button>`;
+                    else if (euCuido) btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}', this)">🚪 Deixar de Executar</button>`;
+                    else btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}', this)">🙋 Assumir Execução</button>`;
+                }
 
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${DOMPurify.sanitize(demanda.numero_demanda)}</div>` : '';
                 const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 Aberto ${tempoRelativo(demanda.criado_em)}</div>` : '';
@@ -643,13 +699,26 @@
 
                 const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-                return `<div class="demanda-card ${aguardandoDaniel ? 'aguardando-daniel' : ''}" onclick="window.location.href='ver-demanda.html?id=${demanda.id}'">
+                let cardStyle = '';
+                let checkOverlay = '';
+                let clickAction = `window.location.href='ver-demanda.html?id=${demanda.id}'`;
+
+                if (modoSelecao) {
+                    const isSelected = selecionadosWord.has(demanda.id);
+                    cardStyle = isSelected ? 'border: 3px solid #27ae60; background-color: #f0fdf4;' : 'opacity: 0.85; transform: scale(0.98);';
+                    checkOverlay = `<div style="position:absolute; top:10px; left:10px; z-index:3; background:white; border-radius:4px; padding:2px; box-shadow:0 2px 4px rgba(0,0,0,0.2);"><input type="checkbox" ${isSelected ? 'checked' : ''} style="width:20px; height:20px; pointer-events:none;"></div>`;
+                    clickAction = `event.preventDefault(); toggleCardSelecao('${demanda.id}')`;
+                }
+
+                return `<div class="demanda-card ${aguardandoDaniel && !modoSelecao ? 'aguardando-daniel' : ''}" style="${cardStyle}" onclick="${clickAction}">
+                            ${checkOverlay}
                             ${numTag}
                             <div class="demanda-media">${mediaTag}</div>
                             <div class="demanda-conteudo">
                                 <span class="badge ${badgeClass}">${demanda.status}</span>
                                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:5px;">
                                     <div class="titulo" style="margin-bottom:0;">${sAssunto}</div>
+                                    ${!modoSelecao ? `
                                     <div style="display:flex; gap:4px; flex-shrink:0;">
                                         <button class="btn-micro" onclick="event.stopPropagation(); copiarTexto('${assuntoSafeJs}')" title="Copiar Assunto">
                                             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -657,7 +726,7 @@
                                         <button class="btn-micro" onclick="event.stopPropagation(); abrirModalDescricao('${demanda.id}')" title="Ver Detalhes/Descrição">
                                             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                         </button>
-                                    </div>
+                                    </div>` : ''}
                                 </div>
                                 <div class="info">📌 ${sTipo}</div>
                                 ${infoAgenda} ${infoEndereco} ${infoSecretaria}
@@ -669,7 +738,7 @@
                                 ${sExp || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Expediente: ${sExp || 'Gerado'}</div>` : ''}
                                 ${tempoCard}
                                 ${atualizacaoCard}
-                                <div class="acoes-card">${btnPrincipal}</div>
+                                ${!modoSelecao ? `<div class="acoes-card">${btnPrincipal}</div>` : ''}
                             </div>
                         </div>`;
             }).join('');
@@ -859,6 +928,61 @@
             link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
             document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
             fecharModalWord();
+        }
+
+        window.abrirModalWordSelecionados = function() {
+            if(selecionadosWord.size === 0) return alert('Selecione ao menos um card!');
+            document.getElementById('modalWordSelecionados').classList.add('ativo');
+        }
+
+        window.fecharModalWordSelecionados = function() { document.getElementById('modalWordSelecionados').classList.remove('ativo'); }
+
+        window.gerarWordDosSelecionados = function() {
+            if (selecionadosWord.size === 0) return alert("Nenhuma demanda selecionada!");
+            const secNome = document.getElementById('wordSecSel').value.trim() || 'Secretaria Destino';
+            const secResp = document.getElementById('wordRespSel').value.trim() || 'Secretário(a)';
+            const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+            let trsHTML = '';
+            Array.from(selecionadosWord).forEach(id => {
+                const d = listaGlobalFiltrada.find(x => x.id === id) || todasDemandas.find(x => x.id === id);
+                if (d) {
+                    const exp = DOMPurify.sanitize(d.expediente || '');
+                    const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
+                    const desc = DOMPurify.sanitize(d.descricao || d.assunto || '');
+                    trsHTML += `<tr><td style="text-align: center; border: 1px solid black; padding: 5px;">${exp}</td><td style="text-align: center; border: 1px solid black; padding: 5px;">${pdp}</td><td style="text-align: justify; border: 1px solid black; padding: 5px;">${desc}</td></tr>`;
+                }
+            });
+            const htmlString = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><title>Ofício Demandas</title></head>
+            <body>
+                <div style="font-family: Arial, sans-serif; font-size: 11pt;">
+                    <br><br>
+                    <table style="width: 100%; border: none; margin-bottom: 20px;">
+                        <tr><td style="text-align: left; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">Pedidos de providências</td><td style="text-align: right; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">São Leopoldo, ${dataHoje}</td></tr>
+                    </table>
+                    <p style="font-weight: bold; margin: 0; font-family: Arial, sans-serif;">Gabinete Vereador Daniel Daudt Schaefer</p>
+                    <p style="margin: 0; font-family: Arial, sans-serif;">Obs.: Demandas da ${DOMPurify.sanitize(secNome)}</p>
+                    <p style="margin: 0; font-family: Arial, sans-serif;">SECRETÁRIO ${DOMPurify.sanitize(secResp)}.</p>
+                    <br><br>
+                    <table border="1" cellspacing="0" cellpadding="5" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt;">
+                        <tr style="background-color: #bfbfbf; font-weight: bold; text-align: center;"><td width="15%" style="border: 1px solid black; padding: 5px;">EXPEDIENTE</td><td width="25%" style="border: 1px solid black; padding: 5px;">PEDIDO DE PROVIDÊNCIAS</td><td width="60%" style="border: 1px solid black; padding: 5px;">ASSUNTO/DEMANDA</td></tr>
+                        ${trsHTML}
+                    </table>
+                    <br><br><br>
+                    <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">______________________________</p>
+                    <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Luana Costa Dias</p>
+                    <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Chefe de Gabinete</p>
+                </div>
+            </body></html>`;
+            const blob = new Blob(['\ufeff', htmlString], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a'); link.href = url;
+            const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
+            const nomeCurtoSec = secNome.split('-').pop().trim();
+            link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+            fecharModalWordSelecionados(); toggleSelecao();
         }
 
         window.assumirDemanda = async function(id, btnElement) {
