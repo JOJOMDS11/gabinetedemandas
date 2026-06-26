@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -183,13 +182,6 @@
             'Secretaria Municipal de Proteção Animal - SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'
         ];
         let listaSecretariasCarregada = secretariasPadrao;
-
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('keydown', e => {
-            if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && e.keyCode === 85)) {
-                e.preventDefault();
-            }
-        });
 
         async function carregarListaSecretarias() {
             try {
@@ -462,6 +454,14 @@
             const encerrada = ['Concluída', 'Arquivada', 'Rejeitada'].includes(d.status);
             const isAtualBloqueado = tiposProjetos.includes(d.tipo_solicitacao);
 
+            const sPrioridade = d.prioridade || 'Normal';
+            let badgePrioridade = '';
+            if(sPrioridade === 'Baixa') badgePrioridade = '⚪ Baixa';
+            else if(sPrioridade === 'Normal') badgePrioridade = '🟡 Normal';
+            else if(sPrioridade === 'Alta') badgePrioridade = '🟠 Alta';
+            else if(sPrioridade === 'Crítica') badgePrioridade = '🔴 Crítica';
+            else badgePrioridade = '🟡 ' + DOMPurify.sanitize(sPrioridade);
+
             let linkLegisSeguro = '';
             const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
             if (isLegisSafe) {
@@ -581,7 +581,7 @@
 
             construirTimelineHtml(d);
 
-            const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '"');
 
             const linksEquipe = euEstouCuidando ? `
                 <div style="background:#e8f0ff; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px dashed #185199;">
@@ -605,7 +605,10 @@
                         ${linkLegisSeguro}
                     </div>
 
-                    <div class="info-group"><label>Tipo de Solicitação</label><p>📌 <b>${sTipo}</b></p></div>
+                    <div class="info-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div><label>Tipo de Solicitação</label><p>📌 <b>${sTipo}</b></p></div>
+                        <div><label>Prioridade</label><p><b>${badgePrioridade}</b></p></div>
+                    </div>
                     
                     <div class="info-group">
                         <label>Assunto</label>
@@ -648,32 +651,44 @@
                     <div class="bloco-edicao">
                         <h4>✏️ Corrigir Dados Principais</h4>
                         
-                        <div class="form-group">
-                            <label>Corrigir Tipo de Solicitação</label>
-                            <select id="editTipo" ${bloqueado}>
-                                <option value="" ${!d.tipo_solicitacao?'selected':''}>Não classificado</option>
-                                <optgroup label="Agendas e Internos (Livre)">
-                                    <option value="AGENDA VISITA AO GABINETE" ${d.tipo_solicitacao==='AGENDA VISITA AO GABINETE'?'selected':''}>AGENDA VISITA AO GABINETE</option>
-                                    <option value="AGENDA VISITA EXTERNA" ${d.tipo_solicitacao==='AGENDA VISITA EXTERNA'?'selected':''}>AGENDA VISITA EXTERNA</option>
-                                    <option value="GABINETE" ${d.tipo_solicitacao==='GABINETE'?'selected':''}>GABINETE</option>
-                                    <option value="REUNIÃO" ${d.tipo_solicitacao==='REUNIÃO'?'selected':''}>REUNIÃO</option>
-                                </optgroup>
-                                <optgroup label="Demandas (Livre)">
-                                    <option value="DEMANDA (GERAL)" ${d.tipo_solicitacao==='DEMANDA (GERAL)'?'selected':''}>DEMANDA (GERAL)</option>
-                                    <option value="DEMANDA EXTERNA" ${d.tipo_solicitacao==='DEMANDA EXTERNA'?'selected':''}>DEMANDA EXTERNA</option>
-                                </optgroup>
-                                <optgroup label="Legislativo e Projetos (Requer Aprovação)">
-                                    <option value="INDICAÇÃO" ${d.tipo_solicitacao==='INDICAÇÃO'?'selected':''}>INDICAÇÃO</option>
-                                    <option value="MOÇÃO DE APOIO" ${d.tipo_solicitacao==='MOÇÃO DE APOIO'?'selected':''}>MOÇÃO DE APOIO</option>
-                                    <option value="PEDIDO DE PROVIDÊNCIAS" ${d.tipo_solicitacao==='PEDIDO DE PROVIDÊNCIAS'?'selected':''}>PEDIDO DE PROVIDÊNCIAS</option>
-                                    <option value="PROJETO DE LEI" ${d.tipo_solicitacao==='PROJETO DE LEI'?'selected':''}>PROJETO DE LEI</option>
-                                    <option value="PROJETO DE LEI DE VEREADOR" ${d.tipo_solicitacao==='PROJETO DE LEI DE VEREADOR'?'selected':''}>PROJETO DE LEI DE VEREADOR</option>
-                                    <option value="PROJETO DE RESOLUÇÃO (PR)" ${d.tipo_solicitacao==='PROJETO DE RESOLUÇÃO (PR)'?'selected':''}>PROJETO DE RESOLUÇÃO (PR)</option>
-                                    <option value="REQUERIMENTO" ${d.tipo_solicitacao==='REQUERIMENTO'?'selected':''}>REQUERIMENTO</option>
-                                    <option value="SESSÃO SOLENE" ${d.tipo_solicitacao==='SESSÃO SOLENE'?'selected':''}>SESSÃO SOLENE</option>
-                                </optgroup>
-                            </select>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Corrigir Tipo de Solicitação</label>
+                                <select id="editTipo" ${bloqueado}>
+                                    <option value="" ${!d.tipo_solicitacao?'selected':''}>Não classificado</option>
+                                    <optgroup label="Agendas e Internos (Livre)">
+                                        <option value="AGENDA VISITA AO GABINETE" ${d.tipo_solicitacao==='AGENDA VISITA AO GABINETE'?'selected':''}>AGENDA VISITA AO GABINETE</option>
+                                        <option value="AGENDA VISITA EXTERNA" ${d.tipo_solicitacao==='AGENDA VISITA EXTERNA'?'selected':''}>AGENDA VISITA EXTERNA</option>
+                                        <option value="GABINETE" ${d.tipo_solicitacao==='GABINETE'?'selected':''}>GABINETE</option>
+                                        <option value="REUNIÃO" ${d.tipo_solicitacao==='REUNIÃO'?'selected':''}>REUNIÃO</option>
+                                    </optgroup>
+                                    <optgroup label="Demandas (Livre)">
+                                        <option value="DEMANDA (GERAL)" ${d.tipo_solicitacao==='DEMANDA (GERAL)'?'selected':''}>DEMANDA (GERAL)</option>
+                                        <option value="DEMANDA EXTERNA" ${d.tipo_solicitacao==='DEMANDA EXTERNA'?'selected':''}>DEMANDA EXTERNA</option>
+                                    </optgroup>
+                                    <optgroup label="Legislativo e Projetos (Requer Aprovação)">
+                                        <option value="INDICAÇÃO" ${d.tipo_solicitacao==='INDICAÇÃO'?'selected':''}>INDICAÇÃO</option>
+                                        <option value="MOÇÃO DE APOIO" ${d.tipo_solicitacao==='MOÇÃO DE APOIO'?'selected':''}>MOÇÃO DE APOIO</option>
+                                        <option value="PEDIDO DE PROVIDÊNCIAS" ${d.tipo_solicitacao==='PEDIDO DE PROVIDÊNCIAS'?'selected':''}>PEDIDO DE PROVIDÊNCIAS</option>
+                                        <option value="PROJETO DE LEI" ${d.tipo_solicitacao==='PROJETO DE LEI'?'selected':''}>PROJETO DE LEI</option>
+                                        <option value="PROJETO DE LEI DE VEREADOR" ${d.tipo_solicitacao==='PROJETO DE LEI DE VEREADOR'?'selected':''}>PROJETO DE LEI DE VEREADOR</option>
+                                        <option value="PROJETO DE RESOLUÇÃO (PR)" ${d.tipo_solicitacao==='PROJETO DE RESOLUÇÃO (PR)'?'selected':''}>PROJETO DE RESOLUÇÃO (PR)</option>
+                                        <option value="REQUERIMENTO" ${d.tipo_solicitacao==='REQUERIMENTO'?'selected':''}>REQUERIMENTO</option>
+                                        <option value="SESSÃO SOLENE" ${d.tipo_solicitacao==='SESSÃO SOLENE'?'selected':''}>SESSÃO SOLENE</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Corrigir Prioridade</label>
+                                <select id="editPrioridade" ${bloqueado}>
+                                    <option value="Baixa" ${d.prioridade==='Baixa'?'selected':''}>⚪ Baixa</option>
+                                    <option value="Normal" ${!d.prioridade||d.prioridade==='Normal'?'selected':''}>🟡 Normal</option>
+                                    <option value="Alta" ${d.prioridade==='Alta'?'selected':''}>🟠 Alta</option>
+                                    <option value="Crítica" ${d.prioridade==='Crítica'?'selected':''}>🔴 Crítica</option>
+                                </select>
+                            </div>
                         </div>
+
                         <div class="form-group"><label>Corrigir Assunto</label><input type="text" id="editAssunto" value="${sAssunto}" ${bloqueado}></div>
                         <div class="form-group"><label>Corrigir Descrição</label><textarea id="editDescricao" rows="3" ${bloqueado}>${sDesc}</textarea></div>
                         <div class="form-row">
@@ -766,7 +781,7 @@
                                     <option value="Moção" ${d.doc_tipo==='Moção'?'selected':''}>Moção</option>
                                     <option value="Ofício" ${d.doc_tipo==='Ofício'?'selected':''}>Ofício</option>
                                     <option value="Pedido de Informação" ${d.doc_tipo==='Pedido de Informação'?'selected':''}>Pedido de Informação</option>
-                                    <option value="Pedido de Providência" ${d.doc_tipo==='Pedido de Providência'?'selected':''}>Pedido de Providência</option>
+                                    <option value="PDP" ${d.doc_tipo==='PDP'?'selected':''}>Pedido de Providência</option>
                                     <option value="Projeto de Decreto Legislativo" ${d.doc_tipo==='Projeto de Decreto Legislativo'?'selected':''}>Projeto de Decreto Legislativo</option>
                                     <option value="Projeto de Lei Complementar do Legislativo" ${d.doc_tipo==='Projeto de Lei Complementar do Legislativo'?'selected':''}>Projeto de Lei Complementar do Legislativo</option>
                                     <option value="Projeto de Lei de Vereador" ${d.doc_tipo==='Projeto de Lei de Vereador'?'selected':''}>Projeto de Lei de Vereador</option>
@@ -1023,6 +1038,7 @@
             const providencias = document.getElementById('editProvidencias') ? document.getElementById('editProvidencias').value.trim() : (demandaAtual.providencias || '');
             
             const tipo_solicitacao = document.getElementById('editTipo') ? document.getElementById('editTipo').value : demandaAtual.tipo_solicitacao;
+            const prioridade = document.getElementById('editPrioridade') ? document.getElementById('editPrioridade').value : (demandaAtual.prioridade || 'Normal');
             const assunto = document.getElementById('editAssunto') ? document.getElementById('editAssunto').value.trim() : demandaAtual.assunto;
             const descricao = document.getElementById('editDescricao') ? document.getElementById('editDescricao').value.trim() : demandaAtual.descricao;
             const nomeSol = document.getElementById('editNomeSol') ? document.getElementById('editNomeSol').value.trim() : demandaAtual.solicitante_nome;
@@ -1045,7 +1061,7 @@
                 status: statusEdit, doc_tipo: doc_tipo, doc_numero: doc_numero, protocolo: protocolo, expediente: expediente, link_legis: linkLegis,
                 observacoes_internas: observacoes_internas,
                 data_agendada: data_agendada, horario_agendado: horario_agendado, secretaria: secretaria, providencias: providencias,
-                tipo_solicitacao: tipo_solicitacao, assunto: assunto, descricao: descricao, solicitante_nome: nomeSol, solicitante_tel: telSol, responsavel_ordem: responsavel_ordem,
+                tipo_solicitacao: tipo_solicitacao, prioridade: prioridade, assunto: assunto, descricao: descricao, solicitante_nome: nomeSol, solicitante_tel: telSol, responsavel_ordem: responsavel_ordem,
                 rua: rua, numero: numero, bairro: bairro
             };
             
@@ -1053,6 +1069,7 @@
             
             let alterados = [];
             if (tipo_solicitacao !== demandaAtual.tipo_solicitacao) alterados.push('Tipo');
+            if (prioridade !== (demandaAtual.prioridade || 'Normal')) alterados.push('Prioridade');
             if (assunto !== demandaAtual.assunto) alterados.push('Assunto');
             if (descricao !== demandaAtual.descricao) alterados.push('Descrição');
             if (secretaria !== demandaAtual.secretaria) alterados.push('Secretaria');
