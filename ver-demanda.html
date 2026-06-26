@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -5,8 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalhes da Demanda</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- 🔒 DOMPurify (Prevenção contra XSS) -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
     <style>
@@ -16,37 +15,28 @@
         .navbar { padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; color: white; }
         .navbar img { height: 80px; background: white; padding: 5px; border-radius: 4px; }
         .navbar a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
-
         .container { max-width: 1000px; margin: 30px auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 15px; }
         @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
-
         .box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 4px solid #185199; }
         h2 { color: #185199; margin-bottom: 20px; font-size: 20px; border-bottom: 2px solid #98ED34; padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-
         .info-group { margin-bottom: 15px; }
         .info-group label { display: block; font-size: 12px; color: #777; font-weight: bold; text-transform: uppercase; }
         .info-group p { font-size: 15px; color: #333; margin-top: 3px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; color: #185199; font-weight: bold; font-size: 13px; }
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: #185199; }
-
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-
         .botoes { display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap; }
         button { flex: 1; min-width: 120px; padding: 12px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; text-align: center; text-decoration: none; display: inline-block; transition: background-color 0.2s;}
         button:disabled { opacity: 0.7; cursor: not-allowed; }
-        
         .btn-salvar { background: #185199; color: white; }
         .btn-assumir { background: #98ED34; color: #185199; }
         .btn-retirar { background: #e67e22; color: white; }
         .btn-whats { background: #25D366; color: white; }
-
         .responsaveis-lista { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; align-items: center; }
         .responsavel-tag { background: #e8f0ff; border: 1px solid #185199; color: #185199; padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; }
         .responsavel-tag button { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 14px; padding: 0; min-width: unset; flex: none; line-height: 1; }
-
         .galeria { display: flex; flex-direction: column; gap: 15px; }
         .foto-container { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; cursor: pointer; }
         .foto-container img, .foto-container video { width: 100%; height: auto; display: block; }
@@ -55,7 +45,6 @@
         .btn-foto:hover { background: #185199; }
         .btn-excluir-foto { background: rgba(231,76,60,0.9); }
         .upload-extra { margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px; background: #fdfdfd; border-radius: 8px; padding: 15px; border: 1px dashed #ccc; }
-
         .badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
         .badge-Pendente { background: #ffe5e5; color: #c0392b; }
         .badge-Andamento { background: #fff3cd; color: #856404; }
@@ -67,10 +56,8 @@
         .badge-Concluida { background: #d4edda; color: #155724; }
         .badge-Rejeitada { background: #c0392b; color: white; }
         .badge-Arquivada { background: #eee; color: #777; }
-
         .alerta-aprovacao { background: #fff8e1; border: 2px solid #f39c12; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; font-weight: bold; color: #856404; }
         .aprovado-daniel { display: inline-block; margin-left: 10px; background: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-
         .timeline { list-style: none; padding: 0; margin: 0; position: relative; }
         .timeline::before { content:''; position:absolute; left:14px; top:0; bottom:0; width:2px; background:#e0e0e0; }
         .timeline li { position: relative; padding: 0 0 18px 38px; }
@@ -83,22 +70,18 @@
         .timeline-dot.azul { background: #3498db; box-shadow: 0 0 0 2px #3498db; }
         .timeline-evento { font-size: 13px; font-weight: bold; color: #185199; }
         .timeline-tempo { font-size: 11px; color: #999; font-style: italic; }
-        
         .paginacao-timeline { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc; }
         .paginacao-timeline button { background: #ecf0f1; color: #333; flex: none; min-width: 100px; padding: 8px; border: 1px solid #bdc3c7; }
         .paginacao-timeline button:hover { background: #bdc3c7; }
-
         .progress-wrapper { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 4px solid #185199; grid-column: 1 / -1; margin-bottom: 5px; }
         .progress-container { display: flex; justify-content: space-between; align-items: center; position: relative; margin-top: 15px; }
         .progress-line { position: absolute; top: 15px; left: 0; width: 100%; height: 4px; background: #eee; z-index: 1; }
         .progress-step { position: relative; z-index: 2; background: white; padding: 8px; border-radius: 20px; font-size: 11px; font-weight: bold; color: #999; border: 2px solid #eee; text-align: center; width: 18%; }
         .progress-step.active { color: #185199; border-color: #185199; background: #e8f0ff; }
         .progress-step.completed { color: white; background: #27ae60; border-color: #27ae60; }
-
         .links-externos { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;}
         .btn-link { background: #ecf0f1; color: #2c3e50; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; text-decoration: none; border: 1px solid #bdc3c7; flex: 1; text-align: center; min-width: 130px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;}
         .btn-link:hover { background: #bdc3c7; }
-
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; }
         .modal-overlay.ativo { display: flex; flex-direction: column; }
         .modal-box { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 380px; border-top: 4px solid #c0392b; text-align:center;}
@@ -107,7 +90,6 @@
         .modal-box p { font-size: 14px; margin-bottom: 20px; color: #555; }
         .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; text-align:center; font-size:16px;}
         .modal-botoes { display: flex; gap: 10px; }
-
         #lightboxImg, #lightboxVid { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); object-fit: contain; }
         #lightboxPdf { width: 90%; height: 75vh; border: none; border-radius: 8px; background: white; margin-bottom: 10px; }
         .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; font-size: 30px; padding: 15px 20px; cursor: pointer; border-radius: 4px; z-index: 10000; }
@@ -115,22 +97,15 @@
         #btnPrev { left: 10px; }
         #btnNext { right: 10px; }
         #btnFecharLightbox { position: absolute; top: 15px; right: 15px; background: rgba(231,76,60,0.9); color: white; border: none; padding: 10px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; z-index: 10000; }
-
-        @media (max-width: 600px) {
-            .lightbox-nav { padding: 10px; font-size: 20px; }
-            .form-row { grid-template-columns: 1fr; }
-        }
-        
+        @media (max-width: 600px) { .lightbox-nav { padding: 10px; font-size: 20px; } .form-row { grid-template-columns: 1fr; } }
         .bloco-edicao { background: #fdfdfd; border: 1px dashed #ccc; padding: 20px; border-radius: 8px; margin-top: 10px;}
         .bloco-edicao h4 { color: #185199; margin-bottom: 15px; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px;}
-
         .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; margin-top: 10px; }
         .preview-item { border-radius: 4px; border: 1px solid #eee; overflow: hidden; height: 60px; position: relative; }
         .preview-item img, .preview-item video { width: 100%; height: 100%; object-fit: cover; }
         .btn-remover-preview { position: absolute; top: 2px; right: 2px; background: rgba(231,76,60,0.9); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .pdf-preview-box { display: none; background: #e8f0ff; color: #185199; padding: 8px 12px; border-radius: 4px; border: 1px solid #185199; font-size: 13px; font-weight: bold; margin-top: 8px; align-items: center; justify-content: space-between; }
         .pdf-preview-box button { background: none; border: none; color: #c0392b; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0; min-width: unset; flex: none; }
-        
         .btn-micro { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 11px; font-weight: bold; padding: 4px 8px; height: 26px;}
         .btn-micro:hover { background: #e2e8f0; color: #185199; border-color: #185199; }
     </style>
@@ -208,6 +183,13 @@
             'Secretaria Municipal de Proteção Animal - SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'
         ];
         let listaSecretariasCarregada = secretariasPadrao;
+
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && e.keyCode === 85)) {
+                e.preventDefault();
+            }
+        });
 
         async function carregarListaSecretarias() {
             try {
@@ -301,7 +283,11 @@
             
             demandaAtual = data;
             mediaGlobal = [];
-            if(data.pdf_url) mediaGlobal.push({ url: data.pdf_url, type: 'pdf' });
+            
+            if(data.pdf_url) {
+                const pdfs = data.pdf_url.split(',');
+                pdfs.forEach(p => mediaGlobal.push({ url: p, type: 'pdf' }));
+            }
             const fotos = (data.fotos_urls || []).filter(f => f);
             fotos.forEach(f => { mediaGlobal.push({ url: f, type: isVideo(f) ? 'video' : 'image' }); });
 
@@ -385,7 +371,11 @@
             if (d.doc_tipo || d.doc_numero) resumo += `\n*Doc Interno:* ${d.doc_tipo || 'Doc'} ${d.doc_numero || ''}`;
             if (d.protocolo) resumo += `\n*Protocolo 156:* ${d.protocolo}`;
             if (d.expediente) resumo += `\n*Expediente:* ${d.expediente}`;
-            if (d.pdf_url) resumo += `\n\n*Para ver o PDF clique aqui:* ${d.pdf_url}`;
+            
+            if (d.pdf_url) {
+                const pdfs = d.pdf_url.split(',');
+                resumo += `\n\n*Para ver o PDF Principal clique aqui:* ${pdfs[0]}`;
+            }
 
             const textarea = document.createElement('textarea'); textarea.value = resumo;
             document.body.appendChild(textarea); textarea.select(); document.execCommand('copy'); document.body.removeChild(textarea);
@@ -457,7 +447,7 @@
             const sTel = DOMPurify.sanitize(d.solicitante_tel || '');
             const sProt = DOMPurify.sanitize(d.protocolo || '');
             const sExp = DOMPurify.sanitize(d.expediente || '');
-            const sDocTipo = DOMPurify.sanitize(d.doc_tipo || 'Doc');
+            const sDocTipo = DOMPurify.sanitize(d.doc_tipo || '');
             const sDocNum = DOMPurify.sanitize(d.doc_numero || '');
             const sProv = DOMPurify.sanitize(d.providencias || '');
             const sObs = DOMPurify.sanitize(d.observacoes_internas || '');
@@ -472,7 +462,6 @@
             const encerrada = ['Concluída', 'Arquivada', 'Rejeitada'].includes(d.status);
             const isAtualBloqueado = tiposProjetos.includes(d.tipo_solicitacao);
 
-            // NOVA BLINDAGEM DO LINK LEGIS
             let linkLegisSeguro = '';
             const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
             if (isLegisSafe) {
@@ -515,23 +504,41 @@
                 if (temVisto) { seloAprovado = `<span class="aprovado-daniel" style="background:#3498db;">Visto pelo Daniel </span>`; }
             }
 
-            let htmlFotos = ''; let mediaIndex = d.pdf_url ? 1 : 0; 
+            let htmlPdfs = '';
+            let mediaIndexOffset = 0;
+            if (d.pdf_url) {
+                const pdfs = d.pdf_url.split(',');
+                mediaIndexOffset = pdfs.length;
+                htmlPdfs = pdfs.map((pdfUrl, i) => {
+                    const isPrincipal = i === 0;
+                    const btnEstrela = isPrincipal ? 
+                        `<span style="font-size:12px; font-weight:bold; color:#e67e22; margin-right: 10px;">⭐ CORE (Principal)</span>` : 
+                        `<button onclick="tornarPdfPrincipal(${i})" class="btn-foto" style="background:#e67e22; color:white; font-size: 11px; padding: 6px 10px; margin-right: 10px;">⭐ Tornar Core</button>`;
+                    
+                    return `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; padding:10px; border-radius:6px; margin-bottom:10px; flex-wrap: wrap; gap: 8px;">
+                        <div style="display:flex; align-items:center;">
+                            <span style="font-weight:bold; color:#185199; margin-right:15px;">📄 PDF Anexo ${i+1}</span>
+                            ${btnEstrela}
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="abrirLightboxIndex(${i})" class="btn-foto" style="background:#185199; font-size: 11px; padding: 6px 10px;">👁️ Ler PDF</button>
+                            <button onclick="excluirPdfUnico(${i})" class="btn-foto" style="background:#c0392b; font-size: 11px; padding: 6px 10px;">🗑️ Apagar</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            let htmlFotos = '';
             const fotosLimpo = (d.fotos_urls || []).filter(f => f);
-            
             if (fotosLimpo.length > 0) {
                 htmlFotos = fotosLimpo.map((f, i) => {
-                    const currentIndex = mediaIndex + i; const vid = isVideo(f);
+                    const currentIndex = mediaIndexOffset + i; const vid = isVideo(f);
                     const mediaTag = vid ? `<video src="${f}" onclick="abrirLightboxIndex(${currentIndex})"></video>` : `<img src="${f}" onclick="abrirLightboxIndex(${currentIndex})">`;
                     const ext = vid ? '.mp4' : '.jpg';
                     return `<div class="foto-container">${mediaTag}<div class="acoes-foto"><button class="btn-foto btn-excluir-foto" onclick="event.stopPropagation(); apagarFotoUnica(${i})">🗑️</button><button class="btn-foto" onclick="event.stopPropagation(); forcarDownload('${f}', 'demanda_anexo${i}${ext}')">⬇️</button></div></div>`;
                 }).join('');
-            } else if (d.pdf_url) {
-                htmlFotos = `
-                <div style="height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; background: linear-gradient(135deg, #185199, #123e75); color:white; border-radius:8px; cursor:pointer;" onclick="abrirLightboxIndex(0)">
-                    <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-bottom:8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    <span style="font-size:12px; font-weight:bold; letter-spacing: 1px;">DOCUMENTO OFICIAL (CLIQUE PARA ABRIR)</span>
-                </div>`;
-            } else {
+            } else if (!d.pdf_url) {
                 htmlFotos = `
                 <div style="height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; background: #e2e8f0; position:relative; overflow:hidden; border-radius:8px;">
                     <img src="https://i.imgur.com/coryuD6.png" style="position:absolute; width:auto; height:180%; opacity:0.04; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none;">
@@ -559,7 +566,10 @@
             if (d.doc_tipo || d.doc_numero) textoWhats += `\n*Doc Interno:* ${d.doc_tipo || 'Doc'} ${d.doc_numero || ''}`;
             if (d.protocolo) textoWhats += `\n*Protocolo 156:* ${d.protocolo}`;
             if (d.expediente) textoWhats += `\n*Expediente:* ${d.expediente}`;
-            if (d.pdf_url) textoWhats += `\n\n*Para ver o PDF clique aqui:* ${d.pdf_url}`;
+            if (d.pdf_url) {
+                const pdfs = d.pdf_url.split(',');
+                textoWhats += `\n\n*Para ver o PDF Principal clique aqui:* ${pdfs[0]}`;
+            }
             textoWhats += `\n\n🔗 Acesse: ${window.location.href}`;
 
             const msgWhats = encodeURIComponent(textoWhats);
@@ -594,12 +604,6 @@
                         <button class="btn-link" style="background:#9b59b6; color:white; border-color:#8e44ad;" onclick="copiarResumo()">📋 Copiar Resumo</button>
                         ${linkLegisSeguro}
                     </div>
-
-                    ${d.pdf_url ? `
-                    <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap: wrap;">
-                        <button onclick="abrirLightboxIndex(0)" class="btn-foto" style="background:#185199; font-size: 13px; padding: 10px 15px;">👁️ Ler Arquivo PDF</button>
-                        <button onclick="excluirPdf()" class="btn-foto" style="background:#c0392b; font-size: 13px; padding: 10px 15px;">🗑️ Excluir PDF</button>
-                    </div>` : ''}
 
                     <div class="info-group"><label>Tipo de Solicitação</label><p>📌 <b>${sTipo}</b></p></div>
                     
@@ -749,26 +753,27 @@
                                 <option value="Arquivada" ${d.status==='Arquivada'?'selected':''}>📦 Arquivada</option>
                             </select>
                         </div>
-
-                        <div class="form-group">
-                            <label>Prioridade</label>
-                            <select id="editPrioridade" ${bloqueado}>
-                                <option value="Baixa" ${d.prioridade==='Baixa'?'selected':''}>⚪ Baixa</option>
-                                <option value="Normal" ${d.prioridade==='Normal' || !d.prioridade?'selected':''}>🟡 Normal</option>
-                                <option value="Alta" ${d.prioridade==='Alta'?'selected':''}>🟠 Alta</option>
-                                <option value="Crítica" ${d.prioridade==='Crítica'?'selected':''}>🔴 Crítica</option>
-                            </select>
-                        </div>
                         
                         <div class="form-row" style="margin-bottom:15px;">
                             <div class="form-group" style="margin-bottom:0;">
                                 <label>Doc. Interno (Tipo)</label>
                                 <select id="editDocTipo" ${bloqueado}>
                                     <option value="" ${!d.doc_tipo?'selected':''}>Selecione...</option>
+                                    <option value="Emenda à Lei Orgânica" ${d.doc_tipo==='Emenda à Lei Orgânica'?'selected':''}>Emenda à Lei Orgânica</option>
+                                    <option value="Indicação" ${d.doc_tipo==='Indicação'?'selected':''}>Indicação</option>
+                                    <option value="Intenção de Projeto" ${d.doc_tipo==='Intenção de Projeto'?'selected':''}>Intenção de Projeto</option>
                                     <option value="Memorando" ${d.doc_tipo==='Memorando'?'selected':''}>Memorando</option>
+                                    <option value="Moção" ${d.doc_tipo==='Moção'?'selected':''}>Moção</option>
                                     <option value="Ofício" ${d.doc_tipo==='Ofício'?'selected':''}>Ofício</option>
-                                    <option value="PDP" ${d.doc_tipo==='PDP'?'selected':''}>PDP</option>
+                                    <option value="Pedido de Informação" ${d.doc_tipo==='Pedido de Informação'?'selected':''}>Pedido de Informação</option>
+                                    <option value="Pedido de Providência" ${d.doc_tipo==='Pedido de Providência'?'selected':''}>Pedido de Providência</option>
+                                    <option value="Projeto de Decreto Legislativo" ${d.doc_tipo==='Projeto de Decreto Legislativo'?'selected':''}>Projeto de Decreto Legislativo</option>
+                                    <option value="Projeto de Lei Complementar do Legislativo" ${d.doc_tipo==='Projeto de Lei Complementar do Legislativo'?'selected':''}>Projeto de Lei Complementar do Legislativo</option>
+                                    <option value="Projeto de Lei de Vereador" ${d.doc_tipo==='Projeto de Lei de Vereador'?'selected':''}>Projeto de Lei de Vereador</option>
+                                    <option value="Projeto de Resolução" ${d.doc_tipo==='Projeto de Resolução'?'selected':''}>Projeto de Resolução</option>
+                                    <option value="Representação" ${d.doc_tipo==='Representação'?'selected':''}>Representação</option>
                                     <option value="Requerimento" ${d.doc_tipo==='Requerimento'?'selected':''}>Requerimento</option>
+                                    <option value="Sessão Especial" ${d.doc_tipo==='Sessão Especial'?'selected':''}>Sessão Especial</option>
                                     <option value="Sessão Solene" ${d.doc_tipo==='Sessão Solene'?'selected':''}>Sessão Solene</option>
                                 </select>
                             </div>
@@ -776,7 +781,7 @@
                         </div>
                         
                         <div class="form-group"><label>Protocolo 156</label><input type="text" id="editProtocolo" value="${sProt}" onfocus="if(!this.value) this.value='156 2026/'" placeholder="Clique aqui para preencher" ${bloqueado}></div>
-                        <div class="form-group"><label>Expediente (Legis)</label><input type="text" id="editExpediente" value="${sExp}" placeholder="Ex: Exp. 5149" ${bloqueado}></div>
+                        <div class="form-group"><label>Expediente (Legis)</label><input type="text" id="editExpediente" value="${sExp}" placeholder="Ex: Exp. 5149" onfocus="if(!this.value) this.value='Exp. '" ${bloqueado}></div>
                         <div class="form-group"><label>Observações Internas (Equipe)</label><textarea id="editObservacoes" rows="2" placeholder="Anotações que só a equipe vê..." ${bloqueado}>${sObs}</textarea></div>
                         <div class="form-group" style="background:#fff3cd; padding:10px; border-radius:4px;">
                             <label>Link Direto do Legis 🔗</label>
@@ -799,12 +804,13 @@
 
                 <div class="box">
                     <h2>Galeria de Mídias</h2>
+                    ${htmlPdfs}
                     <div class="galeria">${htmlFotos}</div>
 
                     <div class="upload-extra">
                         <h4 style="color:#185199; margin-bottom:10px;">Adicionar Anexos</h4>
-                        <label style="font-size:12px; font-weight:bold;">Documento PDF (Substituir o atual)</label>
-                        <input type="file" id="extraPdf" accept="application/pdf" style="width:100%;">
+                        <label style="font-size:12px; font-weight:bold;">Documentos PDF (Máx total de 3 PDFs)</label>
+                        <input type="file" id="extraPdf" accept="application/pdf" multiple style="width:100%; margin-bottom:15px; padding:8px; border:1px solid #ccc; background:#f8fafc; border-radius:4px;">
                         <div id="pdfExtraPreviewBox" class="pdf-preview-box"></div>
                         <label style="font-size:12px; font-weight:bold; margin-top:15px; display:block;">Fotos/Vídeos (Máx 5 fotos, 1 vídeo. 15MB cada)</label>
                         <input type="file" id="extraFotos" accept="image/*,video/*" multiple style="width:100%;">
@@ -827,14 +833,126 @@
             renderTimelinePagina(); 
         }
 
-        let arquivosExtrasSelecionados = [];
-        let arquivoPdfExtraSelecionado = null;
+        window.tornarPdfPrincipal = async function(index) {
+            let pdfs = demandaAtual.pdf_url.split(',');
+            let temp = pdfs[0];
+            pdfs[0] = pdfs[index];
+            pdfs[index] = temp;
+            await db.from('demandas').update({ pdf_url: pdfs.join(',') }).eq('id', demandaId);
+            window.location.reload();
+        }
 
-        window.excluirPdf = function() {
-            pedirConfirmacao('🗑️ Excluir PDF', 'Tem a certeza que deseja excluir o PDF desta demanda?', async () => {
-                const { error } = await db.from('demandas').update({ pdf_url: null }).eq('id', demandaId);
-                if(!error) window.location.reload(); 
+        window.excluirPdfUnico = async function(index) {
+            pedirConfirmacao('🗑️ Excluir PDF', 'Tem a certeza que deseja excluir este PDF anexo?', async () => {
+                let pdfs = demandaAtual.pdf_url.split(',');
+                pdfs.splice(index, 1);
+                let novoPdfUrl = pdfs.length > 0 ? pdfs.join(',') : null;
+                await db.from('demandas').update({ pdf_url: novoPdfUrl }).eq('id', demandaId);
+                window.location.reload();
             });
+        }
+
+        let arquivosExtrasSelecionados = [];
+        let arquivosPdfExtraSelecionados = [];
+
+        document.getElementById('conteudo').addEventListener('change', function(e) {
+            if (e.target.id === 'extraPdf') {
+                const novos = Array.from(e.target.files);
+                const qtdAtual = demandaAtual.pdf_url ? demandaAtual.pdf_url.split(',').length : 0;
+                if (qtdAtual + arquivosPdfExtraSelecionados.length + novos.length > 3) { 
+                    alert('Limite máximo de 3 arquivos PDF atingido!'); 
+                    e.target.value = ''; return; 
+                }
+                novos.forEach(file => {
+                    if (file.size > 15 * 1024 * 1024) { alert('Tamanho máximo 15MB excedido.'); return; }
+                    arquivosPdfExtraSelecionados.push(file);
+                });
+                renderizarPdfExtraPreviews();
+                e.target.value = ''; 
+            }
+            if (e.target.id === 'extraFotos') {
+                const novos = Array.from(e.target.files);
+                let countExistenteFotos = (demandaAtual.fotos_urls || []).filter(f => !isVideo(f)).length + arquivosExtrasSelecionados.filter(f => f.type.startsWith('image/')).length;
+                let countExistenteVideos = (demandaAtual.fotos_urls || []).filter(f => isVideo(f)).length + arquivosExtrasSelecionados.filter(f => f.type.startsWith('video/')).length;
+
+                novos.forEach(file => {
+                    if (file.size > 15 * 1024 * 1024) { alert(`O arquivo ${file.name} passou do limite de 15MB!`); return; }
+                    if (file.type.startsWith('video/')) {
+                        if (countExistenteVideos >= 1) { alert('Você já atingiu o limite de 1 vídeo nesta demanda.'); return; }
+                        countExistenteVideos++; arquivosExtrasSelecionados.push(file);
+                    } else if (file.type.startsWith('image/')) {
+                        if (countExistenteFotos >= 5) { alert('Você já atingiu o limite de 5 fotos nesta demanda.'); return; }
+                        countExistenteFotos++; arquivosExtrasSelecionados.push(file);
+                    }
+                });
+                renderizarExtraPreviews();
+                e.target.value = ''; 
+            }
+        });
+
+        window.renderizarPdfExtraPreviews = function() {
+            const box = document.getElementById('pdfExtraPreviewBox');
+            if (arquivosPdfExtraSelecionados.length === 0) { box.style.display = 'none'; return; }
+            box.innerHTML = arquivosPdfExtraSelecionados.map((f, i) => `
+                <div class="pdf-preview-item">
+                    <span>📄 ${DOMPurify.sanitize(f.name)}</span>
+                    <button type="button" onclick="removerPdfExtra(${i})">✕</button>
+                </div>
+            `).join('');
+            box.style.display = 'flex';
+        }
+
+        window.removerPdfExtra = function(index) { arquivosPdfExtraSelecionados.splice(index, 1); renderizarPdfExtraPreviews(); }
+
+        function renderizarExtraPreviews() {
+            const grid = document.getElementById('extraPreviewGrid');
+            grid.innerHTML = '';
+            arquivosExtrasSelecionados.forEach((file, index) => {
+                const url = URL.createObjectURL(file);
+                const isVideo = file.type.startsWith('video/');
+                const mediaTag = isVideo ? `<video src="${url}" muted loop></video>` : `<img src="${url}">`;
+                grid.innerHTML += `<div class="preview-item">${mediaTag}<button type="button" class="btn-remover-preview" onclick="removerArquivoExtra(${index})">✕</button></div>`;
+            });
+        }
+
+        window.removerArquivoExtra = function(index) { arquivosExtrasSelecionados.splice(index, 1); renderizarExtraPreviews(); }
+
+        window.uploadNovosAnexos = async function() {
+            if (arquivosPdfExtraSelecionados.length === 0 && arquivosExtrasSelecionados.length === 0) return alert('Selecione algum arquivo!');
+
+            const btn = document.getElementById('btnUploadExtra'); const prog = document.getElementById('progressoExtra');
+            btn.disabled = true; prog.style.display = 'block';
+
+            try {
+                let updates = {};
+                
+                let novasUrlsPdf = [];
+                for (let i = 0; i < arquivosPdfExtraSelecionados.length; i++) {
+                    prog.textContent = `Enviando Novo PDF ${i+1}/${arquivosPdfExtraSelecionados.length}...`;
+                    novasUrlsPdf.push(await uploadCloudinaryDirect(arquivosPdfExtraSelecionados[i]));
+                }
+                if (novasUrlsPdf.length > 0) {
+                    const atuais = demandaAtual.pdf_url ? demandaAtual.pdf_url.split(',') : [];
+                    updates.pdf_url = [...atuais, ...novasUrlsPdf].join(',');
+                }
+
+                if (arquivosExtrasSelecionados.length > 0) {
+                    let novasFotos = [];
+                    for (let i = 0; i < arquivosExtrasSelecionados.length; i++) {
+                        prog.textContent = `Enviando mídia ${i+1}/${arquivosExtrasSelecionados.length}...`;
+                        novasFotos.push(await uploadCloudinaryDirect(arquivosExtrasSelecionados[i]));
+                    }
+                    updates.fotos_urls = [...(demandaAtual.fotos_urls || []).filter(f => f), ...novasFotos];
+                }
+                
+                const hist = demandaAtual.historico || [];
+                hist.push({ status: 'Edição', autor: usuarioLogado, data: new Date().toISOString(), detalhes: 'Adicionou novos anexos' });
+                updates.historico = hist;
+
+                await db.from('demandas').update(updates).eq('id', demandaId);
+                window.location.reload(); 
+            } catch (e) { alert('Erro: ' + e.message); } 
+            finally { btn.disabled = false; setTimeout(() => { prog.style.display = 'none'; }, 3000); }
         }
 
         window.assumirAqui = async function(btn) {
@@ -914,7 +1032,6 @@
             const rua = document.getElementById('editRua') ? document.getElementById('editRua').value.trim() : (demandaAtual.rua || '');
             const numero = document.getElementById('editNumero') ? document.getElementById('editNumero').value.trim() : (demandaAtual.numero || '');
             const bairro = document.getElementById('editBairro') ? document.getElementById('editBairro').value.trim() : (demandaAtual.bairro || '');
-            const prioridade = document.getElementById('editPrioridade') ? document.getElementById('editPrioridade').value : (demandaAtual.prioridade || 'Normal');
 
             const isAtualBloqueado = tiposProjetos.includes(tipo_solicitacao || demandaAtual.tipo_solicitacao);
             const estaAguardando = (demandaAtual.status === 'Aguardando Aprovação' || demandaAtual.status === 'Pendente');
@@ -929,7 +1046,7 @@
                 observacoes_internas: observacoes_internas,
                 data_agendada: data_agendada, horario_agendado: horario_agendado, secretaria: secretaria, providencias: providencias,
                 tipo_solicitacao: tipo_solicitacao, assunto: assunto, descricao: descricao, solicitante_nome: nomeSol, solicitante_tel: telSol, responsavel_ordem: responsavel_ordem,
-                rua: rua, numero: numero, bairro: bairro, prioridade: prioridade
+                rua: rua, numero: numero, bairro: bairro
             };
             
             const hist = demandaAtual.historico || [];
@@ -1043,83 +1160,6 @@
             const data = await res.json(); return data.secure_url;
         }
 
-        document.addEventListener('change', function(e) {
-            if (e.target.id === 'extraPdf') {
-                const file = e.target.files[0];
-                if (!file) return;
-                if (file.size > 15 * 1024 * 1024) { alert('PDF muito grande! O máximo é 15MB.'); e.target.value = ''; return; }
-                arquivoPdfExtraSelecionado = file;
-                const box = document.getElementById('pdfExtraPreviewBox');
-                box.innerHTML = `📄 ${DOMPurify.sanitize(file.name)} <button type="button" onclick="removerPdfExtraPreview()">✕</button>`;
-                box.style.display = 'flex';
-                e.target.value = ''; 
-            }
-            if (e.target.id === 'extraFotos') {
-                const novos = Array.from(e.target.files);
-                let countExistenteFotos = (demandaAtual.fotos_urls || []).filter(f => !isVideo(f)).length + arquivosExtrasSelecionados.filter(f => f.type.startsWith('image/')).length;
-                let countExistenteVideos = (demandaAtual.fotos_urls || []).filter(f => isVideo(f)).length + arquivosExtrasSelecionados.filter(f => f.type.startsWith('video/')).length;
-
-                novos.forEach(file => {
-                    if (file.size > 15 * 1024 * 1024) { alert(`O arquivo ${file.name} passou do limite de 15MB!`); return; }
-                    if (file.type.startsWith('video/')) {
-                        if (countExistenteVideos >= 1) { alert('Você já atingiu o limite de 1 vídeo nesta demanda.'); return; }
-                        countExistenteVideos++; arquivosExtrasSelecionados.push(file);
-                    } else if (file.type.startsWith('image/')) {
-                        if (countExistenteFotos >= 5) { alert('Você já atingiu o limite de 5 fotos nesta demanda.'); return; }
-                        countExistenteFotos++; arquivosExtrasSelecionados.push(file);
-                    }
-                });
-                renderizarExtraPreviews();
-                e.target.value = ''; 
-            }
-        });
-
-        window.removerPdfExtraPreview = function() {
-            arquivoPdfExtraSelecionado = null; document.getElementById('pdfExtraPreviewBox').style.display = 'none';
-        }
-
-        function renderizarExtraPreviews() {
-            const grid = document.getElementById('extraPreviewGrid');
-            grid.innerHTML = '';
-            arquivosExtrasSelecionados.forEach((file, index) => {
-                const url = URL.createObjectURL(file);
-                const isVideo = file.type.startsWith('video/');
-                const mediaTag = isVideo ? `<video src="${url}" muted loop></video>` : `<img src="${url}">`;
-                grid.innerHTML += `<div class="preview-item">${mediaTag}<button type="button" class="btn-remover-preview" onclick="removerArquivoExtra(${index})">✕</button></div>`;
-            });
-        }
-
-        window.removerArquivoExtra = function(index) { arquivosExtrasSelecionados.splice(index, 1); renderizarExtraPreviews(); }
-
-        window.uploadNovosAnexos = async function() {
-            if (!arquivoPdfExtraSelecionado && arquivosExtrasSelecionados.length === 0) return alert('Selecione algum arquivo!');
-
-            const btn = document.getElementById('btnUploadExtra'); const prog = document.getElementById('progressoExtra');
-            btn.disabled = true; prog.style.display = 'block';
-
-            try {
-                let updates = {};
-                if (arquivoPdfExtraSelecionado) { prog.textContent = 'Enviando Novo PDF...'; updates.pdf_url = await uploadCloudinaryDirect(arquivoPdfExtraSelecionado); }
-                if (arquivosExtrasSelecionados.length > 0) {
-                    let novasFotos = [];
-                    for (let i = 0; i < arquivosExtrasSelecionados.length; i++) {
-                        prog.textContent = `Enviando mídia ${i+1}/${arquivosExtrasSelecionados.length}...`;
-                        novasFotos.push(await uploadCloudinaryDirect(arquivosExtrasSelecionados[i]));
-                    }
-                    updates.fotos_urls = [...(demandaAtual.fotos_urls || []).filter(f => f), ...novasFotos];
-                }
-                
-                const hist = demandaAtual.historico || [];
-                hist.push({ status: 'Edição', autor: usuarioLogado, data: new Date().toISOString(), detalhes: 'Adicionou novos anexos' });
-                updates.historico = hist;
-
-                await db.from('demandas').update(updates).eq('id', demandaId);
-                window.location.reload(); 
-            } catch (e) { alert('Erro: ' + e.message); } 
-            finally { btn.disabled = false; setTimeout(() => { prog.style.display = 'none'; }, 3000); }
-        }
-
-        // --- PROTEÇÃO DE SESSÃO (TIMEOUT DE 30 MINUTOS) ---
         let sessionTimeout;
         function resetarSessao() {
             clearTimeout(sessionTimeout);
