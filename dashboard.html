@@ -147,7 +147,7 @@
         <div style="display:flex; gap:15px; align-items:center; margin-bottom:20px; flex-wrap:wrap; padding:10px; background:#f8fafc; border-radius:6px;">
             <div style="display:flex; gap:10px; align-items:center;">
                 <label for="filtroPrioridade" style="font-weight:bold; color:#555; font-size:14px;">Prioridade:</label>
-                <select id="filtroPrioridade" onchange="carregarDemandas()" style="padding:6px 10px; border:1px solid #ddd; border-radius:4px; cursor:pointer;">
+                <select id="filtroPrioridade" onchange="mudarPagina(1); renderDemandas();" style="padding:6px 10px; border:1px solid #ddd; border-radius:4px; cursor:pointer;">
                     <option value="">Todas</option>
                     <option value="Crítica">🔴 Crítica</option>
                     <option value="Alta">🟠 Alta</option>
@@ -166,6 +166,7 @@
         </div>
 
         <div class="paginacao" id="paginacaoContainer"></div>
+        <div class="cards-grid" id="demandas"></div>
     </div>
 
     <button class="fab-quick" onclick="abrirModalQuick()" title="Nova Demanda Rápida">⚡</button>
@@ -180,6 +181,13 @@
             <input type="file" id="qArquivo" accept="image/*,video/*,.pdf" multiple style="font-size: 12px; padding: 5px; border: none; margin-bottom: 5px; width: 100%; background: #f8fafc; border-radius: 4px;">
             <div id="qPreviewArea" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;"></div>
             <textarea id="qDetalhe" placeholder="Detalhamento da demanda..." style="width:100%; height:80px; margin-bottom:15px; padding:10px; border-radius:4px; border:1px solid #ccc; font-size:14px; outline:none; resize:none;"></textarea>
+            <label style="font-size:12px; font-weight:bold; color:#555; display:block; margin-bottom:5px;">Prioridade:</label>
+            <select id="qPrioridade" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:14px; margin-bottom:15px;">
+                <option value="Normal">🟡 Normal</option>
+                <option value="Alta">🟠 Alta</option>
+                <option value="Crítica">🔴 Crítica</option>
+                <option value="Baixa">⚪ Baixa</option>
+            </select>
             <label style="font-size:12px; font-weight:bold; color:#555; display: block; margin-bottom: 5px;">Quem vai cuidar?</label>
             <div id="respTagsQuick" class="resp-tags-quick"></div>
             <select id="selectAddRespQuick" onchange="adicionarRespQuick()" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:14px; margin-bottom:15px;">
@@ -500,6 +508,7 @@
             const fone = document.getElementById('qFone').value.trim();
             const assunto = document.getElementById('qAssunto').value.trim();
             const detalhe = document.getElementById('qDetalhe').value.trim();
+            const prioridade = document.getElementById('qPrioridade').value || 'Normal';
             
             if(!nome || !fone || !assunto) return alert("Preencha Nome, Fone e Assunto!");
             
@@ -538,6 +547,7 @@
                 descricao: detalhe,
                 responsaveis: responsaveis,
                 status: 'Pendente',
+                prioridade: prioridade,
                 tipo_solicitacao: 'DEMANDA (GERAL)',
                 criador: usuarioLogado,
                 criado_em: hoje.toISOString(),
@@ -562,7 +572,7 @@
                         }).catch(()=>{});
                     }
                     fecharModalQuick();
-                    document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = '';
+                    document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = ''; document.getElementById('qPrioridade').value = 'Normal';
                     window._respQuickList = []; window._arquivosQuick = []; renderRespTagsQuick(); renderPreviewQuick();
                     alert("Demanda Rápida criada com sucesso!");
                 } else { alert("Erro ao salvar no banco. Verifique os dados."); console.error(error); }
