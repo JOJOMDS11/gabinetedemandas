@@ -447,7 +447,7 @@
                                 }
                             }
                             else if (payload.eventType === 'DELETE') { todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id); }
-                            todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+                            lista.sort((a, b) => Number(b.numero_demanda) - Number(a.numero_demanda));
                             atualizarContadores(); renderDemandas();
                         }
                     ).subscribe();
