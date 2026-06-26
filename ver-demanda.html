@@ -11,9 +11,12 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f2f5; color: #333; }
         .bg-primary { background-color: #185199; }
-        .navbar { padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; color: white; }
-        .navbar img { height: 80px; background: white; padding: 5px; border-radius: 4px; }
-        .navbar a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
+        .navbar { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; gap: 8px; flex-wrap: nowrap; overflow: hidden; }
+        .navbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; font-weight: bold; font-size: 16px; white-space: nowrap; }
+        .navbar-brand img { height: 38px; width: 38px; background: white; padding: 2px; border-radius: 6px; object-fit: contain; flex-shrink: 0; }
+        .navbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .btn-logout { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.5); padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.2s; white-space: nowrap; display: flex; align-items: center; justify-content: center;}
+        .btn-logout:hover { background: rgba(255,255,255,0.1); }
         .container { max-width: 1000px; margin: 30px auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 15px; }
         @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
         .box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 4px solid #185199; }
@@ -97,7 +100,7 @@
         #btnNext { right: 10px; }
         #btnFecharLightbox { position: absolute; top: 15px; right: 15px; background: rgba(231,76,60,0.9); color: white; border: none; padding: 10px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; z-index: 10000; }
         @media (max-width: 600px) { .lightbox-nav { padding: 10px; font-size: 20px; } .form-row { grid-template-columns: 1fr; } }
-        .bloco-edicao { background: #fdfdfd; border: 1px dashed #ccc; padding: 20px; border-radius: 8px; margin-top: 10px;}
+        .bloco-edicao { background: #fdfdfd; border: 1px dashed #ccc; padding: 20px; border-radius: 8px; margin-top: 10px; position: relative;}
         .bloco-edicao h4 { color: #185199; margin-bottom: 15px; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px;}
         .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; margin-top: 10px; }
         .preview-item { border-radius: 4px; border: 1px solid #eee; overflow: hidden; height: 60px; position: relative; }
@@ -107,13 +110,20 @@
         .pdf-preview-box button { background: none; border: none; color: #c0392b; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0; min-width: unset; flex: none; }
         .btn-micro { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 11px; font-weight: bold; padding: 4px 8px; height: 26px;}
         .btn-micro:hover { background: #e2e8f0; color: #185199; border-color: #185199; }
+        .btn-acao.verde { background: #27ae60; color: white; }
     </style>
 </head>
 <body>
     <div class="navbar bg-primary">
-        <a href="dashboard.html">← Voltar</a>
-        <a href="dashboard.html" style="font-size: 16px;">INÍCIO</a>
-        <img src="https://i.imgur.com/coryuD6.png" alt="Logo">
+        <a href="dashboard.html" class="navbar-brand">
+            <img src="https://i.imgur.com/coryuD6.png" alt="Logo">
+            <span class="brand-text" style="color:white; font-size:16px; margin-left:10px;">Gabinete Daniel</span>
+        </a>
+        <div class="navbar-actions">
+            <span class="user-name-span" style="font-size:13px; color:white; margin-right:10px;">👤 <span id="nomeUsuario"></span></span>
+            <button class="btn-logout" id="btnGerenciarCadastros" onclick="abrirGerenciadorCadastros()" title="Gerenciar Cadastros do Sistema">⚙️</button>
+            <button class="btn-logout" id="btnLogout" title="Sair">🚪</button>
+        </div>
     </div>
 
     <div class="container" id="conteudo">
@@ -157,6 +167,30 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="modalCadastros">
+        <div class="modal-box" style="max-width: 480px; text-align: left;">
+            <h3 style="text-align:center; color:#185199;">⚙️ Gerenciar Cadastros</h3>
+            
+            <h4 style="font-size: 14px; margin-top: 15px; margin-bottom: 10px; color: #555;">🏢 Secretarias</h4>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+                <input type="text" id="inputNovaSecretaria" placeholder="Nome da nova secretaria..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                <button onclick="adicionarSecretaria()" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
+            </div>
+            <div id="listaSecretariasModal" style="max-height: 150px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-bottom:20px; border: 1px solid #eee; padding: 5px; border-radius: 4px;"></div>
+
+            <h4 style="font-size: 14px; margin-bottom: 10px; color: #555;">📍 Bairros</h4>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+                <input type="text" id="inputNovoBairro" placeholder="Nome do novo bairro..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                <button onclick="adicionarBairro()" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
+            </div>
+            <div id="listaBairrosModal" style="max-height: 150px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-bottom:15px; border: 1px solid #eee; padding: 5px; border-radius: 4px;"></div>
+
+            <div class="modal-botoes">
+                <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharGerenciadorCadastros()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let db, cloudName, uploadPreset;
         let demandaAtual = null;
@@ -172,29 +206,31 @@
 
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         if (!usuarioLogado) window.location.href = 'index.html';
+        document.getElementById('nomeUsuario').textContent = usuarioLogado;
+
+        document.getElementById('btnLogout').addEventListener('click', () => {
+            localStorage.removeItem('usuarioLogado');
+            localStorage.removeItem('authToken');
+            window.location.href = 'index.html';
+        });
 
         const adminUsers = ['Daniel', 'João Pedro', 'Luana'];
         const isAdmin = adminUsers.includes(usuarioLogado);
 
-        const secretariasPadrao = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'Secretaria Geral de Governo - SGG', 'Secretaria Municipal de Habitação - SEMHAB', 'Secretaria Municipal de Proteção Animal - SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
-        let listaSecretariasCarregada = secretariasPadrao;
+        let listaSecretariasCarregada = [];
         let listaBairrosCarregada = [];
 
         async function carregarListaSecretarias() {
             try {
                 const { data, error } = await db.from('secretarias').select('nome').order('nome');
-                if (!error && data && data.length > 0) {
-                    listaSecretariasCarregada = data.map(r => r.nome).sort();
-                }
+                if (!error && data && data.length > 0) { listaSecretariasCarregada = data.map(r => r.nome).sort(); }
             } catch (e) { }
         }
 
         async function carregarBairros() {
             try {
                 const { data, error } = await db.from('bairros').select('nome').order('nome');
-                if (!error && data && data.length > 0) { 
-                    listaBairrosCarregada = data.map(r => r.nome).sort(); 
-                }
+                if (!error && data && data.length > 0) { listaBairrosCarregada = data.map(r => r.nome.toUpperCase()).sort(); }
             } catch (e) { }
         }
 
@@ -291,6 +327,65 @@
             fotos.forEach(f => { mediaGlobal.push({ url: f, type: isVideo(f) ? 'video' : 'image' }); });
 
             renderizar(demandaAtual);
+        }
+
+        window.abrirGerenciadorCadastros = async function() { 
+            document.getElementById('modalCadastros').classList.add('ativo'); 
+            await renderizarListaSecretariasModal();
+            await renderizarListaBairrosModal();
+        }
+        
+        window.fecharGerenciadorCadastros = function() { 
+            document.getElementById('modalCadastros').classList.remove('ativo'); 
+        }
+
+        async function renderizarListaSecretariasModal() {
+            const lista = document.getElementById('listaSecretariasModal');
+            lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
+            const { data, error } = await db.from('secretarias').select('id, nome').order('nome');
+            if (!error && data) {
+                listaSecretariasCarregada = data.map(r => r.nome).sort();
+                lista.innerHTML = data.map(s => `<div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;"><span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(s.nome)}</span><button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button></div>`).join('');
+                popularSelectSecretaria(obterSecretariaEditSelecionada());
+            }
+        }
+
+        window.adicionarSecretaria = async function() {
+            const input = document.getElementById('inputNovaSecretaria');
+            const nome = input.value.trim();
+            if (!nome) return;
+            try { await db.from('secretarias').insert([{ nome }]); input.value = ''; await renderizarListaSecretariasModal(); } catch (e) { alert('Erro ao salvar.'); }
+        }
+
+        window.excluirSecretaria = async function(id, btn) {
+            if (!confirm('Remover esta secretaria?')) return;
+            btn.disabled = true;
+            try { await db.from('secretarias').delete().eq('id', id); await renderizarListaSecretariasModal(); } catch (e) { alert('Erro.'); btn.disabled = false; }
+        }
+
+        async function renderizarListaBairrosModal() {
+            const lista = document.getElementById('listaBairrosModal');
+            lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
+            const { data, error } = await db.from('bairros').select('id, nome').order('nome');
+            if (!error && data) { 
+                listaBairrosCarregada = data.map(r => r.nome.toUpperCase()).sort(); 
+                lista.innerHTML = data.map(b => `<div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;"><span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(b.nome)}</span><button onclick="excluirBairro(${b.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button></div>`).join('');
+                const datalist = document.getElementById('listaBairrosEdit');
+                if(datalist) datalist.innerHTML = listaBairrosCarregada.map(b => `<option value="${DOMPurify.sanitize(b)}"></option>`).join('');
+            }
+        }
+
+        window.adicionarBairro = async function() {
+            const input = document.getElementById('inputNovoBairro');
+            const nome = input.value.trim().toUpperCase();
+            if (!nome) return;
+            try { await db.from('bairros').insert([{ nome }]); input.value = ''; await renderizarListaBairrosModal(); } catch (e) { alert('Erro ao salvar.'); }
+        }
+
+        window.excluirBairro = async function(id, btn) {
+            if (!confirm('Remover este bairro?')) return;
+            btn.disabled = true;
+            try { await db.from('bairros').delete().eq('id', id); await renderizarListaBairrosModal(); } catch (e) { alert('Erro.'); btn.disabled = false; }
         }
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
@@ -435,6 +530,75 @@
             return `<div class="progress-wrapper"><h4 style="color:#185199; font-size:14px; text-align:center;">Progresso da Demanda</h4><div class="progress-container"><div class="progress-line"></div>${html}</div></div>`;
         }
 
+        window.regenerarNumeroDemanda = async function(btn) {
+            if(!confirm("Gerar novo identificador baseado na Data e Horário definidos abaixo no formulário?")) return;
+            const dataCampo = document.getElementById('editDataAgendada').value;
+            const horaCampo = document.getElementById('editHorarioAgendado').value;
+            const agora = new Date();
+            let ano, mes, dia;
+            if (dataCampo) {
+                [ano, mes, dia] = dataCampo.split('-');
+            } else {
+                ano = String(agora.getFullYear());
+                mes = String(agora.getMonth() + 1).padStart(2, '0');
+                dia = String(agora.getDate()).padStart(2, '0');
+            }
+            
+            let horas, minutos;
+            if (horaCampo) {
+                [horas, minutos] = horaCampo.split(':');
+            } else {
+                horas = String(agora.getHours()).padStart(2, '0');
+                minutos = String(agora.getMinutes()).padStart(2, '0');
+            }
+            const segundos = String(agora.getSeconds()).padStart(2, '0');
+            
+            const novoNum = `${dia}${mes}${ano}${horas}${minutos}${segundos}`;
+            document.getElementById('editNumDemanda').value = novoNum;
+        }
+
+        window.salvarParcial = async function(secao, btn) {
+            const textoOriginal = btn.innerHTML;
+            btn.innerHTML = '⏳ Salvando...';
+            btn.disabled = true;
+
+            let updates = {};
+            let histDetalhe = '';
+            let alterados = [];
+
+            if (secao === 'dados') {
+                updates.tipo_solicitacao = document.getElementById('editTipo').value || demandaAtual.tipo_solicitacao;
+                updates.prioridade = document.getElementById('editPrioridade').value || demandaAtual.prioridade;
+                updates.assunto = document.getElementById('editAssunto').value.trim();
+                updates.descricao = document.getElementById('editDescricao').value.trim();
+                updates.solicitante_nome = document.getElementById('editNomeSol').value.trim();
+                updates.solicitante_tel = document.getElementById('editTelSol').value.trim();
+                updates.rua = document.getElementById('editRua').value.trim();
+                updates.numero = document.getElementById('editNumero').value.trim();
+                updates.bairro = document.getElementById('editBairro').value.trim();
+                histDetalhe = 'Atualizou Dados Principais (Save Rápido)';
+            } else if (secao === 'equipe') {
+                updates.responsavel_ordem = document.getElementById('editResponsavelOrdem').value;
+                histDetalhe = 'Atualizou Ordem/Equipe (Save Rápido)';
+            }
+
+            const hist = demandaAtual.historico || [];
+            hist.push({ status: 'Edição', autor: usuarioLogado, data: new Date().toISOString(), detalhes: histDetalhe });
+            updates.historico = hist;
+
+            const { error } = await db.from('demandas').update(updates).eq('id', demandaId);
+            
+            if (!error) {
+                Object.assign(demandaAtual, updates);
+                temAlteracoesNaoSalvas = false;
+                btn.innerHTML = '✅ Salvo!';
+                setTimeout(() => { btn.innerHTML = textoOriginal; btn.disabled = false; }, 2000);
+            } else {
+                btn.innerHTML = '❌ Erro!';
+                setTimeout(() => { btn.innerHTML = textoOriginal; btn.disabled = false; }, 2000);
+            }
+        }
+
         function renderizar(d) {
             const sAssunto = DOMPurify.sanitize(d.assunto || '');
             const sDesc = DOMPurify.sanitize(d.descricao || '');
@@ -559,7 +723,7 @@
             const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui(this)">🙋 Eu Assumo (Executar)</button>` : '';
             const inputDemandaNum = isAdmin
                 ? `<input type="text" id="editNumDemanda" value="${numSafeJs}" readonly style="max-width:160px; padding:5px; background:#eee; font-weight:bold;">
-                   <button type="button" class="btn-foto" style="background:#9b59b6; margin-left:8px;" onclick="regenerarNumeroDemanda()" title="Recalcula como Data + Hora atual">🔄 Atualizar p/ Data+Hora atual</button>`
+                   <button type="button" class="btn-foto" style="background:#9b59b6; margin-left:8px;" onclick="regenerarNumeroDemanda(this)" title="Recalcula baseado na Data/Hora agendada">🔄 Atualizar p/ Data do Protocolo</button>`
                 : `<p><b>${numSafeJs || 'N/A'}</b></p>`;
 
             const ruaSegura = sRua.replace(/'/g,"\\'"); const bairroSeguro = sBairro.replace(/'/g,"\\'");
@@ -648,8 +812,14 @@
                         <label>Aberto por</label><p>✍️ <b>${sCriador}</b> em ${tempoRelativo(d.criado_em)}</p>
                     </div>
 
-                    <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+                    ${htmlPdfs ? `
+                        <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+                        <h4 style="color:#185199; margin-bottom:10px; font-size: 14px;">📁 Documentos Relacionados</h4>
+                        ${htmlPdfs}
+                    ` : ''}
+                </div>
 
+                <div class="box">
                     <h2>Acompanhamento & Edição</h2>
                     ${isAtualBloqueado && bloqueado !== '' ? `<div style="color:#c0392b; font-size:13px; font-weight:bold; margin-bottom:10px; background:#ffe5e5; padding:10px; border-radius:4px; border:1px solid #c0392b;">⚠️ Bloqueado: Este projeto requer aprovação para edição de andamento.</div>` : ''}
 
@@ -713,6 +883,9 @@
                                 ${listaBairrosCarregada.map(b => `<option value="${DOMPurify.sanitize(b)}"></option>`).join('')}
                             </datalist>
                         </div>
+                        <div style="text-align: right; margin-top: 10px;">
+                            <button class="btn-acao verde" style="width: auto; padding: 8px 15px;" onclick="salvarParcial('dados', this)" ${bloqueado}>💾 Salvar Dados Rápidos</button>
+                        </div>
                     </div>
 
                     <div class="bloco-edicao" style="margin-top: 20px;">
@@ -729,6 +902,9 @@
                                 <option value="João Pedro" ${d.responsavel_ordem==='João Pedro'?'selected':''}>João Pedro</option>
                                 <option value="Luana" ${d.responsavel_ordem==='Luana'?'selected':''}>Luana</option>
                             </select>
+                        </div>
+                        <div style="text-align: right; margin-top: 10px;">
+                            <button class="btn-acao verde" style="width: auto; padding: 8px 15px;" onclick="salvarParcial('equipe', this)" ${bloqueado}>💾 Salvar Equipe</button>
                         </div>
 
                         <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
@@ -831,8 +1007,7 @@
                 </div>
 
                 <div class="box">
-                    <h2>Galeria de Mídias</h2>
-                    ${htmlPdfs}
+                    <h2>Galeria de Mídias Extra</h2>
                     <div class="galeria">${htmlFotos}</div>
 
                     <div class="upload-extra">
