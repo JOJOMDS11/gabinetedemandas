@@ -46,8 +46,9 @@
         .secao-tecnica { background: #ffffff; padding: 20px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 20px; }
         .secao-tecnica h3 { color:#1a365d; font-size:14px; margin-bottom:15px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;}
 
-        .pdf-preview-box { display: none; background: #f1f5f9; color: #1a365d; padding: 10px 15px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; font-weight: bold; margin-top: 10px; align-items: center; justify-content: space-between; }
-        .pdf-preview-box button { background: none; border: none; color: #b91c1c; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0; min-width: unset; flex: none; }
+        .pdf-preview-box { display: none; background: #f1f5f9; color: #1a365d; padding: 10px 15px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; font-weight: bold; margin-top: 10px; flex-direction: column; gap: 8px;}
+        .pdf-preview-item { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 5px 0; border-bottom: 1px solid #cbd5e1; }
+        .pdf-preview-item button { background: none; border: none; color: #b91c1c; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0; min-width: unset; flex: none; }
         
         .box-aprovacao { background:#f8fafc; padding:15px; border-radius:6px; border:1px solid #cbd5e1; display:none; margin-top: 25px; margin-bottom: 10px;}
         .box-aprovacao label { display:flex; align-items:center; gap:10px; cursor:pointer; color:#334155; margin-bottom:0; font-size: 13px; text-transform: none;}
@@ -238,10 +239,21 @@
                     <label>Tipo de Documento</label>
                     <select id="doc_tipo">
                         <option value="">Selecione...</option>
+                        <option value="Emenda à Lei Orgânica">Emenda à Lei Orgânica</option>
+                        <option value="Indicação">Indicação</option>
+                        <option value="Intenção de Projeto">Intenção de Projeto</option>
                         <option value="Memorando">Memorando</option>
+                        <option value="Moção">Moção</option>
                         <option value="Ofício">Ofício</option>
-                        <option value="PDP">PDP</option>
+                        <option value="Pedido de Informação">Pedido de Informação</option>
+                        <option value="Pedido de Providência">Pedido de Providência</option>
+                        <option value="Projeto de Decreto Legislativo">Projeto de Decreto Legislativo</option>
+                        <option value="Projeto de Lei Complementar do Legislativo">Projeto de Lei Complementar do Legislativo</option>
+                        <option value="Projeto de Lei de Vereador">Projeto de Lei de Vereador</option>
+                        <option value="Projeto de Resolução">Projeto de Resolução</option>
+                        <option value="Representação">Representação</option>
                         <option value="Requerimento">Requerimento</option>
+                        <option value="Sessão Especial">Sessão Especial</option>
                         <option value="Sessão Solene">Sessão Solene</option>
                     </select>
                 </div>
@@ -257,7 +269,7 @@
             </div>
             <div class="form-group">
                 <label>Identificação Legislativa</label>
-                <input type="text" id="expediente" placeholder="Ex: Exp. 1234" oninput="verificarCheckboxAprovacao()">
+                <input type="text" id="expediente" placeholder="Ex: Exp. 1234" onfocus="if(!this.value) this.value='Exp. '" oninput="verificarCheckboxAprovacao()">
             </div>
             <div class="form-group">
                 <label>Anotações Restritas</label>
@@ -273,8 +285,8 @@
         </div>
 
         <div class="form-group" style="background:#f8fafc; padding: 15px; border-radius: 6px; margin-top: 20px; border: 1px solid #cbd5e1;">
-            <label style="color:#1a365d;">Anexar Documento PDF (Máx. 15MB)</label>
-            <input type="file" id="pdfFile" accept="application/pdf" style="background:white;">
+            <label style="color:#1a365d;">Anexar Documentos PDF (Máx. 3 PDFs, 15MB cada)</label>
+            <input type="file" id="pdfFile" accept="application/pdf" multiple style="background:white;">
             <div id="pdfPreviewBox" class="pdf-preview-box"></div>
         </div>
 
@@ -310,12 +322,16 @@
         const tiposAtualBloqueados = ['INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
         const nomesEquipe = ['Alemão', 'Antonio', 'Daniel', 'Débora', 'João Pedro', 'Luana'];
 
-        const secretariasPadrao = [
-            'CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE',
-            'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'
-        ].sort();
+        const secretariasPadrao = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'].sort();
 
         const bairrosSL = ['CENTRO', 'FEITORIA', 'CAMPINA', 'SCHARLAU', 'SANTOS DUMONT', 'RIO DOS SINOS', 'VICENTINA', 'SÃO JOSÉ', 'SÃO MIGUEL', 'CRISTO REI', 'FIÃO', 'DUQUE DE CAXIAS', 'JARDIM AMÉRICA', 'FAZENDA SÃO BORJA', 'PINHEIRO', 'RIO BRANCO', 'SANTA TEREZA', 'POMBAL', 'ARROIO DA MANTEIGA', 'BOA VISTA', 'MORRO DO ESPELHO', 'PADRE REUS', 'PASSO DOS FERREIROS', 'CAMPESTRE', 'JARDIM LUCIANA', 'COHAB'];
+
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && e.keyCode === 85)) {
+                e.preventDefault();
+            }
+        });
 
         async function carregarSecretarias() {
             const select = document.getElementById('secretaria');
@@ -346,9 +362,7 @@
 
         function obterSecretariaSelecionada() {
             const select = document.getElementById('secretaria');
-            if (select.value === '__outra__') {
-                return document.getElementById('secretaria_outra').value.trim();
-            }
+            if (select.value === '__outra__') return document.getElementById('secretaria_outra').value.trim();
             return select.value;
         }
 
@@ -371,13 +385,8 @@
         }
 
         document.addEventListener('change', function() { formularioAlterado = true; });
-        document.addEventListener('input', function(e) { 
-            if (e.target.id !== 'textoMagico') formularioAlterado = true;
-        });
-
-        window.addEventListener('beforeunload', function(e) {
-            if (formularioAlterado) { e.preventDefault(); e.returnValue = ''; return ''; }
-        });
+        document.addEventListener('input', function(e) { if (e.target.id !== 'textoMagico') formularioAlterado = true; });
+        window.addEventListener('beforeunload', function(e) { if (formularioAlterado) { e.preventDefault(); e.returnValue = ''; return ''; } });
 
         window.preencherDataHojeSeVazio = function(input) {
             if (input.value) return;
@@ -412,35 +421,22 @@
             const horas = String(agora.getHours()).padStart(2, '0');
             const minutos = String(agora.getMinutes()).padStart(2, '0');
             const segundos = String(agora.getSeconds()).padStart(2, '0');
-            
             return `${dia}${mes}${ano}${horas}${minutos}${segundos}`;
         }
 
         document.getElementById('data_agendada').addEventListener('change', atualizarNumeroDemanda);
-
-        function atualizarNumeroDemanda() {
-            document.getElementById('numero_demanda').value = montarNumeroDemanda();
-        }
-
-        function inicializarNumeroDemanda() {
-            const numInput = document.getElementById('numero_demanda');
-            if (!numInput.value) { numInput.value = montarNumeroDemanda(); }
-        }
+        function atualizarNumeroDemanda() { document.getElementById('numero_demanda').value = montarNumeroDemanda(); }
+        function inicializarNumeroDemanda() { const numInput = document.getElementById('numero_demanda'); if (!numInput.value) { numInput.value = montarNumeroDemanda(); } }
 
         async function inicializarSistema() {
             try {
-                if (usuarioLogado !== 'Daniel') {
-                    document.getElementById('blocoAprovacaoSmart').style.display = 'block';
-                }
-
+                if (usuarioLogado !== 'Daniel') document.getElementById('blocoAprovacaoSmart').style.display = 'block';
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
                 cloudName = config.cloudinaryName;
                 uploadPreset = config.uploadPreset;
-
                 await carregarSecretarias();
-
                 const btn = document.getElementById('btnEnviar');
                 btn.disabled = false;
                 btn.textContent = 'Registrar Demanda';
@@ -480,8 +476,8 @@
             toggleDiaEvento();
             atualizarLinkLegisNovaDemanda();
             
-            arquivoPdfSelecionado = null;
-            document.getElementById('pdfPreviewBox').style.display = 'none';
+            arquivosPdfSelecionados = [];
+            renderizarPdfPreviews();
             arquivosSelecionados = [];
             renderizarPreviews();
         }
@@ -494,19 +490,15 @@
             
             if (link || exp || ['aprovada', 'concluída', 'arquivada', 'rejeitada', 'em andamento', '156 solicitado', 'expediente (legis) gerado', 'aguardando exec. secretaria'].includes(status)) {
                 check.checked = false;
-            } else {
-                check.checked = true;
-            }
+            } else { check.checked = true; }
         }
 
-        
         window.executarMagiaPlanilha = function() {
             const textarea = document.getElementById('textoMagico');
             const texto = textarea.value;
             if (!texto.trim()) return alert("Cole os dados da planilha na caixa primeiro!");
 
             limparFormulario();
-
             let parsed = { data: '', resp: '', status: '', tipo: '', doc_tipo: '', doc_numero: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '', rua: '', numero: '', bairro: '', link_legis: '' };
 
             const tiposConhecidos = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO', 'DEMANDA (GERAL)', 'DEMANDA EXTERNA', 'INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
@@ -535,11 +527,14 @@
                     let prefix = docMatch[1].toUpperCase();
                     if(prefix.includes('REQ')) parsed.doc_tipo = 'Requerimento';
                     else if(prefix.includes('MEM')) parsed.doc_tipo = 'Memorando';
-                    else if(prefix.includes('PDP')) parsed.doc_tipo = 'PDP';
+                    else if(prefix.includes('PDP')) parsed.doc_tipo = 'Pedido de Providência';
                     else if(prefix.includes('SESS')) parsed.doc_tipo = 'Sessão Solene';
                     else parsed.doc_tipo = 'Ofício';
                     return;
                 }
+
+                let matchExp = cell.match(/Exp\.?\s*\d+/i);
+                if (matchExp) { parsed.expediente = matchExp[0]; return; }
 
                 let matchedNome = nomesEquipe.find(n => n.toLowerCase() === cell.toLowerCase());
                 if (matchedNome) { parsed.resp = matchedNome; return; }
@@ -581,45 +576,32 @@
 
                 if (cell.match(/^\d{1,6}$/)) return;
 
-                if (cell.length > 50) {
-                    parsed.desc = parsed.desc ? parsed.desc + '\n' + cell : cell;
-                    return;
-                }
-
-                if (cell.length > 2 && cell.length <= 40 && !cell.match(/\d/) && !parsed.nome) {
-                    parsed.nome = cell; return;
-                }
+                if (cell.length > 50) { parsed.desc = parsed.desc ? parsed.desc + '\n' + cell : cell; return; }
+                if (cell.length > 2 && cell.length <= 40 && !cell.match(/\d/) && !parsed.nome) { parsed.nome = cell; return; }
             });
 
             if (parsed.desc) {
+                let matchExpDesc = parsed.desc.match(/Exp\.?\s*\d+/i);
+                if (matchExpDesc && !parsed.expediente) { parsed.expediente = matchExpDesc[0]; parsed.desc = parsed.desc.replace(matchExpDesc[0], '').trim(); }
+
                 let matchProt = parsed.desc.match(/protocolo\s+([A-Za-z0-9\s]+\s*20\d{2}\/\d+(?:\s*Vol\.?\s*\d+)?)/i);
                 if(matchProt) {
-                    parsed.protocolo = matchProt[1].trim();
-                    parsed.desc = parsed.desc.replace(matchProt[0], '').trim();
+                    parsed.protocolo = matchProt[1].trim(); parsed.desc = parsed.desc.replace(matchProt[0], '').trim();
                 } else {
                     let match156Desc = parsed.desc.match(/156\s*20\d{2}\/\d+/i);
-                    if(match156Desc) {
-                        parsed.protocolo = match156Desc[0];
-                        parsed.desc = parsed.desc.replace(match156Desc[0], '').trim();
-                    }
+                    if(match156Desc) { parsed.protocolo = match156Desc[0]; parsed.desc = parsed.desc.replace(match156Desc[0], '').trim(); }
                 }
 
                 let matchRua = parsed.desc.match(/(?:Rua|Ruas|Av\.?|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)\s+([^,.-]+)(?:[,.-]\s*(?:n[ºo]?\s*)?(\d+|s\/?n))?/i);
                 if (matchRua) {
                     let prefix = matchRua[0].match(/^(Ruas|Rua|Av\.?|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)/i)[0];
                     parsed.rua = prefix + ' ' + matchRua[1].trim();
-                    if (matchRua[2]) parsed.numero = matchRua[2].trim();
-                    else parsed.numero = 'S/N';
+                    if (matchRua[2]) parsed.numero = matchRua[2].trim(); else parsed.numero = 'S/N';
                 }
 
                 let matchBairro = parsed.desc.match(/(?:bairro|b\.)\s+([A-Za-zÀ-ÿ\s]+?)(?:,|\.| no | na | em | protocolo |$)/i);
-                if (matchBairro) {
-                    parsed.bairro = matchBairro[1].trim();
-                } else {
-                    for (let b of bairrosSL) {
-                        let regex = new RegExp(`\\b${b}\\b`, 'i');
-                        if (regex.test(parsed.desc)) { parsed.bairro = b; break; }
-                    }
+                if (matchBairro) { parsed.bairro = matchBairro[1].trim(); } else {
+                    for (let b of bairrosSL) { let regex = new RegExp(`\\b${b}\\b`, 'i'); if (regex.test(parsed.desc)) { parsed.bairro = b; break; } }
                 }
 
                 let primeiraLinha = parsed.desc.split('\n')[0];
@@ -628,10 +610,7 @@
                 if(assuntoInteligente.length > 0) assuntoInteligente = assuntoInteligente.charAt(0).toUpperCase() + assuntoInteligente.slice(1);
 
                 const cortes = [" na rua", " nas ruas", " na av", " na travessa", " no bairro", " em via", " especificamente", " especial", " ao longo", " defronte", " em frente", ", conforme", " no município", ", no ", " n°", " nº", " numero", " número", " em razão", " devido a", ", situada"];
-                for (let corte of cortes) {
-                    let idx = assuntoInteligente.toLowerCase().indexOf(corte);
-                    if (idx > 0) assuntoInteligente = assuntoInteligente.substring(0, idx);
-                }
+                for (let corte of cortes) { let idx = assuntoInteligente.toLowerCase().indexOf(corte); if (idx > 0) assuntoInteligente = assuntoInteligente.substring(0, idx); }
 
                 assuntoInteligente = assuntoInteligente.replace(/[,.-]+$/, '').trim();
                 if (assuntoInteligente.length > 70) assuntoInteligente = assuntoInteligente.substring(0, 70).trim() + '...';
@@ -643,13 +622,10 @@
             }
 
             preencherCampos(parsed);
-            
-            textarea.style.backgroundColor = '#ecfdf5';
-            textarea.value = 'Planilha processada! Verifique os campos e faça os ajustes necessários.';
+            textarea.style.backgroundColor = '#ecfdf5'; textarea.value = 'Planilha processada! Verifique os campos e faça os ajustes necessários.';
             setTimeout(() => { textarea.value = ''; textarea.style.backgroundColor = '#ffffff'; }, 3000);
         }
 
-    
         window.extrairDeTextoLivre = function() {
             const textarea = document.getElementById('textoMagico');
             const texto = textarea.value;
@@ -658,19 +634,16 @@
             limparFormulario();
             let parsed = { data: '', resp: '', status: '', tipo: '', doc_tipo: '', doc_numero: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '', rua: '', numero: '', bairro: '', link_legis: '' };
 
-        
-            if (/pedido de providências/i.test(texto)) { parsed.tipo = 'PEDIDO DE PROVIDÊNCIAS'; parsed.doc_tipo = 'PDP'; }
-            else if (/indicação/i.test(texto)) { parsed.tipo = 'INDICAÇÃO'; }
+            if (/pedido de providências/i.test(texto)) { parsed.tipo = 'PEDIDO DE PROVIDÊNCIAS'; parsed.doc_tipo = 'Pedido de Providência'; }
+            else if (/indicação/i.test(texto)) { parsed.tipo = 'INDICAÇÃO'; parsed.doc_tipo = 'Indicação'; }
             else if (/requerimento/i.test(texto)) { parsed.tipo = 'REQUERIMENTO'; parsed.doc_tipo = 'Requerimento'; }
             else if (/projeto de lei/i.test(texto)) { parsed.tipo = 'PROJETO DE LEI'; }
-            else if (/moção/i.test(texto)) { parsed.tipo = 'MOÇÃO DE APOIO'; }
-
+            else if (/moção/i.test(texto)) { parsed.tipo = 'MOÇÃO DE APOIO'; parsed.doc_tipo = 'Moção'; }
 
             let matchAssunto = texto.match(/Assunto:\s*([\s\S]*?)(?=O Vereador|Senhor|Prefeito|\n\n|\r\n\r\n)/i);
             if (matchAssunto) {
                 let limpo = matchAssunto[1].replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
                 parsed.assunto = limpo.charAt(0).toUpperCase() + limpo.slice(1);
-                
                 
                 let matchRua = limpo.match(/(?:na\s+)?(?:Rua|Ruas|Av\.?|Avenida|Travessa|Beco|Estrada|Rodovia|Vila)\s+([^,.-]+)/i);
                 if (matchRua) parsed.rua = matchRua[0].replace(/^na\s+/i, '').trim();
@@ -681,37 +654,34 @@
                 let matchBairro = limpo.match(/(?:bairro|b\.)\s+([A-Za-zÀ-ÿ\s]+?)(?:,|\.| no | na | em | neste|$)/i);
                 if (matchBairro) parsed.bairro = matchBairro[1].trim();
                 
-            
-                if (parsed.assunto.length > 100) {
-                    parsed.assunto = parsed.assunto.substring(0, 100).trim() + '...';
-                }
+                if (parsed.assunto.length > 100) parsed.assunto = parsed.assunto.substring(0, 100).trim() + '...';
             }
 
-            
+            let matchExp = texto.match(/Exp\.?\s*\d+/i);
+            if (matchExp) parsed.expediente = matchExp[0];
+
             let matchProt = texto.match(/156\s*20\d{2}\/\d+/i);
             if(matchProt) parsed.protocolo = matchProt[0];
 
-        
             let matchTel = texto.match(/(?:\+55\s*)?\(?\d{2}\)?\s*\d{4,5}-?\d{4}/);
             if (matchTel) parsed.tel = matchTel[0].trim();
 
-        
             parsed.desc = texto.trim();
-
             preencherCampos(parsed);
 
-            textarea.style.backgroundColor = '#eff6ff';
-            textarea.value = 'Texto Livre processado! Verifique a Natureza, Assunto, Rua e Bairro abaixo.';
+            textarea.style.backgroundColor = '#eff6ff'; textarea.value = 'Texto Livre processado! Verifique a Natureza, Assunto, Rua e Bairro abaixo.';
             setTimeout(() => { textarea.value = ''; textarea.style.backgroundColor = '#ffffff'; }, 4000);
         }
 
-    
         function preencherCampos(parsed) {
             if(parsed.link_legis) { document.getElementById('link_legis').value = parsed.link_legis; atualizarLinkLegisNovaDemanda(); }
             if(parsed.tipo) document.getElementById('tipo_solicitacao').value = parsed.tipo.toUpperCase();
             if(parsed.data) document.getElementById('data_agendada').value = parsed.data;
             if(parsed.resp) document.getElementById('responsavel_ordem').value = parsed.resp;
-            if(parsed.doc_tipo) document.getElementById('doc_tipo').value = parsed.doc_tipo;
+            if(parsed.doc_tipo) {
+                const selectDoc = document.getElementById('doc_tipo');
+                Array.from(selectDoc.options).forEach(opt => { if(opt.value.toLowerCase() === parsed.doc_tipo.toLowerCase()) { selectDoc.value = opt.value; } });
+            }
             if(parsed.doc_numero) document.getElementById('doc_numero').value = parsed.doc_numero;
 
             if(parsed.secretaria) {
@@ -719,11 +689,7 @@
                 const opcoes = Array.from(select.options).map(o => o.value.toLowerCase());
                 const idx = opcoes.indexOf(parsed.secretaria.toLowerCase());
                 if (idx > -1) { select.selectedIndex = idx; } 
-                else {
-                    select.value = '__outra__';
-                    document.getElementById('secretaria_outra').style.display = 'block';
-                    document.getElementById('secretaria_outra').value = parsed.secretaria;
-                }
+                else { select.value = '__outra__'; document.getElementById('secretaria_outra').style.display = 'block'; document.getElementById('secretaria_outra').value = parsed.secretaria; }
             }
             
             if(parsed.expediente) document.getElementById('expediente').value = parsed.expediente;
@@ -738,53 +704,45 @@
             
             if(parsed.status) {
                 const selectStatus = document.getElementById('status_forcado');
-                Array.from(selectStatus.options).forEach(opt => {
-                    if(opt.value.toLowerCase() === parsed.status.toLowerCase()) { selectStatus.value = opt.value; }
-                });
+                Array.from(selectStatus.options).forEach(opt => { if(opt.value.toLowerCase() === parsed.status.toLowerCase()) { selectStatus.value = opt.value; } });
             }
-
-            verificarCheckboxAprovacao();
-            adaptarFormulario();
-            atualizarNumeroDemanda(); 
+            verificarCheckboxAprovacao(); adaptarFormulario(); atualizarNumeroDemanda(); 
         }
 
         function adaptarFormulario() {
             const tipo = document.getElementById('tipo_solicitacao').value;
             const blocoEndereco = document.getElementById('bloco_endereco');
-            
-            const tiposSemEndereco = [
-                'AGENDA VISITA AO GABINETE', 'GABINETE', 'REUNIÃO', 'INDICAÇÃO', 
-                'MOÇÃO DE APOIO', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 
-                'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'
-            ];
-
-            if (tiposSemEndereco.includes(tipo)) {
-                blocoEndereco.style.display = 'none';
-            } else {
-                blocoEndereco.style.display = 'block';
-            }
+            const tiposSemEndereco = ['AGENDA VISITA AO GABINETE', 'GABINETE', 'REUNIÃO', 'INDICAÇÃO', 'MOÇÃO DE APOIO', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+            if (tiposSemEndereco.includes(tipo)) { blocoEndereco.style.display = 'none'; } else { blocoEndereco.style.display = 'block'; }
         }
 
-        let arquivosSelecionados = [];
-        let arquivoPdfSelecionado = null;
-
+        let arquivosPdfSelecionados = [];
         document.getElementById('pdfFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            if (file.size > 15 * 1024 * 1024) { alert('Arquivo excede o limite de 15MB.'); this.value = ''; return; }
-            
-            arquivoPdfSelecionado = file;
-            const box = document.getElementById('pdfPreviewBox');
-            box.innerHTML = `Documento: ${DOMPurify.sanitize(file.name)} <button type="button" onclick="removerPdfPreview()">✕</button>`;
-            box.style.display = 'flex';
+            const novos = Array.from(e.target.files);
+            if (arquivosPdfSelecionados.length + novos.length > 3) { alert('O limite é de 3 arquivos PDF.'); this.value = ''; return; }
+            novos.forEach(file => {
+                if (file.size > 15 * 1024 * 1024) { alert(`O arquivo ${file.name} excede o limite de 15MB.`); return; }
+                arquivosPdfSelecionados.push(file);
+            });
+            renderizarPdfPreviews();
             this.value = ''; 
         });
 
-        window.removerPdfPreview = function() {
-            arquivoPdfSelecionado = null;
-            document.getElementById('pdfPreviewBox').style.display = 'none';
+        function renderizarPdfPreviews() {
+            const box = document.getElementById('pdfPreviewBox');
+            if (arquivosPdfSelecionados.length === 0) { box.style.display = 'none'; return; }
+            box.innerHTML = arquivosPdfSelecionados.map((f, i) => `
+                <div class="pdf-preview-item">
+                    <span>📄 ${DOMPurify.sanitize(f.name)}</span>
+                    <button type="button" onclick="removerPdfPreview(${i})">✕</button>
+                </div>
+            `).join('');
+            box.style.display = 'flex';
         }
 
+        window.removerPdfPreview = function(index) { arquivosPdfSelecionados.splice(index, 1); renderizarPdfPreviews(); }
+
+        let arquivosSelecionados = [];
         document.getElementById('fotos').addEventListener('change', function(e) {
             const novos = Array.from(e.target.files);
             let videosCount = arquivosSelecionados.filter(f => f.type.startsWith('video/')).length;
@@ -834,7 +792,6 @@
             
             const isAgenda = document.getElementById('is_agenda_toggle').checked;
             const dia_evento = document.getElementById('dia_evento').value || null;
-            
             const data_agendada = isAgenda && dia_evento ? dia_evento : (document.getElementById('data_agendada').value || null);
             const horario_agendado = document.getElementById('horario_agendado').value || null;
             
@@ -858,13 +815,8 @@
             const msg = document.getElementById('mensagem');
             msg.style.display = 'none';
 
-            if (!tipo_solicitacao || !assunto) {
-                msg.className = 'mensagem erro'; msg.textContent = 'Campos obrigatórios: Natureza da Solicitação e Assunto.'; msg.style.display = 'block'; window.scrollTo(0,0); return;
-            }
-
-            if (!responsavel_ordem) {
-                msg.className = 'mensagem erro'; msg.textContent = 'Atribuição obrigatória: Selecione o Responsável (Ordem).'; msg.style.display = 'block'; window.scrollTo(0,0); return;
-            }
+            if (!tipo_solicitacao || !assunto) { msg.className = 'mensagem erro'; msg.textContent = 'Campos obrigatórios: Natureza da Solicitação e Assunto.'; msg.style.display = 'block'; window.scrollTo(0,0); return; }
+            if (!responsavel_ordem) { msg.className = 'mensagem erro'; msg.textContent = 'Atribuição obrigatória: Selecione o Responsável (Ordem).'; msg.style.display = 'block'; window.scrollTo(0,0); return; }
 
             const btn = document.getElementById('btnEnviar');
             btn.disabled = true; btn.textContent = 'Registrando...';
@@ -872,8 +824,14 @@
 
             try {
                 prog.style.display = 'block';
-                let pdf_url = null;
-                if (arquivoPdfSelecionado) { prog.textContent = `Processando Documento PDF...`; pdf_url = await uploadCloudinary(arquivoPdfSelecionado); }
+                let pdf_urls = [];
+                if (arquivosPdfSelecionados.length > 0) {
+                    for (let i = 0; i < arquivosPdfSelecionados.length; i++) {
+                        prog.textContent = `Processando Documento PDF ${i+1}/${arquivosPdfSelecionados.length}...`;
+                        pdf_urls.push(await uploadCloudinary(arquivosPdfSelecionados[i]));
+                    }
+                }
+                let pdfUrlFinal = pdf_urls.length > 0 ? pdf_urls.join(',') : null;
 
                 const fotosUrls = [];
                 if (arquivosSelecionados.length > 0) {
@@ -890,27 +848,16 @@
                 if (statusForcado) {
                     statusInicial = statusForcado; 
                 } else {
-                    if (tiposAtualBloqueados.includes(tipo_solicitacao)) {
-                        statusInicial = usuarioLogado === 'Daniel' ? 'Aprovada' : 'Aguardando Aprovação';
-                    } else {
-                        statusInicial = 'Pendente'; 
-                    }
+                    if (tiposAtualBloqueados.includes(tipo_solicitacao)) { statusInicial = usuarioLogado === 'Daniel' ? 'Aprovada' : 'Aguardando Aprovação'; } 
+                    else { statusInicial = 'Pendente'; }
                     
                     if (usuarioLogado !== 'Daniel' && !document.getElementById('checkAprovacaoDaniel').checked) {
-                        if (statusInicial === 'Aguardando Aprovação') {
-                            statusInicial = 'Aprovada';
-                        }
+                        if (statusInicial === 'Aguardando Aprovação') { statusInicial = 'Aprovada'; }
                     }
                 }
 
                 let historicoInicial = [];
-                if (solicitante_nome && nomesEquipe.includes(solicitante_nome)) {
-                    historicoInicial.push({
-                        status: 'Solicitado via Equipe Interna',
-                        autor: solicitante_nome,
-                        data: new Date().toISOString()
-                    });
-                }
+                if (solicitante_nome && nomesEquipe.includes(solicitante_nome)) { historicoInicial.push({ status: 'Solicitado via Equipe Interna', autor: solicitante_nome, data: new Date().toISOString() }); }
 
                 await db.from('demandas').insert([{
                     tipo_solicitacao, numero_demanda, assunto, rua, numero, bairro, 
@@ -923,7 +870,7 @@
                     data_criacao: new Date().toISOString(),
                     prioridade: document.getElementById('prioridade').value,
                     fotos_urls: fotosUrls, 
-                    pdf_url: pdf_url,
+                    pdf_url: pdfUrlFinal,
                     status: statusInicial, 
                     criador: usuarioLogado, 
                     responsavel_ordem: responsavel_ordem, 
