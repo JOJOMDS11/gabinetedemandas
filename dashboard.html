@@ -447,6 +447,7 @@
                                 }
                             }
                             else if (payload.eventType === 'DELETE') { todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id); }
+                            lista.sort((a, b) => Number(b.numero_demanda) - Number(a.numero_demanda));
                             atualizarContadores(); renderDemandas();
                         }
                     ).subscribe();
@@ -673,11 +674,7 @@
         function renderDemandas() {
             const container = document.getElementById('demandas');
             const pagContainer = document.getElementById('paginacaoContainer');
-lista.sort((a, b) =>
-    String(b.numero_demanda || '').localeCompare(
-        String(a.numero_demanda || '')
-    )
-);
+
             const termoBusca = document.getElementById('buscaGeral').value.toLowerCase();
             const respSelecionado = document.getElementById('filtroResp').value;
             const catSelecionada = document.getElementById('filtroCategoria').value;
