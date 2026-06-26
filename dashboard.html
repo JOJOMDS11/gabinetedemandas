@@ -23,18 +23,15 @@
         .btn-sino { background: #e67e22; color: white; border: none; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; animation: pulse 2s infinite; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         @media (max-width: 600px) { .user-name-span, .brand-text { display: none; } }
         .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; padding-bottom: 80px; }
-        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;}
-        
         .filtros-avancados { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; }
         .filtros-avancados input:focus, .filtros-avancados select:focus { border-color: #185199; }
         #buscaGeral { flex: 1; min-width: 200px; }
-        
         .filtros { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .filtro-btn { padding: 6px 14px; border: 1px solid #185199; background: white; color: #185199; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 13px; }
         .filtro-btn.ativo { background: #185199; color: white; }
-        
         .realtime-dot { display: inline-block; width: 8px; height: 8px; background: #98ED34; border-radius: 50%; margin-right: 6px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
@@ -83,7 +80,8 @@
         .modal-desc-box { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 500px; border-top: 4px solid #185199; display: flex; flex-direction: column; max-height: 85vh; text-align: left; }
         .modal-desc-box h3 { color: #185199; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
-        
+        #listaDemandasWord::-webkit-scrollbar { width: 6px; }
+        #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         #barraSelecao { display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#185199; color:white; padding:15px; border-radius:12px; gap:10px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:9999; align-items:center; width: 95%; max-width: 600px; flex-wrap: wrap; justify-content: center; }
     </style>
 </head>
@@ -103,9 +101,11 @@
 
     <div class="container">
         <div class="header-section">
-            <h2 class="text-primary">Painel de Demandas</h2>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button id="btnAtivarSelecao" onclick="toggleSelecao()" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;">☑️ Selecionar Cards</button>
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <h2 class="text-primary" style="margin: 0;">Painel de Demandas</h2>
+                <button id="btnAtivarSelecao" onclick="toggleSelecao()" style="background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">☑️ Selecionar Cards</button>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
                 <button class="btn-nova" style="background-color: #f39c12; color: white;" onclick="abrirModalWord()">📄 Gerar Ofício (Word)</button>
                 <button class="btn-nova" style="background-color: #3b82f6; color: white;" onclick="window.location.href='relatorios.html'">📊 Relatórios BI</button>
                 <button class="btn-nova" onclick="window.location.href='nova-demanda.html'">+ Nova Demanda</button>
@@ -121,7 +121,7 @@
                 <option value="Legislativo">⚖️ Legislativo e Projetos</option>
             </select>
             <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()">
-                <option value="">👥 Filtro: Toda a Equipe (Cuidando/Executando)</option>
+                <option value="">👥 Filtro: Toda a Equipe</option>
                 <option value="Daniel">Daniel</option>
                 <option value="João Pedro">João Pedro</option>
                 <option value="Alemão">Alemão</option>
@@ -132,16 +132,16 @@
         </div>
 
        <div class="filtros" style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #ddd;">
-            <button class="filtro-btn stat-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
-            <button class="filtro-btn stat-btn ativo" data-status="Pendente" onclick="filtrar('Pendente')">📥 Pendentes <span id="count-Pendente" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn stat-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="display:none; font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn stat-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas <span id="count-Aprovada" style="display:none; font-size:10px; background:#27ae60; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn stat-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">🏃 Andamento <span id="count-Em Andamento" style="display:none; font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn stat-btn" data-status="156 Solicitado" onclick="filtrar('156 Solicitado')">🔢 156 Solicitado <span id="count-156 Solicitado" style="display:none; font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn stat-btn" data-status="Expediente (Legis) Gerado" onclick="filtrar('Expediente (Legis) Gerado')">📄 Exp. Legis</button>
-            <button class="filtro-btn stat-btn" data-status="Aguardando Exec. Secretaria" onclick="filtrar('Aguardando Exec. Secretaria')">🏢 Aguard. Secretaria <span id="count-Sec" style="display:none; font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn stat-btn" data-status="Concluída" onclick="filtrar('Concluída')">🏁 Concluídas</button>
-            <button class="filtro-btn stat-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
+            <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
+            <button class="filtro-btn ativo" data-status="Pendente" onclick="filtrar('Pendente')">📥 Pendentes <span id="count-Pendente" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="display:none; font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas <span id="count-Aprovada" style="display:none; font-size:10px; background:#27ae60; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">🏃 Andamento <span id="count-Em Andamento" style="display:none; font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="156 Solicitado" onclick="filtrar('156 Solicitado')">🔢 156 Solicitado <span id="count-156 Solicitado" style="display:none; font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Expediente (Legis) Gerado" onclick="filtrar('Expediente (Legis) Gerado')">📄 Exp. Legis</button>
+            <button class="filtro-btn" data-status="Aguardando Exec. Secretaria" onclick="filtrar('Aguardando Exec. Secretaria')">🏢 Aguard. Secretaria <span id="count-Sec" style="display:none; font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Concluída" onclick="filtrar('Concluída')">🏁 Concluídas</button>
+            <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
         </div>
 
         <div class="cards-grid" id="demandas"></div>
@@ -214,7 +214,7 @@
                 <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="flex:1; min-width:200px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
                 <select id="filtroStatusWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; min-width: 150px;"></select>
             </div>
-            <div id="listaDemandasWord" class="modal-desc-content" style="max-height: 250px; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px;"></div>
+            <div id="listaDemandasWord" style="max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px; white-space: normal; margin-bottom: 15px;"></div>
             <div class="modal-botoes" style="margin-top: 20px;">
                 <button style="background:#e0e0e0; color:#333; flex:0.4; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalWord()">Cancelar</button>
                 <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="gerarEBaixarWord()">⬇️ Baixar Arquivo Word</button>
@@ -281,16 +281,6 @@
     </div>
 
     <script>
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        document.addEventListener('keydown', event => {
-            if (event.keyCode === 123 || 
-               (event.ctrlKey && event.shiftKey && event.keyCode === 73) || 
-               (event.ctrlKey && event.shiftKey && event.keyCode === 74) || 
-               (event.ctrlKey && event.keyCode === 85)) {
-                event.preventDefault();
-            }
-        });
-
         let db, cloudName, uploadPreset;
         let todasDemandas = [];
         let listaGlobalFiltrada = []; 
@@ -548,7 +538,7 @@
             localStorage.setItem('filtro_preferido_' + usuarioLogado, status);
             if (contadoresNovas[status] !== undefined) contadoresNovas[status] = 0;
             if (status === 'Aguardando Exec. Secretaria') contadoresNovas['Aguardando Exec. Secretaria'] = 0;
-            document.querySelectorAll('.stat-btn').forEach(btn => { btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); });
+            document.querySelectorAll('.filtro-btn').forEach(btn => { btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); });
             atualizarContadores(); renderDemandas();
         }
         
@@ -888,7 +878,7 @@
             
             const statusAtivos = ['156 Solicitado', 'Aguardando Aprovação', 'Aguardando Exec. Secretaria', 'Aprovada', 'Em Andamento', 'Expediente (Legis) Gerado', 'Pendente'];
             const selectStatusWord = document.getElementById('filtroStatusWord');
-            selectStatusWord.innerHTML = '<option value="">Todos os Status</option>' + statusAtivos.map(s => `<option value="${s}">${s}</option>`).join('');
+            selectStatusWord.innerHTML = '<option value="">Todos os Status</option>' + statusAtivos.map(s => `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`).join('');
 
             const container = document.getElementById('listaDemandasWord');
             document.getElementById('buscaModalWord').value = ''; 
