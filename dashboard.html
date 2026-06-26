@@ -836,15 +836,15 @@
         }
 
         window.filtrarListaWord = function() {
-            const termo = document.getElementById('buscaModalWord').value.toLowerCase();
+            const termo = document.getElementById('buscaModalWord').value.toLowerCase().trim();
             const statusFiltro = document.getElementById('filtroStatusWord').value;
             const labels = document.querySelectorAll('.label-word-demanda');
             labels.forEach(lbl => {
-                const texto = lbl.innerText.toLowerCase();
+                const texto = (lbl.getAttribute('data-texto') || '').toLowerCase();
                 const statusDaLabel = lbl.getAttribute('data-status') || '';
-                const matchTermo = texto.includes(termo);
-                const matchStatus = statusFiltro === "" || statusDaLabel.trim() === statusFiltro.trim();
-                if (matchTermo && matchStatus) { lbl.style.display = 'flex'; } else { lbl.style.display = 'none'; }
+                const matchTermo = !termo || texto.includes(termo);
+                const matchStatus = !statusFiltro || statusDaLabel === statusFiltro;
+                lbl.style.display = (matchTermo && matchStatus) ? 'flex' : 'none';
             });
         }
 
@@ -895,16 +895,7 @@
                 if (prot && !d.doc_numero) idText = `${exp} | ${prot}`;
                 if (exp === 'S/Exp' && pdp === 'S/PDP' && prot) idText = prot;
 
-                return `
-                <label class="label-word-demanda" data-status="${statusTag}" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
-                    <input type="checkbox" class="check-word-demanda" value="${d.id}" onchange="atualizarContadorWord()" style="margin-top:3px; transform: scale(1.2);">
-                    <div style="font-size:13px; color:#333; line-height: 1.4; width:100%;">
-                        <b style="color: #185199;">${idText}</b> 
-                        <span style="float:right; font-size:10px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${statusTag}</span><br>
-                        <span style="color:#555;">${assunto}</span>
-                    </div>
-                </label>
-                `;
+                return `<label class="label-word-demanda" data-status="${statusTag}" data-texto="${(idText + ' ' + (d.assunto || '') + ' ' + statusTag).toLowerCase().replace(/"/g, '')}" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;"><input type="checkbox" class="check-word-demanda" value="${d.id}" onchange="atualizarContadorWord()" style="margin-top:3px; transform: scale(1.2);"><div style="font-size:13px; color:#333; line-height: 1.4; width:100%;"><b style="color: #185199;">${idText}</b> <span style="float:right; font-size:10px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${statusTag}</span><br><span style="color:#555;">${assunto}</span></div></label>`;
             }).join('');
             
             wordTodasMarcadas = false; atualizarContadorWord();
