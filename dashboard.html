@@ -26,12 +26,12 @@
         .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;}
         
-        .filtros-avancados { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-        .filtros-avancados input { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; flex: 1; min-width: 200px;}
-        .filtros-avancados input:focus { border-color: #185199; }
+        .filtros-avancados { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; }
+        .filtros-avancados input:focus, .filtros-avancados select:focus { border-color: #185199; }
+        #buscaGeral { flex: 1; min-width: 200px; }
         
-        .filtros { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; -ms-overflow-style: none; scrollbar-width: none; }
-        .filtros::-webkit-scrollbar { display: none; }
+        .filtros { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .filtro-btn { padding: 6px 14px; border: 1px solid #185199; background: white; color: #185199; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 13px; }
         .filtro-btn.ativo { background: #185199; color: white; }
         
@@ -66,6 +66,7 @@
         .btn-acao.azul { background: #185199; }
         .btn-acao.laranja { background: #e67e22; }
         .btn-acao.cinza { background: #95a5a6; }
+        .btn-pdf-card { background: #c0392b; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; position: absolute; bottom: 8px; right: 8px; z-index: 2;}
         .paginacao { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 25px; flex-wrap: wrap; }
         .page-btn { padding: 6px 10px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; min-width: 32px; text-align: center; }
         .page-btn.ativo { background: #185199; color: white; }
@@ -83,8 +84,8 @@
         .modal-desc-box { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 500px; border-top: 4px solid #185199; display: flex; flex-direction: column; max-height: 85vh; text-align: left; }
         .modal-desc-box h3 { color: #185199; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
-        
-        #barraSelecao { display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#185199; color:white; padding:12px 20px; border-radius:30px; gap:15px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:9999; align-items:center; width: 90%; max-width: 400px; justify-content: space-between; }
+        #listaDemandasWord::-webkit-scrollbar { width: 6px; }
+        #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -105,7 +106,7 @@
         <div class="header-section">
             <h2 class="text-primary">Painel de Demandas</h2>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button class="btn-nova" style="background-color: #f39c12; color: white;" onclick="toggleSelecao()" id="btnAtivarSelecao">☑️ Selecionar Cards</button>
+                <button class="btn-nova" style="background-color: #f39c12; color: white;" onclick="abrirModalWord()">📄 Gerar Ofício (Word)</button>
                 <button class="btn-nova" style="background-color: #3b82f6; color: white;" onclick="window.location.href='relatorios.html'">📊 Relatórios BI</button>
                 <button class="btn-nova" onclick="window.location.href='nova-demanda.html'">+ Nova Demanda</button>
             </div>
@@ -113,48 +114,38 @@
 
         <div class="filtros-avancados">
             <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº, data...">
-        </div>
-
-        <div class="filtros" id="filtrosCategoria" style="margin-bottom: 10px;">
-            <button class="filtro-btn cat-btn ativo" data-cat="" onclick="filtrarCategoria('')">📁 Todas Categorias</button>
-            <button class="filtro-btn cat-btn" data-cat="Agendas" onclick="filtrarCategoria('Agendas')">📅 Agendas e Internos</button>
-            <button class="filtro-btn cat-btn" data-cat="Demandas" onclick="filtrarCategoria('Demandas')">🚧 Demandas (Rua)</button>
-            <button class="filtro-btn cat-btn" data-cat="Legislativo" onclick="filtrarCategoria('Legislativo')">⚖️ Legislativo e Projetos</button>
-        </div>
-
-        <div class="filtros" id="filtrosEquipe" style="margin-bottom: 25px;">
-            <button class="filtro-btn resp-btn ativo" data-resp="" onclick="filtrarEquipe('')">👥 Toda a Equipe</button>
-            <button class="filtro-btn resp-btn" data-resp="Daniel" onclick="filtrarEquipe('Daniel')">Daniel</button>
-            <button class="filtro-btn resp-btn" data-resp="João Pedro" onclick="filtrarEquipe('João Pedro')">João Pedro</button>
-            <button class="filtro-btn resp-btn" data-resp="Alemão" onclick="filtrarEquipe('Alemão')">Alemão</button>
-            <button class="filtro-btn resp-btn" data-resp="Antonio" onclick="filtrarEquipe('Antonio')">Antonio</button>
-            <button class="filtro-btn resp-btn" data-resp="Luana" onclick="filtrarEquipe('Luana')">Luana</button>
-            <button class="filtro-btn resp-btn" data-resp="Débora" onclick="filtrarEquipe('Débora')">Débora</button>
+            <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()">
+                <option value="">📁 Filtro: Todas Categorias</option>
+                <option value="Agendas">📅 Agendas e Internos</option>
+                <option value="Demandas">🚧 Demandas (Rua/Externa)</option>
+                <option value="Legislativo">⚖️ Legislativo e Projetos</option>
+            </select>
+            <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()">
+                <option value="">👥 Filtro: Toda a Equipe</option>
+                <option value="Daniel">Daniel</option>
+                <option value="João Pedro">João Pedro</option>
+                <option value="Alemão">Alemão</option>
+                <option value="Antonio">Antonio</option>
+                <option value="Luana">Luana</option>
+                <option value="Débora">Débora</option>
+            </select>
         </div>
 
        <div class="filtros" style="margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #ddd;">
-            <button class="filtro-btn stat-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
-            <button class="filtro-btn stat-btn ativo" data-status="Pendente" onclick="filtrar('Pendente')">📥 Pendentes <span id="count-Pendente" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn stat-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="display:none; font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn stat-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas <span id="count-Aprovada" style="display:none; font-size:10px; background:#27ae60; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn stat-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">🏃 Andamento <span id="count-Em Andamento" style="display:none; font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn stat-btn" data-status="156 Solicitado" onclick="filtrar('156 Solicitado')">🔢 156 Solicitado <span id="count-156 Solicitado" style="display:none; font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn stat-btn" data-status="Expediente (Legis) Gerado" onclick="filtrar('Expediente (Legis) Gerado')">📄 Exp. Legis</button>
-            <button class="filtro-btn stat-btn" data-status="Aguardando Exec. Secretaria" onclick="filtrar('Aguardando Exec. Secretaria')">🏢 Aguard. Secretaria <span id="count-Sec" style="display:none; font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
-            <button class="filtro-btn stat-btn" data-status="Concluída" onclick="filtrar('Concluída')">🏁 Concluídas</button>
-            <button class="filtro-btn stat-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
+            <button class="filtro-btn" data-status="Todas" onclick="filtrar('Todas')">Todas</button>
+            <button class="filtro-btn ativo" data-status="Pendente" onclick="filtrar('Pendente')">📥 Pendentes <span id="count-Pendente" style="display:none; font-size:10px; background:#c0392b; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Aguardando Aprovação" onclick="filtrar('Aguardando Aprovação')">⏳ Aprovação <span id="count-Aguardando Aprovação" style="display:none; font-size:10px; background:#e67e22; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Aprovada" onclick="filtrar('Aprovada')">✅ Aprovadas <span id="count-Aprovada" style="display:none; font-size:10px; background:#27ae60; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Em Andamento" onclick="filtrar('Em Andamento')">🏃 Andamento <span id="count-Em Andamento" style="display:none; font-size:10px; background:#856404; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="156 Solicitado" onclick="filtrar('156 Solicitado')">🔢 156 Solicitado <span id="count-156 Solicitado" style="display:none; font-size:10px; background:#0984e3; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Expediente (Legis) Gerado" onclick="filtrar('Expediente (Legis) Gerado')">📄 Exp. Legis</button>
+            <button class="filtro-btn" data-status="Aguardando Exec. Secretaria" onclick="filtrar('Aguardando Exec. Secretaria')">🏢 Aguard. Secretaria <span id="count-Sec" style="display:none; font-size:10px; background:#8e44ad; padding:2px 6px; border-radius:10px; color:white;">0</span></button>
+            <button class="filtro-btn" data-status="Concluída" onclick="filtrar('Concluída')">🏁 Concluídas</button>
+            <button class="filtro-btn" data-status="Arquivada" onclick="filtrar('Arquivada')">📦 Arquivadas</button>
         </div>
 
         <div class="cards-grid" id="demandas"></div>
         <div class="paginacao" id="paginacaoContainer"></div>
-    </div>
-
-    <div id="barraSelecao">
-        <span id="qtdSelecionados" style="font-weight:bold; font-size:14px;">0 selecionados</span>
-        <div style="display:flex; gap:8px;">
-            <button onclick="abrirModalWordConfig()" style="background:#f39c12; color:white; border:none; padding:8px 12px; border-radius:20px; font-weight:bold; cursor:pointer; font-size:12px;">📄 Gerar Word</button>
-            <button onclick="toggleSelecao()" style="background:transparent; color:white; border:1px solid white; padding:8px 12px; border-radius:20px; cursor:pointer; font-size:12px;">✕ Cancelar</button>
-        </div>
     </div>
 
     <button class="fab-quick" onclick="abrirModalQuick()" title="Nova Demanda Rápida">⚡</button>
@@ -185,9 +176,10 @@
     </div>
 
     <div class="modal-overlay" id="modalWord">
-        <div class="modal-box" style="max-width: 450px; text-align: left; padding: 20px;">
-            <h3 style="text-align:center; color:#185199; margin-bottom: 20px;">📄 Configurar Ofício</h3>
-            <div style="display:grid; grid-template-columns: 1fr; gap:15px; margin-bottom:20px;">
+        <div class="modal-box" style="max-width: 650px; text-align: left; padding: 20px;">
+            <h3 style="text-align:center; color:#185199; margin-bottom: 5px;">📄 Gerar Ofício em Word</h3>
+            <p style="text-align:center; color:#666; font-size:12px; margin-bottom: 20px;">O sistema listará abaixo as demandas do seu filtro atual (excluindo as finalizadas e as sem protocolo/expediente).</p>
+            <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#555;">Secretaria Destino:</label>
                     <input type="text" id="wordSecretaria" value="Secretaria Municipal de Mobilidade e Obras - SEMOB" style="text-align: left; font-size: 14px;">
@@ -197,7 +189,16 @@
                     <input type="text" id="wordSecretario" value="Rogel da Silva Corrêa" style="text-align: left; font-size: 14px;">
                 </div>
             </div>
-            <div class="modal-botoes">
+            <p style="font-size:13px; color:#555; margin-bottom:8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                <span>Selecione as demandas para o ofício:</span>
+                <span id="contadorWordBadge" onclick="toggleMarcarTodasWord()" style="background: #185199; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s;" title="Clique para Marcar/Desmarcar todas">0 selecionadas</span>
+            </p>
+            <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+                <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="flex:1; min-width:200px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
+                <select id="filtroStatusWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; min-width: 150px;"></select>
+            </div>
+            <div id="listaDemandasWord" class="modal-desc-content" style="max-height: 250px; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px;"></div>
+            <div class="modal-botoes" style="margin-top: 20px;">
                 <button style="background:#e0e0e0; color:#333; flex:0.4; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalWord()">Cancelar</button>
                 <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="gerarEBaixarWord()">⬇️ Baixar Arquivo Word</button>
             </div>
@@ -253,14 +254,10 @@
         document.getElementById('nomeUsuario').textContent = usuarioLogado; 
 
         let filtroPadrao = localStorage.getItem('filtro_preferido_' + usuarioLogado);
-        if (!filtroPadrao) { filtroPadrao = (usuarioLogado === 'Daniel') ? 'Aguardando Aprovação' : 'Pendente'; }
-        
+        if (!filtroPadrao) {
+            filtroPadrao = (usuarioLogado === 'Daniel') ? 'Aguardando Aprovação' : 'Pendente';
+        }
         let filtroAtual = filtroPadrao;
-        let filtroCategoria = '';
-        let filtroResp = '';
-        let modoSelecao = false;
-        let selecionadosWord = new Set();
-        
         let paginaAtual = 1;
         const itensPorPagina = 9;
         let idParaExcluir = null;
@@ -497,24 +494,12 @@
             try { await db.from('secretarias').delete().eq('id', id); await renderizarListaSecretarias(); } catch (e) { alert('Erro ao excluir.'); btn.disabled = false; }
         }
 
-        window.filtrarCategoria = function(cat) {
-            filtroCategoria = cat; paginaAtual = 1;
-            document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.toggle('ativo', btn.getAttribute('data-cat') === cat));
-            renderDemandas();
-        }
-
-        window.filtrarEquipe = function(resp) {
-            filtroResp = resp; paginaAtual = 1;
-            document.querySelectorAll('.resp-btn').forEach(btn => btn.classList.toggle('ativo', btn.getAttribute('data-resp') === resp));
-            renderDemandas();
-        }
-
         window.filtrar = function(status) {
             filtroAtual = status; paginaAtual = 1;
             localStorage.setItem('filtro_preferido_' + usuarioLogado, status);
             if (contadoresNovas[status] !== undefined) contadoresNovas[status] = 0;
             if (status === 'Aguardando Exec. Secretaria') contadoresNovas['Aguardando Exec. Secretaria'] = 0;
-            document.querySelectorAll('.stat-btn').forEach(btn => { btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); });
+            document.querySelectorAll('.filtro-btn').forEach(btn => { btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); });
             atualizarContadores(); renderDemandas();
         }
         
@@ -528,41 +513,26 @@
                 }
             }
         }
-
-        window.toggleSelecao = function() {
-            modoSelecao = !modoSelecao;
-            selecionadosWord.clear();
-            document.getElementById('barraSelecao').style.display = modoSelecao ? 'flex' : 'none';
-            document.querySelector('.fab-quick').style.display = modoSelecao ? 'none' : 'flex';
-            document.getElementById('btnAtivarSelecao').style.backgroundColor = modoSelecao ? '#27ae60' : '#f39c12';
-            document.getElementById('btnAtivarSelecao').textContent = modoSelecao ? 'Cancelar Seleção' : '☑️ Selecionar Cards';
-            document.getElementById('qtdSelecionados').textContent = `0 selecionados`;
-            renderDemandas();
-        }
-
-        window.toggleCardSelecao = function(id) {
-            if (selecionadosWord.has(id)) selecionadosWord.delete(id);
-            else selecionadosWord.add(id);
-            document.getElementById('qtdSelecionados').textContent = `${selecionadosWord.size} selecionados`;
-            renderDemandas();
-        }
         
         function renderDemandas() {
             const container = document.getElementById('demandas');
             const pagContainer = document.getElementById('paginacaoContainer');
+
             const termoBusca = document.getElementById('buscaGeral').value.toLowerCase();
+            const respSelecionado = document.getElementById('filtroResp').value;
+            const catSelecionada = document.getElementById('filtroCategoria').value;
 
             let lista = todasDemandas;
             
             if (filtroAtual === 'Todas') lista = lista.filter(d => !['Arquivada', 'Rejeitada'].includes(d.status));
             else lista = lista.filter(d => d.status === filtroAtual);
 
-            if (filtroCategoria === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
-            if (filtroCategoria === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
-            if (filtroCategoria === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
+            if (catSelecionada === 'Agendas') lista = lista.filter(d => tiposAgendas.includes(d.tipo_solicitacao));
+            if (catSelecionada === 'Demandas') lista = lista.filter(d => tiposDemandasLivre.includes(d.tipo_solicitacao));
+            if (catSelecionada === 'Legislativo') lista = lista.filter(d => tiposLegis.includes(d.tipo_solicitacao));
 
-            if (filtroResp) {
-                const buscaOriginal = filtroResp.toLowerCase().trim();
+            if (respSelecionado) {
+                const buscaOriginal = respSelecionado.toLowerCase().trim();
                 const termosBusca = ['daniel', 'daniel daudt'].includes(buscaOriginal) ? ['daniel', 'daniel daudt'] : [buscaOriginal]; 
                 lista = lista.filter(d => {
                     const reps = (d.responsaveis || []); const respOrdem = (d.responsavel_ordem || '');
@@ -624,7 +594,7 @@
                 
                 let quickLinks = '';
                 const isLegisSafe = demanda.link_legis && (demanda.link_legis.startsWith('http://') || demanda.link_legis.startsWith('https://'));
-                if (!modoSelecao && (primeiroPdf || isLegisSafe)) {
+                if (primeiroPdf || isLegisSafe) {
                     quickLinks += `<div style="position:absolute; bottom:8px; right:8px; display:flex; gap:5px; z-index:2;">`;
                     if (isLegisSafe) quickLinks += `<a href="${DOMPurify.sanitize(demanda.link_legis)}" target="_blank" onclick="event.stopPropagation()" style="background:#f39c12; color:white; padding:6px 10px; border-radius:4px; text-decoration:none; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3);">🔗 Legis</a>`;
                     if (primeiroPdf) quickLinks += `<a href="${primeiroPdf}" target="_blank" onclick="event.stopPropagation()" style="background:#c0392b; color:white; padding:6px 10px; border-radius:4px; text-decoration:none; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3);">📄 Ver PDF</a>`;
@@ -654,13 +624,11 @@
                 const infoEndereco = sRua ? `<div class="info">📍 ${sRua}${sNum ? ', '+sNum : ''} ${sBairro ? '- '+sBairro : ''}</div>` : '';
 
                 let btnPrincipal = '';
-                if (!modoSelecao) {
-                    if (aguardandoDaniel) btnPrincipal = `<button class="btn-acao verde" onclick="event.stopPropagation(); window.location.href='ver-demanda.html?id=${demanda.id}'">👁️ Ver & Aprovar</button>`;
-                    else if (demanda.status === 'Arquivada') btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Arquivada</button><button class="btn-acao" style="background:#c0392b; flex:0.5;" onclick="event.stopPropagation(); solicitarExclusao('${demanda.id}')">🗑️ Excluir</button>`;
-                    else if (encerrada) btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Encerrada</button>`;
-                    else if (euCuido) btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}', this)">🚪 Deixar de Executar</button>`;
-                    else btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}', this)">🙋 Assumir Execução</button>`;
-                }
+                if (aguardandoDaniel) btnPrincipal = `<button class="btn-acao verde" onclick="event.stopPropagation(); window.location.href='ver-demanda.html?id=${demanda.id}'">👁️ Ver & Aprovar</button>`;
+                else if (demanda.status === 'Arquivada') btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Arquivada</button><button class="btn-acao" style="background:#c0392b; flex:0.5;" onclick="event.stopPropagation(); solicitarExclusao('${demanda.id}')">🗑️ Excluir</button>`;
+                else if (encerrada) btnPrincipal = `<button class="btn-acao cinza" disabled>🔒 Encerrada</button>`;
+                else if (euCuido) btnPrincipal = `<button class="btn-acao laranja" onclick="event.stopPropagation(); sairDemanda('${demanda.id}', this)">🚪 Deixar de Executar</button>`;
+                else btnPrincipal = `<button class="btn-acao azul" onclick="event.stopPropagation(); assumirDemanda('${demanda.id}', this)">🙋 Assumir Execução</button>`;
 
                 const numTag = demanda.numero_demanda ? `<div class="num-demanda">Nº ${DOMPurify.sanitize(demanda.numero_demanda)}</div>` : '';
                 const tempoCard = demanda.criado_em ? `<div class="info-tempo" data-criado="${demanda.criado_em}">🕐 Aberto ${tempoRelativo(demanda.criado_em)}</div>` : '';
@@ -675,26 +643,13 @@
 
                 const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-                let cardStyle = '';
-                let checkOverlay = '';
-                let clickAction = `window.location.href='ver-demanda.html?id=${demanda.id}'`;
-
-                if (modoSelecao) {
-                    const isSelected = selecionadosWord.has(demanda.id);
-                    cardStyle = isSelected ? 'border: 3px solid #27ae60; background-color: #f0fdf4;' : 'opacity: 0.85; transform: scale(0.98);';
-                    checkOverlay = `<div style="position:absolute; top:10px; left:10px; z-index:3; background:white; border-radius:4px; padding:2px; box-shadow:0 2px 4px rgba(0,0,0,0.2);"><input type="checkbox" ${isSelected ? 'checked' : ''} style="width:20px; height:20px; pointer-events:none;"></div>`;
-                    clickAction = `event.preventDefault(); toggleCardSelecao('${demanda.id}')`;
-                }
-
-                return `<div class="demanda-card ${aguardandoDaniel && !modoSelecao ? 'aguardando-daniel' : ''}" style="${cardStyle}" onclick="${clickAction}">
-                            ${checkOverlay}
+                return `<div class="demanda-card ${aguardandoDaniel ? 'aguardando-daniel' : ''}" onclick="window.location.href='ver-demanda.html?id=${demanda.id}'">
                             ${numTag}
                             <div class="demanda-media">${mediaTag}</div>
                             <div class="demanda-conteudo">
                                 <span class="badge ${badgeClass}">${demanda.status}</span>
                                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:5px;">
                                     <div class="titulo" style="margin-bottom:0;">${sAssunto}</div>
-                                    ${!modoSelecao ? `
                                     <div style="display:flex; gap:4px; flex-shrink:0;">
                                         <button class="btn-micro" onclick="event.stopPropagation(); copiarTexto('${assuntoSafeJs}')" title="Copiar Assunto">
                                             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -702,7 +657,7 @@
                                         <button class="btn-micro" onclick="event.stopPropagation(); abrirModalDescricao('${demanda.id}')" title="Ver Detalhes/Descrição">
                                             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                         </button>
-                                    </div>` : ''}
+                                    </div>
                                 </div>
                                 <div class="info">📌 ${sTipo}</div>
                                 ${infoAgenda} ${infoEndereco} ${infoSecretaria}
@@ -714,7 +669,7 @@
                                 ${sExp || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Expediente: ${sExp || 'Gerado'}</div>` : ''}
                                 ${tempoCard}
                                 ${atualizacaoCard}
-                                ${!modoSelecao ? `<div class="acoes-card">${btnPrincipal}</div>` : ''}
+                                <div class="acoes-card">${btnPrincipal}</div>
                             </div>
                         </div>`;
             }).join('');
@@ -774,23 +729,95 @@
             }
         }
 
-        window.abrirModalWordConfig = function() {
-            if(selecionadosWord.size === 0) return alert('Selecione ao menos um card!');
+        window.filtrarListaWord = function() {
+            const termo = document.getElementById('buscaModalWord').value.toLowerCase();
+            const statusFiltro = document.getElementById('filtroStatusWord').value;
+            const labels = document.querySelectorAll('.label-word-demanda');
+            labels.forEach(lbl => {
+                const texto = lbl.innerText.toLowerCase();
+                const statusDaLabel = lbl.getAttribute('data-status');
+                const matchTermo = texto.includes(termo);
+                const matchStatus = statusFiltro === "" || statusDaLabel === statusFiltro;
+                if (matchTermo && matchStatus) { lbl.style.display = 'flex'; } else { lbl.style.display = 'none'; }
+            });
+        }
+
+        let wordTodasMarcadas = false;
+        
+        window.toggleMarcarTodasWord = function() {
+            const checkboxes = document.querySelectorAll('.check-word-demanda');
+            const visiveis = Array.from(checkboxes).filter(chk => chk.closest('.label-word-demanda').style.display !== 'none');
+            wordTodasMarcadas = !wordTodasMarcadas;
+            visiveis.forEach(chk => chk.checked = wordTodasMarcadas);
+            atualizarContadorWord();
+        }
+
+        window.atualizarContadorWord = function() {
+            const qtd = document.querySelectorAll('.check-word-demanda:checked').length;
+            const badge = document.getElementById('contadorWordBadge');
+            badge.textContent = `${qtd} selecionada${qtd !== 1 ? 's' : ''} (Clique para Inverter)`;
+            if(qtd > 0) { badge.style.background = '#27ae60'; wordTodasMarcadas = true; }
+            else { badge.style.background = '#185199'; wordTodasMarcadas = false; }
+        }
+
+        window.abrirModalWord = function() {
+            const statusExcluidos = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
+            const demandasParaWord = listaGlobalFiltrada.filter(d => {
+                const isEncerrada = statusExcluidos.includes(d.status);
+                const temIdentificador = d.expediente || d.protocolo || d.doc_numero;
+                return !isEncerrada && temIdentificador;
+            });
+
+            if (demandasParaWord.length === 0) return alert("Não há demandas válidas no filtro atual para gerar o ofício.");
+            
+            const statusAtivos = ['156 Solicitado', 'Aguardando Aprovação', 'Aguardando Exec. Secretaria', 'Aprovada', 'Em Andamento', 'Expediente (Legis) Gerado', 'Pendente'];
+            const selectStatusWord = document.getElementById('filtroStatusWord');
+            selectStatusWord.innerHTML = '<option value="">Todos os Status</option>' + statusAtivos.map(s => `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`).join('');
+
+            const container = document.getElementById('listaDemandasWord');
+            document.getElementById('buscaModalWord').value = ''; 
+            selectStatusWord.value = ''; 
+            
+            container.innerHTML = demandasParaWord.map(d => {
+                const exp = DOMPurify.sanitize(d.expediente || 'S/Exp');
+                const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : 'S/PDP');
+                const prot = DOMPurify.sanitize(d.protocolo ? '156: ' + d.protocolo : '');
+                const assunto = DOMPurify.sanitize(d.assunto || '');
+                const statusTag = DOMPurify.sanitize(d.status || '');
+                
+                let idText = `${exp} | ${pdp}`;
+                if (prot && !d.doc_numero) idText = `${exp} | ${prot}`;
+                if (exp === 'S/Exp' && pdp === 'S/PDP' && prot) idText = prot;
+
+                return `
+                <label class="label-word-demanda" data-status="${statusTag}" style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; cursor:pointer; padding-bottom:10px; border-bottom:1px solid #e2e8f0; background: white; padding: 10px; border-radius: 4px;">
+                    <input type="checkbox" class="check-word-demanda" value="${d.id}" onchange="atualizarContadorWord()" style="margin-top:3px; transform: scale(1.2);">
+                    <div style="font-size:13px; color:#333; line-height: 1.4; width:100%;">
+                        <b style="color: #185199;">${idText}</b> 
+                        <span style="float:right; font-size:10px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${statusTag}</span><br>
+                        <span style="color:#555;">${assunto}</span>
+                    </div>
+                </label>
+                `;
+            }).join('');
+            
+            wordTodasMarcadas = false; atualizarContadorWord();
             document.getElementById('modalWord').classList.add('ativo');
         }
 
         window.fecharModalWord = function() { document.getElementById('modalWord').classList.remove('ativo'); }
 
         window.gerarEBaixarWord = function() {
-            if (selecionadosWord.size === 0) return alert("Nenhuma demanda selecionada!");
+            const checkboxes = document.querySelectorAll('.check-word-demanda:checked');
+            if (checkboxes.length === 0) return alert("Selecione pelo menos uma demanda!");
 
             const secNome = document.getElementById('wordSecretaria').value.trim() || 'Secretaria Destino';
             const secResp = document.getElementById('wordSecretario').value.trim() || 'Secretário(a)';
             const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
 
             let trsHTML = '';
-            Array.from(selecionadosWord).forEach(id => {
-                const d = listaGlobalFiltrada.find(x => x.id === id) || todasDemandas.find(x => x.id === id);
+            checkboxes.forEach(chk => {
+                const d = listaGlobalFiltrada.find(x => x.id === chk.value);
                 if (d) {
                     const exp = DOMPurify.sanitize(d.expediente || '');
                     const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
@@ -832,7 +859,6 @@
             link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
             document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
             fecharModalWord();
-            toggleSelecao();
         }
 
         window.assumirDemanda = async function(id, btnElement) {
