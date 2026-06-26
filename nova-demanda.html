@@ -223,34 +223,7 @@
             <div class="form-group">
                 <label>Bairro</label>
                 <input type="text" id="bairro" list="listaBairros" placeholder="Bairro da ocorrência">
-                <datalist id="listaBairros">
-                    <option value="ARROIO DA MANTEIGA"></option>
-                    <option value="BOA VISTA"></option>
-                    <option value="CAMPESTRE"></option>
-                    <option value="CAMPINA"></option>
-                    <option value="CENTRO"></option>
-                    <option value="COHAB"></option>
-                    <option value="CRISTO REI"></option>
-                    <option value="DUQUE DE CAXIAS"></option>
-                    <option value="FAZENDA SÃO BORJA"></option>
-                    <option value="FEITORIA"></option>
-                    <option value="FIÃO"></option>
-                    <option value="JARDIM AMÉRICA"></option>
-                    <option value="JARDIM LUCIANA"></option>
-                    <option value="MORRO DO ESPELHO"></option>
-                    <option value="PADRE REUS"></option>
-                    <option value="PASSO DOS FERREIROS"></option>
-                    <option value="PINHEIRO"></option>
-                    <option value="POMBAL"></option>
-                    <option value="RIO BRANCO"></option>
-                    <option value="RIO DOS SINOS"></option>
-                    <option value="SANTA TEREZA"></option>
-                    <option value="SANTOS DUMONT"></option>
-                    <option value="SÃO JOSÉ"></option>
-                    <option value="SÃO MIGUEL"></option>
-                    <option value="SCHARLAU"></option>
-                    <option value="VICENTINA"></option>
-                </datalist>
+                <datalist id="listaBairros"></datalist>
             </div>
         </div>
 
@@ -351,8 +324,7 @@
         const nomesEquipe = ['Alemão', 'Antonio', 'Daniel', 'Débora', 'João Pedro', 'Luana'];
 
         const secretariasPadrao = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'].sort();
-
-        const bairrosSL = ['CENTRO', 'FEITORIA', 'CAMPINA', 'SCHARLAU', 'SANTOS DUMONT', 'RIO DOS SINOS', 'VICENTINA', 'SÃO JOSÉ', 'SÃO MIGUEL', 'CRISTO REI', 'FIÃO', 'DUQUE DE CAXIAS', 'JARDIM AMÉRICA', 'FAZENDA SÃO BORJA', 'PINHEIRO', 'RIO BRANCO', 'SANTA TEREZA', 'POMBAL', 'ARROIO DA MANTEIGA', 'BOA VISTA', 'MORRO DO ESPELHO', 'PADRE REUS', 'PASSO DOS FERREIROS', 'CAMPESTRE', 'JARDIM LUCIANA', 'COHAB'];
+        let listaBairrosCarregada = [];
 
         async function carregarSecretarias() {
             const select = document.getElementById('secretaria');
@@ -367,6 +339,17 @@
             select.innerHTML = '<option value="">Selecione a secretaria competente...</option>' +
                 lista.map(s => `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`).join('') +
                 '<option value="__outra__">Outra (Especificar manualmente)</option>';
+        }
+
+        async function carregarBairros() {
+            const datalist = document.getElementById('listaBairros');
+            try {
+                const { data, error } = await db.from('bairros').select('nome').order('nome');
+                if (!error && data && data.length > 0) { 
+                    listaBairrosCarregada = data.map(r => r.nome.toUpperCase()).sort(); 
+                }
+            } catch (e) { }
+            if(datalist) datalist.innerHTML = listaBairrosCarregada.map(b => `<option value="${DOMPurify.sanitize(b)}"></option>`).join('');
         }
 
         window.alternarSecretariaOutra = function() {
@@ -458,6 +441,7 @@
                 cloudName = config.cloudinaryName;
                 uploadPreset = config.uploadPreset;
                 await carregarSecretarias();
+                await carregarBairros();
                 const btn = document.getElementById('btnEnviar');
                 btn.disabled = false;
                 btn.textContent = 'Registrar Demanda';
@@ -548,7 +532,7 @@
                     let prefix = docMatch[1].toUpperCase();
                     if(prefix.includes('REQ')) parsed.doc_tipo = 'Requerimento';
                     else if(prefix.includes('MEM')) parsed.doc_tipo = 'Memorando';
-                    else if(prefix.includes('PDP')) parsed.doc_tipo = 'Pedido de Providência';
+                    else if(prefix.includes('PDP')) parsed.doc_tipo = 'PDP';
                     else if(prefix.includes('SESS')) parsed.doc_tipo = 'Sessão Solene';
                     else parsed.doc_tipo = 'Ofício';
                     return;
@@ -622,7 +606,7 @@
 
                 let matchBairro = parsed.desc.match(/(?:bairro|b\.)\s+([A-Za-zÀ-ÿ\s]+?)(?:,|\.| no | na | em | protocolo |$)/i);
                 if (matchBairro) { parsed.bairro = matchBairro[1].trim(); } else {
-                    for (let b of bairrosSL) { let regex = new RegExp(`\\b${b}\\b`, 'i'); if (regex.test(parsed.desc)) { parsed.bairro = b; break; } }
+                    for (let b of listaBairrosCarregada) { let regex = new RegExp(`\\b${b}\\b`, 'i'); if (regex.test(parsed.desc)) { parsed.bairro = b; break; } }
                 }
 
                 let primeiraLinha = parsed.desc.split('\n')[0];
@@ -655,7 +639,7 @@
             limparFormulario();
             let parsed = { data: '', resp: '', status: '', tipo: '', doc_tipo: '', doc_numero: '', expediente: '', protocolo: '', assunto: '', desc: '', secretaria: '', nome: '', tel: '', rua: '', numero: '', bairro: '', link_legis: '' };
 
-            if (/pedido de providências/i.test(texto)) { parsed.tipo = 'PEDIDO DE PROVIDÊNCIAS'; parsed.doc_tipo = 'Pedido de Providência'; }
+            if (/pedido de providências/i.test(texto)) { parsed.tipo = 'PEDIDO DE PROVIDÊNCIAS'; parsed.doc_tipo = 'PDP'; }
             else if (/indicação/i.test(texto)) { parsed.tipo = 'INDICAÇÃO'; parsed.doc_tipo = 'Indicação'; }
             else if (/requerimento/i.test(texto)) { parsed.tipo = 'REQUERIMENTO'; parsed.doc_tipo = 'Requerimento'; }
             else if (/projeto de lei/i.test(texto)) { parsed.tipo = 'PROJETO DE LEI'; }
@@ -832,6 +816,7 @@
             const protocolo = document.getElementById('protocolo').value.trim();
             const link_legis = document.getElementById('link_legis').value.trim();
             const observacoes = document.getElementById('observacoes').value.trim();
+            const prioridade = document.getElementById('prioridade').value;
             
             const msg = document.getElementById('mensagem');
             msg.style.display = 'none';
@@ -889,7 +874,7 @@
                     expediente, protocolo, link_legis,
                     observacoes_internas: observacoes,
                     data_criacao: new Date().toISOString(),
-                    prioridade: document.getElementById('prioridade').value,
+                    prioridade: prioridade,
                     fotos_urls: fotosUrls, 
                     pdf_url: pdfUrlFinal,
                     status: statusInicial, 
