@@ -120,7 +120,19 @@
                         <option value="SESSÃO SOLENE">SESSÃO SOLENE</option>
                     </optgroup>
                 </select>
+            </div>
 
+            <div class="form-group">
+                <label for="prioridade">Prioridade *</label>
+                <select id="prioridade" required>
+                    <option value="Baixa">⚪ Baixa</option>
+                    <option value="Normal" selected>🟡 Normal</option>
+                    <option value="Alta">🟠 Alta</option>
+                    <option value="Crítica">🔴 Crítica</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="grid-column: 1 / -1;">
                 <div style="margin-top: 15px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #1a365d; font-size: 13px; margin-bottom: 0; text-transform: none;">
                         <input type="checkbox" id="is_agenda_toggle" onchange="toggleDiaEvento()" style="width: 16px; height: 16px;">
@@ -909,6 +921,7 @@
                     expediente, protocolo, link_legis,
                     observacoes_internas: observacoes,
                     data_criacao: new Date().toISOString(),
+                    prioridade: document.getElementById('prioridade').value,
                     fotos_urls: fotosUrls, 
                     pdf_url: pdf_url,
                     status: statusInicial, 
