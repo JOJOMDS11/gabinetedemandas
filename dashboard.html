@@ -25,16 +25,13 @@
         .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; padding-bottom: 80px; }
         .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;}
-        
         .filtros-avancados { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; }
         .filtros-avancados input:focus, .filtros-avancados select:focus { border-color: #185199; }
         #buscaGeral { flex: 1; min-width: 200px; }
-        
         .filtros { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .filtro-btn { padding: 6px 14px; border: 1px solid #185199; background: white; color: #185199; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 13px; }
         .filtro-btn.ativo { background: #185199; color: white; }
-        
         .realtime-dot { display: inline-block; width: 8px; height: 8px; background: #98ED34; border-radius: 50%; margin-right: 6px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
@@ -56,13 +53,6 @@
         .badge-Concluida { background: #d4edda; color: #155724; }
         .badge-Rejeitada { background: #c0392b; color: white; }
         .badge-Arquivada { background: #eee; color: #777; }
-        
-        /* Badges de Prioridade */
-        .badge-p-Baixa { background: #f8fafc; color: #64748b; border: 1px solid #cbd5e1; }
-        .badge-p-Normal { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
-        .badge-p-Alta { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
-        .badge-p-Crítica { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
-
         .titulo { font-size: 15px; font-weight: bold; color: #185199; line-height: 1.3; }
         .info { font-size: 12px; color: #555; margin-bottom: 4px; }
         .info-tempo { font-size: 11px; color: #999; margin-bottom: 4px; font-style: italic; margin-top: 5px; }
@@ -73,7 +63,6 @@
         .btn-acao.azul { background: #185199; }
         .btn-acao.laranja { background: #e67e22; }
         .btn-acao.cinza { background: #95a5a6; }
-        .btn-pdf-card { background: #c0392b; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; position: absolute; bottom: 8px; right: 8px; z-index: 2;}
         .paginacao { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 25px; flex-wrap: wrap; }
         .page-btn { padding: 6px 10px; background: white; border: 1px solid #185199; color: #185199; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; min-width: 32px; text-align: center; }
         .page-btn.ativo { background: #185199; color: white; }
@@ -94,6 +83,8 @@
         #listaDemandasWord::-webkit-scrollbar { width: 6px; }
         #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         #barraSelecao { display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#185199; color:white; padding:15px; border-radius:12px; gap:10px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:9999; align-items:center; width: 95%; max-width: 600px; flex-wrap: wrap; justify-content: center; }
+        .select-periodo { padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 11px; font-weight: bold; color: #185199; background: #e2e8f0; outline: none; cursor: pointer; transition: 0.2s; }
+        .select-periodo:hover { background: #cbd5e1; }
     </style>
 </head>
 <body>
@@ -115,6 +106,13 @@
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                 <h2 class="text-primary" style="margin: 0;">Painel de Demandas</h2>
                 <button id="btnAtivarSelecao" onclick="toggleSelecao()" style="background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">☑️ Selecionar Cards</button>
+                <select id="filtroPeriodo" class="select-periodo" onchange="mudarPagina(1); renderDemandas()">
+                    <option value="">📅 Todo o Período</option>
+                    <option value="hoje">📅 Apenas Hoje</option>
+                    <option value="7">📅 Últimos 7 dias</option>
+                    <option value="30">📅 Últimos 30 dias</option>
+                    <option value="mes_atual">📅 Este Mês</option>
+                </select>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
                 <button class="btn-nova" style="background-color: #f39c12; color: white;" onclick="abrirModalWord()">📄 Gerar Ofício (Word)</button>
@@ -126,13 +124,13 @@
         <div class="filtros-avancados">
             <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº, data...">
             <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()">
-                <option value="">📁 Todas Categorias</option>
+                <option value="">📁 Filtro: Todas Categorias</option>
                 <option value="Agendas">📅 Agendas e Internos</option>
                 <option value="Demandas">🚧 Demandas (Rua/Externa)</option>
                 <option value="Legislativo">⚖️ Legislativo e Projetos</option>
             </select>
             <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()">
-                <option value="">👥 Toda a Equipe</option>
+                <option value="">👥 Filtro: Toda a Equipe</option>
                 <option value="Daniel">Daniel</option>
                 <option value="João Pedro">João Pedro</option>
                 <option value="Alemão">Alemão</option>
@@ -316,6 +314,16 @@
     </div>
 
     <script>
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', event => {
+            if (event.keyCode === 123 || 
+               (event.ctrlKey && event.shiftKey && event.keyCode === 73) || 
+               (event.ctrlKey && event.shiftKey && event.keyCode === 74) || 
+               (event.ctrlKey && event.keyCode === 85)) {
+                event.preventDefault();
+            }
+        });
+
         let db, cloudName, uploadPreset;
         let todasDemandas = [];
         let listaGlobalFiltrada = []; 
@@ -421,7 +429,7 @@
                 db.channel('dashboard-live')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, async (payload) => {
                             if (payload.eventType === 'INSERT') {
-                                todasDemandas.unshift(payload.new);
+                                sortDemandasArray([payload.new, ...todasDemandas]);
                                 if (payload.new.status !== filtroAtual && contadoresNovas[payload.new.status] !== undefined) contadoresNovas[payload.new.status]++;
                                 if (['Pendente', 'Aguardando Aprovação'].includes(payload.new.status)) {
                                     const assuntoCurto = payload.new.assunto?.length > 35 ? payload.new.assunto.substring(0, 35) + '...' : payload.new.assunto;
@@ -448,8 +456,7 @@
                             }
                             else if (payload.eventType === 'DELETE') { todasDemandas = todasDemandas.filter(d => d.id !== payload.old.id); }
                             
-                            // Correção principal: ordenando sempre de forma cronológica garantida através da data de criação, substituindo o sort bugado anterior.
-                            todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+                            sortDemandasArray(todasDemandas);
                             atualizarContadores(); renderDemandas();
                         }
                     ).subscribe();
@@ -514,9 +521,14 @@
 
             btn.textContent = 'A salvar...';
 
-            const hoje = new Date();
-            // Correção: Geração do número para formato YYYYMMDDHHMMSS permitindo ordenação cronológica correta
-            const numGerado = hoje.getFullYear().toString() + (hoje.getMonth() + 1).toString().padStart(2, '0') + hoje.getDate().toString().padStart(2, '0') + hoje.getHours().toString().padStart(2, '0') + hoje.getMinutes().toString().padStart(2, '0') + hoje.getSeconds().toString().padStart(2, '0');
+            const agora = new Date();
+            const anoStr = agora.getFullYear().toString();
+            const mesStr = String(agora.getMonth() + 1).padStart(2, '0');
+            const diaStr = String(agora.getDate()).padStart(2, '0');
+            const horasStr = String(agora.getHours()).padStart(2, '0');
+            const minutosStr = String(agora.getMinutes()).padStart(2, '0');
+            const segundosStr = String(agora.getSeconds()).padStart(2, '0');
+            const numGerado = `${diaStr}${mesStr}${anoStr}${horasStr}${minutosStr}${segundosStr}`;
             
             const novaDemanda = {
                 numero_demanda: numGerado,
@@ -530,13 +542,10 @@
                 status: requerAprovacao ? 'Aguardando Aprovação' : 'Pendente',
                 tipo_solicitacao: 'DEMANDA (GERAL)',
                 criador: usuarioLogado,
-                criado_em: hoje.toISOString(),
-                data_agendada: hoje.toISOString().split('T')[0],
+                criado_em: agora.toISOString(),
+                data_agendada: agora.toISOString().split('T')[0],
                 fotos_urls: fotos_urls.length > 0 ? fotos_urls : null,
-                pdf_url: pdf_urls.length > 0 ? pdf_urls.join(',') : null,
-                rua: "Não informada",
-                bairro: "Não informado",
-                numero: "S/N"
+                pdf_url: pdf_urls.length > 0 ? pdf_urls.join(',') : null
             };
 
             try {
@@ -606,7 +615,7 @@
             localStorage.setItem('filtro_preferido_' + usuarioLogado, status);
             if (contadoresNovas[status] !== undefined) contadoresNovas[status] = 0;
             if (status === 'Aguardando Exec. Secretaria') contadoresNovas['Aguardando Exec. Secretaria'] = 0;
-            document.querySelectorAll('.filtro-btn').forEach(btn => { btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); });
+            document.querySelectorAll('.stat-btn').forEach(btn => { btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); });
             atualizarContadores(); renderDemandas();
         }
         
@@ -673,6 +682,23 @@
             }
         }
         
+        function sortDemandasArray(arr) {
+            arr.sort((a, b) => {
+                function parseNum(n) {
+                    if (!n || typeof n !== 'string' || n.length < 14) return 0;
+                    let ano = n.substring(4,8);
+                    let mes = n.substring(2,4);
+                    let dia = n.substring(0,2);
+                    let hora = n.substring(8,14);
+                    return parseInt(ano + mes + dia + hora);
+                }
+                let valA = parseNum(a.numero_demanda);
+                let valB = parseNum(b.numero_demanda);
+                if (valA > 0 && valB > 0 && valA !== valB) return valB - valA;
+                return new Date(b.criado_em) - new Date(a.criado_em);
+            });
+        }
+        
         function renderDemandas() {
             const container = document.getElementById('demandas');
             const pagContainer = document.getElementById('paginacaoContainer');
@@ -681,6 +707,7 @@
             const respSelecionado = document.getElementById('filtroResp').value;
             const catSelecionada = document.getElementById('filtroCategoria').value;
             const prioridadeSelecionada = document.getElementById('filtroPrioridade').value;
+            const periodoSelecionado = document.getElementById('filtroPeriodo').value;
 
             let lista = todasDemandas;
             
@@ -702,6 +729,25 @@
 
             if (prioridadeSelecionada) {
                 lista = lista.filter(d => (d.prioridade || 'Normal') === prioridadeSelecionada);
+            }
+            
+            if (periodoSelecionado) {
+                const agora = new Date();
+                lista = lista.filter(d => {
+                    const dataDemanda = new Date(d.criado_em);
+                    if (periodoSelecionado === 'hoje') {
+                        return dataDemanda.getDate() === agora.getDate() && dataDemanda.getMonth() === agora.getMonth() && dataDemanda.getFullYear() === agora.getFullYear();
+                    } else if (periodoSelecionado === '7') {
+                        const seteDias = new Date(); seteDias.setDate(agora.getDate() - 7);
+                        return dataDemanda >= seteDias;
+                    } else if (periodoSelecionado === '30') {
+                        const trintaDias = new Date(); trintaDias.setDate(agora.getDate() - 30);
+                        return dataDemanda >= trintaDias;
+                    } else if (periodoSelecionado === 'mes_atual') {
+                        return dataDemanda.getMonth() === agora.getMonth() && dataDemanda.getFullYear() === agora.getFullYear();
+                    }
+                    return true;
+                });
             }
 
             if (termoBusca) {
@@ -746,13 +792,6 @@
                 const sExp = DOMPurify.sanitize(demanda.expediente || '');
                 const donoOrdem = demanda.responsavel_ordem ? DOMPurify.sanitize(demanda.responsavel_ordem) : 'Não definido';
                 const cuindoTxt = responsaveis.length > 0 ? DOMPurify.sanitize(responsaveis.join(', ')) : 'Nenhum';
-
-                // Configuração da Prioridade
-                const sPrioridade = demanda.prioridade || 'Normal';
-                let prioIcon = '🟡';
-                if (sPrioridade === 'Baixa') prioIcon = '⚪';
-                if (sPrioridade === 'Alta') prioIcon = '🟠';
-                if (sPrioridade === 'Crítica') prioIcon = '🔴';
 
                 let mediaTag = '';
                 if (fotoPrincipal) {
@@ -832,10 +871,7 @@
                             ${numTag}
                             <div class="demanda-media">${mediaTag}</div>
                             <div class="demanda-conteudo">
-                                <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom: 10px;">
-                                    <span class="badge ${badgeClass}" style="margin-bottom:0;">${demanda.status}</span>
-                                    <span class="badge badge-p-${sPrioridade}" style="margin-bottom:0;">${prioIcon} ${sPrioridade}</span>
-                                </div>
+                                <span class="badge ${badgeClass}">${demanda.status}</span>
                                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:5px;">
                                     <div class="titulo" style="margin-bottom:0;">${sAssunto}</div>
                                     ${!modoSelecao ? `
@@ -910,11 +946,10 @@
         }, 30000);
 
        async function carregarDemandas() {
-            const { data, error } = await db.from('demandas').select('*').order('criado_em', { ascending: false });
+            const { data, error } = await db.from('demandas').select('*');
             if (!error) { 
                 todasDemandas = data || []; 
-                // A carga inicial já estava ordenando por criado_em corretamente
-                todasDemandas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+                sortDemandasArray(todasDemandas);
                 window.filtrar(filtroAtual);
             }
         }
@@ -927,9 +962,7 @@
                 const texto = (lbl.getAttribute('data-texto') || '').toLowerCase();
                 const statusDaLabel = lbl.getAttribute('data-status') || '';
                 const matchTermo = !termo || texto.includes(termo);
-                const matchStatus = !statusFiltro || statusDaLabel === statusFiltro;
-                
-                // MÁGICA AQUI: Quando dá match, exibe colado, quando não dá, esconde tudo!
+                const matchStatus = !statusFiltro || statusDaLabel.trim() === statusFiltro.trim();
                 lbl.style.display = (matchTermo && matchStatus) ? 'flex' : 'none';
             });
         }
@@ -964,7 +997,7 @@
             
             const statusAtivos = ['156 Solicitado', 'Aguardando Aprovação', 'Aguardando Exec. Secretaria', 'Aprovada', 'Em Andamento', 'Expediente (Legis) Gerado', 'Pendente'];
             const selectStatusWord = document.getElementById('filtroStatusWord');
-            selectStatusWord.innerHTML = '<option value="">Todos os Status</option>' + statusAtivos.map(s => `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`).join('');
+            selectStatusWord.innerHTML = '<option value="">Todos os Status</option>' + statusAtivos.map(s => `<option value="${s}">${s}</option>`).join('');
 
             const container = document.getElementById('listaDemandasWord');
             document.getElementById('buscaModalWord').value = ''; 
@@ -1151,15 +1184,6 @@
         }
         document.addEventListener('mousemove', resetarSessao); document.addEventListener('keypress', resetarSessao); document.addEventListener('click', resetarSessao);
         resetarSessao();
-
-        // Adicionando evento global para fechar modais com o botão ESC
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay').forEach(modal => {
-                    modal.classList.remove('ativo');
-                });
-            }
-        });
 
         inicializarSistema();
     </script>
