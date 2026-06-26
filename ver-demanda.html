@@ -11,12 +11,9 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f2f5; color: #333; }
         .bg-primary { background-color: #185199; }
-        .navbar { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; gap: 8px; flex-wrap: nowrap; overflow: hidden; }
-        .navbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; font-weight: bold; font-size: 16px; white-space: nowrap; }
-        .navbar-brand img { height: 38px; width: 38px; background: white; padding: 2px; border-radius: 6px; object-fit: contain; flex-shrink: 0; }
-        .navbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-        .btn-logout { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.5); padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.2s; white-space: nowrap; display: flex; align-items: center; justify-content: center;}
-        .btn-logout:hover { background: rgba(255,255,255,0.1); }
+        .navbar { padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; color: white; }
+        .navbar img { height: 80px; background: white; padding: 5px; border-radius: 4px; }
+        .navbar a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
         .container { max-width: 1000px; margin: 30px auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 15px; }
         @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
         .box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 4px solid #185199; }
@@ -115,13 +112,13 @@
 </head>
 <body>
     <div class="navbar bg-primary">
-        <a href="dashboard.html" class="navbar-brand">
+        <a href="dashboard.html" class="navbar-brand" style="display:flex; align-items:center;">
             <img src="https://i.imgur.com/coryuD6.png" alt="Logo">
-            <span class="brand-text" style="color:white; font-size:16px; margin-left:10px;">Gabinete Daniel</span>
+            <span style="color:white; font-size:16px; margin-left:10px;">Gabinete Daniel</span>
         </a>
         <div class="navbar-actions">
-            <span class="user-name-span" style="font-size:13px; color:white; margin-right:10px;">👤 <span id="nomeUsuario"></span></span>
-            <button class="btn-logout" id="btnGerenciarCadastros" onclick="abrirGerenciadorCadastros()" title="Gerenciar Cadastros do Sistema">⚙️</button>
+            <span style="font-size:13px; color:white; margin-right:10px;">👤 <span id="nomeUsuario"></span></span>
+            <button class="btn-logout" onclick="abrirGerenciadorCadastros()" title="Gerenciar Cadastros do Sistema">⚙️</button>
             <button class="btn-logout" id="btnLogout" title="Sair">🚪</button>
         </div>
     </div>
@@ -191,28 +188,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="modalDescOverlay">
-        <div class="modal-desc-box">
-            <h3>Detalhes da Demanda <button type="button" onclick="fecharModalDescricao()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#c0392b;" title="Fechar">✕</button></h3>
-            <div class="modal-desc-content" id="modalDescTexto"></div>
-            <button class="btn-acao azul" style="padding:12px; font-size:14px;" onclick="copiarTextoModal()">📋 Copiar Texto Completo</button>
-        </div>
-    </div>
-
     <script>
-        const reqLastTime = {};
-        const MAX_REQUESTS_PER_MINUTE = 15;
-        function checkRateLimit(endpoint) {
-            const now = Date.now();
-            if (!reqLastTime[endpoint]) reqLastTime[endpoint] = [];
-            const recentReqs = reqLastTime[endpoint].filter(t => now - t < 60000);
-            if (recentReqs.length >= MAX_REQUESTS_PER_MINUTE) {
-                alert('⏳ Sistema de Segurança: Muitas requisições. Aguarde alguns segundos.');
-                throw new Error('Rate limit exceeded');
-            }
-            reqLastTime[endpoint].push(now);
-        }
-
         let db, cloudName, uploadPreset;
         let demandaAtual = null;
         let acaoMasterPendente = null; 
@@ -579,13 +555,6 @@
         }
 
         window.salvarParcial = async function(secao, btn) {
-            checkRateLimit('salvar_dados');
-            
-            const numeroInput = document.getElementById('editNumero').value.trim();
-            if (numeroInput && isNaN(numeroInput.replace(/\D/g, '')) && numeroInput.toLowerCase() !== 's/n') {
-                alert('O Número do endereço deve conter apenas números ou "S/N".'); return;
-            }
-
             const textoOriginal = btn.innerHTML;
             btn.innerHTML = '⏳ Salvando...';
             btn.disabled = true;
@@ -601,7 +570,7 @@
                 updates.solicitante_nome = document.getElementById('editNomeSol').value.trim();
                 updates.solicitante_tel = document.getElementById('editTelSol').value.trim();
                 updates.rua = document.getElementById('editRua').value.trim();
-                updates.numero = numeroInput;
+                updates.numero = document.getElementById('editNumero').value.trim();
                 updates.bairro = document.getElementById('editBairro').value.trim();
                 histDetalhe = 'Atualizou Dados Principais (Save Rápido)';
             } else if (secao === 'equipe') {
@@ -663,7 +632,13 @@
             let linkLegisSeguro = '';
             const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
             if (isLegisSafe) {
-                linkLegisSeguro = `<a href="${DOMPurify.sanitize(d.link_legis)}" target="_blank" class="btn-link" style="background:#f39c12; color:white; border-color:#e67e22;">🔗 Ver Legis Anexado</a>`;
+                linkLegisSeguro = `<a href="${DOMPurify.sanitize(d.link_legis)}" target="_blank" class="btn-link" style="background:#f39c12; color:white; border-color:#e67e22;">🔗 Ver Legis</a>`;
+            }
+
+            const primeiroPdf = d.pdf_url ? d.pdf_url.split(',')[0] : null;
+            let btnVerPdfTop = '';
+            if (primeiroPdf) {
+                btnVerPdfTop = `<button class="btn-link" style="background:#c0392b; color:white; border-color:#a93226;" onclick="abrirLightboxIndex(0)">📄 Abrir PDF</button>`;
             }
 
             let badgeClass = 'badge-Pendente';
@@ -714,7 +689,7 @@
                         `<button onclick="tornarPdfPrincipal(${i})" class="btn-foto" style="background:#e67e22; color:white; font-size: 11px; padding: 6px 10px; margin-right: 10px;">⭐ Tornar Core</button>`;
                     
                     return `
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:#ffffff; border:1px solid #cbd5e1; padding:10px; border-radius:6px; margin-bottom:10px; flex-wrap: wrap; gap: 8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; padding:10px; border-radius:6px; margin-bottom:10px; flex-wrap: wrap; gap: 8px;">
                         <div style="display:flex; align-items:center;">
                             <span style="font-weight:bold; color:#185199; margin-right:15px;">📄 PDF Anexo ${i+1}</span>
                             ${btnEstrela}
@@ -749,8 +724,8 @@
 
             const btnAssumir = !encerrada && !euEstouCuidando ? `<button class="btn-assumir" onclick="assumirAqui(this)">🙋 Eu Assumo (Executar)</button>` : '';
             const inputDemandaNum = isAdmin
-                ? `<input type="text" id="editNumDemanda" value="${numSafeJs}" readonly style="max-width:160px; padding:5px; background:#eee; font-weight:bold;">
-                   <button type="button" class="btn-foto" style="background:#9b59b6; margin-left:8px;" onclick="regenerarNumeroDemanda(this)" title="Recalcula baseado na Data/Hora agendada">🔄 Atualizar p/ Data do Protocolo</button>`
+                ? `<div style="display:flex; align-items:center; gap:8px;"><input type="text" id="editNumDemanda" value="${numSafeJs}" readonly style="max-width:160px; padding:5px; background:#eee; font-weight:bold;">
+                   <button type="button" class="btn-foto" style="background:#9b59b6; padding: 6px 10px;" onclick="regenerarNumeroDemanda(this)" title="Recalcula baseado na Data/Hora agendada">🔄 Atualizar p/ Data do Protocolo</button></div>`
                 : `<p><b>${numSafeJs || 'N/A'}</b></p>`;
 
             const ruaSegura = sRua.replace(/'/g,"\\'"); const bairroSeguro = sBairro.replace(/'/g,"\\'");
@@ -779,7 +754,7 @@
 
             construirTimelineHtml(d);
 
-            const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '"');
+            const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
             const linksEquipe = euEstouCuidando ? `
                 <div style="background:#e8f0ff; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px dashed #185199;">
@@ -801,19 +776,13 @@
                    <div class="links-externos">
                         <button class="btn-link" style="background:#9b59b6; color:white; border-color:#8e44ad;" onclick="copiarResumo()">📋 Copiar Resumo</button>
                         ${linkLegisSeguro}
+                        ${btnVerPdfTop}
                     </div>
 
                     <div class="info-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div><label>Tipo de Solicitação</label><p>📌 <b>${sTipo}</b></p></div>
                         <div><label>Prioridade</label><p><b>${badgePrioridade}</b></p></div>
                     </div>
-                    
-                    ${htmlPdfs ? `
-                        <div style="margin-top: 10px; margin-bottom: 20px; background: #e8f0ff; padding: 10px; border-radius: 6px; border: 1px dashed #185199;">
-                            <h4 style="color:#185199; margin-bottom:10px; font-size: 13px; text-transform:uppercase;">📄 Documentos PDF Anexados</h4>
-                            ${htmlPdfs}
-                        </div>
-                    ` : ''}
                     
                     <div class="info-group">
                         <label>Assunto</label>
@@ -845,9 +814,9 @@
                     <div class="info-group" style="background:#f9f9f9; padding:10px; border-radius:4px; margin-top:10px;">
                         <label>Aberto por</label><p>✍️ <b>${sCriador}</b> em ${tempoRelativo(d.criado_em)}</p>
                     </div>
-                </div>
 
-                <div class="box">
+                    <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+
                     <h2>Acompanhamento & Edição</h2>
                     ${isAtualBloqueado && bloqueado !== '' ? `<div style="color:#c0392b; font-size:13px; font-weight:bold; margin-bottom:10px; background:#ffe5e5; padding:10px; border-radius:4px; border:1px solid #c0392b;">⚠️ Bloqueado: Este projeto requer aprovação para edição de andamento.</div>` : ''}
 
@@ -1027,7 +996,7 @@
                     <div class="botoes">
                         ${btnAssumir}
                         ${btnAprovacao}
-                        <button class="btn-salvar" onclick="salvarAlteracoes(this)">💾 Salvar Tudo</button>
+                        <button class="btn-salvar" onclick="salvarAlteracoes(this)">💾 Salvar Tudo (Completo)</button>
                         ${btnWhats}
                     </div>
 
@@ -1035,7 +1004,8 @@
                 </div>
 
                 <div class="box">
-                    <h2>Galeria de Mídias Extra</h2>
+                    <h2>Galeria de Mídias</h2>
+                    ${htmlPdfs}
                     <div class="galeria">${htmlFotos}</div>
 
                     <div class="upload-extra">
@@ -1046,7 +1016,7 @@
                         <label style="font-size:12px; font-weight:bold; margin-top:15px; display:block;">Fotos/Vídeos (Máx 5 fotos, 1 vídeo. 15MB cada)</label>
                         <input type="file" id="extraFotos" accept="image/*,video/*" multiple style="width:100%;">
                         <div class="preview-grid" id="extraPreviewGrid"></div>
-                        <button class="btn-salvar" style="width:100%; margin-top:10px;" id="btnUploadExtra" onclick="uploadNovosAnexos(this)">⬆️ Subir Anexos</button>
+                        <button class="btn-salvar" style="width:100%; margin-top:10px;" id="btnUploadExtra" onclick="uploadNovosAnexos()">⬆️ Subir Anexos</button>
                         <div id="progressoExtra" style="font-size:13px; color:#185199; font-weight:bold; display:none; margin-top:5px;"></div>
                     </div>
                 </div>
@@ -1148,11 +1118,10 @@
 
         window.removerArquivoExtra = function(index) { arquivosExtrasSelecionados.splice(index, 1); renderizarExtraPreviews(); }
 
-        window.uploadNovosAnexos = async function(btn) {
-            checkRateLimit('salvar_dados');
+        window.uploadNovosAnexos = async function() {
             if (arquivosPdfExtraSelecionados.length === 0 && arquivosExtrasSelecionados.length === 0) return alert('Selecione algum arquivo!');
 
-            const prog = document.getElementById('progressoExtra');
+            const btn = document.getElementById('btnUploadExtra'); const prog = document.getElementById('progressoExtra');
             btn.disabled = true; prog.style.display = 'block';
 
             try {
@@ -1215,7 +1184,6 @@
         }
 
         window.aprovarDemanda = async function(btn) { 
-            checkRateLimit('salvar_dados');
             btn.textContent = '⏳ Aprovando...'; btn.disabled = true;
             const hist = demandaAtual.historico || [];
             hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
@@ -1224,7 +1192,6 @@
         }
 
         window.darVisto = async function(btn) { 
-            checkRateLimit('salvar_dados');
             btn.textContent = '⏳ Visto...'; btn.disabled = true;
             const hist = demandaAtual.historico || [];
             hist.push({ status: 'Visto', autor: usuarioLogado, data: new Date().toISOString() });
@@ -1234,7 +1201,6 @@
 
         window.rejeitarDemanda = function() {
             pedirConfirmacao('❌ Rejeitar Demanda', 'Atenção: Ao rejeitar, <b>todas as fotos serão apagadas</b> do sistema. O PDF será mantido.', async () => {
-                checkRateLimit('salvar_dados');
                 const hist = demandaAtual.historico || [];
                 hist.push({ status: 'Rejeitada', autor: usuarioLogado, data: new Date().toISOString() });
                 await db.from('demandas').update({ status: 'Rejeitada', fotos_urls: [], historico: hist }).eq('id', demandaId);
@@ -1243,13 +1209,6 @@
         }
 
         window.salvarAlteracoes = async function(btn) {
-            checkRateLimit('salvar_dados');
-            
-            const numeroInput = document.getElementById('editNumero') ? document.getElementById('editNumero').value.trim() : (demandaAtual.numero || '');
-            if (numeroInput && isNaN(numeroInput.replace(/\D/g, '')) && numeroInput.toLowerCase() !== 's/n') {
-                alert('O Número do endereço deve conter apenas números ou "S/N".'); return;
-            }
-
             btn.textContent = '⏳ Salvando...'; btn.disabled = true;
             
             let statusEdit = document.getElementById('editStatus') ? document.getElementById('editStatus').value : demandaAtual.status;
@@ -1273,7 +1232,7 @@
             const responsavel_ordem = document.getElementById('editResponsavelOrdem') ? document.getElementById('editResponsavelOrdem').value : demandaAtual.responsavel_ordem;
 
             const rua = document.getElementById('editRua') ? document.getElementById('editRua').value.trim() : (demandaAtual.rua || '');
-            const numero = numeroInput;
+            const numero = document.getElementById('editNumero') ? document.getElementById('editNumero').value.trim() : (demandaAtual.numero || '');
             const bairro = document.getElementById('editBairro') ? document.getElementById('editBairro').value.trim() : (demandaAtual.bairro || '');
 
             const isAtualBloqueado = tiposProjetos.includes(tipo_solicitacao || demandaAtual.tipo_solicitacao);
@@ -1357,7 +1316,6 @@
             const senhaDigitada = document.getElementById('inputSenhaMaster').value.trim();
             const btn = document.getElementById('btnConfirmarSenha');
             if(!senhaDigitada) return;
-            checkRateLimit('salvar_dados');
             btn.textContent = '⏳...'; btn.disabled = true;
 
             try {
