@@ -25,13 +25,16 @@
         .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; padding-bottom: 80px; }
         .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;}
+        
         .filtros-avancados { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; }
         .filtros-avancados input:focus, .filtros-avancados select:focus { border-color: #185199; }
         #buscaGeral { flex: 1; min-width: 200px; }
+        
         .filtros { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .filtro-btn { padding: 6px 14px; border: 1px solid #185199; background: white; color: #185199; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 13px; }
         .filtro-btn.ativo { background: #185199; color: white; }
+        
         .realtime-dot { display: inline-block; width: 8px; height: 8px; background: #98ED34; border-radius: 50%; margin-right: 6px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
@@ -80,8 +83,7 @@
         .modal-desc-box { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 500px; border-top: 4px solid #185199; display: flex; flex-direction: column; max-height: 85vh; text-align: left; }
         .modal-desc-box h3 { color: #185199; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .modal-desc-content { font-size: 14px; color: #444; white-space: pre-wrap; overflow-y: auto; flex-grow: 1; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 15px; line-height: 1.5;}
-        #listaDemandasWord::-webkit-scrollbar { width: 6px; }
-        #listaDemandasWord::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
         #barraSelecao { display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#185199; color:white; padding:15px; border-radius:12px; gap:10px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:9999; align-items:center; width: 95%; max-width: 600px; flex-wrap: wrap; justify-content: center; }
         .select-periodo { padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 11px; font-weight: bold; color: #185199; background: #e2e8f0; outline: none; cursor: pointer; transition: 0.2s; }
         .select-periodo:hover { background: #cbd5e1; }
@@ -326,6 +328,16 @@
     </div>
 
     <script>
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', event => {
+            if (event.keyCode === 123 || 
+               (event.ctrlKey && event.shiftKey && event.keyCode === 73) || 
+               (event.ctrlKey && event.shiftKey && event.keyCode === 74) || 
+               (event.ctrlKey && event.keyCode === 85)) {
+                event.preventDefault();
+            }
+        });
+
         let db, cloudName, uploadPreset;
         let todasDemandas = [];
         let listaGlobalFiltrada = []; 
@@ -431,7 +443,8 @@
                 db.channel('dashboard-live')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, async (payload) => {
                             if (payload.eventType === 'INSERT') {
-                                sortDemandasArray([payload.new, ...todasDemandas]);
+                                todasDemandas.push(payload.new);
+                                sortDemandasArray(todasDemandas);
                                 if (payload.new.status !== filtroAtual && contadoresNovas[payload.new.status] !== undefined) contadoresNovas[payload.new.status]++;
                                 if (['Pendente', 'Aguardando Aprovação'].includes(payload.new.status)) {
                                     const assuntoCurto = payload.new.assunto?.length > 35 ? payload.new.assunto.substring(0, 35) + '...' : payload.new.assunto;
@@ -445,7 +458,7 @@
                             else if (payload.eventType === 'UPDATE') {
                                 const idx = todasDemandas.findIndex(d => d.id === payload.new.id);
                                 const statusAntigo = idx !== -1 ? todasDemandas[idx].status : payload.old?.status;
-                                if (idx !== -1) todasDemandas[idx] = payload.new; else todasDemandas.unshift(payload.new);
+                                if (idx !== -1) todasDemandas[idx] = payload.new; else todasDemandas.push(payload.new);
                                 if (payload.new.status !== statusAntigo && payload.new.status !== filtroAtual && contadoresNovas[payload.new.status] !== undefined) contadoresNovas[payload.new.status]++;
                                 if (payload.new.status === 'Aprovada' && statusAntigo !== 'Aprovada') {
                                     let interessados = [payload.new.criador, ...(payload.new.responsaveis || [])].filter(x => x && x !== 'Daniel');
@@ -587,66 +600,61 @@
 
         window.abrirGerenciadorCadastros = async function() { 
             document.getElementById('modalCadastros').classList.add('ativo'); 
-            await renderizarListaSecretarias();
-            await renderizarListaBairros();
+            await renderizarListaSecretariasModal();
+            await renderizarListaBairrosModal();
         }
         
         window.fecharGerenciadorCadastros = function() { 
             document.getElementById('modalCadastros').classList.remove('ativo'); 
         }
 
-        async function renderizarListaSecretarias() {
+        async function renderizarListaSecretariasModal() {
             const lista = document.getElementById('listaSecretariasModal');
             lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
             const { data, error } = await db.from('secretarias').select('id, nome').order('nome');
-            const secretarias = data || [];
-            if (secretarias.length === 0) { lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhuma secretaria cadastrada.</p>'; return; }
-            lista.innerHTML = secretarias.map(s => `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;">
-                    <span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(s.nome)}</span>
-                    <button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button>
-                </div>
-            `).join('');
+            if (!error && data) {
+                listaSecretariasCarregada = data.map(r => r.nome).sort();
+                lista.innerHTML = data.map(s => `<div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;"><span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(s.nome)}</span><button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button></div>`).join('');
+                popularSelectSecretaria(obterSecretariaEditSelecionada());
+            }
         }
 
         window.adicionarSecretaria = async function() {
             const input = document.getElementById('inputNovaSecretaria');
             const nome = input.value.trim();
-            if (!nome) return alert('Digite o nome!');
-            try { await db.from('secretarias').insert([{ nome }]); input.value = ''; await renderizarListaSecretarias(); } catch (e) { alert('Erro ao salvar.'); }
+            if (!nome) return;
+            try { await db.from('secretarias').insert([{ nome }]); input.value = ''; await renderizarListaSecretariasModal(); } catch (e) { alert('Erro ao salvar.'); }
         }
 
         window.excluirSecretaria = async function(id, btn) {
-            if (!confirm('Remover esta secretaria da lista?')) return;
+            if (!confirm('Remover esta secretaria?')) return;
             btn.disabled = true;
-            try { await db.from('secretarias').delete().eq('id', id); await renderizarListaSecretarias(); } catch (e) { alert('Erro ao excluir.'); btn.disabled = false; }
+            try { await db.from('secretarias').delete().eq('id', id); await renderizarListaSecretariasModal(); } catch (e) { alert('Erro.'); btn.disabled = false; }
         }
 
-        async function renderizarListaBairros() {
+        async function renderizarListaBairrosModal() {
             const lista = document.getElementById('listaBairrosModal');
             lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
             const { data, error } = await db.from('bairros').select('id, nome').order('nome');
-            const bairros = data || [];
-            if (bairros.length === 0) { lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhum bairro cadastrado.</p>'; return; }
-            lista.innerHTML = bairros.map(b => `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;">
-                    <span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(b.nome)}</span>
-                    <button onclick="excluirBairro(${b.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button>
-                </div>
-            `).join('');
+            if (!error && data) { 
+                listaBairrosCarregada = data.map(r => r.nome.toUpperCase()).sort(); 
+                lista.innerHTML = data.map(b => `<div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;"><span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(b.nome)}</span><button onclick="excluirBairro(${b.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button></div>`).join('');
+                const datalist = document.getElementById('listaBairrosEdit');
+                if(datalist) datalist.innerHTML = listaBairrosCarregada.map(b => `<option value="${DOMPurify.sanitize(b)}"></option>`).join('');
+            }
         }
 
         window.adicionarBairro = async function() {
             const input = document.getElementById('inputNovoBairro');
             const nome = input.value.trim().toUpperCase();
-            if (!nome) return alert('Digite o nome do bairro!');
-            try { await db.from('bairros').insert([{ nome }]); input.value = ''; await renderizarListaBairros(); } catch (e) { alert('Erro ao salvar. Pode ser um bairro duplicado.'); }
+            if (!nome) return;
+            try { await db.from('bairros').insert([{ nome }]); input.value = ''; await renderizarListaBairrosModal(); } catch (e) { alert('Erro ao salvar. Pode ser um bairro duplicado.'); }
         }
 
         window.excluirBairro = async function(id, btn) {
-            if (!confirm('Remover este bairro da lista?')) return;
+            if (!confirm('Remover este bairro?')) return;
             btn.disabled = true;
-            try { await db.from('bairros').delete().eq('id', id); await renderizarListaBairros(); } catch (e) { alert('Erro ao excluir.'); btn.disabled = false; }
+            try { await db.from('bairros').delete().eq('id', id); await renderizarListaBairrosModal(); } catch (e) { alert('Erro.'); btn.disabled = false; }
         }
 
         window.filtrar = function(status) {
@@ -654,7 +662,7 @@
             localStorage.setItem('filtro_preferido_' + usuarioLogado, status);
             if (contadoresNovas[status] !== undefined) contadoresNovas[status] = 0;
             if (status === 'Aguardando Exec. Secretaria') contadoresNovas['Aguardando Exec. Secretaria'] = 0;
-            document.querySelectorAll('button[data-status]').forEach(btn => { 
+            document.querySelectorAll('.stat-btn').forEach(btn => { 
                 btn.classList.toggle('ativo', btn.getAttribute('data-status') === status); 
             });
             atualizarContadores(); renderDemandas();
