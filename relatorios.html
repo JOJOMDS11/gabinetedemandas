@@ -18,8 +18,11 @@
         
         .navbar { background: #1a365d; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100;}
         .navbar h1 { font-size: 18px; font-weight: 800; color: white; }
+        .nav-actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
         .btn-voltar { background: rgba(255,255,255,0.1); color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2);}
         .btn-voltar:hover { background: rgba(255,255,255,0.2); }
+        .btn-reset-nav { background: #fef08a; color: #854d0e; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+        .btn-reset-nav:hover { background: #fde047; transform: translateY(-1px); }
 
         .container { max-width: 1350px; margin: 30px auto 0; padding: 0 20px; }
         
@@ -29,8 +32,6 @@
         .btn-export { background: #0f172a; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px;}
         .btn-export:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);}
         .btn-excel { background: #16a34a; } .btn-excel:hover { background: #15803d; }
-        .btn-reset-header { background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; }
-        .btn-reset-header:hover { background: #cbd5e1; color: #1e293b; }
 
         #containerAlertas { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .alerta-box { padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px; border-left: 5px solid; animation: slideIn 0.5s ease;}
@@ -117,7 +118,10 @@
 
     <div class="navbar">
         <h1>📊 Gabinete Analytics PRO</h1>
-        <a href="dashboard.html" class="btn-voltar">← Voltar ao Painel</a>
+        <div class="nav-actions">
+            <button class="btn-reset-nav" onclick="resetarFiltros()">🧹 Limpar Filtros / Visão Atual</button>
+            <a href="dashboard.html" class="btn-voltar">← Voltar ao Painel</a>
+        </div>
     </div>
 
     <div class="container">
@@ -127,7 +131,6 @@
                 <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Acompanhamento de eficiência, gargalos e execução da equipe.</p>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="btn-export btn-reset-header" onclick="resetarFiltros()">🧹 Limpar Filtros / Visão Atual</button>
                 <button class="btn-export btn-excel" onclick="exportarExcel()">📊 Exportar Planilha Excel</button>
                 <button class="btn-export" onclick="gerarBackupJSON()">📥 Baixar JSON do Banco</button>
             </div>
