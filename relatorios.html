@@ -10,13 +10,16 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background-color: #f8fafc; color: #0f172a; padding-bottom: 50px; }
         
-        .navbar { background: #1a365d; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100;}
+        .navbar { background: #1a365d; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000;}
         .navbar h1 { font-size: 18px; font-weight: 800; color: white; }
         .nav-actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
         .btn-voltar { background: rgba(255,255,255,0.1); color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2);}
@@ -32,6 +35,8 @@
         .btn-export { background: #0f172a; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px;}
         .btn-export:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);}
         .btn-excel { background: #16a34a; } .btn-excel:hover { background: #15803d; }
+        .btn-reset-header { background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; }
+        .btn-reset-header:hover { background: #cbd5e1; color: #1e293b; }
 
         #containerAlertas { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .alerta-box { padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px; border-left: 5px solid; animation: slideIn 0.5s ease;}
@@ -65,7 +70,7 @@
         .secao-lista { background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px solid #3b82f6; display: none; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1);}
         .secao-lista h3 { font-size: 16px; color: #0f172a; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
         .btn-fechar-lista { background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold;}
-        .lista-item { border-bottom: 1px solid #f1f5f9; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; gap: 15px;}
+        .lista-item { border-bottom: 1px solid #f1f5f9; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap;}
         .lista-info strong { color: #1e293b; font-size: 14px; display: block; margin-bottom: 6px;}
         .detalhe-tag { display: inline-flex; align-items: center; background: #f1f5f9; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; color: #475569; margin-right: 6px; margin-bottom: 4px;}
         .btn-ver-demanda { background: #3b82f6; color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; white-space: nowrap; transition: 0.2s;}
@@ -104,9 +109,11 @@
         .btn-toggle-secao { font-size: 11px; background: #e2e8f0; color: #334155; padding: 4px 10px; border-radius: 20px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px;}
         .btn-toggle-secao:hover { background: #cbd5e1; }
 
-        #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center;}
+        #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;}
         .spinner { border: 4px solid #e2e8f0; border-top: 4px solid #1a365d; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 16px;}
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .leaflet-top, .leaflet-bottom { z-index: 90 !important; }
     </style>
 </head>
 <body>
@@ -212,6 +219,11 @@
 
         <div class="charts-grid">
             
+            <div class="chart-card full-width" style="margin-bottom: 10px;">
+                <h3>🗺️ Mapa de Calor das Demandas <span>Tamanho e cor indicam o volume (clique na bolha)</span></h3>
+                <div id="mapaBairros" style="height: 450px; width: 100%; border-radius: 8px; z-index: 1;"></div>
+            </div>
+
             <div class="chart-card full-width">
                 <h3>Tendência de Abertura <span>Últimos 12 Meses (Data Fato)</span></h3>
                 <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
@@ -338,6 +350,37 @@
         let dirSecSort = -1; 
 
         let chartStatus, chartCat, chartTendencia, chartPrioridade, chartSecBar, chartDiaSemana, chartTempoPrioridade;
+        
+        let leafletMap = null;
+        let mapLayerGroup = null;
+
+        const coordsBairros = {
+            'CENTRO': [-29.760, -51.140],
+            'FEITORIA': [-29.770, -51.110],
+            'CAMPINA': [-29.740, -51.150],
+            'SCHARLAU': [-29.725, -51.155],
+            'SANTOS DUMONT': [-29.715, -51.140],
+            'RIO DOS SINOS': [-29.745, -51.135],
+            'VICENTINA': [-29.770, -51.150],
+            'SÃO JOSÉ': [-29.765, -51.130],
+            'SÃO MIGUEL': [-29.755, -51.155],
+            'CRISTO REI': [-29.775, -51.145],
+            'FIÃO': [-29.765, -51.145],
+            'DUQUE DE CAXIAS': [-29.780, -51.130],
+            'JARDIM AMÉRICA': [-29.750, -51.120],
+            'FAZENDA SÃO BORJA': [-29.780, -51.100],
+            'PINHEIRO': [-29.750, -51.100],
+            'RIO BRANCO': [-29.775, -51.120],
+            'SANTA TEREZA': [-29.750, -51.130],
+            'CAMPESTRE': [-29.790, -51.130],
+            'ARROIO DA MANTEIGA': [-29.715, -51.165],
+            'BOA VISTA': [-29.730, -51.140],
+            'MORRO DO ESPELHO': [-29.770, -51.135],
+            'PADRE REUS': [-29.785, -51.140],
+            'PASSO DOS FERREIROS': [-29.760, -51.155],
+            'JARDIM LUCIANA': [-29.735, -51.160],
+            'COHAB': [-29.785, -51.115]
+        };
 
         const arrayAbertas = ['Pendente', 'Aguardando Aprovação'];
         const arrayConcluidas = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
@@ -759,6 +802,11 @@
                 const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
                 const btnLegis = isLegisSafe ? `<a href="${DOMPurify.sanitize(d.link_legis)}" target="_blank" class="btn-ver-demanda" style="background:#f59e0b; color:white;">🔗 Legis</a>` : '';
 
+                const ruaLimpa = d.rua ? d.rua.replace(/'/g,"") : '';
+                const numLimpo = d.numero ? d.numero.replace(/'/g,"") : '';
+                const bairroLimpo = d.bairro ? d.bairro.replace(/'/g,"") : '';
+                const btnLocal = (ruaLimpa || bairroLimpo) ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ruaLimpa}, ${numLimpo}, ${bairroLimpo}, São Leopoldo, RS`)}" target="_blank" class="btn-ver-demanda" style="background:#10b981; color:white;">📍 Ver Local</a>` : '';
+
                 return `
                     <div class="lista-item">
                         <div class="lista-info" style="flex:1;">
@@ -773,7 +821,8 @@
                                 <span class="detalhe-tag" style="background:white; color:${sColor}; border:1px solid ${sColor};">🚨 ${DOMPurify.sanitize(d.status)}</span>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 8px; align-items: center;">
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap:wrap; justify-content: flex-end;">
+                            ${btnLocal}
                             ${btnLegis}
                             <a href="ver-demanda.html?id=${d.id}" class="btn-ver-demanda" target="_blank">Abrir Detalhes 🔗</a>
                         </div>
@@ -786,6 +835,57 @@
         }
 
         window.mudarPaginaLista = function(direcao) { paginaAtualLista += direcao; renderizarListaNaTela(); }
+
+        function inicializarMapa() {
+            if(!leafletMap) {
+                leafletMap = L.map('mapaBairros').setView([-29.760, -51.140], 12); 
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(leafletMap);
+                mapLayerGroup = L.layerGroup().addTo(leafletMap);
+            }
+        }
+
+        function desenharMapa() {
+            if(!leafletMap) inicializarMapa();
+            mapLayerGroup.clearLayers();
+
+            const bairroCounts = {};
+            demandasFiltradas.forEach(d => {
+                if(d.bairro && d.bairro.trim() !== '') {
+                    const b = d.bairro.trim().toUpperCase();
+                    bairroCounts[b] = (bairroCounts[b] || 0) + 1;
+                }
+            });
+
+            let maxCount = 0;
+            for(let b in bairroCounts) { if(bairroCounts[b] > maxCount) maxCount = bairroCounts[b]; }
+
+            for(let b in bairroCounts) {
+                const count = bairroCounts[b];
+                const coord = coordsBairros[b];
+                if(coord) {
+                    let raio = maxCount === 0 ? 10 : 10 + (count / maxCount) * 25; 
+                    let cor = '#3b82f6'; 
+                    if(count > maxCount * 0.7 && count > 3) cor = '#ef4444'; 
+                    else if(count > maxCount * 0.4 && count > 1) cor = '#f59e0b'; 
+
+                    const circle = L.circleMarker(coord, {
+                        radius: raio,
+                        fillColor: cor,
+                        color: '#ffffff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+                    
+                    circle.bindTooltip(`<b>${b}</b><br>${count} demanda(s)`, { direction: 'top' });
+                    circle.on('click', () => { lidarCliqueLista(b, 'bairro'); });
+                    
+                    circle.addTo(mapLayerGroup);
+                }
+            }
+        }
 
         function desenharDashboards() {
             Chart.defaults.font.family = "'Inter', sans-serif";
@@ -800,6 +900,7 @@
             if(chartTempoPrioridade) chartTempoPrioridade.destroy();
 
             montarTabelaSecretarias();
+            desenharMapa();
 
             const mapMeses = {};
             demandasFiltradas.forEach(d => {
@@ -1013,18 +1114,6 @@
                 });
             });
             renderListaHTML('listaEquipe', equipeCounts, 'equipe');
-
-            const bairroCounts = {};
-            demandasFiltradas.forEach(d => {
-                if(d.bairro && d.bairro.trim() !== '') {
-                    const b = d.bairro.trim().toUpperCase();
-                    bairroCounts[b] = (bairroCounts[b] || 0) + 1;
-                }
-            });
-            const topBairros = Object.keys(bairroCounts).sort((a, b) => bairroCounts[b] - bairroCounts[a]).slice(0, 10);
-            const objBairros = {};
-            topBairros.forEach(b => objBairros[b] = bairroCounts[b]);
-            renderListaHTML('listaBairros', objBairros, 'bairro');
 
             const solCounts = {};
             demandasFiltradas.forEach(d => {
