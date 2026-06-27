@@ -225,119 +225,50 @@
 
         <div class="charts-grid">
             
-            <div class="chart-card full-width">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoMapa', 'btnToggleMapa', 'Mostrar Mapa')">
-                    🗺️ Mapa de Calor das Demandas <span>Tamanho e cor indicam o volume</span>
-                    <button class="btn-toggle-secao" id="btnToggleMapa">🔽 Mostrar Mapa</button>
-                </h3>
-                <div id="secaoMapa" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                    <div id="mapaBairros" style="height: 450px; width: 100%; border-radius: 8px; z-index: 1;"></div>
-                </div>
+            <div class="chart-card">
+                <h3>Distribuição de Situação</h3>
+                <div class="chart-container"><canvas id="graficoStatus"></canvas></div>
             </div>
 
             <div class="chart-card full-width">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoTendencia', 'btnToggleTend', 'Mostrar Gráfico')">
-                    Tendência de Abertura <span>Últimos 12 Meses (Data Fato)</span>
-                    <button class="btn-toggle-secao" id="btnToggleTend">🔽 Mostrar Gráfico</button>
-                </h3>
-                <div id="secaoTendencia" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                    <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
-                </div>
+                <h3>🏢 Demandas por Secretaria</h3>
+                <div class="chart-container" style="height: 300px;"><canvas id="graficoSecBar"></canvas></div>
             </div>
 
             <div class="chart-card">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoPrioridade', 'btnTogglePrio', 'Mostrar Gráfico')">
-                    🚨 Distribuição de Prioridades <span>A partir de Jun/2026</span>
-                    <button class="btn-toggle-secao" id="btnTogglePrio">🔽 Mostrar Gráfico</button>
-                </h3>
-                <div id="secaoPrioridade" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                    <div class="chart-container"><canvas id="graficoPrioridade"></canvas></div>
+                <h3>📅 Demandas por Dia da Semana</h3>
+                <div class="chart-container"><canvas id="graficoDiaSemana"></canvas></div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h3>Eficiência por Secretaria/Órgão <span>Clique no cabeçalho para ordenar, ou na linha para ver demandas</span></h3>
+                <div class="data-table-container">
+                    <table class="data-table" id="tableSecretariasCompleta">
+                        <thead>
+                            <tr>
+                                <th onclick="ordenarTabelaSec('nome')" title="Ordenar por Nome">Secretaria ↕</th>
+                                <th onclick="ordenarTabelaSec('total')" title="Ordenar por Total" style="text-align:center;">Demandas ↕</th>
+                                <th onclick="ordenarTabelaSec('concluidas')" title="Ordenar por Concluídas" style="text-align:center;">Concluídas ↕</th>
+                                <th onclick="ordenarTabelaSec('taxa')" title="Ordenar por Taxa de Resolução" style="text-align:center;">Taxa Resol. ↕</th>
+                                <th onclick="ordenarTabelaSec('somaTempo')" title="Ordenar por Tempo Médio" style="text-align:center;">T. Médio Resolução ↕</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaSecretarias"></tbody>
+                    </table>
                 </div>
+            </div>
+            
+            <div class="chart-card">
+                <h3>Tipos de Solicitações (Gargalos)</h3>
+                <div class="chart-container"><canvas id="graficoCategorias"></canvas></div>
             </div>
 
             <div class="chart-card">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoTempoPrio', 'btnToggleTempoPrio', 'Mostrar Gráfico')">
-                    ⏱️ Tempo Médio vs Prioridade <span>Apenas Concluídas (h)</span>
-                    <button class="btn-toggle-secao" id="btnToggleTempoPrio">🔽 Mostrar Gráfico</button>
-                </h3>
-                <div id="secaoTempoPrio" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                    <div class="chart-container"><canvas id="graficoTempoPrioridade"></canvas></div>
-                </div>
+                <h3>Responsáveis (Ordem) <span>Clicável</span></h3>
+                <div class="data-list" id="listaOrdem"></div>
             </div>
 
-            <div class="chart-card">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoStatus', 'btnToggleStatus', 'Mostrar Gráfico')">
-                    Distribuição de Situação
-                    <button class="btn-toggle-secao" id="btnToggleStatus">🔽 Mostrar Gráfico</button>
-                </h3>
-                <div id="secaoStatus" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                    <div class="chart-container"><canvas id="graficoStatus"></canvas></div>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoCat', 'btnToggleCat', 'Mostrar Gráfico')">
-                    Tipos de Solicitações (Gargalos)
-                    <button class="btn-toggle-secao" id="btnToggleCat">🔽 Mostrar Gráfico</button>
-                </h3>
-                <div id="secaoCat" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                    <div class="chart-container"><canvas id="graficoCategorias"></canvas></div>
-                </div>
-            </div>
-
-            <div class="chart-card full-width">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoSecBar', 'btnToggleSecBar', 'Mostrar Gráfico')">
-                    🏢 Demandas por Secretaria (Gráfico)
-                    <button class="btn-toggle-secao" id="btnToggleSecBar">🔽 Mostrar Gráfico</button>
-                </h3>
-                <div id="secaoSecBar" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                    <div class="chart-container" style="height: 300px;"><canvas id="graficoSecBar"></canvas></div>
-                </div>
-            </div>
-
-            <div class="chart-card full-width">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoEficiencia', 'btnToggleEficiencia', 'Mostrar Tabela')">
-                    Eficiência por Secretaria/Órgão <span>Tabela Detalhada</span>
-                    <button class="btn-toggle-secao" id="btnToggleEficiencia">🔽 Mostrar Tabela</button>
-                </h3>
-                <div id="secaoEficiencia" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                    <div class="data-table-container">
-                        <table class="data-table" id="tableSecretariasCompleta">
-                            <thead>
-                                <tr>
-                                    <th onclick="ordenarTabelaSec('nome')" title="Ordenar por Nome">Secretaria ↕</th>
-                                    <th onclick="ordenarTabelaSec('total')" title="Ordenar por Total" style="text-align:center;">Demandas ↕</th>
-                                    <th onclick="ordenarTabelaSec('concluidas')" title="Ordenar por Concluídas" style="text-align:center;">Concluídas ↕</th>
-                                    <th onclick="ordenarTabelaSec('taxa')" title="Ordenar por Taxa de Resolução" style="text-align:center;">Taxa Resol. ↕</th>
-                                    <th onclick="ordenarTabelaSec('somaTempo')" title="Ordenar por Tempo Médio" style="text-align:center;">T. Médio Resolução ↕</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabelaSecretarias"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="chart-card full-width">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoDiaSemana', 'btnToggleDia', 'Mostrar Gráfico')">
-                    📅 Demandas por Dia da Semana
-                    <button class="btn-toggle-secao" id="btnToggleDia">🔽 Mostrar Gráfico</button>
-                </h3>
-                <div id="secaoDiaSemana" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                    <div class="chart-container"><canvas id="graficoDiaSemana"></canvas></div>
-                </div>
-            </div>
-
-            <div class="chart-card full-width">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoOrdem', 'btnToggleOrdem', 'Mostrar Lista')">
-                    Responsáveis (Ordem)
-                    <button class="btn-toggle-secao" id="btnToggleOrdem">🔽 Mostrar Lista</button>
-                </h3>
-                <div id="secaoOrdem" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                    <div class="data-list bairros-grid" id="listaOrdem"></div>
-                </div>
-            </div>
-
+            <!-- Listas em Acordeão (Fechadas por padrão) -->
             <div class="chart-card full-width">
                 <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoEquipe', 'btnToggleEq', 'Mostrar Lista')">
                     Executores (Cuidando)
@@ -376,6 +307,27 @@
                 <div id="secaoBairros" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
                     <div class="data-list bairros-grid" id="listaBairros"></div>
                 </div>
+            </div>
+
+            <!-- Gráficos movidos para o fundo (Sempre Abertos) -->
+            <div class="chart-card full-width" style="margin-bottom: 10px;">
+                <h3>🗺️ Mapa de Calor das Demandas <span>Tamanho e cor indicam o volume (clique na bolha)</span></h3>
+                <div id="mapaBairros" style="height: 450px; width: 100%; border-radius: 8px; z-index: 1;"></div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h3>Tendência de Abertura <span>Últimos 12 Meses (Data Fato)</span></h3>
+                <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>🚨 Distribuição de Prioridades <span>A partir de Jun/2026</span></h3>
+                <div class="chart-container"><canvas id="graficoPrioridade"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>⏱️ Tempo Médio vs Prioridade <span>Apenas Concluídas (h)</span></h3>
+                <div class="chart-container"><canvas id="graficoTempoPrioridade"></canvas></div>
             </div>
 
         </div>
@@ -717,12 +669,12 @@
             if (secao.style.display === 'none') {
                 secao.style.display = 'block';
                 btn.innerHTML = '🔼 Esconder';
-                if (secaoId === 'secaoMapa' && leafletMap) {
-                    setTimeout(() => leafletMap.invalidateSize(), 100);
-                }
             } else {
                 secao.style.display = 'none';
-                btn.innerHTML = '🔽 ' + (textoAbrir || 'Mostrar');
+                let lbl = '🔽 Mostrar Lista';
+                if (btnId === 'btnToggleGargalo') lbl = '🚨 Mostrar Gargalos';
+                if (btnId === 'btnToggleBairros') lbl = '🔽 Mostrar Bairros';
+                btn.innerHTML = lbl;
             }
         }
 
