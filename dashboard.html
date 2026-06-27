@@ -206,7 +206,9 @@
                 </select>
             </div>
             <label style="font-size:12px; font-weight:bold; color:#555;">Anexos (Fotos ou PDF):</label>
-            <input type="file" id="qArquivo" accept="image/*,.pdf" multiple style="font-size: 12px; padding: 5px; border: none; margin-bottom: 15px; width: 100%; background: #f8fafc; border-radius: 4px;">
+            <input type="file" id="qArquivo" accept="image/*,video/*,.pdf" multiple style="font-size: 12px; padding: 5px; border: none; margin-bottom: 5px; width: 100%; background: #f8fafc; border-radius: 4px;">
+            <div id="qPreviewGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 8px; margin-bottom: 15px;"></div>
+            
             <textarea id="qDetalhe" placeholder="Detalhamento da demanda..." style="width:100%; height:80px; margin-bottom:15px; padding:10px; border-radius:4px; border:1px solid #ccc; font-size:14px; outline:none; resize:none;"></textarea>
             
             <div style="background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:15px;">
@@ -358,6 +360,7 @@
         const itensPorPagina = 9;
         let idParaExcluir = null;
         let contadoresNovas = { 'Aguardando Aprovação': 0, 'Pendente': 0, 'Aprovada': 0, 'Em Andamento': 0, 'Aguardando Exec. Secretaria': 0, '156 Solicitado': 0 };
+        let arquivosQuickSelecionados = [];
 
         const tiposAgendas = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO'];
         const tiposDemandasLivre = ['DEMANDA (GERAL)', 'DEMANDA EXTERNA'];
@@ -410,6 +413,16 @@
                     if(navbarActions) navbarActions.prepend(btnNotif);
                 } 
             }, 1000); 
+
+            document.getElementById('qArquivo').addEventListener('change', function(e) {
+                const novos = Array.from(e.target.files);
+                novos.forEach(file => {
+                    if (file.size > 15 * 1024 * 1024) { alert(`O arquivo ${file.name} excede 15MB.`); return; }
+                    arquivosQuickSelecionados.push(file);
+                });
+                renderizarQuickPreviews();
+                this.value = ''; 
+            });
         });
 
       async function inicializarSistema() {
@@ -495,6 +508,34 @@
         window.abrirModalQuick = function() { document.getElementById('modalQuick').classList.add('ativo'); }
         window.fecharModalQuick = function() { document.getElementById('modalQuick').classList.remove('ativo'); }
 
+        function renderizarQuickPreviews() {
+            const grid = document.getElementById('qPreviewGrid');
+            grid.innerHTML = '';
+            arquivosQuickSelecionados.forEach((file, index) => {
+                let mediaTag = '';
+                if (file.type === 'application/pdf') {
+                    mediaTag = `<div style="background:#e2e8f0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:#185199; text-align:center; padding:2px;">📄 PDF</div>`;
+                } else if (file.type.startsWith('image/')) {
+                    const url = URL.createObjectURL(file);
+                    mediaTag = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;">`;
+                } else if (file.type.startsWith('video/')) {
+                    const url = URL.createObjectURL(file);
+                    mediaTag = `<video src="${url}" style="width:100%; height:100%; object-fit:cover;" muted></video>`;
+                } else {
+                    mediaTag = `<div style="background:#e2e8f0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:#555; text-align:center; padding:2px;">📄 File</div>`;
+                }
+                grid.innerHTML += `<div style="border-radius:4px; border:1px solid #ccc; overflow:hidden; height:50px; position:relative;">
+                    ${mediaTag}
+                    <button type="button" onclick="removerArquivoQuick(${index})" style="position:absolute; top:2px; right:2px; background:rgba(231,76,60,0.9); color:white; border:none; border-radius:50%; width:16px; height:16px; font-size:9px; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+                </div>`;
+            });
+        }
+
+        window.removerArquivoQuick = function(index) {
+            arquivosQuickSelecionados.splice(index, 1);
+            renderizarQuickPreviews();
+        }
+
         async function uploadCloudinaryDirect(file) {
             const formData = new FormData(); formData.append('file', file); formData.append('upload_preset', uploadPreset);
             const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, { method: 'POST', body: formData });
@@ -519,13 +560,13 @@
             let responsaveis = Array.from(document.querySelectorAll('.chk-cuidar:checked')).map(cb => cb.value);
             let fotos_urls = [];
             let pdf_urls = [];
-            const files = Array.from(document.getElementById('qArquivo').files);
+            const files = arquivosQuickSelecionados;
 
             try {
                 for (let file of files) {
                     if (file.type === 'application/pdf') {
                         pdf_urls.push(await uploadCloudinaryDirect(file));
-                    } else if (file.type.startsWith('image/')) {
+                    } else if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
                         fotos_urls.push(await uploadCloudinaryDirect(file));
                     }
                 }
@@ -590,6 +631,8 @@
                     fecharModalQuick();
                     document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = ''; document.getElementById('qSecretaria').value = ''; document.getElementById('qPrioridade').value = 'Normal'; document.getElementById('qAprovacaoDaniel').checked = false;
                     document.querySelectorAll('.chk-cuidar').forEach(cb => cb.checked = false);
+                    arquivosQuickSelecionados = [];
+                    renderizarQuickPreviews();
                     alert("Demanda Rápida criada com sucesso!");
                 } else { alert("Erro ao salvar no banco. Verifique os dados."); console.error(error); }
             } catch (e) { alert("Erro ao tentar salvar."); }
@@ -612,49 +655,54 @@
             const lista = document.getElementById('listaSecretariasModal');
             lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
             const { data, error } = await db.from('secretarias').select('id, nome').order('nome');
-            if (!error && data) {
-                listaSecretariasCarregada = data.map(r => r.nome).sort();
-                lista.innerHTML = data.map(s => `<div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;"><span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(s.nome)}</span><button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button></div>`).join('');
-                popularSelectSecretaria(obterSecretariaEditSelecionada());
-            }
+            const secretarias = data || [];
+            if (secretarias.length === 0) { lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhuma secretaria cadastrada.</p>'; return; }
+            lista.innerHTML = secretarias.map(s => `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;">
+                    <span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(s.nome)}</span>
+                    <button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button>
+                </div>
+            `).join('');
         }
 
         window.adicionarSecretaria = async function() {
             const input = document.getElementById('inputNovaSecretaria');
             const nome = input.value.trim();
-            if (!nome) return;
+            if (!nome) return alert('Digite o nome!');
             try { await db.from('secretarias').insert([{ nome }]); input.value = ''; await renderizarListaSecretariasModal(); } catch (e) { alert('Erro ao salvar.'); }
         }
 
         window.excluirSecretaria = async function(id, btn) {
-            if (!confirm('Remover esta secretaria?')) return;
+            if (!confirm('Remover esta secretaria da lista?')) return;
             btn.disabled = true;
-            try { await db.from('secretarias').delete().eq('id', id); await renderizarListaSecretariasModal(); } catch (e) { alert('Erro.'); btn.disabled = false; }
+            try { await db.from('secretarias').delete().eq('id', id); await renderizarListaSecretariasModal(); } catch (e) { alert('Erro ao excluir.'); btn.disabled = false; }
         }
 
         async function renderizarListaBairrosModal() {
             const lista = document.getElementById('listaBairrosModal');
             lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
             const { data, error } = await db.from('bairros').select('id, nome').order('nome');
-            if (!error && data) { 
-                listaBairrosCarregada = data.map(r => r.nome.toUpperCase()).sort(); 
-                lista.innerHTML = data.map(b => `<div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;"><span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(b.nome)}</span><button onclick="excluirBairro(${b.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button></div>`).join('');
-                const datalist = document.getElementById('listaBairrosEdit');
-                if(datalist) datalist.innerHTML = listaBairrosCarregada.map(b => `<option value="${DOMPurify.sanitize(b)}"></option>`).join('');
-            }
+            const bairros = data || [];
+            if (bairros.length === 0) { lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhum bairro cadastrado.</p>'; return; }
+            lista.innerHTML = bairros.map(b => `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;">
+                    <span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(b.nome)}</span>
+                    <button onclick="excluirBairro(${b.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button>
+                </div>
+            `).join('');
         }
 
         window.adicionarBairro = async function() {
             const input = document.getElementById('inputNovoBairro');
             const nome = input.value.trim().toUpperCase();
-            if (!nome) return;
+            if (!nome) return alert('Digite o nome do bairro!');
             try { await db.from('bairros').insert([{ nome }]); input.value = ''; await renderizarListaBairrosModal(); } catch (e) { alert('Erro ao salvar. Pode ser um bairro duplicado.'); }
         }
 
         window.excluirBairro = async function(id, btn) {
-            if (!confirm('Remover este bairro?')) return;
+            if (!confirm('Remover este bairro da lista?')) return;
             btn.disabled = true;
-            try { await db.from('bairros').delete().eq('id', id); await renderizarListaBairrosModal(); } catch (e) { alert('Erro.'); btn.disabled = false; }
+            try { await db.from('bairros').delete().eq('id', id); await renderizarListaBairrosModal(); } catch (e) { alert('Erro ao excluir.'); btn.disabled = false; }
         }
 
         window.filtrar = function(status) {
