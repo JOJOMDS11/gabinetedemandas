@@ -19,24 +19,29 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background-color: #f8fafc; color: #0f172a; padding-bottom: 50px; }
         
-        .navbar { background: #1a365d; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000;}
-        .navbar h1 { font-size: 18px; font-weight: 800; color: white; }
-        .nav-actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
-        .btn-voltar { background: rgba(255,255,255,0.1); color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2);}
+        .navbar { background: #1a365d; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; flex-wrap: wrap; gap: 10px;}
+        .navbar h1 { font-size: 18px; font-weight: 800; color: white; margin: 0;}
+        .nav-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .btn-voltar { background: rgba(255,255,255,0.1); color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2); white-space: nowrap;}
         .btn-voltar:hover { background: rgba(255,255,255,0.2); }
-        .btn-reset-nav { background: #fef08a; color: #854d0e; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+        .btn-reset-nav { background: #fef08a; color: #854d0e; border: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); white-space: nowrap;}
         .btn-reset-nav:hover { background: #fde047; transform: translateY(-1px); }
 
-        .container { max-width: 1350px; margin: 30px auto 0; padding: 0 20px; }
+        @media (max-width: 600px) {
+            .navbar { flex-direction: column; align-items: stretch; padding: 12px; }
+            .navbar h1 { text-align: center; margin-bottom: 8px; font-size: 16px; }
+            .nav-actions { justify-content: center; }
+            .btn-reset-nav, .btn-voltar { flex: 1; text-align: center; }
+        }
+
+        .container { max-width: 1350px; margin: 30px auto 0; padding: 0 15px; }
         
         .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
-        .page-header h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px;}
+        .page-header h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px;}
         
         .btn-export { background: #0f172a; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px;}
         .btn-export:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);}
         .btn-excel { background: #16a34a; } .btn-excel:hover { background: #15803d; }
-        .btn-reset-header { background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; }
-        .btn-reset-header:hover { background: #cbd5e1; color: #1e293b; }
 
         #containerAlertas { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .alerta-box { padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px; border-left: 5px solid; animation: slideIn 0.5s ease;}
@@ -52,8 +57,8 @@
         .btn-erro-id { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px; height: 39px;}
         .btn-erro-id.ativo { background: #b91c1c; color: white; border-color: #991b1b; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .kpi-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; border-left: 4px solid #cbd5e1; cursor: pointer; transition: 0.2s; position: relative;}
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 25px; }
+        .kpi-card { background: #ffffff; border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; border-left: 4px solid #cbd5e1; cursor: pointer; transition: 0.2s; position: relative;}
         .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         .kpi-card.ativo { background: #f0f9ff; border-left-color: #3b82f6; }
         
@@ -65,10 +70,10 @@
         .kpi-card.concluidas { border-left-color: #64748b; }
 
         .kpi-titulo { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-        .kpi-valor { font-size: 28px; font-weight: 800; margin-top: 8px; color: #0f172a; line-height: 1; }
+        .kpi-valor { font-size: 24px; font-weight: 800; margin-top: 5px; color: #0f172a; line-height: 1; }
 
         .secao-lista { background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px solid #3b82f6; display: none; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1);}
-        .secao-lista h3 { font-size: 16px; color: #0f172a; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+        .secao-lista h3 { font-size: 15px; color: #0f172a; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
         .btn-fechar-lista { background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold;}
         .lista-item { border-bottom: 1px solid #f1f5f9; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap;}
         .lista-info strong { color: #1e293b; font-size: 14px; display: block; margin-bottom: 6px;}
@@ -83,7 +88,7 @@
 
         .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
-        .chart-card { background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;}
+        .chart-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;}
         .chart-card.full-width { grid-column: 1 / -1; }
         .chart-card h3 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;}
         .chart-card h3 span { font-size: 12px; color: #94a3b8; font-weight: 400; background: #f8fafc; padding: 4px 8px; border-radius: 4px;}
@@ -95,11 +100,11 @@
         .data-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: 0.2s; }
         .data-item:hover { background: #f8fafc; padding-left: 15px; }
 
-        .bairros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; max-height: unset; overflow-y: visible;}
-        .bairros-grid .data-item { border: 1px solid #f1f5f9; border-radius: 8px; }
+        .bairros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; max-height: unset; overflow-y: visible;}
+        .bairros-grid .data-item { border: 1px solid #f1f5f9; border-radius: 6px; }
 
         .data-table-container { max-height: 350px; overflow-y: auto; }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
         .data-table th { background: #f8fafc; color: #475569; font-weight: 700; padding: 10px; text-align: left; position: sticky; top: 0; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; font-size: 11px; cursor: pointer; transition: background 0.2s;}
         .data-table th:hover { background: #e2e8f0; }
         .data-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; color: #334155; font-weight: 500; cursor: pointer;}
@@ -135,11 +140,11 @@
         <div class="page-header">
             <div>
                 <h2>Visão Estratégica do Gabinete</h2>
-                <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Acompanhamento de eficiência, gargalos e execução da equipe.</p>
+                <p style="color: #64748b; font-size: 13px; margin-top: 4px;">Acompanhamento de eficiência, gargalos e execução da equipe.</p>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="btn-export btn-excel" onclick="exportarExcel()">📊 Exportar Planilha Excel</button>
-                <button class="btn-export" onclick="gerarBackupJSON()">📥 Baixar JSON do Banco</button>
+                <button class="btn-export btn-excel" onclick="exportarExcel()">📊 Exportar Excel</button>
+                <button class="btn-export" onclick="gerarBackupJSON()">📥 Backup JSON</button>
             </div>
         </div>
 
@@ -219,21 +224,6 @@
 
         <div class="charts-grid">
             
-            <div class="chart-card full-width" style="margin-bottom: 10px;">
-                <h3>🗺️ Mapa de Calor das Demandas <span>Tamanho e cor indicam o volume (clique na bolha)</span></h3>
-                <div id="mapaBairros" style="height: 450px; width: 100%; border-radius: 8px; z-index: 1;"></div>
-            </div>
-
-            <div class="chart-card full-width">
-                <h3>Tendência de Abertura <span>Últimos 12 Meses (Data Fato)</span></h3>
-                <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
-            </div>
-
-            <div class="chart-card">
-                <h3>🚨 Distribuição de Prioridades <span>A partir de Jun/2026</span></h3>
-                <div class="chart-container"><canvas id="graficoPrioridade"></canvas></div>
-            </div>
-
             <div class="chart-card">
                 <h3>Distribuição de Situação</h3>
                 <div class="chart-container"><canvas id="graficoStatus"></canvas></div>
@@ -247,11 +237,6 @@
             <div class="chart-card">
                 <h3>📅 Demandas por Dia da Semana</h3>
                 <div class="chart-container"><canvas id="graficoDiaSemana"></canvas></div>
-            </div>
-
-            <div class="chart-card">
-                <h3>⏱️ Tempo Médio vs Prioridade <span>Apenas Concluídas (h)</span></h3>
-                <div class="chart-container"><canvas id="graficoTempoPrioridade"></canvas></div>
             </div>
 
             <div class="chart-card full-width">
@@ -320,6 +305,26 @@
                 <div id="secaoBairros" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
                     <div class="data-list bairros-grid" id="listaBairros"></div>
                 </div>
+            </div>
+
+            <div class="chart-card full-width" style="margin-bottom: 10px;">
+                <h3>🗺️ Mapa de Calor das Demandas <span>Tamanho e cor indicam o volume (clique na bolha)</span></h3>
+                <div id="mapaBairros" style="height: 450px; width: 100%; border-radius: 8px; z-index: 1;"></div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h3>Tendência de Abertura <span>Últimos 12 Meses (Data Fato)</span></h3>
+                <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>🚨 Distribuição de Prioridades <span>A partir de Jun/2026</span></h3>
+                <div class="chart-container"><canvas id="graficoPrioridade"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>⏱️ Tempo Médio vs Prioridade <span>Apenas Concluídas (h)</span></h3>
+                <div class="chart-container"><canvas id="graficoTempoPrioridade"></canvas></div>
             </div>
 
         </div>
@@ -672,10 +677,11 @@
 
         function renderListaHTML(containerId, dadosObj, tipoGrafico) {
             const container = document.getElementById(containerId);
+            if(!container) return;
             const chaves = Object.keys(dadosObj).sort((a, b) => dadosObj[b] - dadosObj[a]); 
             
             if(chaves.length === 0) {
-                container.innerHTML = '<p style="color:#94a3b8; text-align:center; margin-top:20px;">Sem registros.</p>'; return;
+                container.innerHTML = '<p style="color:#94a3b8; text-align:center; margin-top:20px; font-size:13px;">Sem registros.</p>'; return;
             }
             
             container.innerHTML = chaves.map((k, index) => {
@@ -805,7 +811,7 @@
                 const ruaLimpa = d.rua ? d.rua.replace(/'/g,"") : '';
                 const numLimpo = d.numero ? d.numero.replace(/'/g,"") : '';
                 const bairroLimpo = d.bairro ? d.bairro.replace(/'/g,"") : '';
-                const btnLocal = (ruaLimpa || bairroLimpo) ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ruaLimpa}, ${numLimpo}, ${bairroLimpo}, São Leopoldo, RS`)}" target="_blank" class="btn-ver-demanda" style="background:#10b981; color:white;">📍 Ver Local</a>` : '';
+                const btnLocal = (ruaLimpa || bairroLimpo) ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ruaLimpa}, ${numLimpo}, ${bairroLimpo}, São Leopoldo, RS`)}" target="_blank" class="btn-ver-demanda" style="background:#10b981; color:white;">📍 Local</a>` : '';
 
                 return `
                     <div class="lista-item">
@@ -900,200 +906,91 @@
             if(chartTempoPrioridade) chartTempoPrioridade.destroy();
 
             montarTabelaSecretarias();
-            desenharMapa();
 
-            const mapMeses = {};
-            demandasFiltradas.forEach(d => {
-                const m = getMesAnoReal(d);
-                if(m !== 'Desconhecido') mapMeses[m] = (mapMeses[m] || 0) + 1;
-            });
-            const ultimos12 = Object.keys(mapMeses).sort().slice(-12);
-            
-            const formatarMesAno = (m) => {
-                const parts = m.split('-');
-                if(parts.length!==2) return m;
-                const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-                return `${meses[parseInt(parts[1])-1]}/${parts[0].substring(2)}`;
-            }
-            const labelsFormatadas = ultimos12.map(formatarMesAno);
-            
-            chartTendencia = new Chart(document.getElementById('graficoTendencia'), {
-                type: 'line',
-                data: { labels: labelsFormatadas, datasets: [{ label: 'Volume', data: ultimos12.map(m => mapMeses[m]), borderColor: '#1a365d', backgroundColor: 'rgba(26, 54, 93, 0.1)', borderWidth: 3, tension: 0.3, fill: true, pointRadius: 5, pointHoverRadius: 8 }] },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { display: false }, 
-                        title:{display:true, text:'Tendência'},
-                        datalabels: { align: 'top', font: {weight: 'bold'}, color: '#1a365d' }
-                    }, 
-                    scales: { y: { beginAtZero: true } } 
-                }
-            });
-
-            // Grafico Prioridade
-            const limitDate = new Date('2026-06-01T00:00:00');
-            const prioridadeCounts = { 'Crítica': 0, 'Alta': 0, 'Normal': 0, 'Baixa': 0 };
-            demandasFiltradas.forEach(d => {
-                const dataCriacao = d.criado_em ? new Date(d.criado_em) : new Date();
-                if (dataCriacao >= limitDate) {
-                    let p = d.prioridade || 'Normal';
-                    if (prioridadeCounts[p] !== undefined) prioridadeCounts[p]++;
-                    else prioridadeCounts['Normal']++;
-                }
-            });
-            chartPrioridade = new Chart(document.getElementById('graficoPrioridade'), {
-                type: 'bar',
-                data: {
-                    labels: ['🔴 Crítica', '🟠 Alta', '🟡 Normal', '⚪ Baixa'],
-                    datasets: [{
-                        data: [prioridadeCounts['Crítica'], prioridadeCounts['Alta'], prioridadeCounts['Normal'], prioridadeCounts['Baixa']],
-                        backgroundColor: ['#ef4444', '#f59e0b', '#fbbf24', '#d1d5db'],
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: {weight: 'bold'} } },
-                    scales: { y: { beginAtZero: true } },
-                    onHover: hoverCursor, onClick: (e, elements, chart) => {
-                        if (!elements || elements.length === 0) return;
-                        const idx = elements[0].index;
-                        const prioMap = ['Crítica', 'Alta', 'Normal', 'Baixa'];
-                        lidarCliqueLista(prioMap[idx], 'prioridade');
+            const statusCounts = {}; demandasFiltradas.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
+            try {
+                chartStatus = new Chart(document.getElementById('graficoStatus'), {
+                    type: 'doughnut',
+                    data: { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: paletaCores, borderWidth: 2, borderColor: '#ffffff' }] },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        cutout: '55%', 
+                        plugins: { 
+                            legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } }, 
+                            title:{display:true, text:'Situação'}, 
+                            datalabels: { 
+                                color: '#ffffff', font: { weight: '800', size: 10 }, textAlign: 'center',
+                                formatter: (val, ctx) => {
+                                    let label = ctx.chart.data.labels[ctx.dataIndex];
+                                    if (label === 'Aguardando Exec. Secretaria') label = 'Sec.';
+                                    if (label === 'Expediente (Legis) Gerado') label = 'Legis';
+                                    if (label === 'Aguardando Aprovação') label = 'Aprovar';
+                                    if (label === '156 Solicitado') label = '156';
+                                    let sum = 0; ctx.chart.data.datasets[0].data.map(data => { sum += data; });
+                                    let perc = (val * 100) / sum;
+                                    if (perc < 4) return val; 
+                                    return label + '\n' + val; 
+                                } 
+                            } 
+                        }, 
+                        onHover: hoverCursor, onClick: lidarCliqueGrafico 
                     }
-                }
-            });
+                });
+            } catch(e) {}
 
-            // Gráfico Barras Secretaria
             const secBarCounts = {};
             demandasFiltradas.forEach(d => {
                 const s = (d.secretaria && d.secretaria.trim() !== '') ? d.secretaria.trim() : 'Sem Secretaria';
                 secBarCounts[s] = (secBarCounts[s] || 0) + 1;
             });
             const sortedSecs = Object.keys(secBarCounts).sort((a,b) => secBarCounts[b] - secBarCounts[a]).slice(0, 10);
-            chartSecBar = new Chart(document.getElementById('graficoSecBar'), {
-                type: 'bar',
-                data: {
-                    labels: sortedSecs,
-                    datasets: [{
-                        data: sortedSecs.map(k => secBarCounts[k]),
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', font: {weight: 'bold'} } },
-                    scales: { x: { display: false } },
-                    onHover: hoverCursor, onClick: (e, elements, chart) => {
-                        if (!elements || elements.length === 0) return;
-                        const sec = chart.data.labels[elements[0].index];
-                        lidarCliqueLista(sec, 'secretaria');
+            try {
+                chartSecBar = new Chart(document.getElementById('graficoSecBar'), {
+                    type: 'bar',
+                    data: { labels: sortedSecs, datasets: [{ data: sortedSecs.map(k => secBarCounts[k]), backgroundColor: '#3b82f6', borderRadius: 4 }] },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                        plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', font: {weight: 'bold'} } },
+                        scales: { x: { display: false } },
+                        onHover: hoverCursor, onClick: (e, elements, chart) => {
+                            if (!elements || elements.length === 0) return;
+                            const sec = chart.data.labels[elements[0].index];
+                            lidarCliqueLista(sec, 'secretaria');
+                        }
                     }
-                }
-            });
+                });
+            } catch(e){}
 
-            // Dia da semana
             const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
             const diaCounts = [0, 0, 0, 0, 0, 0, 0];
-            demandasFiltradas.forEach(d => {
-                const dt = d.criado_em ? new Date(d.criado_em) : null;
-                if (dt) diaCounts[dt.getDay()]++;
-            });
-            chartDiaSemana = new Chart(document.getElementById('graficoDiaSemana'), {
-                type: 'bar',
-                data: {
-                    labels: diasSemana,
-                    datasets: [{ data: diaCounts, backgroundColor: '#8b5cf6', borderRadius: 4 }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: {weight: 'bold'} } },
-                    scales: { y: { beginAtZero: true } },
-                    onHover: hoverCursor, onClick: (e, elements, chart) => {
-                        if (!elements || elements.length === 0) return;
-                        const dia = chart.data.labels[elements[0].index];
-                        lidarCliqueLista(dia, 'dia');
+            demandasFiltradas.forEach(d => { const dt = d.criado_em ? new Date(d.criado_em) : null; if (dt) diaCounts[dt.getDay()]++; });
+            try {
+                chartDiaSemana = new Chart(document.getElementById('graficoDiaSemana'), {
+                    type: 'bar',
+                    data: { labels: diasSemana, datasets: [{ data: diaCounts, backgroundColor: '#8b5cf6', borderRadius: 4 }] },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: {weight: 'bold'} } },
+                        scales: { y: { beginAtZero: true } },
+                        onHover: hoverCursor, onClick: (e, elements, chart) => {
+                            if (!elements || elements.length === 0) return;
+                            const dia = chart.data.labels[elements[0].index];
+                            lidarCliqueLista(dia, 'dia');
+                        }
                     }
-                }
-            });
-
-            // Tempo x Prioridade
-            const prioTempo = { 'Crítica': {soma:0, qtd:0}, 'Alta': {soma:0, qtd:0}, 'Normal': {soma:0, qtd:0}, 'Baixa': {soma:0, qtd:0} };
-            demandasFiltradas.forEach(d => {
-                if (arrayConcluidas.includes(d.status)) {
-                    const p = d.prioridade || 'Normal';
-                    const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
-                    let dataFim = new Date();
-                    if (d.historico) { const h = d.historico.slice().reverse().find(x => arrayConcluidas.includes(x.status)); if (h && h.data) dataFim = new Date(h.data); }
-                    const ms = dataFim - dataInicioBase;
-                    if (ms > 0 && prioTempo[p]) {
-                        prioTempo[p].soma += ms; prioTempo[p].qtd++;
-                    }
-                }
-            });
-            const mediasTempo = ['Crítica', 'Alta', 'Normal', 'Baixa'].map(p => {
-                if (prioTempo[p].qtd === 0) return 0;
-                return Math.round((prioTempo[p].soma / prioTempo[p].qtd) / 3600000); 
-            });
-            chartTempoPrioridade = new Chart(document.getElementById('graficoTempoPrioridade'), {
-                type: 'bar',
-                data: {
-                    labels: ['🔴 Crítica', '🟠 Alta', '🟡 Normal', '⚪ Baixa'],
-                    datasets: [{ data: mediasTempo, backgroundColor: ['#ef4444', '#f59e0b', '#fbbf24', '#d1d5db'], borderRadius: 4 }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: {weight: 'bold'}, formatter: val => val + 'h' } },
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
-
-            const statusCounts = {}; demandasFiltradas.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
-            chartStatus = new Chart(document.getElementById('graficoStatus'), {
-                type: 'doughnut',
-                data: { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: paletaCores, borderWidth: 2, borderColor: '#ffffff' }] },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    cutout: '55%', 
-                    plugins: { 
-                        legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } }, 
-                        title:{display:true, text:'Situação'}, 
-                        datalabels: { 
-                            color: '#ffffff', 
-                            font: { weight: '800', size: 10 },
-                            textAlign: 'center',
-                            formatter: (val, ctx) => {
-                                let label = ctx.chart.data.labels[ctx.dataIndex];
-                                if (label === 'Aguardando Exec. Secretaria') label = 'Sec.';
-                                if (label === 'Expediente (Legis) Gerado') label = 'Legis';
-                                if (label === 'Aguardando Aprovação') label = 'Aprovar';
-                                if (label === '156 Solicitado') label = '156';
-                                
-                                let sum = 0;
-                                ctx.chart.data.datasets[0].data.map(data => { sum += data; });
-                                let perc = (val * 100) / sum;
-                                
-                                if (perc < 4) return val; 
-                                return label + '\n' + val; 
-                            } 
-                        } 
-                    }, 
-                    onHover: hoverCursor, 
-                    onClick: lidarCliqueGrafico 
-                }
-            });
+                });
+            } catch(e){}
 
             const catCounts = {}; demandasFiltradas.forEach(d => { let t = d.tipo_solicitacao || 'Sem categoria'; catCounts[t] = (catCounts[t] || 0) + 1; });
             const sCats = Object.keys(catCounts).sort((a,b)=>catCounts[b]-catCounts[a]).slice(0,6);
-            chartCat = new Chart(document.getElementById('graficoCategorias'), {
-                type: 'bar',
-                data: { labels: sCats, datasets: [{ data: sCats.map(k => catCounts[k]), backgroundColor: '#10b981', borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, title:{display:true, text:'Tipos'}, datalabels: { anchor: 'end', align: 'right', font: { weight: 'bold' } } }, scales: { x:{display:false} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
-            });
+            try {
+                chartCat = new Chart(document.getElementById('graficoCategorias'), {
+                    type: 'bar',
+                    data: { labels: sCats, datasets: [{ data: sCats.map(k => catCounts[k]), backgroundColor: '#10b981', borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, title:{display:true, text:'Tipos'}, datalabels: { anchor: 'end', align: 'right', font: { weight: 'bold' } } }, scales: { x:{display:false} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
+                });
+            } catch(e){}
 
             const ordemCounts = {}; 
             demandasFiltradas.forEach(d => {
@@ -1109,11 +1006,20 @@
                 else if (typeof d.responsaveis === 'string') {
                     try { resps = JSON.parse(d.responsaveis); } catch(e) { resps = [d.responsaveis]; }
                 }
-                resps.forEach(r => { 
-                    if (r && r.trim() !== '') { equipeCounts[r] = (equipeCounts[r] || 0) + 1; }
-                });
+                resps.forEach(r => { if (r && r.trim() !== '') { equipeCounts[r] = (equipeCounts[r] || 0) + 1; } });
             });
             renderListaHTML('listaEquipe', equipeCounts, 'equipe');
+
+            const bairroCounts = {};
+            demandasFiltradas.forEach(d => {
+                if(d.bairro && d.bairro.trim() !== '') {
+                    const b = d.bairro.trim().toUpperCase();
+                    bairroCounts[b] = (bairroCounts[b] || 0) + 1;
+                }
+            });
+            const topBairros = Object.keys(bairroCounts).sort((a, b) => bairroCounts[b] - bairroCounts[a]).slice(0, 10);
+            const objBairros = {}; topBairros.forEach(b => objBairros[b] = bairroCounts[b]);
+            renderListaHTML('listaBairros', objBairros, 'bairro');
 
             const solCounts = {};
             demandasFiltradas.forEach(d => {
@@ -1138,6 +1044,63 @@
                 }
             });
             renderListaHTML('listaGargalosSec', atrasoCounts, 'secretaria_atrasada');
+
+            const mapMeses = {};
+            demandasFiltradas.forEach(d => { const m = getMesAnoReal(d); if(m !== 'Desconhecido') mapMeses[m] = (mapMeses[m] || 0) + 1; });
+            const ultimos12 = Object.keys(mapMeses).sort().slice(-12);
+            const formatarMesAno = (m) => { const parts = m.split('-'); if(parts.length!==2) return m; const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']; return `${meses[parseInt(parts[1])-1]}/${parts[0].substring(2)}`; }
+            const labelsFormatadas = ultimos12.map(formatarMesAno);
+            
+            try {
+                chartTendencia = new Chart(document.getElementById('graficoTendencia'), {
+                    type: 'line',
+                    data: { labels: labelsFormatadas, datasets: [{ label: 'Volume', data: ultimos12.map(m => mapMeses[m]), borderColor: '#1a365d', backgroundColor: 'rgba(26, 54, 93, 0.1)', borderWidth: 3, tension: 0.3, fill: true, pointRadius: 5, pointHoverRadius: 8 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title:{display:true, text:'Tendência'}, datalabels: { align: 'top', font: {weight: 'bold'}, color: '#1a365d' } }, scales: { y: { beginAtZero: true } } }
+                });
+            } catch(e){}
+
+            const limitDate = new Date('2026-06-01T00:00:00');
+            const prioridadeCounts = { 'Crítica': 0, 'Alta': 0, 'Normal': 0, 'Baixa': 0 };
+            demandasFiltradas.forEach(d => {
+                const dataCriacao = d.criado_em ? new Date(d.criado_em) : new Date();
+                if (dataCriacao >= limitDate) {
+                    let p = d.prioridade || 'Normal';
+                    if (prioridadeCounts[p] !== undefined) prioridadeCounts[p]++;
+                    else prioridadeCounts['Normal']++;
+                }
+            });
+            try {
+                chartPrioridade = new Chart(document.getElementById('graficoPrioridade'), {
+                    type: 'bar',
+                    data: { labels: ['🔴 Crítica', '🟠 Alta', '🟡 Normal', '⚪ Baixa'], datasets: [{ data: [prioridadeCounts['Crítica'], prioridadeCounts['Alta'], prioridadeCounts['Normal'], prioridadeCounts['Baixa']], backgroundColor: ['#ef4444', '#f59e0b', '#fbbf24', '#d1d5db'], borderRadius: 6 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: {weight: 'bold'} } }, scales: { y: { beginAtZero: true } }, onHover: hoverCursor, onClick: (e, elements, chart) => { if (!elements || elements.length === 0) return; const idx = elements[0].index; const prioMap = ['Crítica', 'Alta', 'Normal', 'Baixa']; lidarCliqueLista(prioMap[idx], 'prioridade'); } }
+                });
+            } catch(e){}
+
+            const prioTempo = { 'Crítica': {soma:0, qtd:0}, 'Alta': {soma:0, qtd:0}, 'Normal': {soma:0, qtd:0}, 'Baixa': {soma:0, qtd:0} };
+            demandasFiltradas.forEach(d => {
+                if (arrayConcluidas.includes(d.status)) {
+                    const p = d.prioridade || 'Normal';
+                    const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
+                    let dataFim = new Date();
+                    if (d.historico) { const h = d.historico.slice().reverse().find(x => arrayConcluidas.includes(x.status)); if (h && h.data) dataFim = new Date(h.data); }
+                    const ms = dataFim - dataInicioBase;
+                    if (ms > 0 && prioTempo[p]) { prioTempo[p].soma += ms; prioTempo[p].qtd++; }
+                }
+            });
+            const mediasTempo = ['Crítica', 'Alta', 'Normal', 'Baixa'].map(p => {
+                if (prioTempo[p].qtd === 0) return 0;
+                return Math.round((prioTempo[p].soma / prioTempo[p].qtd) / 3600000); 
+            });
+            try {
+                chartTempoPrioridade = new Chart(document.getElementById('graficoTempoPrioridade'), {
+                    type: 'bar',
+                    data: { labels: ['🔴 Crítica', '🟠 Alta', '🟡 Normal', '⚪ Baixa'], datasets: [{ data: mediasTempo, backgroundColor: ['#ef4444', '#f59e0b', '#fbbf24', '#d1d5db'], borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: {weight: 'bold'}, formatter: val => val + 'h' } }, scales: { y: { beginAtZero: true } } }
+                });
+            } catch(e){}
+
+            try { desenharMapa(); } catch(e) { console.error("Erro mapa:", e); }
         }
 
         window.exportarExcel = function() {
