@@ -29,6 +29,8 @@
         .btn-export { background: #0f172a; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px;}
         .btn-export:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);}
         .btn-excel { background: #16a34a; } .btn-excel:hover { background: #15803d; }
+        .btn-reset-header { background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; }
+        .btn-reset-header:hover { background: #cbd5e1; color: #1e293b; }
 
         #containerAlertas { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .alerta-box { padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px; border-left: 5px solid; animation: slideIn 0.5s ease;}
@@ -41,8 +43,6 @@
         .filtro-item label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; }
         .filtro-item input, .filtro-item select { padding: 10px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; color: #334155; outline: none; transition: 0.2s; background: #f8fafc;}
         .filtro-item input:focus, .filtro-item select:focus { border-color: #3b82f6; background: white; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);}
-        .btn-reset { background: #e2e8f0; color: #475569; padding: 10px 15px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; font-size: 13px; height: 39px;}
-        .btn-reset:hover { background: #cbd5e1; }
         .btn-erro-id { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px; height: 39px;}
         .btn-erro-id.ativo { background: #b91c1c; color: white; border-color: #991b1b; }
 
@@ -126,7 +126,8 @@
                 <h2>Visão Estratégica do Gabinete</h2>
                 <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Acompanhamento de eficiência, gargalos e execução da equipe.</p>
             </div>
-            <div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn-export btn-reset-header" onclick="resetarFiltros()">🧹 Limpar Filtros / Visão Atual</button>
                 <button class="btn-export btn-excel" onclick="exportarExcel()">📊 Exportar Planilha Excel</button>
                 <button class="btn-export" onclick="gerarBackupJSON()">📥 Baixar JSON do Banco</button>
             </div>
@@ -171,8 +172,7 @@
                 </select>
             </div>
             <div style="display:flex; gap:8px;">
-                <button class="btn-erro-id" id="btnErroFormato" onclick="toggleErroFormato()">⚠️ Formato Antigo</button>
-                <button class="btn-reset" onclick="resetarFiltros()">↻ Limpar</button>
+                <button class="btn-erro-id" id="btnErroFormato" onclick="toggleErroFormato()">⚠️ Formato Antigo/Erro</button>
             </div>
         </div>
 
