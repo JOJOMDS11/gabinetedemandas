@@ -119,6 +119,7 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .leaflet-top, .leaflet-bottom { z-index: 90 !important; }
+        .leaflet-div-icon { background: transparent; border: none; }
     </style>
 </head>
 <body>
@@ -224,51 +225,121 @@
 
         <div class="charts-grid">
             
-            <div class="chart-card">
-                <h3>Distribuição de Situação</h3>
-                <div class="chart-container"><canvas id="graficoStatus"></canvas></div>
-            </div>
-
             <div class="chart-card full-width">
-                <h3>🏢 Demandas por Secretaria</h3>
-                <div class="chart-container" style="height: 300px;"><canvas id="graficoSecBar"></canvas></div>
-            </div>
-
-            <div class="chart-card">
-                <h3>📅 Demandas por Dia da Semana</h3>
-                <div class="chart-container"><canvas id="graficoDiaSemana"></canvas></div>
-            </div>
-
-            <div class="chart-card full-width">
-                <h3>Eficiência por Secretaria/Órgão <span>Clique no cabeçalho para ordenar, ou na linha para ver demandas</span></h3>
-                <div class="data-table-container">
-                    <table class="data-table" id="tableSecretariasCompleta">
-                        <thead>
-                            <tr>
-                                <th onclick="ordenarTabelaSec('nome')" title="Ordenar por Nome">Secretaria ↕</th>
-                                <th onclick="ordenarTabelaSec('total')" title="Ordenar por Total" style="text-align:center;">Demandas ↕</th>
-                                <th onclick="ordenarTabelaSec('concluidas')" title="Ordenar por Concluídas" style="text-align:center;">Concluídas ↕</th>
-                                <th onclick="ordenarTabelaSec('taxa')" title="Ordenar por Taxa de Resolução" style="text-align:center;">Taxa Resol. ↕</th>
-                                <th onclick="ordenarTabelaSec('somaTempo')" title="Ordenar por Tempo Médio" style="text-align:center;">T. Médio Resolução ↕</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaSecretarias"></tbody>
-                    </table>
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoMapa', 'btnToggleMapa', 'Mostrar Mapa')">
+                    🗺️ Mapa de Calor das Demandas <span>Tamanho e cor indicam o volume</span>
+                    <button class="btn-toggle-secao" id="btnToggleMapa">🔽 Mostrar Mapa</button>
+                </h3>
+                <div id="secaoMapa" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div id="mapaBairros" style="height: 450px; width: 100%; border-radius: 8px; z-index: 1;"></div>
                 </div>
             </div>
-            
-            <div class="chart-card">
-                <h3>Tipos de Solicitações (Gargalos)</h3>
-                <div class="chart-container"><canvas id="graficoCategorias"></canvas></div>
+
+            <div class="chart-card full-width">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoTendencia', 'btnToggleTend', 'Mostrar Gráfico')">
+                    Tendência de Abertura <span>Últimos 12 Meses (Data Fato)</span>
+                    <button class="btn-toggle-secao" id="btnToggleTend">🔽 Mostrar Gráfico</button>
+                </h3>
+                <div id="secaoTendencia" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
+                </div>
             </div>
 
             <div class="chart-card">
-                <h3>Responsáveis (Ordem) <span>Clicável</span></h3>
-                <div class="data-list" id="listaOrdem"></div>
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoPrioridade', 'btnTogglePrio', 'Mostrar Gráfico')">
+                    🚨 Distribuição de Prioridades <span>A partir de Jun/2026</span>
+                    <button class="btn-toggle-secao" id="btnTogglePrio">🔽 Mostrar Gráfico</button>
+                </h3>
+                <div id="secaoPrioridade" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="chart-container"><canvas id="graficoPrioridade"></canvas></div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoTempoPrio', 'btnToggleTempoPrio', 'Mostrar Gráfico')">
+                    ⏱️ Tempo Médio vs Prioridade <span>Apenas Concluídas (h)</span>
+                    <button class="btn-toggle-secao" id="btnToggleTempoPrio">🔽 Mostrar Gráfico</button>
+                </h3>
+                <div id="secaoTempoPrio" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="chart-container"><canvas id="graficoTempoPrioridade"></canvas></div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoStatus', 'btnToggleStatus', 'Mostrar Gráfico')">
+                    Distribuição de Situação
+                    <button class="btn-toggle-secao" id="btnToggleStatus">🔽 Mostrar Gráfico</button>
+                </h3>
+                <div id="secaoStatus" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="chart-container"><canvas id="graficoStatus"></canvas></div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoCat', 'btnToggleCat', 'Mostrar Gráfico')">
+                    Tipos de Solicitações (Gargalos)
+                    <button class="btn-toggle-secao" id="btnToggleCat">🔽 Mostrar Gráfico</button>
+                </h3>
+                <div id="secaoCat" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="chart-container"><canvas id="graficoCategorias"></canvas></div>
+                </div>
             </div>
 
             <div class="chart-card full-width">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoEquipe', 'btnToggleEq')">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoSecBar', 'btnToggleSecBar', 'Mostrar Gráfico')">
+                    🏢 Demandas por Secretaria (Gráfico)
+                    <button class="btn-toggle-secao" id="btnToggleSecBar">🔽 Mostrar Gráfico</button>
+                </h3>
+                <div id="secaoSecBar" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="chart-container" style="height: 300px;"><canvas id="graficoSecBar"></canvas></div>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoEficiencia', 'btnToggleEficiencia', 'Mostrar Tabela')">
+                    Eficiência por Secretaria/Órgão <span>Tabela Detalhada</span>
+                    <button class="btn-toggle-secao" id="btnToggleEficiencia">🔽 Mostrar Tabela</button>
+                </h3>
+                <div id="secaoEficiencia" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="data-table-container">
+                        <table class="data-table" id="tableSecretariasCompleta">
+                            <thead>
+                                <tr>
+                                    <th onclick="ordenarTabelaSec('nome')" title="Ordenar por Nome">Secretaria ↕</th>
+                                    <th onclick="ordenarTabelaSec('total')" title="Ordenar por Total" style="text-align:center;">Demandas ↕</th>
+                                    <th onclick="ordenarTabelaSec('concluidas')" title="Ordenar por Concluídas" style="text-align:center;">Concluídas ↕</th>
+                                    <th onclick="ordenarTabelaSec('taxa')" title="Ordenar por Taxa de Resolução" style="text-align:center;">Taxa Resol. ↕</th>
+                                    <th onclick="ordenarTabelaSec('somaTempo')" title="Ordenar por Tempo Médio" style="text-align:center;">T. Médio Resolução ↕</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaSecretarias"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoDiaSemana', 'btnToggleDia', 'Mostrar Gráfico')">
+                    📅 Demandas por Dia da Semana
+                    <button class="btn-toggle-secao" id="btnToggleDia">🔽 Mostrar Gráfico</button>
+                </h3>
+                <div id="secaoDiaSemana" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="chart-container"><canvas id="graficoDiaSemana"></canvas></div>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoOrdem', 'btnToggleOrdem', 'Mostrar Lista')">
+                    Responsáveis (Ordem)
+                    <button class="btn-toggle-secao" id="btnToggleOrdem">🔽 Mostrar Lista</button>
+                </h3>
+                <div id="secaoOrdem" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="data-list bairros-grid" id="listaOrdem"></div>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoEquipe', 'btnToggleEq', 'Mostrar Lista')">
                     Executores (Cuidando)
                     <button class="btn-toggle-secao" id="btnToggleEq">🔽 Mostrar Lista</button>
                 </h3>
@@ -278,7 +349,7 @@
             </div>
 
             <div class="chart-card full-width">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoSolicitantes', 'btnToggleSol')">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoSolicitantes', 'btnToggleSol', 'Mostrar Lista')">
                     Top Solicitantes (Cidadãos Frequentes) 
                     <button class="btn-toggle-secao" id="btnToggleSol">🔽 Mostrar Lista</button>
                 </h3>
@@ -288,7 +359,7 @@
             </div>
 
             <div class="chart-card full-width">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoGargalosSec', 'btnToggleGargalo')">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoGargalosSec', 'btnToggleGargalo', 'Mostrar Gargalos')">
                     Raio-X de Atrasos por Secretaria (> 30 dias) 
                     <button class="btn-toggle-secao" id="btnToggleGargalo" style="background:#fef2f2; color:#dc2626;">🚨 Mostrar Gargalos</button>
                 </h3>
@@ -298,33 +369,13 @@
             </div>
             
             <div class="chart-card full-width">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoBairros', 'btnToggleBairros')">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoBairros', 'btnToggleBairros', 'Mostrar Bairros')">
                     Top Bairros Atendidos
                     <button class="btn-toggle-secao" id="btnToggleBairros">🔽 Mostrar Bairros</button>
                 </h3>
                 <div id="secaoBairros" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
                     <div class="data-list bairros-grid" id="listaBairros"></div>
                 </div>
-            </div>
-
-            <div class="chart-card full-width" style="margin-bottom: 10px;">
-                <h3>🗺️ Mapa de Calor das Demandas <span>Tamanho e cor indicam o volume (clique na bolha)</span></h3>
-                <div id="mapaBairros" style="height: 450px; width: 100%; border-radius: 8px; z-index: 1;"></div>
-            </div>
-
-            <div class="chart-card full-width">
-                <h3>Tendência de Abertura <span>Últimos 12 Meses (Data Fato)</span></h3>
-                <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
-            </div>
-
-            <div class="chart-card">
-                <h3>🚨 Distribuição de Prioridades <span>A partir de Jun/2026</span></h3>
-                <div class="chart-container"><canvas id="graficoPrioridade"></canvas></div>
-            </div>
-
-            <div class="chart-card">
-                <h3>⏱️ Tempo Médio vs Prioridade <span>Apenas Concluídas (h)</span></h3>
-                <div class="chart-container"><canvas id="graficoTempoPrioridade"></canvas></div>
             </div>
 
         </div>
@@ -403,7 +454,7 @@
             return 'Desconhecido';
         }
 
-        async function conectarBanco() {
+        window.onload = async function() {
             try {
                 const authToken = localStorage.getItem('authToken');
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
@@ -418,7 +469,7 @@
                 alert("Erro ao conectar no banco de dados.");
                 document.getElementById('loading').style.display = 'none';
             }
-        }
+        };
 
         async function carregarDados() {
             const { data, error } = await db.from('demandas').select('*');
@@ -660,18 +711,18 @@
             }).join('');
         }
         
-        window.toggleSecao = function(secaoId, btnId) {
+        window.toggleSecao = function(secaoId, btnId, textoAbrir) {
             const secao = document.getElementById(secaoId);
             const btn = document.getElementById(btnId);
             if (secao.style.display === 'none') {
                 secao.style.display = 'block';
                 btn.innerHTML = '🔼 Esconder';
+                if (secaoId === 'secaoMapa' && leafletMap) {
+                    setTimeout(() => leafletMap.invalidateSize(), 100);
+                }
             } else {
                 secao.style.display = 'none';
-                if(btnId === 'btnToggleGargalo') btn.innerHTML = '🚨 Mostrar Gargalos';
-                else if (btnId === 'btnToggleEq') btn.innerHTML = '🔽 Mostrar Lista';
-                else if (btnId === 'btnToggleSol') btn.innerHTML = '🔽 Mostrar Lista';
-                else btn.innerHTML = '🔽 Mostrar Bairros';
+                btn.innerHTML = '🔽 ' + (textoAbrir || 'Mostrar');
             }
         }
 
@@ -871,24 +922,26 @@
                 const count = bairroCounts[b];
                 const coord = coordsBairros[b];
                 if(coord) {
-                    let raio = maxCount === 0 ? 10 : 10 + (count / maxCount) * 25; 
+                    let raio = maxCount === 0 ? 15 : 15 + (count / maxCount) * 20; 
                     let cor = '#3b82f6'; 
                     if(count > maxCount * 0.7 && count > 3) cor = '#ef4444'; 
                     else if(count > maxCount * 0.4 && count > 1) cor = '#f59e0b'; 
 
-                    const circle = L.circleMarker(coord, {
-                        radius: raio,
-                        fillColor: cor,
-                        color: '#ffffff',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.8
+                    const htmlBolha = `<div style="background-color: ${cor}; color: white; border-radius: 50%; width: ${raio*2}px; height: ${raio*2}px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: ${Math.max(10, raio/1.2)}px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${count}</div>`;
+
+                    const marker = L.marker(coord, {
+                        icon: L.divIcon({
+                            className: 'custom-bubble',
+                            html: htmlBolha,
+                            iconSize: [raio*2, raio*2],
+                            iconAnchor: [raio, raio]
+                        })
                     });
                     
-                    circle.bindTooltip(`<b>${b}</b><br>${count} demanda(s)`, { direction: 'top' });
-                    circle.on('click', () => { lidarCliqueLista(b, 'bairro'); });
+                    marker.bindTooltip(`<b>${b}</b><br>${count} demanda(s)`, { direction: 'top', offset: [0, -raio] });
+                    marker.on('click', () => { lidarCliqueLista(b, 'bairro'); });
                     
-                    circle.addTo(mapLayerGroup);
+                    marker.addTo(mapLayerGroup);
                 }
             }
         }
@@ -1045,6 +1098,8 @@
             });
             renderListaHTML('listaGargalosSec', atrasoCounts, 'secretaria_atrasada');
 
+            try { desenharMapa(); } catch(e) { console.error("Erro mapa:", e); }
+
             const mapMeses = {};
             demandasFiltradas.forEach(d => { const m = getMesAnoReal(d); if(m !== 'Desconhecido') mapMeses[m] = (mapMeses[m] || 0) + 1; });
             const ultimos12 = Object.keys(mapMeses).sort().slice(-12);
@@ -1099,8 +1154,6 @@
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: {weight: 'bold'}, formatter: val => val + 'h' } }, scales: { y: { beginAtZero: true } } }
                 });
             } catch(e){}
-
-            try { desenharMapa(); } catch(e) { console.error("Erro mapa:", e); }
         }
 
         window.exportarExcel = function() {
@@ -1141,7 +1194,7 @@
             link.click(); URL.revokeObjectURL(url);
         }
 
-        conectarBanco();
+        window.onload = conectarBanco;
     </script>
 </body>
 </html>
