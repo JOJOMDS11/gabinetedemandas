@@ -217,8 +217,9 @@
             <h3>
                 <span id="tituloLista">Lista de Demandas</span> 
                 <div style="display: flex; gap: 8px;">
-                    <button class="btn-ver-demanda" onclick="atualizarListaAtual(this)" style="background: #10b981; color: white; border: none; cursor: pointer; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold;">🔄 Atualizar Só Esta Lista</button>
-                    <button class="btn-fechar-lista" onclick="fecharLista()">✕ Fechar Detalhamento</button>
+                    <!-- AQUI O TIPO É BUTTON PRA NÃO RECARREGAR A PÁGINA NUNCA -->
+                    <button type="button" class="btn-ver-demanda" onclick="atualizarListaAtual(this)" style="background: #10b981; color: white; border: none; cursor: pointer; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold;">🔄 Atualizar Só Esta Lista</button>
+                    <button type="button" class="btn-fechar-lista" onclick="fecharLista()">✕ Fechar Detalhamento</button>
                 </div>
             </h3>
             <div id="containerItensLista" style="max-height: 400px; overflow-y: auto;"></div>
@@ -480,14 +481,20 @@
             btn.style.opacity = '0.7';
             btn.style.pointerEvents = 'none';
             try {
-                const { data, error } = await db.from('demandas').select('*');
-                if (!error) {
-                    todasDemandasRAW = data || [];
-                    aplicarFiltros(true); 
-                    if(recarregarListaAtual) recarregarListaAtual(); 
+                if (!db) {
+                    alert("Banco de dados não conectado. Atualize a página.");
+                    return;
                 }
+                const { data, error } = await db.from('demandas').select('*');
+                if (error) {
+                    alert("Erro ao buscar dados do Supabase: " + error.message);
+                    return;
+                }
+                todasDemandasRAW = data || [];
+                aplicarFiltros(true); 
+                if(recarregarListaAtual) recarregarListaAtual(); 
             } catch (err) {
-                console.error("Erro: ", err);
+                console.error("Erro na atualização: ", err);
             } finally {
                 btn.innerHTML = txtOrig;
                 btn.style.opacity = '1';
@@ -726,8 +733,8 @@
             }).join('');
         }
 
-        window.abrirListaKPI = function(tipo, tituloKpi, btnCard) {
-            recarregarListaAtual = () => abrirListaKPI(tipo, tituloKpi, btnCard);
+        window.abrirListaKPI = function(tipo, tituloKpi, btnCard, isRefresh = false) {
+            recarregarListaAtual = () => abrirListaKPI(tipo, tituloKpi, btnCard, true);
             if(btnCard && btnCard.classList.contains('fixo')) return;
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
             if(btnCard) btnCard.classList.add('ativo');
@@ -743,11 +750,11 @@
                 });
             }
 
-            iniciarListaNaTela(`Detalhamento: ${tituloKpi} (${f.length})`, f);
+            iniciarListaNaTela(`Detalhamento: ${tituloKpi} (${f.length})`, f, isRefresh);
         }
 
-        window.lidarCliqueLista = function(label, tipo) {
-            recarregarListaAtual = () => lidarCliqueLista(label, tipo);
+        window.lidarCliqueLista = function(label, tipo, isRefresh = false) {
+            recarregarListaAtual = () => lidarCliqueLista(label, tipo, true);
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
             let filtrado = [];
             
@@ -786,7 +793,7 @@
                 });
             }
             
-            iniciarListaNaTela(`Filtro: ${label} (${filtrado.length})`, filtrado);
+            iniciarListaNaTela(`Filtro: ${label} (${filtrado.length})`, filtrado, isRefresh);
         }
 
         function lidarCliqueGrafico(evt, elements, chart) {
@@ -798,20 +805,25 @@
             if(tituloG.includes('Situação')) f = demandasFiltradas.filter(d => d.status === label);
             else if(tituloG.includes('Tipos')) f = demandasFiltradas.filter(d => (d.tipo_solicitacao || 'Sem categoria') === label);
 
-            iniciarListaNaTela(`Resultado: ${label} (${f.length})`, f);
+            iniciarListaNaTela(`Resultado: ${label} (${f.length})`, f, false);
         }
 
-        function iniciarListaNaTela(titulo, lista) {
+        function iniciarListaNaTela(titulo, lista, isRefresh = false) {
             listaExibicao = lista.sort((a, b) => {
                 const dA = a.data_agendada ? new Date(a.data_agendada + 'T12:00:00').getTime() : new Date(a.criado_em).getTime();
                 const dB = b.data_agendada ? new Date(b.data_agendada + 'T12:00:00').getTime() : new Date(b.criado_em).getTime();
                 return dB - dA;
             });
-            paginaAtualLista = 1;
+            
+            if (!isRefresh) paginaAtualLista = 1;
+            
             document.getElementById('secaoLista').style.display = 'block';
             document.getElementById('tituloLista').textContent = titulo;
             renderizarListaNaTela();
-            document.getElementById('secaoLista').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            if (!isRefresh) {
+                document.getElementById('secaoLista').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
         window.fecharLista = function() {
@@ -828,6 +840,8 @@
             }
 
             const totalPags = Math.ceil(listaExibicao.length / itensPorPagina);
+            if (paginaAtualLista > totalPags && totalPags > 0) paginaAtualLista = totalPags;
+
             const inicio = (paginaAtualLista - 1) * itensPorPagina;
             const recorte = listaExibicao.slice(inicio, inicio + itensPorPagina);
 
@@ -846,17 +860,19 @@
                 const bairroLimpo = d.bairro ? d.bairro.replace(/'/g,"") : '';
                 const btnLocal = (ruaLimpa || bairroLimpo) ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ruaLimpa}, ${numLimpo}, ${bairroLimpo}, São Leopoldo, RS`)}" target="_blank" class="btn-ver-demanda" style="background:#10b981; color:white;">📍 Local</a>` : '';
 
+                // --- LÓGICA DO ERRO DE ID ---
                 const num = d.numero_demanda || '';
                 let erroTxt = '';
                 if (num.length !== 14) {
-                    erroTxt = `Tamanho Incorreto (${num.length} dígitos)`;
+                    erroTxt = `Tamanho Incorreto (${num.length} dígitos, o certo é 14)`;
                 } else {
                     const ano = num.substring(4,8);
                     if (parseInt(ano) < 2026) {
                         erroTxt = `Ano Antigo (${ano})`;
                     }
                 }
-                const tagErro = erroTxt ? `<span class="detalhe-tag" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight: 800;">⚠️ Erro ID: ${erroTxt}</span>` : '';
+                const tagErro = erroTxt ? `<span class="detalhe-tag" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight: 800;">⚠️ Erro: ${erroTxt}</span>` : '';
+                // -----------------------------
 
                 return `
                     <div class="lista-item">
@@ -1189,7 +1205,7 @@
             link.click(); URL.revokeObjectURL(url);
         }
 
-        window.onload = conectarBanco;
+        // Removi a maldita linha do 'window.onload = conectarBanco;' que estava aqui e quebrava tudo.
     </script>
 </body>
 </html>
