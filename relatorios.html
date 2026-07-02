@@ -132,6 +132,7 @@
     <div class="navbar">
         <h1>📊 Gabinete Analytics PRO</h1>
         <div class="nav-actions">
+            <button class="btn-voltar" onclick="atualizarDadosSemPerderFiltro(this)" style="background: #2563eb; border-color: #1d4ed8; cursor: pointer;">🔄 Atualizar Dados</button>
             <button class="btn-reset-nav" onclick="resetarFiltros()">🧹 Limpar Filtros / Visão Atual</button>
             <a href="dashboard.html" class="btn-voltar">← Voltar ao Painel</a>
         </div>
@@ -268,7 +269,6 @@
                 <div class="data-list" id="listaOrdem"></div>
             </div>
 
-            <!-- Listas em Acordeão (Fechadas por padrão) -->
             <div class="chart-card full-width">
                 <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoEquipe', 'btnToggleEq', 'Mostrar Lista')">
                     Executores (Cuidando)
@@ -309,7 +309,6 @@
                 </div>
             </div>
 
-            <!-- Gráficos movidos para o fundo (Sempre Abertos) -->
             <div class="chart-card full-width" style="margin-bottom: 10px;">
                 <h3>🗺️ Mapa de Calor das Demandas <span>Tamanho e cor indicam o volume (clique na bolha)</span></h3>
                 <div id="mapaBairros" style="height: 450px; width: 100%; border-radius: 8px; z-index: 1;"></div>
@@ -465,6 +464,30 @@
             if (filtroErroFormato) btn.classList.add('ativo');
             else btn.classList.remove('ativo');
             aplicarFiltros();
+        }
+        
+        // FUNÇÃO NOVA PARA ATUALIZAR SEM PERDER O FILTRO
+        window.atualizarDadosSemPerderFiltro = async function(btnElement) {
+            const textoOriginal = btnElement.innerHTML;
+            btnElement.innerHTML = '⏳ Atualizando...';
+            btnElement.style.pointerEvents = 'none';
+            btnElement.style.opacity = '0.7';
+
+            try {
+                const { data, error } = await db.from('demandas').select('*');
+                if (!error) {
+                    todasDemandasRAW = data || [];
+                    aplicarFiltros(); 
+                } else {
+                    console.error("Erro ao puxar dados: ", error);
+                }
+            } catch (err) {
+                console.error("Erro de conexão: ", err);
+            } finally {
+                btnElement.innerHTML = textoOriginal;
+                btnElement.style.pointerEvents = 'auto';
+                btnElement.style.opacity = '1';
+            }
         }
 
         window.resetarFiltros = function() {
