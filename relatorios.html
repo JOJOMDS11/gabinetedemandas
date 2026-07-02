@@ -132,7 +132,6 @@
     <div class="navbar">
         <h1>📊 Gabinete Analytics PRO</h1>
         <div class="nav-actions">
-            <button class="btn-voltar" onclick="atualizarDadosSemPerderFiltro(this)" style="background: #2563eb; border-color: #1d4ed8; cursor: pointer;">🔄 Atualizar Dados</button>
             <button class="btn-reset-nav" onclick="resetarFiltros()">🧹 Limpar Filtros / Visão Atual</button>
             <a href="dashboard.html" class="btn-voltar">← Voltar ao Painel</a>
         </div>
@@ -215,7 +214,13 @@
         </div>
 
         <div class="secao-lista" id="secaoLista">
-            <h3><span id="tituloLista">Lista de Demandas</span> <button class="btn-fechar-lista" onclick="fecharLista()">✕ Fechar Detalhamento</button></h3>
+            <h3>
+                <span id="tituloLista">Lista de Demandas</span> 
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-ver-demanda" onclick="atualizarListaAtual(this)" style="background: #10b981; color: white; border: none; cursor: pointer; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold;">🔄 Atualizar Só Esta Lista</button>
+                    <button class="btn-fechar-lista" onclick="fecharLista()">✕ Fechar Detalhamento</button>
+                </div>
+            </h3>
             <div id="containerItensLista" style="max-height: 400px; overflow-y: auto;"></div>
             <div class="paginacao">
                 <button id="btnListaAnt" onclick="mudarPaginaLista(-1)">❮ Anterior</button>
@@ -269,6 +274,7 @@
                 <div class="data-list" id="listaOrdem"></div>
             </div>
 
+            <!-- Listas em Acordeão (Fechadas por padrão) -->
             <div class="chart-card full-width">
                 <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoEquipe', 'btnToggleEq', 'Mostrar Lista')">
                     Executores (Cuidando)
@@ -309,6 +315,7 @@
                 </div>
             </div>
 
+            <!-- Gráficos movidos para o fundo (Sempre Abertos) -->
             <div class="chart-card full-width" style="margin-bottom: 10px;">
                 <h3>🗺️ Mapa de Calor das Demandas <span>Tamanho e cor indicam o volume (clique na bolha)</span></h3>
                 <div id="mapaBairros" style="height: 450px; width: 100%; border-radius: 8px; z-index: 1;"></div>
@@ -360,6 +367,7 @@
         
         let leafletMap = null;
         let mapLayerGroup = null;
+        let recarregarListaAtual = null;
 
         const coordsBairros = {
             'CENTRO': [-29.760, -51.140],
@@ -465,28 +473,25 @@
             else btn.classList.remove('ativo');
             aplicarFiltros();
         }
-        
-        // FUNÇÃO NOVA PARA ATUALIZAR SEM PERDER O FILTRO
-        window.atualizarDadosSemPerderFiltro = async function(btnElement) {
-            const textoOriginal = btnElement.innerHTML;
-            btnElement.innerHTML = '⏳ Atualizando...';
-            btnElement.style.pointerEvents = 'none';
-            btnElement.style.opacity = '0.7';
 
+        window.atualizarListaAtual = async function(btn) {
+            const txtOrig = btn.innerHTML;
+            btn.innerHTML = '⏳ Carregando...';
+            btn.style.opacity = '0.7';
+            btn.style.pointerEvents = 'none';
             try {
                 const { data, error } = await db.from('demandas').select('*');
                 if (!error) {
                     todasDemandasRAW = data || [];
-                    aplicarFiltros(); 
-                } else {
-                    console.error("Erro ao puxar dados: ", error);
+                    aplicarFiltros(true); 
+                    if(recarregarListaAtual) recarregarListaAtual(); 
                 }
             } catch (err) {
-                console.error("Erro de conexão: ", err);
+                console.error("Erro: ", err);
             } finally {
-                btnElement.innerHTML = textoOriginal;
-                btnElement.style.pointerEvents = 'auto';
-                btnElement.style.opacity = '1';
+                btn.innerHTML = txtOrig;
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
             }
         }
 
@@ -501,8 +506,8 @@
             aplicarFiltros();
         }
 
-        window.aplicarFiltros = function() {
-            fecharLista();
+        window.aplicarFiltros = function(manterLista = false) {
+            if (!manterLista) fecharLista();
             const vBusca = document.getElementById('filtroBusca').value.toLowerCase().trim();
             const vMes = document.getElementById('filtroMes').value;
             const vSec = document.getElementById('filtroSec').value;
@@ -722,6 +727,7 @@
         }
 
         window.abrirListaKPI = function(tipo, tituloKpi, btnCard) {
+            recarregarListaAtual = () => abrirListaKPI(tipo, tituloKpi, btnCard);
             if(btnCard && btnCard.classList.contains('fixo')) return;
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
             if(btnCard) btnCard.classList.add('ativo');
@@ -741,6 +747,7 @@
         }
 
         window.lidarCliqueLista = function(label, tipo) {
+            recarregarListaAtual = () => lidarCliqueLista(label, tipo);
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
             let filtrado = [];
             
