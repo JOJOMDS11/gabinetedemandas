@@ -26,10 +26,12 @@
         .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;}
         
-        .filtros-avancados { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; flex: 1; min-width: 150px;}
+        /* Layout dos Filtros Adaptado para Celular */
+        .filtros-avancados { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 13px; outline: none; }
+        .filtros-avancados select { flex: 1; min-width: calc(50% - 10px); }
+        #buscaGeral { flex: 1; min-width: 100%; }
         .filtros-avancados input:focus, .filtros-avancados select:focus { border-color: #185199; }
-        #buscaGeral { flex: 2; min-width: 200px; }
         
         .filtros { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .filtro-btn { padding: 6px 14px; border: 1px solid #185199; background: white; color: #185199; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 13px; }
@@ -131,13 +133,13 @@
         <div class="filtros-avancados">
             <input type="text" id="buscaGeral" placeholder="🔍 Buscar assunto, solicitante, rua, Nº, data...">
             <select id="filtroCategoria" onchange="mudarPagina(1); renderDemandas()">
-                <option value="">📁 Filtro: Todas Categorias</option>
+                <option value="">📁 Todas Categorias</option>
                 <option value="Agendas">📅 Agendas e Internos</option>
                 <option value="Demandas">🚧 Demandas (Rua/Externa)</option>
                 <option value="Legislativo">⚖️ Legislativo e Projetos</option>
             </select>
             <select id="filtroResp" onchange="mudarPagina(1); renderDemandas()">
-                <option value="">👥 Filtro: Toda a Equipe</option>
+                <option value="">👥 Toda a Equipe</option>
                 <option value="Daniel">Daniel</option>
                 <option value="João Pedro">João Pedro</option>
                 <option value="Alemão">Alemão</option>
@@ -153,7 +155,7 @@
                 <option value="Crítica">🔴 Crítica</option>
             </select>
             <select id="filtroBairroMain" onchange="mudarPagina(1); renderDemandas()">
-                <option value="">📍 Filtro: Todos Bairros</option>
+                <option value="">📍 Todos os Bairros</option>
             </select>
         </div>
 
@@ -255,12 +257,16 @@
                 <span>Selecione as demandas para o ofício:</span>
                 <span id="contadorWordBadge" style="background: #185199; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">0 selecionadas</span>
             </p>
-            <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
-                <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar nesta lista..." oninput="filtrarListaWord()" style="flex:1; min-width:180px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
-                <select id="filtroStatusWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; flex:1; min-width:130px;"></select>
-                <select id="filtroBairroWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; flex:1; min-width:130px;"></select>
-                <button onclick="toggleMarcarTodasWord()" style="background:#27ae60; color:white; border:none; padding:10px 15px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:13px; white-space:nowrap; flex:none;">☑️ Marcar Visíveis</button>
+            
+            <div style="display:flex; flex-direction: column; gap:8px; margin-bottom:10px;">
+                <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar nesta lista..." oninput="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
+                <div style="display:flex; gap:8px;">
+                    <select id="filtroStatusWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; flex:1;"></select>
+                    <select id="filtroBairroWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; flex:1;"></select>
+                </div>
+                <button onclick="toggleMarcarTodasWord()" style="background:#27ae60; color:white; border:none; padding:10px 15px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:13px; width:100%;">☑️ Marcar Visíveis</button>
             </div>
+            
             <div id="listaDemandasWord" style="max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px; margin-bottom: 15px;"></div>
             <div class="modal-botoes" style="margin-top: 20px;">
                 <button style="background:#e0e0e0; color:#333; flex:0.4; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalWord()">Cancelar</button>
@@ -505,7 +511,7 @@
                     listaBairrosCarregada = data.map(r => r.nome.toUpperCase()).sort(); 
                     const selectBairroMain = document.getElementById('filtroBairroMain');
                     if(selectBairroMain) {
-                        selectBairroMain.innerHTML = '<option value="">📍 Filtro: Todos Bairros</option>' + listaBairrosCarregada.map(b => `<option value="${DOMPurify.sanitize(b)}">${DOMPurify.sanitize(b)}</option>`).join('');
+                        selectBairroMain.innerHTML = '<option value="">📍 Todos os Bairros</option>' + listaBairrosCarregada.map(b => `<option value="${DOMPurify.sanitize(b)}">${DOMPurify.sanitize(b)}</option>`).join('');
                     }
                 }
             } catch (e) { }
@@ -1182,7 +1188,7 @@
 
             const bairrosUnicos = [...new Set(demandasParaWord.map(d => (d.bairro || '').trim().toUpperCase()).filter(b => b !== ''))].sort();
             const selectBairroWord = document.getElementById('filtroBairroWord');
-            selectBairroWord.innerHTML = '<option value="">Todos os Bairros</option>' + bairrosUnicos.map(b => `<option value="${DOMPurify.sanitize(b)}">${DOMPurify.sanitize(b)}</option>`).join('');
+            selectBairroWord.innerHTML = '<option value="">📍 Todos os Bairros</option>' + bairrosUnicos.map(b => `<option value="${DOMPurify.sanitize(b)}">${DOMPurify.sanitize(b)}</option>`).join('');
 
             const container = document.getElementById('listaDemandasWord');
             document.getElementById('buscaModalWord').value = ''; 
