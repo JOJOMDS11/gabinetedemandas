@@ -26,12 +26,19 @@
         .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;}
         
-        /* Layout dos Filtros Adaptado para Celular */
         .filtros-avancados { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
         .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 13px; outline: none; }
-        .filtros-avancados select { flex: 1; min-width: calc(50% - 10px); }
-        #buscaGeral { flex: 1; min-width: 100%; }
         .filtros-avancados input:focus, .filtros-avancados select:focus { border-color: #185199; }
+        
+        /* Ajuste Sênior Mobile para os Filtros */
+        @media (max-width: 600px) {
+            #buscaGeral { width: 100%; flex: 1 1 100%; }
+            .filtros-avancados select { flex: 1 1 calc(50% - 8px); min-width: 140px; }
+        }
+        @media (min-width: 601px) {
+            #buscaGeral { flex: 2; min-width: 200px; }
+            .filtros-avancados select { flex: 1; min-width: 140px; }
+        }
         
         .filtros { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .filtro-btn { padding: 6px 14px; border: 1px solid #185199; background: white; color: #185199; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 13px; }
@@ -1150,6 +1157,7 @@
                 lbl.style.display = (matchTermo && matchStatus && matchBairro) ? 'flex' : 'none';
             });
             wordTodasMarcadas = false;
+            atualizarContadorWord();
         }
 
         let wordTodasMarcadas = false;
