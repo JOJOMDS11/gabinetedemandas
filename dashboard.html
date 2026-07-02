@@ -27,9 +27,9 @@
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;}
         
         .filtros-avancados { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; }
+        .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; flex: 1; min-width: 150px;}
         .filtros-avancados input:focus, .filtros-avancados select:focus { border-color: #185199; }
-        #buscaGeral { flex: 1; min-width: 200px; }
+        #buscaGeral { flex: 2; min-width: 200px; }
         
         .filtros { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .filtro-btn { padding: 6px 14px; border: 1px solid #185199; background: white; color: #185199; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 13px; }
@@ -151,6 +151,9 @@
                 <option value="Normal">🟡 Normal</option>
                 <option value="Alta">🟠 Alta</option>
                 <option value="Crítica">🔴 Crítica</option>
+            </select>
+            <select id="filtroBairroMain" onchange="mudarPagina(1); renderDemandas()">
+                <option value="">📍 Filtro: Todos Bairros</option>
             </select>
         </div>
 
@@ -452,6 +455,7 @@
                     } catch(e) { }
                 })();
 
+                await carregarBairros();
                 await carregarDemandas();
                 await carregarListaSecretariasMenuQuick();
 
@@ -491,6 +495,20 @@
                         }
                     ).subscribe();
             } catch (err) { document.getElementById('demandas').innerHTML = '<p style="color:red;text-align:center;grid-column:1/-1;">Erro de conexão.</p>'; }
+        }
+
+        let listaBairrosCarregada = [];
+        async function carregarBairros() {
+            try {
+                const { data, error } = await db.from('bairros').select('nome').order('nome');
+                if (!error && data && data.length > 0) { 
+                    listaBairrosCarregada = data.map(r => r.nome.toUpperCase()).sort(); 
+                    const selectBairroMain = document.getElementById('filtroBairroMain');
+                    if(selectBairroMain) {
+                        selectBairroMain.innerHTML = '<option value="">📍 Filtro: Todos Bairros</option>' + listaBairrosCarregada.map(b => `<option value="${DOMPurify.sanitize(b)}">${DOMPurify.sanitize(b)}</option>`).join('');
+                    }
+                }
+            } catch (e) { }
         }
 
         async function carregarListaSecretariasMenuQuick() {
@@ -747,6 +765,7 @@
             document.getElementById('filtroCategoria').value = '';
             document.getElementById('filtroResp').value = '';
             document.getElementById('filtroPrioridade').value = '';
+            document.getElementById('filtroBairroMain').value = '';
             document.getElementById('filtroPeriodo').value = '';
             document.getElementById('inputMesCustom').value = '';
             document.getElementById('inputMesCustom').style.display = 'none';
@@ -830,6 +849,7 @@
             const respSelecionado = document.getElementById('filtroResp').value;
             const catSelecionada = document.getElementById('filtroCategoria').value;
             const prioridadeSelecionada = document.getElementById('filtroPrioridade').value;
+            const bairroSelecionado = document.getElementById('filtroBairroMain').value;
             const periodoSelecionado = document.getElementById('filtroPeriodo').value;
 
             let lista = todasDemandas;
@@ -852,6 +872,10 @@
 
             if (prioridadeSelecionada) {
                 lista = lista.filter(d => (d.prioridade || 'Normal') === prioridadeSelecionada);
+            }
+
+            if (bairroSelecionado) {
+                lista = lista.filter(d => (d.bairro || '').toUpperCase().trim() === bairroSelecionado);
             }
             
             if (periodoSelecionado) {
