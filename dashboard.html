@@ -250,11 +250,13 @@
             </div>
             <p style="font-size:13px; color:#555; margin-bottom:8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
                 <span>Selecione as demandas para o ofício:</span>
-                <span id="contadorWordBadge" onclick="toggleMarcarTodasWord()" style="background: #185199; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s;" title="Clique para Marcar/Desmarcar todas">0 selecionadas</span>
+                <span id="contadorWordBadge" style="background: #185199; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">0 selecionadas</span>
             </p>
-            <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
-                <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar demandas nesta lista..." oninput="filtrarListaWord()" style="flex:1; min-width:200px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
-                <select id="filtroStatusWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; min-width: 150px;"></select>
+            <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                <input type="text" id="buscaModalWord" placeholder="🔍 Filtrar nesta lista..." oninput="filtrarListaWord()" style="flex:1; min-width:180px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc;">
+                <select id="filtroStatusWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; flex:1; min-width:130px;"></select>
+                <select id="filtroBairroWord" onchange="filtrarListaWord()" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; background:#f8fafc; flex:1; min-width:130px;"></select>
+                <button onclick="toggleMarcarTodasWord()" style="background:#27ae60; color:white; border:none; padding:10px 15px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:13px; white-space:nowrap; flex:none;">☑️ Marcar Visíveis</button>
             </div>
             <div id="listaDemandasWord" style="max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px; margin-bottom: 15px;"></div>
             <div class="modal-botoes" style="margin-top: 20px;">
@@ -1103,22 +1105,31 @@
         window.filtrarListaWord = function() {
             const termo = document.getElementById('buscaModalWord').value.toLowerCase().trim();
             const statusFiltro = document.getElementById('filtroStatusWord').value;
+            const bairroFiltro = document.getElementById('filtroBairroWord').value.toUpperCase();
+            
             const labels = document.querySelectorAll('.label-word-demanda');
             labels.forEach(lbl => {
                 const texto = (lbl.getAttribute('data-texto') || '').toLowerCase();
                 const statusDaLabel = lbl.getAttribute('data-status') || '';
+                const bairroDaLabel = lbl.getAttribute('data-bairro') || '';
+                
                 const matchTermo = !termo || texto.includes(termo);
                 const matchStatus = !statusFiltro || statusDaLabel.trim() === statusFiltro.trim();
-                lbl.style.display = (matchTermo && matchStatus) ? 'flex' : 'none';
+                const matchBairro = !bairroFiltro || bairroDaLabel === bairroFiltro;
+                
+                lbl.style.display = (matchTermo && matchStatus && matchBairro) ? 'flex' : 'none';
             });
+            wordTodasMarcadas = false;
         }
 
         let wordTodasMarcadas = false;
-        
         window.toggleMarcarTodasWord = function() {
             const checkboxes = document.querySelectorAll('.check-word-demanda');
             const visiveis = Array.from(checkboxes).filter(chk => chk.closest('.label-word-demanda').style.display !== 'none');
-            wordTodasMarcadas = !wordTodasMarcadas;
+            
+            const todasVisiveisMarcadas = visiveis.length > 0 && visiveis.every(chk => chk.checked);
+            wordTodasMarcadas = !todasVisiveisMarcadas;
+            
             visiveis.forEach(chk => chk.checked = wordTodasMarcadas);
             atualizarContadorWord();
         }
@@ -1126,9 +1137,9 @@
         window.atualizarContadorWord = function() {
             const qtd = document.querySelectorAll('.check-word-demanda:checked').length;
             const badge = document.getElementById('contadorWordBadge');
-            badge.textContent = `${qtd} selecionada${qtd !== 1 ? 's' : ''} (Clique para Inverter)`;
-            if(qtd > 0) { badge.style.background = '#27ae60'; wordTodasMarcadas = true; }
-            else { badge.style.background = '#185199'; wordTodasMarcadas = false; }
+            badge.textContent = `${qtd} selecionada${qtd !== 1 ? 's' : ''}`;
+            if(qtd > 0) { badge.style.background = '#27ae60'; }
+            else { badge.style.background = '#185199'; }
         }
 
         window.abrirModalWord = function() {
@@ -1145,9 +1156,14 @@
             const selectStatusWord = document.getElementById('filtroStatusWord');
             selectStatusWord.innerHTML = '<option value="">Todos os Status</option>' + statusAtivos.map(s => `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`).join('');
 
+            const bairrosUnicos = [...new Set(demandasParaWord.map(d => (d.bairro || '').trim().toUpperCase()).filter(b => b !== ''))].sort();
+            const selectBairroWord = document.getElementById('filtroBairroWord');
+            selectBairroWord.innerHTML = '<option value="">Todos os Bairros</option>' + bairrosUnicos.map(b => `<option value="${DOMPurify.sanitize(b)}">${DOMPurify.sanitize(b)}</option>`).join('');
+
             const container = document.getElementById('listaDemandasWord');
             document.getElementById('buscaModalWord').value = ''; 
             selectStatusWord.value = ''; 
+            selectBairroWord.value = '';
             
             container.innerHTML = demandasParaWord.map(d => {
                 const exp = DOMPurify.sanitize(d.expediente || 'S/Exp');
@@ -1155,12 +1171,13 @@
                 const prot = DOMPurify.sanitize(d.protocolo ? '156: ' + d.protocolo : '');
                 const assunto = DOMPurify.sanitize(d.assunto || '');
                 const statusTag = d.status || '';
+                const bairroSafe = DOMPurify.sanitize((d.bairro || '').toUpperCase());
                 
                 let idText = `${exp} | ${pdp}`;
                 if (prot && !d.doc_numero) idText = `${exp} | ${prot}`;
                 if (exp === 'S/Exp' && pdp === 'S/PDP' && prot) idText = prot;
 
-                return `<label class="label-word-demanda" data-status="${statusTag}" data-texto="${(idText + ' ' + (d.assunto || '') + ' ' + statusTag).toLowerCase().replace(/"/g, '')}" style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; padding-bottom:10px; padding-top:10px; border-bottom:1px solid #e2e8f0; background: white; border-radius: 4px;"><input type="checkbox" class="check-word-demanda" value="${d.id}" onchange="atualizarContadorWord()" style="margin-top:3px; margin-left: 10px; transform: scale(1.2);"><div style="font-size:13px; color:#333; line-height: 1.4; width:100%; padding-right: 10px;"><b style="color: #185199;">${idText}</b> <span style="float:right; font-size:10px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${statusTag}</span><br><span style="color:#555;">${assunto}</span></div></label>`;
+                return `<label class="label-word-demanda" data-status="${statusTag}" data-bairro="${bairroSafe}" data-texto="${(idText + ' ' + (d.assunto || '') + ' ' + statusTag).toLowerCase().replace(/"/g, '')}" style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; padding-bottom:10px; padding-top:10px; border-bottom:1px solid #e2e8f0; background: white; border-radius: 4px;"><input type="checkbox" class="check-word-demanda" value="${d.id}" onchange="atualizarContadorWord()" style="margin-top:3px; margin-left: 10px; transform: scale(1.2);"><div style="font-size:13px; color:#333; line-height: 1.4; width:100%; padding-right: 10px;"><b style="color: #185199;">${idText}</b> <span style="float:right; font-size:10px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${statusTag}</span><br><span style="color:#555;">${assunto}</span></div></label>`;
             }).join('');
             
             wordTodasMarcadas = false; atualizarContadorWord();
