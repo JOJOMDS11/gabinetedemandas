@@ -217,7 +217,6 @@
             <h3>
                 <span id="tituloLista">Lista de Demandas</span> 
                 <div style="display: flex; gap: 8px;">
-                    <!-- AQUI O TIPO É BUTTON PRA NÃO RECARREGAR A PÁGINA NUNCA -->
                     <button type="button" class="btn-ver-demanda" onclick="atualizarListaAtual(this)" style="background: #10b981; color: white; border: none; cursor: pointer; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold;">🔄 Atualizar Só Esta Lista</button>
                     <button type="button" class="btn-fechar-lista" onclick="fecharLista()">✕ Fechar Detalhamento</button>
                 </div>
@@ -539,16 +538,25 @@
                 else if (vStat === 'em_execucao') passaStat = !arrayAbertas.includes(d.status) && !arrayConcluidas.includes(d.status);
                 else passaStat = d.status === vStat;
 
+                // --- NOVA LÓGICA DO FILTRO DE ERRO ---
                 if (filtroErroFormato) {
-                    const num = d.numero_demanda || '';
                     let hasError = false;
-                    if (num.length !== 14) hasError = true;
-                    else {
-                        const ano = num.substring(4,8);
-                        if (parseInt(ano) < 2026) hasError = true;
-                    }
+                    const num = (d.numero_demanda || '').trim();
+                    const secInfo = (d.secretaria || '').trim().toUpperCase();
+                    const bOff = (d.bairro || '').trim().toUpperCase();
+                    
+                    if (!num || num.length !== 14) hasError = true;
+                    if (!secInfo || !secretariasOficiais.includes(secInfo)) hasError = true;
+                    if (!bOff || typeof coordsBairros[bOff] === 'undefined') hasError = true;
+                    
+                    // Se o Doc Interno tem alguma regra para ser pego nesse filtro geral,
+                    // como por exemplo faltar a informação, você pode adicionar a lógica aqui:
+                    // const docInt = (d.doc_numero || '').trim();
+                    // if (!docInt) hasError = true;
+
                     if (!hasError) passaErro = false;
                 }
+                // ------------------------------------
 
                 return passaBusca && passaMes && passaSec && passaStat && passaErro;
             });
@@ -860,18 +868,23 @@
                 const bairroLimpo = d.bairro ? d.bairro.replace(/'/g,"") : '';
                 const btnLocal = (ruaLimpa || bairroLimpo) ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ruaLimpa}, ${numLimpo}, ${bairroLimpo}, São Leopoldo, RS`)}" target="_blank" class="btn-ver-demanda" style="background:#10b981; color:white;">📍 Local</a>` : '';
 
-                // --- LÓGICA DO ERRO DE ID ---
-                const num = d.numero_demanda || '';
-                let erroTxt = '';
-                if (num.length !== 14) {
-                    erroTxt = `Tamanho Incorreto (${num.length} dígitos, o certo é 14)`;
-                } else {
-                    const ano = num.substring(4,8);
-                    if (parseInt(ano) < 2026) {
-                        erroTxt = `Ano Antigo (${ano})`;
-                    }
-                }
-                const tagErro = erroTxt ? `<span class="detalhe-tag" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight: 800;">⚠️ Erro: ${erroTxt}</span>` : '';
+                // --- LÓGICA DE AVISOS DE ESTRUTURA (ERROS REAIS) ---
+                const num = (d.numero_demanda || '').trim();
+                const secInfo = (d.secretaria || '').trim().toUpperCase();
+                const bOff = (d.bairro || '').trim().toUpperCase();
+                // const docInt = (d.doc_numero || '').trim(); // Deixei engatilhado se precisar validar futuramente
+                
+                let errosEncontrados = [];
+                if (!num || num.length !== 14) errosEncontrados.push('Formato ID');
+                if (!secInfo || !secretariasOficiais.includes(secInfo)) errosEncontrados.push('Secretaria');
+                if (!bOff || typeof coordsBairros[bOff] === 'undefined') errosEncontrados.push('Bairro');
+                
+                // Se o Doc Interno tem alguma regra para aparecer aqui (ex: precisa de um número de doc se a demanda for tipo X, etc)
+                // if (!docInt) errosEncontrados.push('Doc Interno');
+                
+                const tagErro = errosEncontrados.length > 0 
+                    ? `<span class="detalhe-tag" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight: 800;">⚠️ Erros: ${errosEncontrados.join(', ')}</span>` 
+                    : '';
                 // -----------------------------
 
                 return `
@@ -1204,8 +1217,6 @@
             link.download = `Backup_DB_COMPLETO_${new Date().toISOString().split('T')[0]}.json`;
             link.click(); URL.revokeObjectURL(url);
         }
-
-        // Removi a maldita linha do 'window.onload = conectarBanco;' que estava aqui e quebrava tudo.
     </script>
 </body>
 </html>
