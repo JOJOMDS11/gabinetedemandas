@@ -399,6 +399,9 @@
 
         const arrayAbertas = ['Pendente', 'Aguardando Aprovação'];
         const arrayConcluidas = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
+        // Lista dos status atualmente usados no sistema (ver-demanda.html). Qualquer status fora
+        // dessa lista (ex: status antigo/descontinuado) é tratado como erro no relatório.
+        const statusOficiais = ['Pendente', 'Aguardando Aprovação', 'Aprovada', 'Em Andamento', '156 Solicitado', 'Expediente (Legis) Gerado', 'Aguardando Exec. Secretaria', 'Concluída', 'Rejeitada', 'Arquivada'];
         const paletaCores = ['#1a365d', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#ef4444', '#64748b', '#d946ef'];
 
         const secretariasOficiais = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
@@ -544,10 +547,16 @@
                     const num = (d.numero_demanda || '').trim();
                     const secInfo = (d.secretaria || '').trim().toUpperCase();
                     const bOff = (d.bairro || '').trim().toUpperCase();
+                    const statInfo = (d.status || '').trim();
                     
+                    // Erro real 1: número da demanda em formato antigo (não tem os 14 dígitos do formato atual)
                     if (!num || num.length !== 14) hasError = true;
+                    // Erro real 2: secretaria em formato antigo / fora da lista oficial
                     if (!secInfo || !secretariasOficiais.includes(secInfo)) hasError = true;
+                    // Erro real 3: bairro não cadastrado na base de coordenadas (não existe na Db)
                     if (!bOff || typeof coordsBairros[bOff] === 'undefined') hasError = true;
+                    // Erro real 4: status antigo/descontinuado, fora da lista usada atualmente
+                    if (!statInfo || !statusOficiais.includes(statInfo)) hasError = true;
                     
                     // Se o Doc Interno tem alguma regra para ser pego nesse filtro geral,
                     // como por exemplo faltar a informação, você pode adicionar a lógica aqui:
@@ -872,12 +881,18 @@
                 const num = (d.numero_demanda || '').trim();
                 const secInfo = (d.secretaria || '').trim().toUpperCase();
                 const bOff = (d.bairro || '').trim().toUpperCase();
+                const statInfo = (d.status || '').trim();
                 // const docInt = (d.doc_numero || '').trim(); // Deixei engatilhado se precisar validar futuramente
                 
                 let errosEncontrados = [];
-                if (!num || num.length !== 14) errosEncontrados.push('Formato ID');
+                // Erro real 1: número da demanda em formato antigo (não tem os 14 dígitos do formato atual)
+                if (!num || num.length !== 14) errosEncontrados.push('Formato Antigo');
+                // Erro real 2: secretaria em formato antigo / fora da lista oficial
                 if (!secInfo || !secretariasOficiais.includes(secInfo)) errosEncontrados.push('Secretaria');
+                // Erro real 3: bairro não cadastrado na base de coordenadas (não existe na Db)
                 if (!bOff || typeof coordsBairros[bOff] === 'undefined') errosEncontrados.push('Bairro');
+                // Erro real 4: status antigo/descontinuado, fora da lista usada atualmente
+                if (!statInfo || !statusOficiais.includes(statInfo)) errosEncontrados.push('Status');
                 
                 // Se o Doc Interno tem alguma regra para aparecer aqui (ex: precisa de um número de doc se a demanda for tipo X, etc)
                 // if (!docInt) errosEncontrados.push('Doc Interno');
