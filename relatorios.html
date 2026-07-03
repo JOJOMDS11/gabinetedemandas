@@ -554,7 +554,7 @@
                     // Erro real 2: secretaria em formato antigo / fora da lista oficial
                     if (!secInfo || !secretariasOficiais.includes(secInfo)) hasError = true;
                     // Erro real 3: bairro não cadastrado na base de coordenadas (não existe na Db)
-                    if (!bOff || typeof coordsBairros[bOff] === 'undefined') hasError = true;
+                    if (bOff && typeof coordsBairros[bOff] === 'undefined') hasError = true;
                     // Erro real 4: status antigo/descontinuado, fora da lista usada atualmente
                     if (!statInfo || !statusOficiais.includes(statInfo)) hasError = true;
                     
@@ -890,7 +890,7 @@
                 // Erro real 2: secretaria em formato antigo / fora da lista oficial
                 if (!secInfo || !secretariasOficiais.includes(secInfo)) errosEncontrados.push('Secretaria');
                 // Erro real 3: bairro não cadastrado na base de coordenadas (não existe na Db)
-                if (!bOff || typeof coordsBairros[bOff] === 'undefined') errosEncontrados.push('Bairro');
+                if (bOff && typeof coordsBairros[bOff] === 'undefined') errosEncontrados.push('Bairro');
                 // Erro real 4: status antigo/descontinuado, fora da lista usada atualmente
                 if (!statInfo || !statusOficiais.includes(statInfo)) errosEncontrados.push('Status');
                 
