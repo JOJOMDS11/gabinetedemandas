@@ -368,6 +368,7 @@
         let leafletMap = null;
         let mapLayerGroup = null;
         let recarregarListaAtual = null;
+        let bairrosValidos = new Set(); // nomes de bairros cadastrados de fato no banco
 
         const coordsBairros = {
             'CENTRO': [-29.760, -51.140],
@@ -440,7 +441,25 @@
                 popularFiltrosIniciais();
                 aplicarFiltros(); 
             }
+
+            // Busca a lista real de bairros cadastrados no banco (mesma fonte usada no dashboard/nova-demanda),
+            // em vez de depender só da lista fixa de coordenadas (que tinha só 25 itens e ficava desatualizada).
+            try {
+                const { data: bairrosData, error: erroBairros } = await db.from('bairros').select('nome');
+                if (!erroBairros && bairrosData) {
+                    bairrosValidos = new Set(bairrosData.map(b => (b.nome || '').trim().toUpperCase()).filter(Boolean));
+                }
+            } catch (e) { /* se falhar, cai no fallback da lista de coordenadas */ }
+
             document.getElementById('loading').style.display = 'none';
+        }
+
+        // Um bairro é considerado inválido/não cadastrado só se não existir nem no cadastro real do banco
+        // (bairrosValidos) nem na lista fixa de coordenadas (fallback, caso a tabela 'bairros' não retorne nada).
+        function bairroNaoCadastrado(bOff) {
+            if (!bOff) return false;
+            if (bairrosValidos.size > 0) return !bairrosValidos.has(bOff);
+            return typeof coordsBairros[bOff] === 'undefined';
         }
 
         function popularFiltrosIniciais() {
@@ -553,8 +572,8 @@
                     if (!num || num.length !== 14) hasError = true;
                     // Erro real 2: secretaria em formato antigo / fora da lista oficial
                     if (!secInfo || !secretariasOficiais.includes(secInfo)) hasError = true;
-                    // Erro real 3: bairro não cadastrado na base de coordenadas (não existe na Db)
-                    if (bOff && typeof coordsBairros[bOff] === 'undefined') hasError = true;
+                    // Erro real 3: bairro não cadastrado no banco (tabela 'bairros')
+                    if (bairroNaoCadastrado(bOff)) hasError = true;
                     // Erro real 4: status antigo/descontinuado, fora da lista usada atualmente
                     if (!statInfo || !statusOficiais.includes(statInfo)) hasError = true;
                     
@@ -889,8 +908,8 @@
                 if (!num || num.length !== 14) errosEncontrados.push('Formato Antigo');
                 // Erro real 2: secretaria em formato antigo / fora da lista oficial
                 if (!secInfo || !secretariasOficiais.includes(secInfo)) errosEncontrados.push('Secretaria');
-                // Erro real 3: bairro não cadastrado na base de coordenadas (não existe na Db)
-                if (bOff && typeof coordsBairros[bOff] === 'undefined') errosEncontrados.push('Bairro');
+                // Erro real 3: bairro não cadastrado no banco (tabela 'bairros')
+                if (bairroNaoCadastrado(bOff)) errosEncontrados.push('Bairro');
                 // Erro real 4: status antigo/descontinuado, fora da lista usada atualmente
                 if (!statInfo || !statusOficiais.includes(statInfo)) errosEncontrados.push('Status');
                 
@@ -1033,7 +1052,9 @@
 
             const secBarCounts = {};
             demandasFiltradas.forEach(d => {
-                const s = (d.secretaria && d.secretaria.trim() !== '') ? d.secretaria.trim() : 'Sem Secretaria';
+                // Precisa ser o mesmo texto usado em lidarCliqueLista('secretaria') e na tabela de eficiência
+                // ('Não Atribuída'), senão o clique na barra não encontra nenhuma demanda e a lista fica vazia.
+                const s = (d.secretaria && d.secretaria.trim() !== '') ? d.secretaria.trim() : 'Não Atribuída';
                 secBarCounts[s] = (secBarCounts[s] || 0) + 1;
             });
             const sortedSecs = Object.keys(secBarCounts).sort((a,b) => secBarCounts[b] - secBarCounts[a]).slice(0, 10);
