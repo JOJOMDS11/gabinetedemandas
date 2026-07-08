@@ -341,16 +341,6 @@
     </div>
 
     <script>
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        document.addEventListener('keydown', event => {
-            if (event.keyCode === 123 || 
-               (event.ctrlKey && event.shiftKey && event.keyCode === 73) || 
-               (event.ctrlKey && event.shiftKey && event.keyCode === 74) || 
-               (event.ctrlKey && event.keyCode === 85)) {
-                event.preventDefault();
-            }
-        });
-
         let db, cloudName, uploadPreset;
         let todasDemandas = [];
         let listaGlobalFiltrada = []; 
@@ -635,32 +625,38 @@
 
             try {
                 const { data, error } = await db.from('demandas').insert([novaDemanda]).select();
-                if(!error) {
-                    if (requerAprovacao) {
-                        db.functions.invoke('send-push', {
-                            body: {
-                                payload: { title: '🔔 Nova demanda', body: `Aberto por: ${usuarioLogado}\nAssunto: ${assunto}`, url: `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${data[0].id}` },
-                                targetUsers: ['Daniel']
-                            }
-                        }).catch(()=>{});
-                    }
+                if (error) {
+                    alert('Erro do Banco: ' + error.message);
+                    console.error(error);
+                    btn.disabled = false; btn.textContent = 'Salvar Rápida';
+                    return;
+                }
+                
+                if (requerAprovacao) {
+                    db.functions.invoke('send-push', {
+                        body: {
+                            payload: { title: '🔔 Nova demanda', body: `Aberto por: ${usuarioLogado}\nAssunto: ${assunto}`, url: `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${data[0].id}` },
+                            targetUsers: ['Daniel']
+                        }
+                    }).catch(()=>{});
+                }
 
-                    const notifyUsers = responsaveis.filter(r => r !== usuarioLogado && r !== 'Daniel');
-                    if(notifyUsers.length > 0) {
-                        db.functions.invoke('send-push', {
-                            body: {
-                                payload: { title: '⚡ Demanda Rápida', body: `${usuarioLogado} delegou uma nova demanda rápida: ${assunto}`, url: `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${data[0].id}` },
-                                targetUsers: notifyUsers
-                            }
-                        }).catch(()=>{});
-                    }
-                    fecharModalQuick();
-                    document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = ''; document.getElementById('qSecretaria').value = ''; document.getElementById('qPrioridade').value = 'Normal'; document.getElementById('qAprovacaoDaniel').checked = false;
-                    document.querySelectorAll('.chk-cuidar').forEach(cb => cb.checked = false);
-                    arquivosQuickSelecionados = [];
-                    renderizarQuickPreviews();
-                    alert("Demanda Rápida criada com sucesso!");
-                } else { alert("Erro ao salvar no banco. Verifique os dados."); console.error(error); }
+                const notifyUsers = responsaveis.filter(r => r !== usuarioLogado && r !== 'Daniel');
+                if(notifyUsers.length > 0) {
+                    db.functions.invoke('send-push', {
+                        body: {
+                            payload: { title: '⚡ Demanda Rápida', body: `${usuarioLogado} delegou uma nova demanda rápida: ${assunto}`, url: `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${data[0].id}` },
+                            targetUsers: notifyUsers
+                        }
+                    }).catch(()=>{});
+                }
+                fecharModalQuick();
+                document.getElementById('qNome').value = ''; document.getElementById('qFone').value = ''; document.getElementById('qAssunto').value = ''; document.getElementById('qDetalhe').value = ''; document.getElementById('qArquivo').value = ''; document.getElementById('qSecretaria').value = ''; document.getElementById('qPrioridade').value = 'Normal'; document.getElementById('qAprovacaoDaniel').checked = false;
+                document.querySelectorAll('.chk-cuidar').forEach(cb => cb.checked = false);
+                arquivosQuickSelecionados = [];
+                renderizarQuickPreviews();
+                alert("Demanda Rápida criada com sucesso!");
+                
             } catch (e) { alert("Erro ao tentar salvar."); }
             
             btn.disabled = false;
@@ -695,13 +691,31 @@
             const input = document.getElementById('inputNovaSecretaria');
             const nome = input.value.trim();
             if (!nome) return alert('Digite o nome!');
-            try { await db.from('secretarias').insert([{ nome }]); input.value = ''; await renderizarListaSecretariasModal(); } catch (e) { alert('Erro ao salvar.'); }
+            
+            const { error } = await db.from('secretarias').insert([{ nome }]);
+            if (error) {
+                alert('Erro do Banco: ' + error.message);
+                console.error(error);
+                return;
+            }
+            
+            input.value = ''; 
+            await renderizarListaSecretariasModal();
         }
 
         window.excluirSecretaria = async function(id, btn) {
             if (!confirm('Remover esta secretaria da lista?')) return;
             btn.disabled = true;
-            try { await db.from('secretarias').delete().eq('id', id); await renderizarListaSecretariasModal(); } catch (e) { alert('Erro ao excluir.'); btn.disabled = false; }
+            
+            const { error } = await db.from('secretarias').delete().eq('id', id);
+            if (error) {
+                alert('Erro do Banco: ' + error.message);
+                console.error(error);
+                btn.disabled = false;
+                return;
+            }
+            
+            await renderizarListaSecretariasModal();
         }
 
         async function renderizarListaBairrosModal() {
@@ -722,13 +736,31 @@
             const input = document.getElementById('inputNovoBairro');
             const nome = input.value.trim().toUpperCase();
             if (!nome) return alert('Digite o nome do bairro!');
-            try { await db.from('bairros').insert([{ nome }]); input.value = ''; await renderizarListaBairrosModal(); } catch (e) { alert('Erro ao salvar. Pode ser um bairro duplicado.'); }
+            
+            const { error } = await db.from('bairros').insert([{ nome }]);
+            if (error) {
+                alert('Erro do Banco: ' + error.message);
+                console.error(error);
+                return;
+            }
+            
+            input.value = ''; 
+            await renderizarListaBairrosModal();
         }
 
         window.excluirBairro = async function(id, btn) {
             if (!confirm('Remover este bairro da lista?')) return;
             btn.disabled = true;
-            try { await db.from('bairros').delete().eq('id', id); await renderizarListaBairrosModal(); } catch (e) { alert('Erro ao excluir.'); btn.disabled = false; }
+            
+            const { error } = await db.from('bairros').delete().eq('id', id);
+            if (error) {
+                alert('Erro do Banco: ' + error.message);
+                console.error(error);
+                btn.disabled = false;
+                return;
+            }
+            
+            await renderizarListaBairrosModal();
         }
 
         window.filtrar = function(status) {
