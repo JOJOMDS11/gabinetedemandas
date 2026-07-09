@@ -188,13 +188,26 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="modalSenhaSegura" style="z-index: 10001;">
+        <div class="modal-box">
+            <h3>🔐 Exclusão de Registro</h3>
+            <p style="color:#555; margin-bottom:15px; font-size:13px;">Digite a senha master para autorizar a exclusão desta demanda.</p>
+            <input type="password" id="inputSenhaAcao" placeholder="Senha master">
+            <div id="erroSenhaAcao" style="color:#c0392b; font-size:13px; margin-bottom:10px; display:none;">Senha incorreta ou erro!</div>
+            <div class="modal-botoes">
+                <button style="background:#e0e0e0; color:#333; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalExclusao()">Cancelar</button>
+                <button id="btnConfirmarSenhaAcao" style="background:#c0392b; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="processarExclusao()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let db, cloudName, uploadPreset;
         let demandaAtual = null;
         let acaoMasterPendente = null; 
         let temAlteracoesNaoSalvas = false;
 
-        const tiposProjetos = ['INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+        const tiposProjetos = ['INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE', 'EMENDA MODIFICATIVA'];
         
         let mediaGlobal = [];
         let indexLightboxAtual = 0;
@@ -754,7 +767,7 @@
 
             construirTimelineHtml(d);
 
-            const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '"');
 
             const linksEquipe = euEstouCuidando ? `
                 <div style="background:#e8f0ff; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px dashed #185199;">
@@ -841,6 +854,7 @@
                                         <option value="DEMANDA EXTERNA" ${d.tipo_solicitacao==='DEMANDA EXTERNA'?'selected':''}>DEMANDA EXTERNA</option>
                                     </optgroup>
                                     <optgroup label="Legislativo e Projetos (Requer Aprovação)">
+                                        <option value="EMENDA MODIFICATIVA" ${d.tipo_solicitacao==='EMENDA MODIFICATIVA'?'selected':''}>EMENDA MODIFICATIVA</option>
                                         <option value="INDICAÇÃO" ${d.tipo_solicitacao==='INDICAÇÃO'?'selected':''}>INDICAÇÃO</option>
                                         <option value="MOÇÃO DE APOIO" ${d.tipo_solicitacao==='MOÇÃO DE APOIO'?'selected':''}>MOÇÃO DE APOIO</option>
                                         <option value="PEDIDO DE PROVIDÊNCIAS" ${d.tipo_solicitacao==='PEDIDO DE PROVIDÊNCIAS'?'selected':''}>PEDIDO DE PROVIDÊNCIAS</option>
@@ -1000,12 +1014,14 @@
                         ${btnWhats}
                     </div>
 
-                    ${!['Arquivada', 'Rejeitada'].includes(d.status) ? `<button class="btn-retirar" style="width:100%; margin-top:15px;" onclick="iniciarAcaoMaster('arquivar')">📦 Arquivar (Limpa Mídias)</button>` : ''}
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        ${!['Arquivada', 'Rejeitada'].includes(d.status) ? `<button class="btn-retirar" style="width:100%;" onclick="iniciarAcaoMaster('arquivar')">📦 Arquivar (Limpa Mídias)</button>` : ''}
+                        <button class="btn-retirar" style="background:#c0392b; width:100%;" onclick="iniciarAcaoMaster('excluir')">🗑️ Excluir Definitivamente</button>
+                    </div>
                 </div>
 
                 <div class="box">
-                    <h2>Galeria de Mídias</h2>
-                    ${htmlPdfs}
+                    <h2>Galeria de Mídias Extra</h2>
                     <div class="galeria">${htmlFotos}</div>
 
                     <div class="upload-extra">
@@ -1305,9 +1321,14 @@
             if(acao === 'arquivar') msg = 'Arquivar demanda (Apagará as fotos).';
             if(acao === 'excluir') msg = 'Excluir definitivamente do sistema.';
             document.getElementById('modalSenhaTexto').textContent = msg;
-            document.getElementById('inputSenhaMaster').value = '';
+            
+            const inputSenha = document.getElementById('inputSenhaMaster');
+            inputSenha.value = '';
             document.getElementById('erroSenhaMaster').style.display = 'none';
             document.getElementById('modalSenhaMaster').classList.add('ativo');
+            
+            // Foco Automático Mágico!
+            setTimeout(() => { inputSenha.focus(); }, 100);
         }
 
         window.fecharModalSenha = function() { document.getElementById('modalSenhaMaster').classList.remove('ativo'); }
@@ -1361,6 +1382,31 @@
             const formData = new FormData(); formData.append('file', file); formData.append('upload_preset', uploadPreset);
             const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, { method: 'POST', body: formData });
             const data = await res.json(); return data.secure_url;
+        }
+
+        // Exclusão por clique no botão de demands já arquivadas
+        window.solicitarExclusao = function(id) {
+            idParaExcluir = id;
+            const inputSenha = document.getElementById('inputSenhaAcao');
+            inputSenha.value = ''; 
+            document.getElementById('erroSenhaAcao').style.display = 'none';
+            document.getElementById('modalSenhaSegura').classList.add('ativo');
+            
+            // Foco Automático Mágico!
+            setTimeout(() => { inputSenha.focus(); }, 100);
+        }
+
+        window.fecharModalExclusao = function() { document.getElementById('modalSenhaSegura').classList.remove('ativo'); idParaExcluir = null; }
+
+        window.processarExclusao = async function() {
+            const senha = document.getElementById('inputSenhaAcao').value.trim(); const btn = document.getElementById('btnConfirmarSenhaAcao');
+            if(!senha) return; btn.textContent = '⏳ Excluindo...'; btn.disabled = true;
+            try {
+                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'validar_master', senha: senha }) });
+                if (res.ok) { await db.from('demandas').delete().eq('id', idParaExcluir); fecharModalExclusao(); window.location.href = 'dashboard.html'; } 
+                else { document.getElementById('erroSenhaAcao').style.display = 'block'; }
+            } catch (error) { document.getElementById('erroSenhaAcao').style.display = 'block'; } 
+            finally { btn.textContent = 'Confirmar'; btn.disabled = false; }
         }
 
         let sessionTimeout;
