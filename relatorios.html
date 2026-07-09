@@ -121,16 +121,19 @@
         .leaflet-top, .leaflet-bottom { z-index: 90 !important; }
         .leaflet-div-icon { background: transparent; border: none; }
 
-        /* Estilos Novos para Nuvem de Tags e Feed */
+        /* Estilos Novos para Nuvem de Tags e Feed Zebra */
         .tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; padding: 10px; height: 300px; overflow-y: auto; align-content: center;}
         .tag-word { font-weight: 800; line-height: 1.2; text-transform: uppercase; transition: 0.2s; }
         .tag-word:hover { color: #f59e0b !important; transform: scale(1.1); cursor: pointer; }
         
-        .live-feed { display: flex; flex-direction: column; gap: 10px; height: 300px; overflow-y: auto; padding-right: 5px;}
+        .live-feed { display: flex; flex-direction: column; height: 300px; overflow-y: auto; padding-right: 5px; border-radius: 4px;}
         .live-feed::-webkit-scrollbar { width: 6px; }
         .live-feed::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .feed-item { background: #f8fafc; border-left: 3px solid #3b82f6; padding: 12px; border-radius: 4px; font-size: 13px; line-height: 1.4; border: 1px solid #e2e8f0; border-left-width: 4px; cursor: pointer; transition: 0.2s;}
-        .feed-item:hover { background: #f0f9ff; }
+        .feed-item { padding: 12px; font-size: 13px; line-height: 1.4; border-left: 4px solid; cursor: pointer; transition: 0.2s;}
+        /* Cores Zebra para o Feed */
+        .feed-item:nth-child(odd) { background-color: #ffffff; border-left-color: #3b82f6; border-bottom: 1px solid #f1f5f9; }
+        .feed-item:nth-child(even) { background-color: #f8fafc; border-left-color: #94a3b8; border-bottom: 1px solid #e2e8f0; }
+        .feed-item:hover { background-color: #f0f9ff; filter: brightness(0.98); }
         .feed-time { font-size: 11px; color: #94a3b8; font-weight: 600; margin-bottom: 4px; display: flex; justify-content: space-between;}
     </style>
 </head>
@@ -243,56 +246,18 @@
 
         <div class="charts-grid">
             
-            <!-- LINHA 1 -->
+            <!-- LINHA 1 (O Núcleo) -->
             <div class="chart-card">
                 <h3>Distribuição de Situação</h3>
                 <div class="chart-container"><canvas id="graficoStatus"></canvas></div>
             </div>
 
             <div class="chart-card">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoCat', 'btnToggleCat', 'Mostrar Gráfico')">
-                    Tipos de Solicitações
-                    <button class="btn-toggle-secao" id="btnToggleCat">🔽 Mostrar Gráfico</button>
-                </h3>
-                <div id="secaoCat" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                    <div class="chart-container" style="height: 300px;"><canvas id="graficoCategorias"></canvas></div>
-                </div>
+                <h3>Tipos de Solicitações</h3>
+                <div class="chart-container"><canvas id="graficoCategorias"></canvas></div>
             </div>
 
-            <!-- LINHA 2 (NOVAS FUNCIONALIDADES SÊNIOR) -->
-            <div class="chart-card">
-                <h3>☁️ Nuvem de Assuntos <span>O que mais pedem?</span></h3>
-                <div id="tagCloudContainer" class="tag-cloud"></div>
-            </div>
-
-            <div class="chart-card">
-                <h3>⏳ Envelhecimento da Fila <span>Idade das Demandas Abertas</span></h3>
-                <div class="chart-container"><canvas id="graficoAging"></canvas></div>
-            </div>
-
-            <!-- LINHA 3 -->
-            <div class="chart-card">
-                <h3>⚡ Feed de Atividade <span>Últimas 15 Ações na Base</span></h3>
-                <div id="liveFeedContainer" class="live-feed"></div>
-            </div>
-
-            <div class="chart-card">
-                <h3>📅 Demandas por Dia da Semana</h3>
-                <div class="chart-container"><canvas id="graficoDiaSemana"></canvas></div>
-            </div>
-
-            <!-- LINHA 4 -->
-            <div class="chart-card">
-                <h3>🚨 Distribuição de Prioridades <span>A partir de Jun/2026</span></h3>
-                <div class="chart-container"><canvas id="graficoPrioridade"></canvas></div>
-            </div>
-
-            <div class="chart-card">
-                <h3>⏱️ Tempo Médio vs Prioridade <span>Apenas Concluídas (h)</span></h3>
-                <div class="chart-container"><canvas id="graficoTempoPrioridade"></canvas></div>
-            </div>
-
-            <!-- LINHAS FULL WIDTH -->
+            <!-- LINHA 2 (Secretarias - Full Width) -->
             <div class="chart-card full-width">
                 <h3>🏢 Demandas por Secretaria</h3>
                 <div class="chart-container" style="height: 300px;"><canvas id="graficoSecBar"></canvas></div>
@@ -316,6 +281,38 @@
                 </div>
             </div>
 
+            <!-- NOVAS FUNCIONALIDADES SÊNIOR (Escondidas por padrão) -->
+            <div class="chart-card full-width">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoNuvem', 'btnToggleNuvem', 'Mostrar Nuvem')">
+                    ☁️ Nuvem de Assuntos <span>O que mais pedem?</span>
+                    <button class="btn-toggle-secao" id="btnToggleNuvem">🔽 Mostrar Nuvem</button>
+                </h3>
+                <div id="secaoNuvem" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div id="tagCloudContainer" class="tag-cloud"></div>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoAging', 'btnToggleAging', 'Mostrar Fila')">
+                    ⏳ Envelhecimento da Fila <span>Idade das Demandas Abertas (Clicável)</span>
+                    <button class="btn-toggle-secao" id="btnToggleAging">🔽 Mostrar Fila</button>
+                </h3>
+                <div id="secaoAging" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="chart-container" style="height: 250px;"><canvas id="graficoAging"></canvas></div>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoFeed', 'btnToggleFeed', 'Mostrar Feed')">
+                    ⚡ Feed de Atividade <span>Últimas 15 Ações na Base</span>
+                    <button class="btn-toggle-secao" id="btnToggleFeed">🔽 Mostrar Feed</button>
+                </h3>
+                <div id="secaoFeed" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div id="liveFeedContainer" class="live-feed"></div>
+                </div>
+            </div>
+
+            <!-- Listas em Acordeão (Fechadas por padrão) -->
             <div class="chart-card full-width">
                 <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoOrdem', 'btnToggleOrdem', 'Mostrar Lista')">
                     Responsáveis (Ordem)
@@ -366,14 +363,35 @@
                 </div>
             </div>
 
-            <div class="chart-card full-width" style="margin-bottom: 10px;">
-                <h3>🗺️ Mapa de Calor das Demandas <span>Tamanho e cor indicam o volume (clique na bolha)</span></h3>
-                <div id="mapaBairros" style="height: 450px; width: 100%; border-radius: 8px; z-index: 1;"></div>
+            <div class="chart-card full-width">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoMapa', 'btnToggleMapa', 'Mostrar Mapa')">
+                    🗺️ Mapa de Calor das Demandas <span>Tamanho e cor indicam o volume (clique na bolha)</span>
+                    <button class="btn-toggle-secao" id="btnToggleMapa">🔽 Mostrar Mapa</button>
+                </h3>
+                <div id="secaoMapa" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div id="mapaBairros" style="height: 450px; width: 100%; border-radius: 8px; z-index: 1;"></div>
+                </div>
             </div>
 
+            <!-- Gráficos movidos para o fundo (Sempre Abertos) -->
             <div class="chart-card full-width">
                 <h3>Tendência de Abertura <span>Últimos 12 Meses (Data Fato)</span></h3>
                 <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
+            </div>
+            
+            <div class="chart-card">
+                <h3>📅 Demandas por Dia da Semana</h3>
+                <div class="chart-container"><canvas id="graficoDiaSemana"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>🚨 Distribuição de Prioridades <span>A partir de Jun/2026</span></h3>
+                <div class="chart-container"><canvas id="graficoPrioridade"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>⏱️ Tempo Médio vs Prioridade <span>Apenas Concluídas (h)</span></h3>
+                <div class="chart-container"><canvas id="graficoTempoPrioridade"></canvas></div>
             </div>
 
         </div>
@@ -782,6 +800,9 @@
                 if (btnId === 'btnToggleGargalo') lbl = '🚨 Mostrar Gargalos';
                 if (btnId === 'btnToggleBairros') lbl = '🔽 Mostrar Bairros';
                 if (btnId === 'btnToggleCat') lbl = '🔽 Mostrar Gráfico';
+                if (btnId === 'btnToggleNuvem') lbl = '🔽 Mostrar Nuvem';
+                if (btnId === 'btnToggleAging') lbl = '🔽 Mostrar Fila';
+                if (btnId === 'btnToggleFeed') lbl = '🔽 Mostrar Feed';
                 btn.innerHTML = lbl;
             }
         }
@@ -863,6 +884,18 @@
                 filtrado = demandasFiltradas.filter(d => {
                     const dt = d.criado_em ? new Date(d.criado_em) : null;
                     return dt && dt.getDay() === diasSemanaMap[label];
+                });
+            } else if (tipo === 'aging') {
+                filtrado = demandasFiltradas.filter(d => {
+                    if (arrayConcluidas.includes(d.status)) return false;
+                    const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
+                    const dias = calcularDias(dataInicioBase.toISOString());
+                    
+                    if (label === 'Até 7 dias') return dias <= 7;
+                    if (label === '8 a 15 dias') return dias > 7 && dias <= 15;
+                    if (label === '16 a 30 dias') return dias > 15 && dias <= 30;
+                    if (label === 'Mais de 30 dias') return dias > 30;
+                    return false;
                 });
             }
             
@@ -1058,7 +1091,7 @@
             montarTabelaSecretarias();
 
             // 1. NUVEM DE TAGS (ASSUNTOS)
-            const stopWords = ['A','O','E','DE','DA','DO','DAS','DOS','PARA','COM','EM','NA','NO','NAS','NOS','UMA','UM','QUE','POR','SOBRE','SOLICITA','PEDIDO','PROVIDÊNCIAS','RUA','BAIRRO','C/','S/'];
+            const stopWords = ['A','O','E','DE','DA','DO','DAS','DOS','PARA','COM','EM','NA','NO','NAS','NOS','UMA','UM','QUE','POR','SOBRE','SOLICITA','PEDIDO','PROVIDÊNCIAS','RUA','BAIRRO','C/','S/','SOLICITAÇÃO','SOLICITACAO','SOLICITOU','SOLICITO','SOLICITAMOS','REQUER','PEDE','VER','DETALHES','NOVA','NOVO'];
             let words = {};
             demandasFiltradas.forEach(d => {
                 if(!d.assunto) return;
@@ -1127,7 +1160,12 @@
                     options: {
                         indexAxis: 'y', responsive: true, maintainAspectRatio: false,
                         plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', font: {weight: 'bold'} } },
-                        scales: { x: { display: false } }
+                        scales: { x: { display: false } },
+                        onHover: hoverCursor, onClick: (e, elements, chart) => {
+                            if (!elements || elements.length === 0) return;
+                            const label = chart.data.labels[elements[0].index];
+                            lidarCliqueLista(label, 'aging');
+                        }
                     }
                 });
             } catch(e){}
@@ -1232,7 +1270,7 @@
                 chartCat = new Chart(document.getElementById('graficoCategorias'), {
                     type: 'bar',
                     data: { labels: sCats, datasets: [{ data: sCats.map(k => catCounts[k]), backgroundColor: '#10b981', borderRadius: 4 }] },
-                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', font: { weight: 'bold' } } }, scales: { x:{display:false} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, title:{display:true, text:'Tipos'}, datalabels: { anchor: 'end', align: 'right', font: { weight: 'bold' } } }, scales: { x:{display:false} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
                 });
             } catch(e){}
 
@@ -1384,6 +1422,8 @@
             link.download = `Backup_DB_COMPLETO_${new Date().toISOString().split('T')[0]}.json`;
             link.click(); URL.revokeObjectURL(url);
         }
+
+        window.onload = conectarBanco;
     </script>
 </body>
 </html>
