@@ -120,6 +120,18 @@
 
         .leaflet-top, .leaflet-bottom { z-index: 90 !important; }
         .leaflet-div-icon { background: transparent; border: none; }
+
+        /* Estilos Novos para Nuvem de Tags e Feed */
+        .tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; padding: 10px; height: 300px; overflow-y: auto; align-content: center;}
+        .tag-word { font-weight: 800; line-height: 1.2; text-transform: uppercase; transition: 0.2s; }
+        .tag-word:hover { color: #f59e0b !important; transform: scale(1.1); cursor: pointer; }
+        
+        .live-feed { display: flex; flex-direction: column; gap: 10px; height: 300px; overflow-y: auto; padding-right: 5px;}
+        .live-feed::-webkit-scrollbar { width: 6px; }
+        .live-feed::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .feed-item { background: #f8fafc; border-left: 3px solid #3b82f6; padding: 12px; border-radius: 4px; font-size: 13px; line-height: 1.4; border: 1px solid #e2e8f0; border-left-width: 4px; cursor: pointer; transition: 0.2s;}
+        .feed-item:hover { background: #f0f9ff; }
+        .feed-time { font-size: 11px; color: #94a3b8; font-weight: 600; margin-bottom: 4px; display: flex; justify-content: space-between;}
     </style>
 </head>
 <body>
@@ -231,19 +243,59 @@
 
         <div class="charts-grid">
             
+            <!-- LINHA 1 -->
             <div class="chart-card">
                 <h3>Distribuição de Situação</h3>
                 <div class="chart-container"><canvas id="graficoStatus"></canvas></div>
             </div>
 
-            <div class="chart-card full-width">
-                <h3>🏢 Demandas por Secretaria</h3>
-                <div class="chart-container" style="height: 300px;"><canvas id="graficoSecBar"></canvas></div>
+            <div class="chart-card">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoCat', 'btnToggleCat', 'Mostrar Gráfico')">
+                    Tipos de Solicitações
+                    <button class="btn-toggle-secao" id="btnToggleCat">🔽 Mostrar Gráfico</button>
+                </h3>
+                <div id="secaoCat" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="chart-container" style="height: 300px;"><canvas id="graficoCategorias"></canvas></div>
+                </div>
+            </div>
+
+            <!-- LINHA 2 (NOVAS FUNCIONALIDADES SÊNIOR) -->
+            <div class="chart-card">
+                <h3>☁️ Nuvem de Assuntos <span>O que mais pedem?</span></h3>
+                <div id="tagCloudContainer" class="tag-cloud"></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>⏳ Envelhecimento da Fila <span>Idade das Demandas Abertas</span></h3>
+                <div class="chart-container"><canvas id="graficoAging"></canvas></div>
+            </div>
+
+            <!-- LINHA 3 -->
+            <div class="chart-card">
+                <h3>⚡ Feed de Atividade <span>Últimas 15 Ações na Base</span></h3>
+                <div id="liveFeedContainer" class="live-feed"></div>
             </div>
 
             <div class="chart-card">
                 <h3>📅 Demandas por Dia da Semana</h3>
                 <div class="chart-container"><canvas id="graficoDiaSemana"></canvas></div>
+            </div>
+
+            <!-- LINHA 4 -->
+            <div class="chart-card">
+                <h3>🚨 Distribuição de Prioridades <span>A partir de Jun/2026</span></h3>
+                <div class="chart-container"><canvas id="graficoPrioridade"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>⏱️ Tempo Médio vs Prioridade <span>Apenas Concluídas (h)</span></h3>
+                <div class="chart-container"><canvas id="graficoTempoPrioridade"></canvas></div>
+            </div>
+
+            <!-- LINHAS FULL WIDTH -->
+            <div class="chart-card full-width">
+                <h3>🏢 Demandas por Secretaria</h3>
+                <div class="chart-container" style="height: 300px;"><canvas id="graficoSecBar"></canvas></div>
             </div>
 
             <div class="chart-card full-width">
@@ -263,23 +315,17 @@
                     </table>
                 </div>
             </div>
-            
+
             <div class="chart-card full-width">
-                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoCat', 'btnToggleCat', 'Mostrar Gráfico')">
-                    Tipos de Solicitações (Gargalos)
-                    <button class="btn-toggle-secao" id="btnToggleCat">🔽 Mostrar Gráfico</button>
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoOrdem', 'btnToggleOrdem', 'Mostrar Lista')">
+                    Responsáveis (Ordem)
+                    <button class="btn-toggle-secao" id="btnToggleOrdem">🔽 Mostrar Lista</button>
                 </h3>
-                <div id="secaoCat" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                    <div class="chart-container" style="height: 450px;"><canvas id="graficoCategorias"></canvas></div>
+                <div id="secaoOrdem" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="data-list bairros-grid" id="listaOrdem"></div>
                 </div>
             </div>
 
-            <div class="chart-card">
-                <h3>Responsáveis (Ordem) <span>Clicável</span></h3>
-                <div class="data-list" id="listaOrdem"></div>
-            </div>
-
-            <!-- Listas em Acordeão (Fechadas por padrão) -->
             <div class="chart-card full-width">
                 <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoEquipe', 'btnToggleEq', 'Mostrar Lista')">
                     Executores (Cuidando)
@@ -320,7 +366,6 @@
                 </div>
             </div>
 
-            <!-- Gráficos movidos para o fundo (Sempre Abertos) -->
             <div class="chart-card full-width" style="margin-bottom: 10px;">
                 <h3>🗺️ Mapa de Calor das Demandas <span>Tamanho e cor indicam o volume (clique na bolha)</span></h3>
                 <div id="mapaBairros" style="height: 450px; width: 100%; border-radius: 8px; z-index: 1;"></div>
@@ -329,16 +374,6 @@
             <div class="chart-card full-width">
                 <h3>Tendência de Abertura <span>Últimos 12 Meses (Data Fato)</span></h3>
                 <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
-            </div>
-
-            <div class="chart-card">
-                <h3>🚨 Distribuição de Prioridades <span>A partir de Jun/2026</span></h3>
-                <div class="chart-container"><canvas id="graficoPrioridade"></canvas></div>
-            </div>
-
-            <div class="chart-card">
-                <h3>⏱️ Tempo Médio vs Prioridade <span>Apenas Concluídas (h)</span></h3>
-                <div class="chart-container"><canvas id="graficoTempoPrioridade"></canvas></div>
             </div>
 
         </div>
@@ -358,7 +393,7 @@
         let colSecSort = 'total';
         let dirSecSort = -1; 
 
-        let chartStatus, chartCat, chartTendencia, chartPrioridade, chartSecBar, chartDiaSemana, chartTempoPrioridade;
+        let chartStatus, chartCat, chartTendencia, chartPrioridade, chartSecBar, chartDiaSemana, chartTempoPrioridade, chartAging;
         
         let leafletMap = null;
         let mapLayerGroup = null;
@@ -402,7 +437,6 @@
         let secretariasOficiais = [...secretariasOficiaisBase];
         let secretariasValidas = new Set(secretariasOficiaisBase.map(s => s.toUpperCase()));
         
-        // NOVO: Tipos oficiais de solicitação
         const tiposOficiais = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO', 'DEMANDA (GERAL)', 'DEMANDA EXTERNA', 'INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
 
         function getMesAnoReal(d) {
@@ -998,6 +1032,15 @@
                 }
             }
         }
+        
+        function tempoRelativo(dataStr) {
+            if (!dataStr) return '';
+            const agora = new Date(); const data = new Date(dataStr);
+            const diff = Math.floor((agora - data) / 1000);
+            if (diff < 60) return 'agora mesmo'; if (diff < 3600) return `há ${Math.floor(diff/60)} min`;
+            if (diff < 86400) return `há ${Math.floor(diff/3600)}h`; if (diff < 2592000) return `há ${Math.floor(diff/86400)} dias`;
+            return data.toLocaleDateString('pt-BR');
+        }
 
         function desenharDashboards() {
             Chart.defaults.font.family = "'Inter', sans-serif";
@@ -1010,9 +1053,86 @@
             if(chartSecBar) chartSecBar.destroy();
             if(chartDiaSemana) chartDiaSemana.destroy();
             if(chartTempoPrioridade) chartTempoPrioridade.destroy();
+            if(chartAging) chartAging.destroy();
 
             montarTabelaSecretarias();
 
+            // 1. NUVEM DE TAGS (ASSUNTOS)
+            const stopWords = ['A','O','E','DE','DA','DO','DAS','DOS','PARA','COM','EM','NA','NO','NAS','NOS','UMA','UM','QUE','POR','SOBRE','SOLICITA','PEDIDO','PROVIDÊNCIAS','RUA','BAIRRO','C/','S/'];
+            let words = {};
+            demandasFiltradas.forEach(d => {
+                if(!d.assunto) return;
+                let p = d.assunto.toUpperCase().replace(/[^\w\sÀ-ÿ]/g, ' ').split(/\s+/);
+                p.forEach(w => {
+                    if(w.length > 3 && !stopWords.includes(w) && isNaN(w)) {
+                        words[w] = (words[w] || 0) + 1;
+                    }
+                });
+            });
+            let sortedWords = Object.keys(words).sort((a,b) => words[b] - words[a]).slice(0, 30);
+            let maxW = words[sortedWords[0]] || 1;
+            let htmlTags = sortedWords.map(w => {
+                let size = 12 + (words[w] / maxW) * 22; 
+                let opacity = 0.4 + (words[w] / maxW) * 0.6;
+                return `<span class="tag-word" style="font-size: ${size}px; opacity: ${opacity}; color: #1a365d;" title="${words[w]} ocorrências" onclick="document.getElementById('filtroBusca').value='${w}'; document.getElementById('filtroBusca').dispatchEvent(new Event('input'));">${w}</span>`;
+            }).join('');
+            document.getElementById('tagCloudContainer').innerHTML = htmlTags || '<p style="color:#94a3b8; font-size:12px;">Sem dados suficientes</p>';
+
+            // 2. FEED DE ATIVIDADE AO VIVO
+            let allEvents = [];
+            demandasFiltradas.forEach(d => {
+                if(d.historico && d.historico.length > 0) {
+                    d.historico.forEach(h => {
+                        allEvents.push({ id: d.id, demanda_id: d.numero_demanda || d.id, assunto: d.assunto, autor: h.autor, status: h.status, data: h.data });
+                    });
+                } else {
+                    allEvents.push({ id: d.id, demanda_id: d.numero_demanda || d.id, assunto: d.assunto, autor: d.criador || 'Sistema', status: 'Criada', data: d.criado_em });
+                }
+            });
+            allEvents.sort((a,b) => new Date(b.data) - new Date(a.data));
+            let recentEvents = allEvents.slice(0, 15);
+            let feedHtml = recentEvents.map(e => {
+                let icon = '⚡';
+                if(['Concluída', 'Aprovada', 'Expediente (Legis) Gerado'].includes(e.status)) icon = '✅';
+                else if(['Rejeitada'].includes(e.status)) icon = '❌';
+                else if(['Arquivada'].includes(e.status)) icon = '📦';
+                return `
+                <div class="feed-item" onclick="window.open('ver-demanda.html?id=${e.id}', '_blank')">
+                    <div class="feed-time"><span>🕐 ${tempoRelativo(e.data)}</span> <span>${icon}</span></div>
+                    <div><b>${DOMPurify.sanitize(e.autor || 'Alguém')}</b>: <span style="color:#1a365d; font-weight:bold;">${DOMPurify.sanitize(e.status)}</span></div>
+                    <div style="color:#64748b; margin-top:4px; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Ref: ${DOMPurify.sanitize(e.assunto || '')}</div>
+                </div>`;
+            }).join('');
+            document.getElementById('liveFeedContainer').innerHTML = feedHtml || '<p style="color:#94a3b8; font-size:12px; padding:10px;">Sem atividades recentes</p>';
+
+            // 3. ENVELHECIMENTO DA FILA (AGING)
+            let aging = [0, 0, 0, 0]; 
+            demandasFiltradas.forEach(d => {
+                if(!arrayConcluidas.includes(d.status)) {
+                    const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
+                    const dias = calcularDias(dataInicioBase.toISOString());
+                    if(dias <= 7) aging[0]++;
+                    else if(dias <= 15) aging[1]++;
+                    else if(dias <= 30) aging[2]++;
+                    else aging[3]++;
+                }
+            });
+            try {
+                chartAging = new Chart(document.getElementById('graficoAging'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Até 7 dias', '8 a 15 dias', '16 a 30 dias', 'Mais de 30 dias'],
+                        datasets: [{ data: aging, backgroundColor: ['#10b981', '#facc15', '#f59e0b', '#ef4444'], borderRadius: 4 }]
+                    },
+                    options: {
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', font: {weight: 'bold'} } },
+                        scales: { x: { display: false } }
+                    }
+                });
+            } catch(e){}
+
+            // 4. DISTRIBUIÇÃO SITUAÇÃO (Doughnut Mágico que atualiza o TOTAL KPI)
             const statusCounts = {}; demandasFiltradas.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
             try {
                 chartStatus = new Chart(document.getElementById('graficoStatus'), {
@@ -1038,10 +1158,11 @@
                                             visibleTotal += val;
                                         }
                                     });
+                                    // A MÁGICA: Atualiza o KPI lá em cima!
                                     document.getElementById('kpiTotal').textContent = visibleTotal;
                                 }
                             }, 
-                            title:{display:true, text:'Situação'}, 
+                            title:{display:false}, 
                             datalabels: { 
                                 color: '#ffffff', font: { weight: '800', size: 10 }, textAlign: 'center',
                                 formatter: (val, ctx) => {
@@ -1111,7 +1232,7 @@
                 chartCat = new Chart(document.getElementById('graficoCategorias'), {
                     type: 'bar',
                     data: { labels: sCats, datasets: [{ data: sCats.map(k => catCounts[k]), backgroundColor: '#10b981', borderRadius: 4 }] },
-                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, title:{display:true, text:'Tipos'}, datalabels: { anchor: 'end', align: 'right', font: { weight: 'bold' } } }, scales: { x:{display:false} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', font: { weight: 'bold' } } }, scales: { x:{display:false} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
                 });
             } catch(e){}
 
@@ -1180,7 +1301,7 @@
                 chartTendencia = new Chart(document.getElementById('graficoTendencia'), {
                     type: 'line',
                     data: { labels: labelsFormatadas, datasets: [{ label: 'Volume', data: ultimos12.map(m => mapMeses[m]), borderColor: '#1a365d', backgroundColor: 'rgba(26, 54, 93, 0.1)', borderWidth: 3, tension: 0.3, fill: true, pointRadius: 5, pointHoverRadius: 8 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title:{display:true, text:'Tendência'}, datalabels: { align: 'top', font: {weight: 'bold'}, color: '#1a365d' } }, scales: { y: { beginAtZero: true } } }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title:{display:false}, datalabels: { align: 'top', font: {weight: 'bold'}, color: '#1a365d' } }, scales: { y: { beginAtZero: true } } }
                 });
             } catch(e){}
 
