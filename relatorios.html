@@ -264,9 +264,14 @@
                 </div>
             </div>
             
-            <div class="chart-card">
-                <h3>Tipos de Solicitações (Gargalos)</h3>
-                <div class="chart-container"><canvas id="graficoCategorias"></canvas></div>
+            <div class="chart-card full-width">
+                <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoCat', 'btnToggleCat', 'Mostrar Gráfico')">
+                    Tipos de Solicitações (Gargalos)
+                    <button class="btn-toggle-secao" id="btnToggleCat">🔽 Mostrar Gráfico</button>
+                </h3>
+                <div id="secaoCat" style="display:none; margin-top:15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                    <div class="chart-container" style="height: 450px;"><canvas id="graficoCategorias"></canvas></div>
+                </div>
             </div>
 
             <div class="chart-card">
@@ -340,16 +345,6 @@
     </div>
 
     <script>
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        document.addEventListener('keydown', event => {
-            if (event.keyCode === 123 || 
-               (event.ctrlKey && event.shiftKey && event.keyCode === 73) || 
-               (event.ctrlKey && event.shiftKey && event.keyCode === 74) || 
-               (event.ctrlKey && event.keyCode === 85)) {
-                event.preventDefault();
-            }
-        });
-
         Chart.register(ChartDataLabels);
 
         let db;
@@ -368,9 +363,8 @@
         let leafletMap = null;
         let mapLayerGroup = null;
         let recarregarListaAtual = null;
+        let bairrosValidos = new Set(); 
 
-        // Bairros
-        let bairrosValidos = new Set();
         const coordsBairros = {
             'CENTRO': [-29.760, -51.140],
             'FEITORIA': [-29.770, -51.110],
@@ -404,10 +398,12 @@
         const statusOficiais = ['Pendente', 'Aguardando Aprovação', 'Aprovada', 'Em Andamento', '156 Solicitado', 'Expediente (Legis) Gerado', 'Aguardando Exec. Secretaria', 'Concluída', 'Rejeitada', 'Arquivada'];
         const paletaCores = ['#1a365d', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#ef4444', '#64748b', '#d946ef'];
 
-        // Secretarias (Dinâmico + Base)
         const secretariasOficiaisBase = ['CEPOM', 'CÂMARA DE VEREADORES SÃO LEOPOLDO', 'CAMARA DE VEREADORES SAO LEOPOLDO', 'CÂMARA DE VEREADORES', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
         let secretariasOficiais = [...secretariasOficiaisBase];
         let secretariasValidas = new Set(secretariasOficiaisBase.map(s => s.toUpperCase()));
+        
+        // NOVO: Tipos oficiais de solicitação
+        const tiposOficiais = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO', 'DEMANDA (GERAL)', 'DEMANDA EXTERNA', 'INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
 
         function getMesAnoReal(d) {
             if (d.data_agendada && d.data_agendada.trim() !== '') {
@@ -449,7 +445,6 @@
                 }
             } catch (e) { }
 
-            // INTEGRAÇÃO MÁGICA: Buscar secretarias novas adicionadas pelo utilizador!
             try {
                 const { data: secData, error: erroSec } = await db.from('secretarias').select('nome');
                 if (!erroSec && secData) {
@@ -579,12 +574,13 @@
                     const secInfo = (d.secretaria || '').trim().toUpperCase();
                     const bOff = (d.bairro || '').trim().toUpperCase();
                     const statInfo = (d.status || '').trim();
+                    const tipoInfo = (d.tipo_solicitacao || '').trim().toUpperCase();
                     
                     if (!num || num.length !== 14) hasError = true;
-                    // AGORA USA A LISTA INTELIGENTE (secretariasValidas.has) em vez do includes antigo!
                     if (!secInfo || !secretariasValidas.has(secInfo)) hasError = true;
                     if (bairroNaoCadastrado(bOff)) hasError = true;
                     if (!statInfo || !statusOficiais.includes(statInfo)) hasError = true;
+                    if (!tipoInfo || !tiposOficiais.includes(tipoInfo)) hasError = true;
 
                     if (!hasError) passaErro = false;
                 }
@@ -751,6 +747,7 @@
                 let lbl = '🔽 Mostrar Lista';
                 if (btnId === 'btnToggleGargalo') lbl = '🚨 Mostrar Gargalos';
                 if (btnId === 'btnToggleBairros') lbl = '🔽 Mostrar Bairros';
+                if (btnId === 'btnToggleCat') lbl = '🔽 Mostrar Gráfico';
                 btn.innerHTML = lbl;
             }
         }
@@ -902,26 +899,22 @@
                 const bairroLimpo = d.bairro ? d.bairro.replace(/'/g,"") : '';
                 const btnLocal = (ruaLimpa || bairroLimpo) ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ruaLimpa}, ${numLimpo}, ${bairroLimpo}, São Leopoldo, RS`)}" target="_blank" class="btn-ver-demanda" style="background:#10b981; color:white;">📍 Local</a>` : '';
 
-                // --- LÓGICA DE AVISOS DE ESTRUTURA (ERROS REAIS) ---
                 const num = (d.numero_demanda || '').trim();
                 const secInfo = (d.secretaria || '').trim().toUpperCase();
                 const bOff = (d.bairro || '').trim().toUpperCase();
                 const statInfo = (d.status || '').trim();
+                const tipoInfo = (d.tipo_solicitacao || '').trim().toUpperCase();
                 
                 let errosEncontrados = [];
-                // Erro real 1
                 if (!num || num.length !== 14) errosEncontrados.push('Formato Antigo');
-                // Erro real 2: Usa a lista INTELIGENTE
                 if (!secInfo || !secretariasValidas.has(secInfo)) errosEncontrados.push('Secretaria');
-                // Erro real 3
                 if (bairroNaoCadastrado(bOff)) errosEncontrados.push('Bairro');
-                // Erro real 4
                 if (!statInfo || !statusOficiais.includes(statInfo)) errosEncontrados.push('Status');
+                if (!tipoInfo || !tiposOficiais.includes(tipoInfo)) errosEncontrados.push('Natureza/Tipo');
                 
                 const tagErro = errosEncontrados.length > 0 
                     ? `<span class="detalhe-tag" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight: 800;">⚠️ Erros: ${errosEncontrados.join(', ')}</span>` 
                     : '';
-                // -----------------------------
 
                 return `
                     <div class="lista-item">
@@ -1030,7 +1023,24 @@
                         maintainAspectRatio: false, 
                         cutout: '55%', 
                         plugins: { 
-                            legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } }, 
+                            legend: { 
+                                position: 'right', 
+                                labels: { boxWidth: 12, font: {size: 11} },
+                                onClick: function(e, legendItem, legend) {
+                                    const index = legendItem.index;
+                                    const ci = legend.chart;
+                                    ci.toggleDataVisibility(index);
+                                    ci.update();
+                                    
+                                    let visibleTotal = 0;
+                                    ci.data.datasets[0].data.forEach((val, i) => {
+                                        if (ci.getDataVisibility(i)) {
+                                            visibleTotal += val;
+                                        }
+                                    });
+                                    document.getElementById('kpiTotal').textContent = visibleTotal;
+                                }
+                            }, 
                             title:{display:true, text:'Situação'}, 
                             datalabels: { 
                                 color: '#ffffff', font: { weight: '800', size: 10 }, textAlign: 'center',
@@ -1096,7 +1106,7 @@
             } catch(e){}
 
             const catCounts = {}; demandasFiltradas.forEach(d => { let t = d.tipo_solicitacao || 'Sem categoria'; catCounts[t] = (catCounts[t] || 0) + 1; });
-            const sCats = Object.keys(catCounts).sort((a,b)=>catCounts[b]-catCounts[a]).slice(0,6);
+            const sCats = Object.keys(catCounts).sort((a,b)=>catCounts[b]-catCounts[a]);
             try {
                 chartCat = new Chart(document.getElementById('graficoCategorias'), {
                     type: 'bar',
