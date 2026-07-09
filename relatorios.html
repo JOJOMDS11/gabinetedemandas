@@ -368,8 +368,9 @@
         let leafletMap = null;
         let mapLayerGroup = null;
         let recarregarListaAtual = null;
-        let bairrosValidos = new Set(); // nomes de bairros cadastrados de fato no banco
 
+        // Bairros
+        let bairrosValidos = new Set();
         const coordsBairros = {
             'CENTRO': [-29.760, -51.140],
             'FEITORIA': [-29.770, -51.110],
@@ -400,12 +401,13 @@
 
         const arrayAbertas = ['Pendente', 'Aguardando Aprovação'];
         const arrayConcluidas = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
-        // Lista dos status atualmente usados no sistema (ver-demanda.html). Qualquer status fora
-        // dessa lista (ex: status antigo/descontinuado) é tratado como erro no relatório.
         const statusOficiais = ['Pendente', 'Aguardando Aprovação', 'Aprovada', 'Em Andamento', '156 Solicitado', 'Expediente (Legis) Gerado', 'Aguardando Exec. Secretaria', 'Concluída', 'Rejeitada', 'Arquivada'];
         const paletaCores = ['#1a365d', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#ef4444', '#64748b', '#d946ef'];
 
-        const secretariasOficiais = ['CEPOM', 'CÂMARA DE VEREADORES SÃO LEOPOLDO', 'CAMARA DE VEREADORES SAO LEOPOLDO', 'CÂMARA DE VEREADORES', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
+        // Secretarias (Dinâmico + Base)
+        const secretariasOficiaisBase = ['CEPOM', 'CÂMARA DE VEREADORES SÃO LEOPOLDO', 'CAMARA DE VEREADORES SAO LEOPOLDO', 'CÂMARA DE VEREADORES', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
+        let secretariasOficiais = [...secretariasOficiaisBase];
+        let secretariasValidas = new Set(secretariasOficiaisBase.map(s => s.toUpperCase()));
 
         function getMesAnoReal(d) {
             if (d.data_agendada && d.data_agendada.trim() !== '') {
@@ -438,24 +440,35 @@
             const { data, error } = await db.from('demandas').select('*');
             if (!error) {
                 todasDemandasRAW = data || [];
-                popularFiltrosIniciais();
-                aplicarFiltros(); 
             }
 
-            // Busca a lista real de bairros cadastrados no banco (mesma fonte usada no dashboard/nova-demanda),
-            // em vez de depender só da lista fixa de coordenadas (que tinha só 25 itens e ficava desatualizada).
             try {
                 const { data: bairrosData, error: erroBairros } = await db.from('bairros').select('nome');
                 if (!erroBairros && bairrosData) {
                     bairrosValidos = new Set(bairrosData.map(b => (b.nome || '').trim().toUpperCase()).filter(Boolean));
                 }
-            } catch (e) { /* se falhar, cai no fallback da lista de coordenadas */ }
+            } catch (e) { }
+
+            // INTEGRAÇÃO MÁGICA: Buscar secretarias novas adicionadas pelo utilizador!
+            try {
+                const { data: secData, error: erroSec } = await db.from('secretarias').select('nome');
+                if (!erroSec && secData) {
+                    secData.forEach(s => {
+                        if(s.nome) {
+                            const nomeTrim = s.nome.trim();
+                            if(!secretariasOficiais.includes(nomeTrim)) secretariasOficiais.push(nomeTrim);
+                            secretariasValidas.add(nomeTrim.toUpperCase());
+                        }
+                    });
+                }
+            } catch (e) { }
+
+            popularFiltrosIniciais();
+            aplicarFiltros(); 
 
             document.getElementById('loading').style.display = 'none';
         }
 
-        // Um bairro é considerado inválido/não cadastrado só se não existir nem no cadastro real do banco
-        // (bairrosValidos) nem na lista fixa de coordenadas (fallback, caso a tabela 'bairros' não retorne nada).
         function bairroNaoCadastrado(bOff) {
             if (!bOff) return false;
             if (bairrosValidos.size > 0) return !bairrosValidos.has(bOff);
@@ -560,7 +573,6 @@
                 else if (vStat === 'em_execucao') passaStat = !arrayAbertas.includes(d.status) && !arrayConcluidas.includes(d.status);
                 else passaStat = d.status === vStat;
 
-                // --- NOVA LÓGICA DO FILTRO DE ERRO ---
                 if (filtroErroFormato) {
                     let hasError = false;
                     const num = (d.numero_demanda || '').trim();
@@ -568,23 +580,14 @@
                     const bOff = (d.bairro || '').trim().toUpperCase();
                     const statInfo = (d.status || '').trim();
                     
-                    // Erro real 1: número da demanda em formato antigo (não tem os 14 dígitos do formato atual)
                     if (!num || num.length !== 14) hasError = true;
-                    // Erro real 2: secretaria em formato antigo / fora da lista oficial
-                    if (!secInfo || !secretariasOficiais.includes(secInfo)) hasError = true;
-                    // Erro real 3: bairro não cadastrado no banco (tabela 'bairros')
+                    // AGORA USA A LISTA INTELIGENTE (secretariasValidas.has) em vez do includes antigo!
+                    if (!secInfo || !secretariasValidas.has(secInfo)) hasError = true;
                     if (bairroNaoCadastrado(bOff)) hasError = true;
-                    // Erro real 4: status antigo/descontinuado, fora da lista usada atualmente
                     if (!statInfo || !statusOficiais.includes(statInfo)) hasError = true;
-                    
-                    // Se o Doc Interno tem alguma regra para ser pego nesse filtro geral,
-                    // como por exemplo faltar a informação, você pode adicionar a lógica aqui:
-                    // const docInt = (d.doc_numero || '').trim();
-                    // if (!docInt) hasError = true;
 
                     if (!hasError) passaErro = false;
                 }
-                // ------------------------------------
 
                 return passaBusca && passaMes && passaSec && passaStat && passaErro;
             });
@@ -904,20 +907,16 @@
                 const secInfo = (d.secretaria || '').trim().toUpperCase();
                 const bOff = (d.bairro || '').trim().toUpperCase();
                 const statInfo = (d.status || '').trim();
-                // const docInt = (d.doc_numero || '').trim(); // Deixei engatilhado se precisar validar futuramente
                 
                 let errosEncontrados = [];
-                // Erro real 1: número da demanda em formato antigo (não tem os 14 dígitos do formato atual)
+                // Erro real 1
                 if (!num || num.length !== 14) errosEncontrados.push('Formato Antigo');
-                // Erro real 2: secretaria em formato antigo / fora da lista oficial
-                if (!secInfo || !secretariasOficiais.includes(secInfo)) errosEncontrados.push('Secretaria');
-                // Erro real 3: bairro não cadastrado no banco (tabela 'bairros')
+                // Erro real 2: Usa a lista INTELIGENTE
+                if (!secInfo || !secretariasValidas.has(secInfo)) errosEncontrados.push('Secretaria');
+                // Erro real 3
                 if (bairroNaoCadastrado(bOff)) errosEncontrados.push('Bairro');
-                // Erro real 4: status antigo/descontinuado, fora da lista usada atualmente
+                // Erro real 4
                 if (!statInfo || !statusOficiais.includes(statInfo)) errosEncontrados.push('Status');
-                
-                // Se o Doc Interno tem alguma regra para aparecer aqui (ex: precisa de um número de doc se a demanda for tipo X, etc)
-                // if (!docInt) errosEncontrados.push('Doc Interno');
                 
                 const tagErro = errosEncontrados.length > 0 
                     ? `<span class="detalhe-tag" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight: 800;">⚠️ Erros: ${errosEncontrados.join(', ')}</span>` 
@@ -1055,8 +1054,6 @@
 
             const secBarCounts = {};
             demandasFiltradas.forEach(d => {
-                // Precisa ser o mesmo texto usado em lidarCliqueLista('secretaria') e na tabela de eficiência
-                // ('Não Atribuída'), senão o clique na barra não encontra nenhuma demanda e a lista fica vazia.
                 const s = (d.secretaria && d.secretaria.trim() !== '') ? d.secretaria.trim() : 'Não Atribuída';
                 secBarCounts[s] = (secBarCounts[s] || 0) + 1;
             });
@@ -1256,8 +1253,6 @@
             link.download = `Backup_DB_COMPLETO_${new Date().toISOString().split('T')[0]}.json`;
             link.click(); URL.revokeObjectURL(url);
         }
-
-        window.onload = conectarBanco;
     </script>
 </body>
 </html>
