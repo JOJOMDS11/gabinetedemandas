@@ -405,7 +405,7 @@
         const statusOficiais = ['Pendente', 'Aguardando Aprovação', 'Aprovada', 'Em Andamento', '156 Solicitado', 'Expediente (Legis) Gerado', 'Aguardando Exec. Secretaria', 'Concluída', 'Rejeitada', 'Arquivada'];
         const paletaCores = ['#1a365d', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#ef4444', '#64748b', '#d946ef'];
 
-        const secretariasOficiais = ['CEPOM', 'CÂMARA DE VEREADORES', 'CAMARA DE VEREADORES', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
+        const secretariasOficiais = ['CEPOM', 'CÂMARA DE VEREADORES SÃO LEOPOLDO', 'CAMARA DE VEREADORES SAO LEOPOLDO', 'CÂMARA DE VEREADORES', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
 
         function getMesAnoReal(d) {
             if (d.data_agendada && d.data_agendada.trim() !== '') {
@@ -745,7 +745,10 @@
                 }
             } else {
                 secao.style.display = 'none';
-                btn.innerHTML = '🔽 ' + (textoAbrir || 'Mostrar');
+                let lbl = '🔽 Mostrar Lista';
+                if (btnId === 'btnToggleGargalo') lbl = '🚨 Mostrar Gargalos';
+                if (btnId === 'btnToggleBairros') lbl = '🔽 Mostrar Bairros';
+                btn.innerHTML = lbl;
             }
         }
 
@@ -1253,6 +1256,8 @@
             link.download = `Backup_DB_COMPLETO_${new Date().toISOString().split('T')[0]}.json`;
             link.click(); URL.revokeObjectURL(url);
         }
+
+        window.onload = conectarBanco;
     </script>
 </body>
 </html>
