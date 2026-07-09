@@ -405,7 +405,7 @@
         const statusOficiais = ['Pendente', 'Aguardando Aprovação', 'Aprovada', 'Em Andamento', '156 Solicitado', 'Expediente (Legis) Gerado', 'Aguardando Exec. Secretaria', 'Concluída', 'Rejeitada', 'Arquivada'];
         const paletaCores = ['#1a365d', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#ef4444', '#64748b', '#d946ef'];
 
-        const secretariasOficiais = ['CEPOM', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
+        const secretariasOficiais = ['CEPOM', 'CÂMARA DE VEREADORES', 'CAMARA DE VEREADORES', 'EDUCAÇÃO', 'FAZENDA', 'GABINETE', 'OUVIDORIA', 'PREFEITURA', 'SAÚDE', 'SGG', 'SEMHAB', 'SEMPA', 'SEMAE', 'SEMMAM', 'SEMOB', 'SEMOV', 'SEMURB'];
 
         function getMesAnoReal(d) {
             if (d.data_agendada && d.data_agendada.trim() !== '') {
@@ -740,12 +740,12 @@
             if (secao.style.display === 'none') {
                 secao.style.display = 'block';
                 btn.innerHTML = '🔼 Esconder';
+                if (secaoId === 'secaoMapa' && leafletMap) {
+                    setTimeout(() => leafletMap.invalidateSize(), 100);
+                }
             } else {
                 secao.style.display = 'none';
-                let lbl = '🔽 Mostrar Lista';
-                if (btnId === 'btnToggleGargalo') lbl = '🚨 Mostrar Gargalos';
-                if (btnId === 'btnToggleBairros') lbl = '🔽 Mostrar Bairros';
-                btn.innerHTML = lbl;
+                btn.innerHTML = '🔽 ' + (textoAbrir || 'Mostrar');
             }
         }
 
