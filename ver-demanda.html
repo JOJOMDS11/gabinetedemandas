@@ -118,7 +118,6 @@
         </a>
         <div class="navbar-actions">
             <span style="font-size:13px; color:white; margin-right:10px;">👤 <span id="nomeUsuario"></span></span>
-            <button class="btn-logout" onclick="abrirGerenciadorCadastros()" title="Gerenciar Cadastros do Sistema">⚙️</button>
             <button class="btn-logout" id="btnLogout" title="Sair">🚪</button>
         </div>
     </div>
@@ -160,30 +159,6 @@
             <div class="modal-botoes">
                 <button style="background:#e0e0e0; color:#333; flex:1;" onclick="fecharModalSenha()">Cancelar</button>
                 <button id="btnConfirmarSenha" style="background:#27ae60; color:white; flex:1;" onclick="confirmarAcaoMaster()">✅ Confirmar</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modalCadastros">
-        <div class="modal-box" style="max-width: 480px; text-align: left;">
-            <h3 style="text-align:center; color:#185199;">⚙️ Gerenciar Cadastros</h3>
-            
-            <h4 style="font-size: 14px; margin-top: 15px; margin-bottom: 10px; color: #555;">🏢 Secretarias</h4>
-            <div style="display:flex; gap:8px; margin-bottom:10px;">
-                <input type="text" id="inputNovaSecretaria" placeholder="Nome da nova secretaria..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
-                <button onclick="adicionarSecretaria()" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
-            </div>
-            <div id="listaSecretariasModal" style="max-height: 150px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-bottom:20px; border: 1px solid #eee; padding: 5px; border-radius: 4px;"></div>
-
-            <h4 style="font-size: 14px; margin-bottom: 10px; color: #555;">📍 Bairros</h4>
-            <div style="display:flex; gap:8px; margin-bottom:10px;">
-                <input type="text" id="inputNovoBairro" placeholder="Nome do novo bairro..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
-                <button onclick="adicionarBairro()" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
-            </div>
-            <div id="listaBairrosModal" style="max-height: 150px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-bottom:15px; border: 1px solid #eee; padding: 5px; border-radius: 4px;"></div>
-
-            <div class="modal-botoes">
-                <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharGerenciadorCadastros()">Fechar</button>
             </div>
         </div>
     </div>
@@ -337,65 +312,6 @@
             fotos.forEach(f => { mediaGlobal.push({ url: f, type: isVideo(f) ? 'video' : 'image' }); });
 
             renderizar(demandaAtual);
-        }
-
-        window.abrirGerenciadorCadastros = async function() { 
-            document.getElementById('modalCadastros').classList.add('ativo'); 
-            await renderizarListaSecretariasModal();
-            await renderizarListaBairrosModal();
-        }
-        
-        window.fecharGerenciadorCadastros = function() { 
-            document.getElementById('modalCadastros').classList.remove('ativo'); 
-        }
-
-        async function renderizarListaSecretariasModal() {
-            const lista = document.getElementById('listaSecretariasModal');
-            lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
-            const { data, error } = await db.from('secretarias').select('id, nome').order('nome');
-            if (!error && data) {
-                listaSecretariasCarregada = data.map(r => r.nome).sort();
-                lista.innerHTML = data.map(s => `<div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;"><span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(s.nome)}</span><button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button></div>`).join('');
-                popularSelectSecretaria(obterSecretariaEditSelecionada());
-            }
-        }
-
-        window.adicionarSecretaria = async function() {
-            const input = document.getElementById('inputNovaSecretaria');
-            const nome = input.value.trim();
-            if (!nome) return;
-            try { await db.from('secretarias').insert([{ nome }]); input.value = ''; await renderizarListaSecretariasModal(); } catch (e) { alert('Erro ao salvar.'); }
-        }
-
-        window.excluirSecretaria = async function(id, btn) {
-            if (!confirm('Remover esta secretaria?')) return;
-            btn.disabled = true;
-            try { await db.from('secretarias').delete().eq('id', id); await renderizarListaSecretariasModal(); } catch (e) { alert('Erro.'); btn.disabled = false; }
-        }
-
-        async function renderizarListaBairrosModal() {
-            const lista = document.getElementById('listaBairrosModal');
-            lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
-            const { data, error } = await db.from('bairros').select('id, nome').order('nome');
-            if (!error && data) { 
-                listaBairrosCarregada = data.map(r => r.nome.toUpperCase()).sort(); 
-                lista.innerHTML = data.map(b => `<div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;"><span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(b.nome)}</span><button onclick="excluirBairro(${b.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button></div>`).join('');
-                const datalist = document.getElementById('listaBairrosEdit');
-                if(datalist) datalist.innerHTML = listaBairrosCarregada.map(b => `<option value="${DOMPurify.sanitize(b)}"></option>`).join('');
-            }
-        }
-
-        window.adicionarBairro = async function() {
-            const input = document.getElementById('inputNovoBairro');
-            const nome = input.value.trim().toUpperCase();
-            if (!nome) return;
-            try { await db.from('bairros').insert([{ nome }]); input.value = ''; await renderizarListaBairrosModal(); } catch (e) { alert('Erro ao salvar. Pode ser um bairro duplicado.'); }
-        }
-
-        window.excluirBairro = async function(id, btn) {
-            if (!confirm('Remover este bairro?')) return;
-            btn.disabled = true;
-            try { await db.from('bairros').delete().eq('id', id); await renderizarListaBairrosModal(); } catch (e) { alert('Erro.'); btn.disabled = false; }
         }
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
@@ -709,7 +625,7 @@
                         </div>
                         <div style="display:flex; gap:8px;">
                             <button onclick="abrirLightboxIndex(${i})" class="btn-foto" style="background:#185199; font-size: 11px; padding: 6px 10px;">👁️ Ler PDF</button>
-                            <button onclick="excluirPdfUnico(${i})" class="btn-foto" style="background:#c0392b; font-size: 11px; padding: 6px 10px;">🗑️ Apagar</button>
+                            <button onclick="excluirPdfUnico(${i})" class="btn-foto" style="background:#c0392b; font-size: 11px; padding: 6px 10px;">🗑️ Excluir PDF</button>
                         </div>
                     </div>`;
                 }).join('');
@@ -767,7 +683,7 @@
 
             construirTimelineHtml(d);
 
-            const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '"');
+            const assuntoSafeJs = sAssunto.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
             const linksEquipe = euEstouCuidando ? `
                 <div style="background:#e8f0ff; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px dashed #185199;">
@@ -974,6 +890,7 @@
                                 <label>Doc. Interno (Tipo)</label>
                                 <select id="editDocTipo" ${bloqueado}>
                                     <option value="" ${!d.doc_tipo?'selected':''}>Selecione...</option>
+                                    <option value="Demanda" ${d.doc_tipo==='Demanda'?'selected':''}>Demanda</option>
                                     <option value="Emenda à Lei Orgânica" ${d.doc_tipo==='Emenda à Lei Orgânica'?'selected':''}>Emenda à Lei Orgânica</option>
                                     <option value="Indicação" ${d.doc_tipo==='Indicação'?'selected':''}>Indicação</option>
                                     <option value="Intenção de Projeto" ${d.doc_tipo==='Intenção de Projeto'?'selected':''}>Intenção de Projeto</option>
@@ -1113,7 +1030,7 @@
             box.innerHTML = arquivosPdfExtraSelecionados.map((f, i) => `
                 <div class="pdf-preview-item">
                     <span>📄 ${DOMPurify.sanitize(f.name)}</span>
-                    <button type="button" onclick="removerPdfExtra(${i})">✕</button>
+                    <button type="button" onclick="removerPdfExtra(${i})" style="background:#c0392b; color:white; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold;">🗑️ Excluir</button>
                 </div>
             `).join('');
             box.style.display = 'flex';
