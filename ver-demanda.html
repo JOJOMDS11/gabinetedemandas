@@ -104,6 +104,7 @@
         .preview-item img, .preview-item video { width: 100%; height: 100%; object-fit: cover; }
         .btn-remover-preview { position: absolute; top: 2px; right: 2px; background: rgba(231,76,60,0.9); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .pdf-preview-box { display: none; background: #e8f0ff; color: #185199; padding: 8px 12px; border-radius: 4px; border: 1px solid #185199; font-size: 13px; font-weight: bold; margin-top: 8px; align-items: center; justify-content: space-between; }
+        .pdf-preview-box button { background: none; border: none; color: #c0392b; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0; min-width: unset; flex: none; }
         .btn-micro { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 11px; font-weight: bold; padding: 4px 8px; height: 26px;}
         .btn-micro:hover { background: #e2e8f0; color: #185199; border-color: #185199; }
         .btn-acao.verde { background: #27ae60; color: white; }
@@ -651,7 +652,11 @@
             const primeiroPdf = d.pdf_url ? d.pdf_url.split(',')[0] : null;
             let btnVerPdfTop = '';
             if (primeiroPdf) {
-                btnVerPdfTop = `<button class="btn-link" style="background:#c0392b; color:white; border-color:#a93226;" onclick="abrirLightboxIndex(0)">📄 Abrir PDF</button>`;
+                btnVerPdfTop = `
+                <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:130px;">
+                    <button type="button" onclick="excluirPdfUnico(0)" style="background:transparent; color:#c0392b; border:1px solid #c0392b; border-radius:4px; font-size:10px; font-weight:bold; padding:2px 5px; cursor:pointer; width:100%; text-transform:uppercase;">🗑️ Excluir PDF</button>
+                    <button type="button" class="btn-link" style="background:#c0392b; color:white; border-color:#a93226; width:100%; margin:0;" onclick="abrirLightboxIndex(0)">📄 Abrir PDF</button>
+                </div>`;
             }
 
             let badgeClass = 'badge-Pendente';
@@ -709,7 +714,6 @@
                         </div>
                         <div style="display:flex; gap:8px;">
                             <button onclick="abrirLightboxIndex(${i})" class="btn-foto" style="background:#185199; font-size: 11px; padding: 6px 10px;">👁️ Ler PDF</button>
-                            <button onclick="excluirPdfUnico(${i})" class="btn-foto" style="background:#c0392b; font-size: 11px; padding: 6px 10px;">🗑️ Excluir PDF</button>
                         </div>
                     </div>`;
                 }).join('');
@@ -1328,6 +1332,7 @@
             document.getElementById('erroSenhaMaster').style.display = 'none';
             document.getElementById('modalSenhaMaster').classList.add('ativo');
             
+            // Foco Automático Mágico!
             setTimeout(() => { inputSenha.focus(); }, 100);
         }
 
@@ -1384,6 +1389,7 @@
             const data = await res.json(); return data.secure_url;
         }
 
+        // Exclusão por clique no botão de demands já arquivadas
         window.solicitarExclusao = function(id) {
             idParaExcluir = id;
             const inputSenha = document.getElementById('inputSenhaAcao');
@@ -1391,6 +1397,7 @@
             document.getElementById('erroSenhaAcao').style.display = 'none';
             document.getElementById('modalSenhaSegura').classList.add('ativo');
             
+            // Foco Automático Mágico!
             setTimeout(() => { inputSenha.focus(); }, 100);
         }
 
