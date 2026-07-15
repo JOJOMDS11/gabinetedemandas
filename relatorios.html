@@ -189,7 +189,7 @@
         <div class="filtros-avancados">
             <div class="filtro-item" style="flex: 2;">
                 <label>🔍 Busca Rápida</label>
-                <input type="text" id="filtroBusca" placeholder="Pesquisar por assunto, exp ou local..." oninput="debounceFiltros()">
+                <input type="text" id="filtroBusca" placeholder="Pesquisar por assunto, exp ou local..." oninput="debounceFiltros()" onkeydown="if(event.key === 'Enter') { document.querySelector('.kpi-card.total').click(); }">
             </div>
             <div class="filtro-item">
                 <label>📅 Mês (Data do Fato)</label>
@@ -223,7 +223,6 @@
                 </select>
             </div>
             
-            <!-- NOVO FILTRO DE BAIRRO ADICIONADO LADO A LADO COM STATUS -->
             <div class="filtro-item">
                 <label>📍 Bairro</label>
                 <select id="filtroBairro" onchange="aplicarFiltros()">
@@ -278,7 +277,6 @@
 
         <div class="charts-grid">
             
-            <!-- LINHA 1 (O Núcleo) -->
             <div class="chart-card">
                 <h3>Distribuição de Situação</h3>
                 <div class="chart-container"><canvas id="graficoStatus"></canvas></div>
@@ -289,7 +287,6 @@
                 <div class="chart-container"><canvas id="graficoCategorias"></canvas></div>
             </div>
 
-            <!-- LINHA 2 (Secretarias - Full Width) -->
             <div class="chart-card full-width">
                 <h3>🏢 Demandas por Secretaria</h3>
                 <div class="chart-container" style="height: 300px;"><canvas id="graficoSecBar"></canvas></div>
@@ -313,7 +310,6 @@
                 </div>
             </div>
 
-            <!-- NOVAS FUNCIONALIDADES SÊNIOR (Escondidas por padrão) -->
             <div class="chart-card full-width">
                 <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoNuvem', 'btnToggleNuvem', 'Mostrar Nuvem')">
                     ☁️ Nuvem de Assuntos <span>O que mais pedem?</span>
@@ -344,7 +340,6 @@
                 </div>
             </div>
 
-            <!-- Listas em Acordeão (Fechadas por padrão) -->
             <div class="chart-card full-width">
                 <h3 style="cursor:pointer; margin-bottom: 0; border-bottom: none;" onclick="toggleSecao('secaoOrdem', 'btnToggleOrdem', 'Mostrar Lista')">
                     Responsáveis (Ordem)
@@ -405,7 +400,6 @@
                 </div>
             </div>
 
-            <!-- Gráficos movidos para o fundo (Sempre Abertos) -->
             <div class="chart-card full-width">
                 <h3>Tendência de Abertura <span>Últimos 12 Meses (Data Fato)</span></h3>
                 <div class="chart-container" style="height: 250px;"><canvas id="graficoTendencia"></canvas></div>
@@ -571,7 +565,6 @@
                 if(d.bairro && d.bairro.trim() !== '') bairrosSet.add(d.bairro.trim().toUpperCase());
             });
 
-            // Limpa as seleções dinâmicas
             selMes.innerHTML = '<option value="todos">Todo o Período</option>';
             selSec.innerHTML = '<option value="todas">Todas as Secretarias</option>';
             selBairro.innerHTML = '<option value="todos">Todos os Bairros</option>';
@@ -1085,8 +1078,6 @@
                 const optsStatus = statusOficiais.map(s => `<option value="${s}" ${s === d.status ? 'selected' : ''}>${s}</option>`).join('');
                 const optsExec = equipeMembros.map(m => `<option value="${DOMPurify.sanitize(m)}">${DOMPurify.sanitize(m)}</option>`).join('');
 
-                // GERAÇÃO DE TAGS CLARAS DE EXPEDIENTE (EXP) E TIPO
-                const tagExp = d.expediente ? `<span class="detalhe-tag" style="background:#fffbeb; color:#854d0e; border:1px solid #fde047; font-weight:800;">📄 EXP: ${DOMPurify.sanitize(d.expediente)}</span>` : '';
                 const tagTipo = d.tipo_solicitacao ? `<span class="detalhe-tag" style="background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; font-weight:700;">🏷️ Tipo: ${DOMPurify.sanitize(d.tipo_solicitacao)}</span>` : '';
 
                 return `
@@ -1100,7 +1091,6 @@
                                 <span class="detalhe-tag">📅 ${dataF}</span>
                                 <span class="detalhe-tag" style="background:#e0f2fe; color:#1e40af;">📍 Bairro: ${bairroTxt}</span>
                                 ${tagTipo}
-                                ${tagExp}
                                 <div class="edicao-inline">
                                     <select class="sel-status" title="Mudar status">${optsStatus}</select>
                                     <div class="chips-executores">${chipsHtml}</div>
@@ -1279,7 +1269,6 @@
 
             montarTabelaSecretarias();
 
-            // 1. NUVEM DE TAGS (ASSUNTOS)
             const stopWords = ['A','O','E','DE','DA','DO','DAS','DOS','PARA','COM','EM','NA','NO','NAS','NOS','UMA','UM','QUE','POR','SOBRE','SOLICITA','PEDIDO','PROVIDÊNCIAS','RUA','BAIRRO','C/','S/','SOLICITAÇÃO','SOLICITACAO','SOLICITOU','SOLICITO','SOLICITAMOS','REQUER','PEDE','VER','DETALHES','NOVA','NOVO'];
             let words = {};
             demandasFiltradas.forEach(d => {
@@ -1300,7 +1289,6 @@
             }).join('');
             document.getElementById('tagCloudContainer').innerHTML = htmlTags || '<p style="color:#94a3b8; font-size:12px;">Sem dados suficientes</p>';
 
-            // 2. FEED DE ATIVIDADE AO VIVO
             let allEvents = [];
             demandasFiltradas.forEach(d => {
                 if(d.historico && d.historico.length > 0) {
@@ -1327,7 +1315,6 @@
             }).join('');
             document.getElementById('liveFeedContainer').innerHTML = feedHtml || '<p style="color:#94a3b8; font-size:12px; padding:10px;">Sem atividades recentes</p>';
 
-            // 3. ENVELHECIMENTO DA FILA (AGING)
             let aging = [0, 0, 0, 0]; 
             demandasFiltradas.forEach(d => {
                 if(!arrayConcluidas.includes(d.status)) {
@@ -1359,7 +1346,6 @@
                 });
             } catch(e){}
 
-            // 4. DISTRIBUIÇÃO SITUAÇÃO
             const statusCounts = {}; demandasFiltradas.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
             try {
                 chartStatus = new Chart(document.getElementById('graficoStatus'), {
@@ -1400,7 +1386,8 @@
                                     let sum = 0; ctx.chart.data.datasets[0].data.map(data => { sum += data; });
                                     let perc = (val * 100) / sum;
                                     if (perc < 4) return val; 
-                                    return label + '\n' + val; 
+                                    return label + '
+' + val; 
                                 } 
                             } 
                         }, 
@@ -1582,6 +1569,8 @@
                 'Tipo de Solicitação': d.tipo_solicitacao || '', 
                 'Assunto': d.assunto || '',
                 'Status': d.status || '',
+                'Expediente Legis': d.expediente || '',
+                'Link Legis': d.link_legis || '',
                 'Secretaria': d.secretaria || '',
                 'Responsável Ordem': d.responsavel_ordem || '',
                 'Executores': Array.isArray(d.responsaveis) ? d.responsaveis.join(', ') : '',
@@ -1589,7 +1578,6 @@
                 'Telefone': d.solicitante_tel || '',
                 'Bairro': d.bairro || '',
                 'Protocolo 156': d.protocolo || '',
-                'Expediente Legis': d.expediente || '',
                 'Doc Interno': d.doc_numero ? `${d.doc_tipo || 'Doc'} ${d.doc_numero}` : '',
                 'Link do PDF (Anexo)': d.pdf_url || 'Sem PDF',
                 'Links de Fotos (Anexos)': Array.isArray(d.fotos_urls) ? d.fotos_urls.join(' | ') : ''
@@ -1633,3 +1621,4 @@
     </script>
 </body>
 </html>
+
