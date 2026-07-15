@@ -876,13 +876,7 @@
             const qtdMeses = mapMesesCount.size > 0 ? mapMesesCount.size : 1;
             const mediaMes = Math.round(lista.length / qtdMeses);
 
-            if(ehVisaoGeral) {
-                if(document.getElementById('secaoLista').style.display === 'none') {
-                    document.getElementById('kpiTotal').textContent = lista.length;
-                }
-            } else {
-                document.getElementById('kpiTotal').textContent = lista.length;
-            }
+            document.getElementById('kpiTotal').textContent = lista.length;
             
             document.getElementById('kpiConcluidas').textContent = `${concluidas} (${taxa}%)`;
             document.getElementById('kpiAndamento').textContent = andamento;
@@ -1673,4 +1667,3 @@
     </script>
 </body>
 </html>
-
