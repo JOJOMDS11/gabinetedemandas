@@ -93,13 +93,13 @@
 </head>
 <body>
     <div class="navbar bg-primary">
-        <a href="dashboard.html" class="navbar-brand" style="display:flex; align-items:center;">
+        <a href="dashboard.html" class="navbar-brand">
             <img src="https://i.imgur.com/coryuD6.png" alt="Logo">
-            <span style="color:white; font-size:16px; margin-left:10px;">Gabinete Daniel</span>
+            <span class="brand-text"><span class="realtime-dot"></span>Gabinete Daniel</span>
         </a>
         <div class="navbar-actions">
-            <span style="font-size:13px; color:white; margin-right:10px;">👤 <span id="nomeUsuario"></span></span>
-            <button class="btn-logout" onclick="abrirGerenciadorCadastros()" title="Gerenciar Cadastros do Sistema">⚙️</button>
+            <span class="user-name-span" style="font-size:13px;">👤 <span id="nomeUsuario"></span></span>
+            <button class="btn-logout" id="btnGerenciarCadastros" onclick="abrirGerenciadorCadastros()" title="Gerenciar Cadastros do Sistema">⚙️</button>
             <button class="btn-logout" id="btnLogout" title="Sair">🚪</button>
         </div>
     </div>
@@ -365,16 +365,6 @@
     </div>
 
     <script>
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        document.addEventListener('keydown', event => {
-            if (event.keyCode === 123 || 
-               (event.ctrlKey && event.shiftKey && event.keyCode === 73) || 
-               (event.ctrlKey && event.shiftKey && event.keyCode === 74) || 
-               (event.ctrlKey && event.keyCode === 85)) {
-                event.preventDefault();
-            }
-        });
-
         let db, cloudName, uploadPreset;
         let todasDemandas = [];
         let listaGlobalFiltrada = []; 
