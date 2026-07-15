@@ -189,7 +189,7 @@
         <div class="filtros-avancados">
             <div class="filtro-item" style="flex: 2;">
                 <label>🔍 Busca Rápida</label>
-                <input type="text" id="filtroBusca" placeholder="Pesquisar por assunto, exp ou local..." oninput="debounceFiltros()" onkeydown="if(event.key === 'Enter') { document.querySelector('.kpi-card.total').click(); }">
+                <input type="text" id="filtroBusca" placeholder="Pesquisar por assunto, exp ou local..." oninput="debounceFiltros()" onkeydown="if(event.key === 'Enter') { abrirVisaoGeralBusca(); }">
             </div>
             <div class="filtro-item">
                 <label>📅 Mês (Data do Fato)</label>
@@ -258,12 +258,13 @@
 
         <div class="secao-lista" id="secaoLista">
             <h3>
-                <span id="tituloLista">Lista de Demandas</span> 
+                <span id="tituloLista" style="display: flex; align-items: center; flex-wrap: wrap;">Lista de Demandas</span> 
                 <div style="display: flex; gap: 8px;">
                     <button type="button" class="btn-ver-demanda" onclick="atualizarListaAtual(this)" style="background: #10b981; color: white; border: none; cursor: pointer; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold;">🔄 Atualizar Só Esta Lista</button>
                     <button type="button" class="btn-fechar-lista" onclick="fecharLista()">✕ Fechar Detalhamento</button>
                 </div>
             </h3>
+            <div id="containerFiltrosAtivos" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; margin-top: 5px;"></div>
             <div style="margin: 10px 0 14px;">
                 <input type="text" id="filtroListaResultado" placeholder="🔍 Pesquisar dentro desta lista..." oninput="filtrarListaResultado()" style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; color: #334155; outline: none; box-sizing: border-box;">
             </div>
@@ -434,6 +435,7 @@
         let paginaAtualLista = 1;
         const itensPorPagina = 5;
         let filtroErroFormato = false;
+        let activeDrill = null;
 
         let colSecSort = 'total';
         let dirSecSort = -1; 
@@ -622,6 +624,66 @@
             }
         }
 
+        window.abrirVisaoGeralBusca = function() {
+            clearTimeout(debounceTimeout);
+            document.getElementById('secaoLista').style.display = 'block';
+            aplicarFiltros();
+            document.getElementById('secaoLista').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        window.renderChips = function() {
+            const vBusca = document.getElementById('filtroBusca').value.trim();
+            const vMes = document.getElementById('filtroMes').value;
+            const vSec = document.getElementById('filtroSec').value;
+            const vStat = document.getElementById('filtroStatus').value;
+            const vBairro = document.getElementById('filtroBairro').value;
+
+            let chipsHtml = '';
+
+            if(vBusca) chipsHtml += criarChip('Busca: ' + vBusca, "limparGlobal('busca')");
+            if(vMes !== 'todos') {
+                const labelMes = document.querySelector(`#filtroMes option[value="${vMes}"]`).text;
+                chipsHtml += criarChip('Mês: ' + labelMes, "limparGlobal('mes')");
+            }
+            if(vSec !== 'todas') chipsHtml += criarChip('Sec: ' + vSec, "limparGlobal('sec')");
+            if(vStat !== 'todos') {
+                const labelStat = document.querySelector(`#filtroStatus option[value="${vStat}"]`).text;
+                chipsHtml += criarChip('Status: ' + labelStat, "limparGlobal('status')");
+            }
+            if(vBairro !== 'todos') chipsHtml += criarChip('Bairro: ' + vBairro, "limparGlobal('bairro')");
+            if(filtroErroFormato) chipsHtml += criarChip('Erros/Antigo', "limparGlobal('erro')");
+
+            if(activeDrill && activeDrill.tipo !== 'todas') {
+                chipsHtml += criarChip(activeDrill.label, "limparDrill()");
+            }
+
+            const container = document.getElementById('containerFiltrosAtivos');
+            if(container) container.innerHTML = chipsHtml;
+        }
+
+        function criarChip(texto, funcClear) {
+            return `<span style="background: #eef2ff; color: #1e40af; padding: 4px 10px; border-radius: 16px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #c7d2fe; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${DOMPurify.sanitize(texto)} <button type="button" onclick="${funcClear}" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:800; font-size:12px; line-height:1; padding:0; display:flex; align-items:center; justify-content:center; border-radius:50%;">✕</button></span>`;
+        }
+
+        window.limparGlobal = function(tipo) {
+            if(tipo === 'busca') document.getElementById('filtroBusca').value = '';
+            if(tipo === 'mes') document.getElementById('filtroMes').value = 'todos';
+            if(tipo === 'sec') document.getElementById('filtroSec').value = 'todas';
+            if(tipo === 'status') document.getElementById('filtroStatus').value = 'todos';
+            if(tipo === 'bairro') document.getElementById('filtroBairro').value = 'todos';
+            if(tipo === 'erro') {
+                filtroErroFormato = false;
+                document.getElementById('btnErroFormato').classList.remove('ativo');
+            }
+            aplicarFiltros();
+        }
+
+        window.limparDrill = function() {
+            activeDrill = null;
+            document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
+            aplicarFiltros();
+        }
+
         window.resetarFiltros = function() {
             document.getElementById('filtroBusca').value = '';
             document.getElementById('filtroMes').value = 'todos';
@@ -630,12 +692,13 @@
             document.getElementById('filtroBairro').value = 'todos';
             filtroErroFormato = false;
             document.getElementById('btnErroFormato').classList.remove('ativo');
-            fecharLista();
+            activeDrill = null;
+            document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
+            document.getElementById('secaoLista').style.display = 'none';
             aplicarFiltros();
         }
 
-        window.aplicarFiltros = function(manterLista = false) {
-            if (!manterLista) fecharLista();
+        window.aplicarFiltros = function(manterPagina = false) {
             const vBusca = document.getElementById('filtroBusca').value.toLowerCase().trim();
             const vMes = document.getElementById('filtroMes').value;
             const vSec = document.getElementById('filtroSec').value;
@@ -686,6 +749,90 @@
             gerarAlertas();
             atualizarKPIs();
             desenharDashboards();
+
+            let listaFinal = [...demandasFiltradas];
+
+            if (activeDrill) {
+                if (activeDrill.category === 'kpi') {
+                    if (activeDrill.tipo === 'andamento') listaFinal = listaFinal.filter(d => !arrayConcluidas.includes(d.status));
+                    else if (activeDrill.tipo === 'concluidas') listaFinal = listaFinal.filter(d => arrayConcluidas.includes(d.status));
+                    else if (activeDrill.tipo === 'atrasadas') {
+                        listaFinal = listaFinal.filter(d => {
+                            const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
+                            return !arrayConcluidas.includes(d.status) && calcularDias(dataInicioBase.toISOString()) > 30;
+                        });
+                    }
+                    else if (activeDrill.tipo === 'sem_executor') {
+                        listaFinal = listaFinal.filter(d => !arrayConcluidas.includes(d.status) && (!d.responsaveis || d.responsaveis.length === 0));
+                    }
+                } else if (activeDrill.category === 'chart') {
+                    const tipo = activeDrill.tipo;
+                    const label = activeDrill.valor;
+                    if (tipo === 'equipe') {
+                        listaFinal = listaFinal.filter(d => {
+                            let resps = Array.isArray(d.responsaveis) ? d.responsaveis : (typeof d.responsaveis === 'string' ? [d.responsaveis] : []);
+                            return resps.includes(label);
+                        });
+                    } else if (tipo === 'ordem') {
+                        listaFinal = listaFinal.filter(d => d.responsavel_ordem === label);
+                    } else if (tipo === 'bairro') {
+                        listaFinal = listaFinal.filter(d => (d.bairro || '').trim().toUpperCase() === label);
+                    } else if (tipo === 'secretaria') {
+                        listaFinal = listaFinal.filter(d => (d.secretaria || 'Não Atribuída').trim() === label);
+                    } else if (tipo === 'solicitante') {
+                        listaFinal = listaFinal.filter(d => (d.solicitante_nome || '').trim().toUpperCase() === label);
+                    } else if (tipo === 'secretaria_atrasada') {
+                        listaFinal = listaFinal.filter(d => {
+                            const secMatch = (d.secretaria || 'Sem Secretaria').trim() === label;
+                            const isEncerrada = arrayConcluidas.includes(d.status);
+                            const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
+                            const isAtrasada = calcularDias(dataInicioBase.toISOString()) > 30;
+                            return secMatch && !isEncerrada && isAtrasada;
+                        });
+                    } else if (tipo === 'prioridade') {
+                        const limitDate = new Date('2026-06-01T00:00:00');
+                        listaFinal = listaFinal.filter(d => {
+                            const dt = d.criado_em ? new Date(d.criado_em) : new Date();
+                            return dt >= limitDate && (d.prioridade || 'Normal') === label;
+                        });
+                    } else if (tipo === 'dia') {
+                        const diasSemanaMap = {'Domingo':0, 'Segunda':1, 'Terça':2, 'Quarta':3, 'Quinta':4, 'Sexta':5, 'Sábado':6};
+                        listaFinal = listaFinal.filter(d => {
+                            const dt = d.criado_em ? new Date(d.criado_em) : null;
+                            return dt && dt.getDay() === diasSemanaMap[label];
+                        });
+                    } else if (tipo === 'aging') {
+                        listaFinal = listaFinal.filter(d => {
+                            if (arrayConcluidas.includes(d.status)) return false;
+                            const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
+                            const dias = calcularDias(dataInicioBase.toISOString());
+                            if (label === 'Até 7 dias') return dias <= 7;
+                            if (label === '8 a 15 dias') return dias > 7 && dias <= 15;
+                            if (label === '16 a 30 dias') return dias > 15 && dias <= 30;
+                            if (label === 'Mais de 30 dias') return dias > 30;
+                            return false;
+                        });
+                    } else if (tipo === 'status_grafico') {
+                        listaFinal = listaFinal.filter(d => d.status === label);
+                    } else if (tipo === 'tipo_grafico') {
+                        listaFinal = listaFinal.filter(d => (d.tipo_solicitacao || 'Sem categoria') === label);
+                    }
+                }
+            }
+
+            renderChips();
+
+            let t = activeDrill ? activeDrill.label : 'Resultados (Visão Geral)';
+            document.getElementById('tituloLista').innerHTML = `${t} <span style="background:#f1f5f9; padding:2px 8px; border-radius:10px; font-size:12px; color:#3b82f6; margin-left:8px;">Listado: ${listaFinal.length}</span>`;
+
+            listaExibicaoOriginal = listaFinal.sort((a, b) => {
+                const dA = a.data_agendada ? new Date(a.data_agendada + 'T12:00:00').getTime() : new Date(a.criado_em).getTime();
+                const dB = b.data_agendada ? new Date(b.data_agendada + 'T12:00:00').getTime() : new Date(b.criado_em).getTime();
+                return dB - dA;
+            });
+
+            if (!manterPagina) paginaAtualLista = 1;
+            filtrarListaResultado(true);
         }
 
         function calcularDias(dataBase) {
@@ -887,115 +1034,20 @@
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
             if(btnCard && btnCard.classList) btnCard.classList.add('ativo');
 
-            let f = [];
-            if (tipo === 'todas') f = [...demandasFiltradas];
-            else if (tipo === 'andamento') f = demandasFiltradas.filter(d => !arrayConcluidas.includes(d.status));
-            else if (tipo === 'concluidas') f = demandasFiltradas.filter(d => arrayConcluidas.includes(d.status));
-            else if (tipo === 'atrasadas') {
-                f = demandasFiltradas.filter(d => {
-                    const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
-                    return !arrayConcluidas.includes(d.status) && calcularDias(dataInicioBase.toISOString()) > 30;
-                });
-            }
-            else if (tipo === 'sem_executor') {
-                f = demandasFiltradas.filter(d => {
-                    return !arrayConcluidas.includes(d.status) && (!d.responsaveis || d.responsaveis.length === 0);
-                });
-            }
-
-            atualizarKPIsComLista(f, false);
-            iniciarListaNaTela(`Detalhamento: ${tituloKpi} (${f.length})`, f, isRefresh);
+            activeDrill = { category: 'kpi', tipo: tipo, label: 'KPI: ' + tituloKpi };
+            document.getElementById('secaoLista').style.display = 'block';
+            aplicarFiltros(isRefresh);
+            if(!isRefresh) document.getElementById('secaoLista').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         window.lidarCliqueLista = function(label, tipo, isRefresh = false) {
             recarregarListaAtual = () => lidarCliqueLista(label, tipo, true);
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
-            let filtrado = [];
             
-            if (tipo === 'equipe') {
-                filtrado = demandasFiltradas.filter(d => {
-                    let resps = Array.isArray(d.responsaveis) ? d.responsaveis : (typeof d.responsaveis === 'string' ? [d.responsaveis] : []);
-                    return resps.includes(label);
-                });
-            } else if (tipo === 'ordem') {
-                filtrado = demandasFiltradas.filter(d => d.responsavel_ordem === label);
-            } else if (tipo === 'bairro') {
-                filtrado = demandasFiltradas.filter(d => (d.bairro || '').trim().toUpperCase() === label);
-            } else if (tipo === 'secretaria') {
-                filtrado = demandasFiltradas.filter(d => (d.secretaria || 'Não Atribuída').trim() === label);
-            } else if (tipo === 'solicitante') {
-                filtrado = demandasFiltradas.filter(d => (d.solicitante_nome || '').trim().toUpperCase() === label);
-            } else if (tipo === 'secretaria_atrasada') {
-                filtrado = demandasFiltradas.filter(d => {
-                    const secMatch = (d.secretaria || 'Sem Secretaria').trim() === label;
-                    const isEncerrada = arrayConcluidas.includes(d.status);
-                    const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
-                    const isAtrasada = calcularDias(dataInicioBase.toISOString()) > 30;
-                    return secMatch && !isEncerrada && isAtrasada;
-                });
-            } else if (tipo === 'prioridade') {
-                const limitDate = new Date('2026-06-01T00:00:00');
-                filtrado = demandasFiltradas.filter(d => {
-                    const dt = d.criado_em ? new Date(d.criado_em) : new Date();
-                    return dt >= limitDate && (d.prioridade || 'Normal') === label;
-                });
-            } else if (tipo === 'dia') {
-                const diasSemanaMap = {'Domingo':0, 'Segunda':1, 'Terça':2, 'Quarta':3, 'Quinta':4, 'Sexta':5, 'Sábado':6};
-                filtrado = demandasFiltradas.filter(d => {
-                    const dt = d.criado_em ? new Date(d.criado_em) : null;
-                    return dt && dt.getDay() === diasSemanaMap[label];
-                });
-            } else if (tipo === 'aging') {
-                filtrado = demandasFiltradas.filter(d => {
-                    if (arrayConcluidas.includes(d.status)) return false;
-                    const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
-                    const dias = calcularDias(dataInicioBase.toISOString());
-                    
-                    if (label === 'Até 7 dias') return dias <= 7;
-                    if (label === '8 a 15 dias') return dias > 7 && dias <= 15;
-                    if (label === '16 a 30 dias') return dias > 15 && dias <= 30;
-                    if (label === 'Mais de 30 dias') return dias > 30;
-                    return false;
-                });
-            }
-            
-            atualizarKPIsComLista(filtrado, false);
-            iniciarListaNaTela(`Filtro: ${label} (${filtrado.length})`, filtrado, isRefresh);
-        }
-
-        function lidarCliqueGrafico(evt, elements, chart) {
-            if (!elements || elements.length === 0) return;
-            const label = chart.data.labels[elements[0].index];
-            const tituloG = chart.options.plugins.title.text;
-            
-            let f = [];
-            if(tituloG.includes('Situação')) f = demandasFiltradas.filter(d => d.status === label);
-            else if(tituloG.includes('Tipos')) f = demandasFiltradas.filter(d => (d.tipo_solicitacao || 'Sem categoria') === label);
-
-            atualizarKPIsComLista(f, false);
-            iniciarListaNaTela(`Resultado: ${label} (${f.length})`, f, false);
-        }
-
-        function iniciarListaNaTela(titulo, lista, isRefresh = false) {
-            listaExibicaoOriginal = lista.sort((a, b) => {
-                const dA = a.data_agendada ? new Date(a.data_agendada + 'T12:00:00').getTime() : new Date(a.criado_em).getTime();
-                const dB = b.data_agendada ? new Date(b.data_agendada + 'T12:00:00').getTime() : new Date(b.criado_em).getTime();
-                return dB - dA;
-            });
-
-            if (!isRefresh) document.getElementById('filtroListaResultado').value = '';
-            
-            document.getElementById('kpiTotal').textContent = lista.length;
-            
-            if (!isRefresh) paginaAtualLista = 1;
-            
+            activeDrill = { category: 'chart', tipo: tipo, valor: label, label: `Filtro: ${label}` };
             document.getElementById('secaoLista').style.display = 'block';
-            document.getElementById('tituloLista').textContent = titulo;
-            filtrarListaResultado(isRefresh);
-            
-            if (!isRefresh) {
-                document.getElementById('secaoLista').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+            aplicarFiltros(isRefresh);
+            if(!isRefresh) document.getElementById('secaoLista').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         window.filtrarListaResultado = function(manterPagina = false) {
@@ -1022,7 +1074,8 @@
         window.fecharLista = function() {
             document.getElementById('secaoLista').style.display = 'none';
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
-            atualizarKPIs();
+            activeDrill = null;
+            aplicarFiltros(true);
         }
 
         function renderizarListaNaTela() {
@@ -1386,11 +1439,11 @@
                                     let sum = 0; ctx.chart.data.datasets[0].data.map(data => { sum += data; });
                                     let perc = (val * 100) / sum;
                                     if (perc < 4) return val; 
-                                    return label + '\n' + val; 
+                                    return [label, val]; 
                                 } 
                             } 
                         }, 
-                        onHover: hoverCursor, onClick: lidarCliqueGrafico 
+                        onHover: hoverCursor, onClick: (e, elements, chart) => { if (!elements || elements.length === 0) return; const label = chart.data.labels[elements[0].index]; lidarCliqueLista(label, 'status_grafico'); } 
                     }
                 });
             } catch(e) {}
@@ -1444,7 +1497,7 @@
                 chartCat = new Chart(document.getElementById('graficoCategorias'), {
                     type: 'bar',
                     data: { labels: sCats, datasets: [{ data: sCats.map(k => catCounts[k]), backgroundColor: '#10b981', borderRadius: 4 }] },
-                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, title:{display:true, text:'Tipos'}, datalabels: { anchor: 'end', align: 'right', font: { weight: 'bold' } } }, scales: { x:{display:false} }, onHover: hoverCursor, onClick: lidarCliqueGrafico }
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, title:{display:true, text:'Tipos'}, datalabels: { anchor: 'end', align: 'right', font: { weight: 'bold' } } }, scales: { x:{display:false} }, onHover: hoverCursor, onClick: (e, elements, chart) => { if (!elements || elements.length === 0) return; const label = chart.data.labels[elements[0].index]; lidarCliqueLista(label, 'tipo_grafico'); } }
                 });
             } catch(e){}
 
