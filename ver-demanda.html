@@ -11,9 +11,24 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f2f5; color: #333; }
         .bg-primary { background-color: #185199; }
-        .navbar { padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; color: white; }
-        .navbar img { height: 80px; background: white; padding: 5px; border-radius: 4px; }
+        .navbar { position: sticky; top: 0; z-index: 900; padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .navbar img { height: 80px; background: white; padding: 5px; border-radius: 4px; transition: height 0.2s; }
         .navbar a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
+        @media (max-width: 600px) {
+            .navbar { padding: 8px 12px; }
+            .navbar img { height: 42px; padding: 3px; }
+            .navbar-brand span { font-size: 13px !important; margin-left: 6px !important; }
+            .navbar-actions span { display: none; }
+        }
+        .fab-container { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; z-index: 800; }
+        .fab { width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.3); transition: opacity 0.25s, transform 0.25s; }
+        .fab-home { background: #98ED34; color: #185199; }
+        .fab-top { background: #185199; color: white; opacity: 0; pointer-events: none; transform: translateY(12px) scale(0.9); }
+        .fab-top.visivel { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+        @media (max-width: 600px) {
+            .fab-container { bottom: max(14px, env(safe-area-inset-bottom)); gap: 14px; }
+            .fab { width: 44px; height: 44px; font-size: 18px; }
+        }
         .container { max-width: 1000px; margin: 30px auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 15px; }
         @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
         .box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 4px solid #185199; }
@@ -123,6 +138,11 @@
         </div>
     </div>
 
+    <div class="fab-container">
+        <button class="fab fab-top" id="btnScrollTop" title="Voltar ao topo" onclick="window.scrollTo({top:0, behavior:'smooth'})">⬆️</button>
+        <button class="fab fab-home" title="Ir para o início" onclick="window.location.href='dashboard.html'">🏠</button>
+    </div>
+
     <div class="container" id="conteudo">
         <h3 style="grid-column:1/-1; text-align:center; color:#777;">Carregando...</h3>
     </div>
@@ -214,6 +234,10 @@
         let indexLightboxAtual = 0;
         let timelineItemsHtml = [];
         let paginaTimeline = 1;
+
+        window.addEventListener('scroll', () => {
+            document.getElementById('btnScrollTop').classList.toggle('visivel', window.scrollY > 300);
+        });
 
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         if (!usuarioLogado) window.location.href = 'index.html';
@@ -338,6 +362,13 @@
             fotos.forEach(f => { mediaGlobal.push({ url: f, type: isVideo(f) ? 'video' : 'image' }); });
 
             renderizar(demandaAtual);
+        }
+
+        // Atualiza os dados da demanda em tela sem recarregar/sair da página, mantendo a posição de rolagem
+        async function atualizarSemSair() {
+            const scrollAtual = window.scrollY;
+            await carregarDemanda();
+            requestAnimationFrame(() => window.scrollTo(0, scrollAtual));
         }
 
         window.abrirGerenciadorCadastros = async function() { 
@@ -1061,7 +1092,7 @@
             pdfs[0] = pdfs[index];
             pdfs[index] = temp;
             await db.from('demandas').update({ pdf_url: pdfs.join(',') }).eq('id', demandaId);
-            window.location.reload();
+            await atualizarSemSair();
         }
 
         window.excluirPdfUnico = async function(index) {
@@ -1070,7 +1101,7 @@
                 pdfs.splice(index, 1);
                 let novoPdfUrl = pdfs.length > 0 ? pdfs.join(',') : null;
                 await db.from('demandas').update({ pdf_url: novoPdfUrl }).eq('id', demandaId);
-                window.location.reload();
+                await atualizarSemSair();
             });
         }
 
@@ -1172,7 +1203,7 @@
                 updates.historico = hist;
 
                 await db.from('demandas').update(updates).eq('id', demandaId);
-                window.location.reload(); 
+                await atualizarSemSair();
             } catch (e) { alert('Erro: ' + e.message); } 
             finally { btn.disabled = false; setTimeout(() => { prog.style.display = 'none'; }, 3000); }
         }
@@ -1183,14 +1214,14 @@
             if (!responsaveis.includes(usuarioLogado)) {
                 await db.from('demandas').update({ responsaveis: [...responsaveis, usuarioLogado] }).eq('id', demandaId);
             }
-            window.location.reload();
+            await atualizarSemSair();
         }
 
         window.sairDaCuidado = async function(nome, btn) {
             btn.disabled = true; btn.style.opacity = '0.5';
             const responsaveis = (demandaAtual.responsaveis || []).filter(r => r !== nome);
             await db.from('demandas').update({ responsaveis }).eq('id', demandaId);
-            window.location.reload();
+            await atualizarSemSair();
         }
 
         window.adicionarResponsavelManual = async function(btn) {
@@ -1201,7 +1232,7 @@
             
             btn.textContent = '⏳'; btn.disabled = true;
             await db.from('demandas').update({ responsaveis: [...responsaveis, novoResp] }).eq('id', demandaId);
-            window.location.reload();
+            await atualizarSemSair();
         }
 
         window.aprovarDemanda = async function(btn) { 
@@ -1209,7 +1240,7 @@
             const hist = demandaAtual.historico || [];
             hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
             await db.from('demandas').update({ status: 'Aprovada', historico: hist }).eq('id', demandaId); 
-            window.location.reload(); 
+            await atualizarSemSair();
         }
 
         window.darVisto = async function(btn) { 
@@ -1217,7 +1248,7 @@
             const hist = demandaAtual.historico || [];
             hist.push({ status: 'Visto', autor: usuarioLogado, data: new Date().toISOString() });
             await db.from('demandas').update({ historico: hist }).eq('id', demandaId); 
-            window.location.reload(); 
+            await atualizarSemSair();
         }
 
         window.rejeitarDemanda = function() {
@@ -1311,7 +1342,7 @@
             if (!error) { 
                 temAlteracoesNaoSalvas = false;
                 if (['Arquivada', 'Rejeitada', 'Concluída'].includes(updates.status)) { window.location.href = 'dashboard.html'; } 
-                else { window.location.reload(); }
+                else { await atualizarSemSair(); }
             } else { btn.textContent = 'Erro ao salvar!'; btn.disabled = false; }
         }
 
@@ -1355,79 +1386,5 @@
 
                     if (acaoMasterPendente === 'aprovar') {
                         hist.push({ status: 'Aprovada', autor: usuarioLogado, data: new Date().toISOString() });
-                        await db.from('demandas').update({ status: 'Aprovada', historico: hist }).eq('id', demandaId); window.location.reload();
-                    } else if (acaoMasterPendente === 'arquivar') {
-                        hist.push({ status: 'Arquivada', autor: usuarioLogado, data: new Date().toISOString() });
-                        await db.from('demandas').update({ status: 'Arquivada', fotos_urls: [], historico: hist }).eq('id', demandaId); window.location.href = 'dashboard.html';
-                    } else if (acaoMasterPendente === 'excluir') { 
-                        await db.from('demandas').delete().eq('id', demandaId); window.location.href = 'dashboard.html'; 
-                    }
-                    acaoMasterPendente = null; 
-                } else { document.getElementById('erroSenhaMaster').style.display = 'block'; }
-            } catch (error) { document.getElementById('erroSenhaMaster').style.display = 'block'; } 
-            finally { btn.textContent = '✅ Confirmar'; btn.disabled = false; }
-        }
-
-        window.apagarFotoUnica = function(index) {
-            pedirConfirmacao('🗑️ Apagar Mídia', 'Certeza que deseja apagar este anexo?', async () => {
-                const fotos = [...(demandaAtual.fotos_urls || [])]; fotos.splice(index, 1);
-                await db.from('demandas').update({ fotos_urls: fotos }).eq('id', demandaId); window.location.reload();
-            });
-        }
-
-        window.forcarDownload = async function(url, nome) {
-            try {
-                const response = await fetch(url); const blob = await response.blob();
-                const a = document.createElement('a'); a.href = window.URL.createObjectURL(blob);
-                a.download = nome; a.click();
-            } catch { alert('Erro ao baixar.'); }
-        }
-
-        async function uploadCloudinaryDirect(file) {
-            const formData = new FormData(); formData.append('file', file); formData.append('upload_preset', uploadPreset);
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, { method: 'POST', body: formData });
-            const data = await res.json(); return data.secure_url;
-        }
-
-        // Exclusão por clique no botão de demands já arquivadas
-        window.solicitarExclusao = function(id) {
-            idParaExcluir = id;
-            const inputSenha = document.getElementById('inputSenhaAcao');
-            inputSenha.value = ''; 
-            document.getElementById('erroSenhaAcao').style.display = 'none';
-            document.getElementById('modalSenhaSegura').classList.add('ativo');
-            
-            // Foco Automático Mágico!
-            setTimeout(() => { inputSenha.focus(); }, 100);
-        }
-
-        window.fecharModalExclusao = function() { document.getElementById('modalSenhaSegura').classList.remove('ativo'); idParaExcluir = null; }
-
-        window.processarExclusao = async function() {
-            const senha = document.getElementById('inputSenhaAcao').value.trim(); const btn = document.getElementById('btnConfirmarSenhaAcao');
-            if(!senha) return; btn.textContent = '⏳ Excluindo...'; btn.disabled = true;
-            try {
-                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'validar_master', senha: senha }) });
-                if (res.ok) { await db.from('demandas').delete().eq('id', idParaExcluir); fecharModalExclusao(); window.location.href = 'dashboard.html'; } 
-                else { document.getElementById('erroSenhaAcao').style.display = 'block'; }
-            } catch (error) { document.getElementById('erroSenhaAcao').style.display = 'block'; } 
-            finally { btn.textContent = 'Confirmar'; btn.disabled = false; }
-        }
-
-        let sessionTimeout;
-        function resetarSessao() {
-            clearTimeout(sessionTimeout);
-            sessionTimeout = setTimeout(() => {
-                alert("Sessão expirada por inatividade. Por segurança, faça login novamente.");
-                document.getElementById('btnLogout').click();
-            }, 30 * 60 * 1000);
-        }
-        document.addEventListener('mousemove', resetarSessao);
-        document.addEventListener('keypress', resetarSessao);
-        document.addEventListener('click', resetarSessao);
-        resetarSessao();
-
-        inicializarSistema();
-    </script>
-</body>
-</html>
+                        await db.from('demandas').update({ status: 'Aprovada', historico: hist }).eq('id', demandaId); await atualizarSemSair();
+  
