@@ -747,7 +747,6 @@
             });
 
             gerarAlertas();
-            atualizarKPIs();
             desenharDashboards();
 
             let listaFinal = [...demandasFiltradas];
@@ -819,6 +818,8 @@
                     }
                 }
             }
+
+            atualizarKPIsComLista(listaFinal);
 
             renderChips();
 
@@ -1667,3 +1668,4 @@
     </script>
 </body>
 </html>
+
