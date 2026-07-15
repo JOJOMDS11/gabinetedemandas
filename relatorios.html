@@ -52,22 +52,6 @@
         .alerta-critico { background: #fef2f2; color: #991b1b; border-left-color: #ef4444; }
         .alerta-aviso { background: #fffbeb; color: #854d0e; border-left-color: #f59e0b; }
 
-        /* ================= ESTILOS DO PAINEL OPERACIONAL INJETADOS ================= */
-        .card-op { background-color: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; margin-bottom: 20px; }
-        .btn-op { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-right: 5px; margin-bottom: 5px; font-size: 13px; transition: 0.2s; }
-        .btn-op:hover { filter: brightness(0.9); }
-        .btn-op-primary { background-color: #3b82f6; color: white; }
-        .btn-op-success { background-color: #10b981; color: white; }
-        .btn-op-warning { background-color: #f59e0b; color: white; }
-        .badge-group { margin-top: 15px; font-size: 13px; }
-        .badge-group strong { display: inline-block; width: 100px; color: #475569; }
-        .badge-op { display: inline-block; background-color: #f1f5f9; padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin: 3px; cursor: pointer; color: #334155; border: 1px solid transparent;}
-        .badge-op:hover { background-color: #e2e8f0; }
-        .input-op { width: 100%; padding: 10px; margin-top: 8px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: #f8fafc; outline: none;}
-        .input-op:focus { border-color: #3b82f6; background: white; }
-        hr.hr-op { border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0; }
-        /* =========================================================================== */
-
         .filtros-avancados { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; margin-bottom: 30px; display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;}
         .filtro-item { display: flex; flex-direction: column; flex: 1; min-width: 180px; }
         .filtro-item label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; }
@@ -99,15 +83,13 @@
         .lista-item:nth-child(even) { background-color: #f8fafc; }
         .lista-item:hover { background-color: #f0f9ff; }
 
-        .edicao-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 5px 7px; max-width: 260px; position: relative; z-index: 2; }
-        .edicao-inline select { padding: 3px 4px; border-radius: 4px; border: 1px solid #c7d2fe; font-size: 11px; background: white; color: #1e293b; max-width: 118px; cursor: pointer; position: relative; z-index: 3; }
-        .chips-executores { display: flex; flex-wrap: wrap; gap: 3px; max-width: 240px; }
-        .chip-exec { font-size: 10px; padding: 2px 5px; }
-        .chips-executores { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 4px; }
-        .chip-exec { display: inline-flex; align-items: center; gap: 4px; background: #f3e8ff; color: #7e22ce; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+        .edicao-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 8px; max-width: 100%; position: relative; z-index: 2; margin-top: 5px;}
+        .edicao-inline select { padding: 4px 6px; border-radius: 4px; border: 1px solid #c7d2fe; font-size: 12px; background: white; color: #1e293b; max-width: 130px; cursor: pointer; position: relative; z-index: 3; }
+        .chips-executores { display: flex; flex-wrap: wrap; gap: 5px; }
+        .chip-exec { display: inline-flex; align-items: center; gap: 4px; background: #f3e8ff; color: #7e22ce; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
         .chip-exec button { border: none; background: transparent; color: #7e22ce; cursor: pointer; font-weight: 800; font-size: 11px; line-height: 1; padding: 0; }
         .chip-exec button:hover { color: #b91c1c; }
-        .btn-salvar-inline { background: #16a34a; color: white; border: none; padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; position: relative; z-index: 3; }
+        .btn-salvar-inline { background: #16a34a; color: white; border: none; padding: 6px 12px; border-radius: 5px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; position: relative; z-index: 3; display: inline-flex; align-items: center; gap: 4px;}
         .btn-salvar-inline:hover { background: #15803d; }
         .btn-salvar-inline.salvo { background: #0f172a; }
         .btn-home { background: #fef08a; color: #854d0e; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; border: 1px solid rgba(255,255,255,0.2); white-space: nowrap; }
@@ -203,62 +185,6 @@
         </div>
 
         <div id="containerAlertas"></div>
-
-        <!-- ================= INÍCIO: PAINEL OPERACIONAL INTEGRADO ================= -->
-        <div class="card-op">
-            <h2 style="margin-top: 0; margin-bottom: 15px; font-size: 18px; color: #1e293b;">⚡ Ações Operacionais de Demandas</h2>
-            
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
-                <button class="btn-op btn-op-primary">☑️ Selecionar Cards</button>
-                <button class="btn-op btn-op-warning" style="color: #000;">📄 Gerar Ofício (Word)</button>
-                
-                <!-- Ações Rápidas em Lote -->
-                <div style="display: flex; gap: 10px; align-items: center; background: #f8fafc; padding: 5px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                    <span style="font-size: 13px; font-weight: bold; color: #475569;">Ações em Lote:</span>
-                    <select class="input-op" style="width: auto; margin: 0; padding: 6px 10px;">
-                        <option>⚡ Mudar Status...</option>
-                        <option>✅ Aprovada</option>
-                        <option>🏃 Em Andamento</option>
-                        <option>🏁 Concluída</option>
-                        <option>📦 Arquivada</option>
-                    </select>
-                    <button class="btn-op btn-op-success" style="margin: 0; padding: 6px 12px;">Aplicar</button>
-                </div>
-            </div>
-
-            <div class="badge-group">
-                <strong>Categorias:</strong>
-                <span class="badge-op">📁 Todas</span>
-                <span class="badge-op">📅 Agendas e Internos</span>
-                <span class="badge-op">🚧 Demandas (Rua)</span>
-                <span class="badge-op">⚖️ Legislativo</span>
-            </div>
-
-            <div class="badge-group">
-                <strong>Equipe:</strong>
-                <span class="badge-op">Toda a Equipe</span>
-                <span class="badge-op">Daniel</span>
-                <span class="badge-op">João Pedro</span>
-                <span class="badge-op">Alemão</span>
-                <span class="badge-op">Antonio</span>
-                <span class="badge-op">Luana</span>
-                <span class="badge-op">Débora</span>
-            </div>
-
-            <hr class="hr-op">
-
-            <div class="badge-group" style="background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                <strong>Status Rápido:</strong>
-                <span class="badge-op" style="background:#fff; border: 1px solid #ccc;">Todas</span>
-                <span class="badge-op">📥 Pendentes</span>
-                <span class="badge-op">⏳ Aprovação</span>
-                <span class="badge-op">✅ Aprovadas</span>
-                <span class="badge-op">🏃 Andamento</span>
-                <span class="badge-op">🔢 156</span>
-                <span class="badge-op">🏁 Concluídas</span>
-            </div>
-        </div>
-        <!-- ================= FIM: PAINEL OPERACIONAL INTEGRADO ================= -->
 
         <div class="filtros-avancados">
             <div class="filtro-item" style="flex: 2;">
@@ -1113,7 +1039,7 @@
                                         <option value="">+ Executor...</option>
                                         ${optsExec}
                                     </select>
-                                    <button type="button" class="btn-salvar-inline" title="Salvar" onclick="salvarEdicaoInline('${d.id}', this)">💾</button>
+                                    <button type="button" class="btn-salvar-inline" title="Salvar" onclick="salvarEdicaoInline('${d.id}', this)">💾 SALVAR</button>
                                 </div>
                             </div>
                             <div>
@@ -1160,7 +1086,7 @@
             const novosResponsaveis = Array.from(item.querySelectorAll('.chip-exec')).map(c => c.firstChild.textContent.trim());
 
             const txtOrig = btnSalvar.innerHTML;
-            btnSalvar.innerHTML = '⏳';
+            btnSalvar.innerHTML = '⏳ Salvando...';
             btnSalvar.disabled = true;
 
             try {
@@ -1183,7 +1109,7 @@
                     if (alvo) { alvo.status = novoStatus; alvo.responsaveis = novosResponsaveis; alvo.historico = hist; }
                 });
 
-                btnSalvar.innerHTML = '✅';
+                btnSalvar.innerHTML = '✅ Salvo!';
                 btnSalvar.classList.add('salvo');
 
                 aplicarFiltros(true);
