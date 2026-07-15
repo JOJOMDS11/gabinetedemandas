@@ -1386,7 +1386,7 @@
                                     let sum = 0; ctx.chart.data.datasets[0].data.map(data => { sum += data; });
                                     let perc = (val * 100) / sum;
                                     if (perc < 4) return val; 
-                                    return label + '' + val; 
+                                    return label + '\n' + val; 
                                 } 
                             } 
                         }, 
