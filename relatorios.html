@@ -256,6 +256,9 @@
                     <button type="button" class="btn-fechar-lista" onclick="fecharLista()">✕ Fechar Detalhamento</button>
                 </div>
             </h3>
+            <div style="margin: 10px 0 14px;">
+                <input type="text" id="filtroListaResultado" placeholder="🔍 Pesquisar dentro desta lista..." oninput="filtrarListaResultado()" style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; color: #334155; outline: none; box-sizing: border-box;">
+            </div>
             <div id="containerItensLista" style="max-height: 400px; overflow-y: auto;"></div>
             <div class="paginacao">
                 <button id="btnListaAnt" onclick="mudarPaginaLista(-1)">❮ Anterior</button>
@@ -423,6 +426,7 @@
         let db;
         let todasDemandasRAW = []; 
         let demandasFiltradas = []; 
+        let listaExibicaoOriginal = [];
         let listaExibicao = [];
         let paginaAtualLista = 1;
         const itensPorPagina = 5;
@@ -672,10 +676,14 @@
         }
 
         function atualizarKPIs() {
+            atualizarKPIsComLista(demandasFiltradas, true);
+        }
+
+        function atualizarKPIsComLista(lista, ehVisaoGeral = false) {
             let andamento = 0, concluidas = 0, atrasadas = 0, esperaMax = 0;
             let totalTempoMs = 0, qtdResolvidas = 0;
 
-            demandasFiltradas.forEach(d => {
+            lista.forEach(d => {
                 const isEncerrada = arrayConcluidas.includes(d.status);
                 const dataInicioBase = d.data_agendada ? new Date(d.data_agendada + 'T12:00:00') : new Date(d.criado_em);
                 const diasAberto = calcularDias(dataInicioBase.toISOString());
@@ -696,16 +704,20 @@
                 }
             });
 
-            const taxa = demandasFiltradas.length > 0 ? Math.round((concluidas / demandasFiltradas.length) * 100) : 0;
+            const taxa = lista.length > 0 ? Math.round((concluidas / lista.length) * 100) : 0;
 
             const mapMesesCount = new Set();
-            demandasFiltradas.forEach(d => { const m = getMesAnoReal(d); if(m !== 'Desconhecido') mapMesesCount.add(m); });
+            lista.forEach(d => { const m = getMesAnoReal(d); if(m !== 'Desconhecido') mapMesesCount.add(m); });
             const qtdMeses = mapMesesCount.size > 0 ? mapMesesCount.size : 1;
-            const mediaMes = Math.round(demandasFiltradas.length / qtdMeses);
+            const mediaMes = Math.round(lista.length / qtdMeses);
 
-            // Somente atualiza kpiTotal se não houver uma lista aberta, ou se a lista for recarregada
-            if(document.getElementById('secaoLista').style.display === 'none') {
-                document.getElementById('kpiTotal').textContent = demandasFiltradas.length;
+            // Somente atualiza kpiTotal aqui se for a visão geral e não houver lista aberta
+            if(ehVisaoGeral) {
+                if(document.getElementById('secaoLista').style.display === 'none') {
+                    document.getElementById('kpiTotal').textContent = lista.length;
+                }
+            } else {
+                document.getElementById('kpiTotal').textContent = lista.length;
             }
             
             document.getElementById('kpiConcluidas').textContent = `${concluidas} (${taxa}%)`;
@@ -874,6 +886,7 @@
                 });
             }
 
+            atualizarKPIsComLista(f, false);
             iniciarListaNaTela(`Detalhamento: ${tituloKpi} (${f.length})`, f, isRefresh);
         }
 
@@ -929,6 +942,7 @@
                 });
             }
             
+            atualizarKPIsComLista(filtrado, false);
             iniciarListaNaTela(`Filtro: ${label} (${filtrado.length})`, filtrado, isRefresh);
         }
 
@@ -941,15 +955,18 @@
             if(tituloG.includes('Situação')) f = demandasFiltradas.filter(d => d.status === label);
             else if(tituloG.includes('Tipos')) f = demandasFiltradas.filter(d => (d.tipo_solicitacao || 'Sem categoria') === label);
 
+            atualizarKPIsComLista(f, false);
             iniciarListaNaTela(`Resultado: ${label} (${f.length})`, f, false);
         }
 
         function iniciarListaNaTela(titulo, lista, isRefresh = false) {
-            listaExibicao = lista.sort((a, b) => {
+            listaExibicaoOriginal = lista.sort((a, b) => {
                 const dA = a.data_agendada ? new Date(a.data_agendada + 'T12:00:00').getTime() : new Date(a.criado_em).getTime();
                 const dB = b.data_agendada ? new Date(b.data_agendada + 'T12:00:00').getTime() : new Date(b.criado_em).getTime();
                 return dB - dA;
             });
+
+            if (!isRefresh) document.getElementById('filtroListaResultado').value = '';
             
             // MÁGICA: Atualiza o Total lá de cima para refletir o filtro aberto
             document.getElementById('kpiTotal').textContent = lista.length;
@@ -958,18 +975,38 @@
             
             document.getElementById('secaoLista').style.display = 'block';
             document.getElementById('tituloLista').textContent = titulo;
-            renderizarListaNaTela();
+            filtrarListaResultado(isRefresh);
             
             if (!isRefresh) {
                 document.getElementById('secaoLista').scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
 
+        window.filtrarListaResultado = function(manterPagina = false) {
+            const v = document.getElementById('filtroListaResultado').value.toLowerCase().trim();
+
+            if (!v) {
+                listaExibicao = listaExibicaoOriginal;
+            } else {
+                listaExibicao = listaExibicaoOriginal.filter(d => 
+                    (d.assunto||'').toLowerCase().includes(v) ||
+                    (d.bairro||'').toLowerCase().includes(v) ||
+                    (d.solicitante_nome||'').toLowerCase().includes(v) ||
+                    (d.numero_demanda||'').toLowerCase().includes(v) ||
+                    (d.secretaria||'').toLowerCase().includes(v) ||
+                    (d.status||'').toLowerCase().includes(v)
+                );
+            }
+
+            if (!manterPagina) paginaAtualLista = 1;
+            renderizarListaNaTela();
+        }
+
         window.fecharLista = function() {
             document.getElementById('secaoLista').style.display = 'none';
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
-            // Volta ao total filtrado atual ao invés do sub-filtro aberto
-            document.getElementById('kpiTotal').textContent = demandasFiltradas.length; 
+            // Volta aos KPIs da visão geral (respeitando os filtros dos dropdowns)
+            atualizarKPIs();
         }
 
         function renderizarListaNaTela() {
@@ -1104,7 +1141,7 @@
                 const { error } = await db.from('demandas').update(updates).eq('id', id);
                 if (error) { alert("Erro ao salvar: " + error.message); return; }
 
-                [todasDemandasRAW, demandasFiltradas, listaExibicao].forEach(lista => {
+                [todasDemandasRAW, demandasFiltradas, listaExibicao, listaExibicaoOriginal].forEach(lista => {
                     const alvo = lista.find(d => String(d.id) === String(id));
                     if (alvo) { alvo.status = novoStatus; alvo.responsaveis = novosResponsaveis; alvo.historico = hist; }
                 });
