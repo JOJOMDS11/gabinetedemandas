@@ -31,7 +31,7 @@
             .navbar { flex-direction: column; align-items: stretch; padding: 12px; }
             .navbar h1 { text-align: center; margin-bottom: 8px; font-size: 16px; }
             .nav-actions { justify-content: center; }
-            .btn-reset-nav, .btn-voltar { flex: 1; text-align: center; }
+            .btn-reset-nav, .btn-voltar, .btn-home { flex: 1; text-align: center; }
         }
 
         .container { max-width: 1350px; margin: 30px auto 0; padding: 0 15px; }
@@ -75,7 +75,24 @@
         .secao-lista { background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px solid #3b82f6; display: none; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1);}
         .secao-lista h3 { font-size: 15px; color: #0f172a; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
         .btn-fechar-lista { background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold;}
-        .lista-item { border-bottom: 1px solid #f1f5f9; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap;}
+        .lista-item { border-bottom: 1px solid #f1f5f9; padding: 12px 10px; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; border-radius: 6px;}
+        .lista-item:nth-child(odd) { background-color: #ffffff; }
+        .lista-item:nth-child(even) { background-color: #f8fafc; }
+        .lista-item:hover { background-color: #f0f9ff; }
+
+        .edicao-inline { display: flex; flex-direction: column; gap: 8px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 10px 12px; min-width: 230px; }
+        .edicao-linha { display: flex; flex-direction: column; gap: 4px; }
+        .edicao-linha label { font-size: 10px; font-weight: 700; color: #4338ca; text-transform: uppercase; letter-spacing: 0.3px; }
+        .edicao-linha select { padding: 6px 8px; border-radius: 5px; border: 1px solid #c7d2fe; font-size: 12px; background: white; color: #1e293b; }
+        .chips-executores { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 4px; }
+        .chip-exec { display: inline-flex; align-items: center; gap: 4px; background: #f3e8ff; color: #7e22ce; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+        .chip-exec button { border: none; background: transparent; color: #7e22ce; cursor: pointer; font-weight: 800; font-size: 11px; line-height: 1; padding: 0; }
+        .chip-exec button:hover { color: #b91c1c; }
+        .btn-salvar-inline { background: #16a34a; color: white; border: none; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-salvar-inline:hover { background: #15803d; }
+        .btn-salvar-inline.salvo { background: #0f172a; }
+        .btn-home { background: #fef08a; color: #854d0e; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; border: 1px solid rgba(255,255,255,0.2); white-space: nowrap; }
+        .btn-home:hover { background: #fde047; }
         .lista-info strong { color: #1e293b; font-size: 14px; display: block; margin-bottom: 6px;}
         .detalhe-tag { display: inline-flex; align-items: center; background: #f1f5f9; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; color: #475569; margin-right: 6px; margin-bottom: 4px;}
         .btn-ver-demanda { background: #3b82f6; color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; white-space: nowrap; transition: 0.2s;}
@@ -148,6 +165,7 @@
         <h1>📊 Gabinete Analytics PRO</h1>
         <div class="nav-actions">
             <button class="btn-reset-nav" onclick="resetarFiltros()">🧹 Limpar Filtros / Visão Atual</button>
+            <a href="dashboard.html" class="btn-home">🏠 Home</a>
             <a href="dashboard.html" class="btn-voltar">← Voltar ao Painel</a>
         </div>
     </div>
@@ -446,6 +464,7 @@
             'COHAB': [-29.785, -51.115]
         };
 
+        const equipeMembros = ['Alemão', 'Antonio', 'Daniel', 'Débora', 'João Pedro', 'Luana'];
         const arrayAbertas = ['Pendente', 'Aguardando Aprovação'];
         const arrayConcluidas = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
         const statusOficiais = ['Pendente', 'Aguardando Aprovação', 'Aprovada', 'Em Andamento', '156 Solicitado', 'Expediente (Legis) Gerado', 'Aguardando Exec. Secretaria', 'Concluída', 'Rejeitada', 'Arquivada'];
@@ -983,8 +1002,15 @@
                     ? `<span class="detalhe-tag" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight: 800;">⚠️ Erros: ${errosEncontrados.join(', ')}</span>` 
                     : '';
 
+                const respArray = Array.isArray(d.responsaveis) ? d.responsaveis : (typeof d.responsaveis === 'string' && d.responsaveis ? [d.responsaveis] : []);
+                const chipsHtml = respArray.length > 0
+                    ? respArray.map(r => `<span class="chip-exec">${DOMPurify.sanitize(r)} <button type="button" title="Remover" onclick="removerChipInline(this)">✕</button></span>`).join('')
+                    : '';
+                const optsStatus = statusOficiais.map(s => `<option value="${s}" ${s === d.status ? 'selected' : ''}>${s}</option>`).join('');
+                const optsExec = equipeMembros.map(m => `<option value="${DOMPurify.sanitize(m)}">${DOMPurify.sanitize(m)}</option>`).join('');
+
                 return `
-                    <div class="lista-item">
+                    <div class="lista-item" data-id="${d.id}">
                         <div class="lista-info" style="flex:1;">
                             <strong>${DOMPurify.sanitize(d.assunto)}</strong>
                             <div style="margin-bottom: 8px;">
@@ -998,6 +1024,21 @@
                                 ${tagErro}
                             </div>
                         </div>
+                        <div class="edicao-inline">
+                            <div class="edicao-linha">
+                                <label>Status</label>
+                                <select class="sel-status">${optsStatus}</select>
+                            </div>
+                            <div class="edicao-linha">
+                                <label>Executores</label>
+                                <div class="chips-executores">${chipsHtml}</div>
+                                <select class="sel-add-exec" onchange="adicionarChipInline(this)">
+                                    <option value="">+ Adicionar executor...</option>
+                                    ${optsExec}
+                                </select>
+                            </div>
+                            <button type="button" class="btn-salvar-inline" onclick="salvarEdicaoInline('${d.id}', this)">💾 Salvar</button>
+                        </div>
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap:wrap; justify-content: flex-end;">
                             ${btnLocal}
                             ${btnLegis}
@@ -1009,6 +1050,72 @@
             document.getElementById('infoPaginaLista').textContent = `Pág ${paginaAtualLista} de ${totalPags}`;
             document.getElementById('btnListaAnt').disabled = paginaAtualLista === 1;
             document.getElementById('btnListaProx').disabled = paginaAtualLista >= totalPags;
+        }
+
+        window.adicionarChipInline = function(selectEl) {
+            const nome = selectEl.value;
+            if (!nome) return;
+            const container = selectEl.closest('.edicao-inline').querySelector('.chips-executores');
+            const jaExiste = Array.from(container.querySelectorAll('.chip-exec')).some(c => c.firstChild && c.firstChild.textContent.trim() === nome);
+            if (!jaExiste) {
+                const chip = document.createElement('span');
+                chip.className = 'chip-exec';
+                chip.innerHTML = `${DOMPurify.sanitize(nome)} <button type="button" title="Remover" onclick="removerChipInline(this)">✕</button>`;
+                container.appendChild(chip);
+            }
+            selectEl.value = '';
+        }
+
+        window.removerChipInline = function(btn) {
+            btn.closest('.chip-exec').remove();
+        }
+
+        window.salvarEdicaoInline = async function(id, btnSalvar) {
+            const item = btnSalvar.closest('.lista-item');
+            const novoStatus = item.querySelector('.sel-status').value;
+            const novosResponsaveis = Array.from(item.querySelectorAll('.chip-exec')).map(c => c.firstChild.textContent.trim());
+
+            const txtOrig = btnSalvar.innerHTML;
+            btnSalvar.innerHTML = '⏳ Salvando...';
+            btnSalvar.disabled = true;
+
+            try {
+                if (!db) { alert("Banco de dados não conectado. Atualize a página."); return; }
+
+                const demandaLocal = todasDemandasRAW.find(d => String(d.id) === String(id));
+                const hist = (demandaLocal && demandaLocal.historico) ? demandaLocal.historico.slice() : [];
+                const autor = localStorage.getItem('usuarioLogado') || 'Painel Relatórios';
+                const statusAnterior = demandaLocal ? demandaLocal.status : null;
+                if (statusAnterior !== novoStatus) {
+                    hist.push({ status: novoStatus, autor: autor, data: new Date().toISOString() });
+                }
+
+                const updates = { status: novoStatus, responsaveis: novosResponsaveis, historico: hist };
+                const { error } = await db.from('demandas').update(updates).eq('id', id);
+                if (error) { alert("Erro ao salvar: " + error.message); return; }
+
+                [todasDemandasRAW, demandasFiltradas, listaExibicao].forEach(lista => {
+                    const alvo = lista.find(d => String(d.id) === String(id));
+                    if (alvo) { alvo.status = novoStatus; alvo.responsaveis = novosResponsaveis; alvo.historico = hist; }
+                });
+
+                btnSalvar.innerHTML = '✅ Salvo!';
+                btnSalvar.classList.add('salvo');
+
+                aplicarFiltros(true);
+                if (recarregarListaAtual) recarregarListaAtual();
+
+                setTimeout(() => {
+                    btnSalvar.innerHTML = txtOrig;
+                    btnSalvar.classList.remove('salvo');
+                    btnSalvar.disabled = false;
+                }, 1500);
+            } catch (err) {
+                console.error("Erro ao salvar edição inline: ", err);
+                alert("Erro inesperado ao salvar.");
+                btnSalvar.innerHTML = txtOrig;
+                btnSalvar.disabled = false;
+            }
         }
 
         window.mudarPaginaLista = function(direcao) { paginaAtualLista += direcao; renderizarListaNaTela(); }
@@ -1200,7 +1307,7 @@
                                     document.getElementById('kpiTotal').textContent = visibleTotal;
                                 }
                             }, 
-                            title:{display:false}, 
+                            title:{display:false, text:'Distribuição de Situação'}, 
                             datalabels: { 
                                 color: '#ffffff', font: { weight: '800', size: 10 }, textAlign: 'center',
                                 formatter: (val, ctx) => {
