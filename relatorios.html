@@ -189,7 +189,7 @@
         <div class="filtros-avancados">
             <div class="filtro-item" style="flex: 2;">
                 <label>🔍 Busca Rápida</label>
-                <input type="text" id="filtroBusca" placeholder="Pesquisar por assunto ou local..." oninput="debounceFiltros()">
+                <input type="text" id="filtroBusca" placeholder="Pesquisar por assunto, exp ou local..." oninput="debounceFiltros()">
             </div>
             <div class="filtro-item">
                 <label>📅 Mês (Data do Fato)</label>
@@ -633,7 +633,8 @@
                     passaBusca = (d.assunto||'').toLowerCase().includes(vBusca) || 
                                  (d.bairro||'').toLowerCase().includes(vBusca) ||
                                  (d.solicitante_nome||'').toLowerCase().includes(vBusca) ||
-                                 (d.numero_demanda||'').toLowerCase().includes(vBusca);
+                                 (d.numero_demanda||'').toLowerCase().includes(vBusca) ||
+                                 (d.expediente||'').toLowerCase().includes(vBusca); // Adicionado filtro por Expediente
                 }
                 
                 if (vMes !== 'todos') passaMes = getMesAnoReal(d) === vMes;
@@ -711,7 +712,6 @@
             const qtdMeses = mapMesesCount.size > 0 ? mapMesesCount.size : 1;
             const mediaMes = Math.round(lista.length / qtdMeses);
 
-            // Somente atualiza kpiTotal aqui se for a visão geral e não houver lista aberta
             if(ehVisaoGeral) {
                 if(document.getElementById('secaoLista').style.display === 'none') {
                     document.getElementById('kpiTotal').textContent = lista.length;
@@ -968,7 +968,6 @@
 
             if (!isRefresh) document.getElementById('filtroListaResultado').value = '';
             
-            // MÁGICA: Atualiza o Total lá de cima para refletir o filtro aberto
             document.getElementById('kpiTotal').textContent = lista.length;
             
             if (!isRefresh) paginaAtualLista = 1;
@@ -994,7 +993,8 @@
                     (d.solicitante_nome||'').toLowerCase().includes(v) ||
                     (d.numero_demanda||'').toLowerCase().includes(v) ||
                     (d.secretaria||'').toLowerCase().includes(v) ||
-                    (d.status||'').toLowerCase().includes(v)
+                    (d.status||'').toLowerCase().includes(v) ||
+                    (d.expediente||'').toLowerCase().includes(v) // Adicionado filtro por Expediente na lista interna
                 );
             }
 
@@ -1005,7 +1005,6 @@
         window.fecharLista = function() {
             document.getElementById('secaoLista').style.display = 'none';
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
-            // Volta aos KPIs da visão geral (respeitando os filtros dos dropdowns)
             atualizarKPIs();
         }
 
@@ -1141,21 +1140,27 @@
                 const { error } = await db.from('demandas').update(updates).eq('id', id);
                 if (error) { alert("Erro ao salvar: " + error.message); return; }
 
-                [todasDemandasRAW, demandasFiltradas, listaExibicao, listaExibicaoOriginal].forEach(lista => {
-                    const alvo = lista.find(d => String(d.id) === String(id));
-                    if (alvo) { alvo.status = novoStatus; alvo.responsaveis = novosResponsaveis; alvo.historico = hist; }
-                });
+                // Atualiza APENAS no repositório base local.
+                if (demandaLocal) {
+                    demandaLocal.status = novoStatus;
+                    demandaLocal.responsaveis = novosResponsaveis;
+                    demandaLocal.historico = hist;
+                }
 
                 btnSalvar.innerHTML = '✅ Salvo!';
                 btnSalvar.classList.add('salvo');
 
+                // Força a atualização do painel, limpando da lista os itens que não pertencem mais a ela.
                 aplicarFiltros(true);
                 if (recarregarListaAtual) recarregarListaAtual();
 
                 setTimeout(() => {
-                    btnSalvar.innerHTML = txtOrig;
-                    btnSalvar.classList.remove('salvo');
-                    btnSalvar.disabled = false;
+                    // Verifica se o botão ainda existe (pode ter sido destruído na recriação da lista)
+                    if (btnSalvar && document.body.contains(btnSalvar)) {
+                        btnSalvar.innerHTML = txtOrig;
+                        btnSalvar.classList.remove('salvo');
+                        btnSalvar.disabled = false;
+                    }
                 }, 1500);
             } catch (err) {
                 console.error("Erro ao salvar edição inline: ", err);
@@ -1350,7 +1355,6 @@
                                             visibleTotal += val;
                                         }
                                     });
-                                    // A MÁGICA: Atualiza o KPI lá em cima!
                                     document.getElementById('kpiTotal').textContent = visibleTotal;
                                 }
                             }, 
@@ -1540,7 +1544,7 @@
         }
 
         window.exportarExcel = function() {
-            if (demandasFiltradas.length === 0) return alert("Nenhum dado para exportar.");
+            if (demandasFiltradas.length === 0) return alert("Nenhum dado filtrado para exportar.");
             
             const dadosLimpos = demandasFiltradas.map(d => ({
                 'Nº Demanda': d.numero_demanda || '',
@@ -1564,20 +1568,39 @@
             const ws = XLSX.utils.json_to_sheet(dadosLimpos);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Relatório Geral");
-            XLSX.writeFile(wb, `Relatorio_Gabinete_${new Date().toISOString().split('T')[0]}.xlsx`);
+            XLSX.writeFile(wb, `Relatorio_Gabinete_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.xlsx`);
         }
 
         window.gerarBackupJSON = function() {
-            if (todasDemandasRAW.length === 0) return alert("Banco vazio.");
-            const dataStr = JSON.stringify(todasDemandasRAW, null, 2);
+            if (demandasFiltradas.length === 0) return alert("Nenhum dado filtrado para backup.");
+            
+            // Mapeia para formatar as datas para o padrão BR antes de gerar o JSON
+            const backupFiltrado = demandasFiltradas.map(d => {
+                let novo = {...d};
+                if (novo.criado_em) {
+                    novo.criado_em = new Date(novo.criado_em).toLocaleDateString('pt-BR');
+                }
+                if (novo.data_agendada) {
+                    novo.data_agendada = new Date(novo.data_agendada + (novo.data_agendada.includes('T') ? '' : 'T12:00:00')).toLocaleDateString('pt-BR');
+                }
+                if (novo.historico && Array.isArray(novo.historico)) {
+                    novo.historico = novo.historico.map(h => ({
+                        ...h,
+                        data: h.data ? new Date(h.data).toLocaleDateString('pt-BR') + ' ' + new Date(h.data).toLocaleTimeString('pt-BR') : h.data
+                    }));
+                }
+                return novo;
+            });
+
+            const dataStr = JSON.stringify(backupFiltrado, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a'); link.href = url;
-            link.download = `Backup_DB_COMPLETO_${new Date().toISOString().split('T')[0]}.json`;
-            link.click(); URL.revokeObjectURL(url);
+            link.download = `Backup_Filtrado_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.json`;
+            link.click(); 
+            URL.revokeObjectURL(url);
         }
 
-        // window.onload = conectarBanco; // Removido para não sobrescrever o onload principal no topo do arquivo
     </script>
 </body>
 </html>
