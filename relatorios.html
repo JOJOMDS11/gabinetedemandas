@@ -222,6 +222,15 @@
                     </optgroup>
                 </select>
             </div>
+            
+            <!-- NOVO FILTRO DE BAIRRO ADICIONADO LADO A LADO COM STATUS -->
+            <div class="filtro-item">
+                <label>📍 Bairro</label>
+                <select id="filtroBairro" onchange="aplicarFiltros()">
+                    <option value="todos">Todos os Bairros</option>
+                </select>
+            </div>
+
             <div style="display:flex; gap:8px;">
                 <button class="btn-erro-id" id="btnErroFormato" onclick="toggleErroFormato()">⚠️ Formato Antigo/Erro</button>
             </div>
@@ -550,14 +559,22 @@
         function popularFiltrosIniciais() {
             const selMes = document.getElementById('filtroMes');
             const selSec = document.getElementById('filtroSec');
+            const selBairro = document.getElementById('filtroBairro');
             const mesesSet = new Set();
             const secSet = new Set(secretariasOficiais);
+            const bairrosSet = new Set();
 
             todasDemandasRAW.forEach(d => { 
                 const mesAnoReal = getMesAnoReal(d);
                 if(mesAnoReal !== 'Desconhecido') mesesSet.add(mesAnoReal); 
                 if(d.secretaria && d.secretaria.trim() !== '') secSet.add(d.secretaria.trim());
+                if(d.bairro && d.bairro.trim() !== '') bairrosSet.add(d.bairro.trim().toUpperCase());
             });
+
+            // Limpa as seleções dinâmicas
+            selMes.innerHTML = '<option value="todos">Todo o Período</option>';
+            selSec.innerHTML = '<option value="todas">Todas as Secretarias</option>';
+            selBairro.innerHTML = '<option value="todos">Todos os Bairros</option>';
 
             Array.from(mesesSet).sort().reverse().forEach(ma => {
                 const parts = ma.split('-');
@@ -567,6 +584,10 @@
 
             Array.from(secSet).sort().forEach(s => {
                 selSec.insertAdjacentHTML('beforeend', `<option value="${DOMPurify.sanitize(s)}">${DOMPurify.sanitize(s)}</option>`);
+            });
+
+            Array.from(bairrosSet).sort().forEach(b => {
+                selBairro.insertAdjacentHTML('beforeend', `<option value="${DOMPurify.sanitize(b)}">${DOMPurify.sanitize(b)}</option>`);
             });
         }
 
@@ -613,6 +634,7 @@
             document.getElementById('filtroMes').value = 'todos';
             document.getElementById('filtroSec').value = 'todas';
             document.getElementById('filtroStatus').value = 'todos';
+            document.getElementById('filtroBairro').value = 'todos';
             filtroErroFormato = false;
             document.getElementById('btnErroFormato').classList.remove('ativo');
             fecharLista();
@@ -625,20 +647,22 @@
             const vMes = document.getElementById('filtroMes').value;
             const vSec = document.getElementById('filtroSec').value;
             const vStat = document.getElementById('filtroStatus').value;
+            const vBairro = document.getElementById('filtroBairro').value;
 
             demandasFiltradas = todasDemandasRAW.filter(d => {
-                let passaBusca = true, passaMes = true, passaSec = true, passaStat = true, passaErro = true;
+                let passaBusca = true, passaMes = true, passaSec = true, passaStat = true, passaErro = true, passaBairro = true;
 
                 if (vBusca) {
                     passaBusca = (d.assunto||'').toLowerCase().includes(vBusca) || 
                                  (d.bairro||'').toLowerCase().includes(vBusca) ||
                                  (d.solicitante_nome||'').toLowerCase().includes(vBusca) ||
                                  (d.numero_demanda||'').toLowerCase().includes(vBusca) ||
-                                 (d.expediente||'').toLowerCase().includes(vBusca); // Adicionado filtro por Expediente
+                                 (d.expediente||'').toLowerCase().includes(vBusca); 
                 }
                 
                 if (vMes !== 'todos') passaMes = getMesAnoReal(d) === vMes;
                 if (vSec !== 'todas') passaSec = d.secretaria && d.secretaria.trim() === vSec;
+                if (vBairro !== 'todos') passaBairro = d.bairro && d.bairro.trim().toUpperCase() === vBairro;
                 
                 if (vStat === 'todos') passaStat = true;
                 else if (vStat === 'abertas_pendentes') passaStat = arrayAbertas.includes(d.status);
@@ -663,7 +687,7 @@
                     if (!hasError) passaErro = false;
                 }
 
-                return passaBusca && passaMes && passaSec && passaStat && passaErro;
+                return passaBusca && passaMes && passaSec && passaStat && passaErro && passaBairro;
             });
 
             gerarAlertas();
@@ -994,7 +1018,7 @@
                     (d.numero_demanda||'').toLowerCase().includes(v) ||
                     (d.secretaria||'').toLowerCase().includes(v) ||
                     (d.status||'').toLowerCase().includes(v) ||
-                    (d.expediente||'').toLowerCase().includes(v) // Adicionado filtro por Expediente na lista interna
+                    (d.expediente||'').toLowerCase().includes(v) 
                 );
             }
 
@@ -1061,13 +1085,22 @@
                 const optsStatus = statusOficiais.map(s => `<option value="${s}" ${s === d.status ? 'selected' : ''}>${s}</option>`).join('');
                 const optsExec = equipeMembros.map(m => `<option value="${DOMPurify.sanitize(m)}">${DOMPurify.sanitize(m)}</option>`).join('');
 
+                // GERAÇÃO DE TAGS CLARAS DE EXPEDIENTE (EXP) E TIPO
+                const tagExp = d.expediente ? `<span class="detalhe-tag" style="background:#fffbeb; color:#854d0e; border:1px solid #fde047; font-weight:800;">📄 EXP: ${DOMPurify.sanitize(d.expediente)}</span>` : '';
+                const tagTipo = d.tipo_solicitacao ? `<span class="detalhe-tag" style="background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; font-weight:700;">🏷️ Tipo: ${DOMPurify.sanitize(d.tipo_solicitacao)}</span>` : '';
+
                 return `
                     <div class="lista-item" data-id="${d.id}">
                         <div class="lista-info" style="flex:1;">
-                            <strong>${DOMPurify.sanitize(d.assunto)}</strong>
+                            <strong>
+                                ${DOMPurify.sanitize(d.assunto)}
+                                ${d.expediente ? `<span style="background: #fef08a; color: #854d0e; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 800; margin-left: 8px; border: 1px solid #fde047; display: inline-block;">📄 EXP: ${DOMPurify.sanitize(d.expediente)}</span>` : ''}
+                            </strong>
                             <div style="margin-bottom: 8px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                                 <span class="detalhe-tag">📅 ${dataF}</span>
                                 <span class="detalhe-tag" style="background:#e0f2fe; color:#1e40af;">📍 Bairro: ${bairroTxt}</span>
+                                ${tagTipo}
+                                ${tagExp}
                                 <div class="edicao-inline">
                                     <select class="sel-status" title="Mudar status">${optsStatus}</select>
                                     <div class="chips-executores">${chipsHtml}</div>
@@ -1140,7 +1173,6 @@
                 const { error } = await db.from('demandas').update(updates).eq('id', id);
                 if (error) { alert("Erro ao salvar: " + error.message); return; }
 
-                // Atualiza APENAS no repositório base local.
                 if (demandaLocal) {
                     demandaLocal.status = novoStatus;
                     demandaLocal.responsaveis = novosResponsaveis;
@@ -1150,12 +1182,10 @@
                 btnSalvar.innerHTML = '✅ Salvo!';
                 btnSalvar.classList.add('salvo');
 
-                // Força a atualização do painel, limpando da lista os itens que não pertencem mais a ela.
                 aplicarFiltros(true);
                 if (recarregarListaAtual) recarregarListaAtual();
 
                 setTimeout(() => {
-                    // Verifica se o botão ainda existe (pode ter sido destruído na recriação da lista)
                     if (btnSalvar && document.body.contains(btnSalvar)) {
                         btnSalvar.innerHTML = txtOrig;
                         btnSalvar.classList.remove('salvo');
@@ -1329,7 +1359,7 @@
                 });
             } catch(e){}
 
-            // 4. DISTRIBUIÇÃO SITUAÇÃO (Doughnut Mágico que atualiza o TOTAL KPI)
+            // 4. DISTRIBUIÇÃO SITUAÇÃO
             const statusCounts = {}; demandasFiltradas.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
             try {
                 chartStatus = new Chart(document.getElementById('graficoStatus'), {
@@ -1549,7 +1579,7 @@
             const dadosLimpos = demandasFiltradas.map(d => ({
                 'Nº Demanda': d.numero_demanda || '',
                 'Abertura / Fato': d.data_agendada ? new Date(d.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : (d.criado_em ? new Date(d.criado_em).toLocaleDateString('pt-BR') : ''),
-                'Natureza': d.tipo_solicitacao || '',
+                'Tipo de Solicitação': d.tipo_solicitacao || '', 
                 'Assunto': d.assunto || '',
                 'Status': d.status || '',
                 'Secretaria': d.secretaria || '',
@@ -1574,7 +1604,6 @@
         window.gerarBackupJSON = function() {
             if (demandasFiltradas.length === 0) return alert("Nenhum dado filtrado para backup.");
             
-            // Mapeia para formatar as datas para o padrão BR antes de gerar o JSON
             const backupFiltrado = demandasFiltradas.map(d => {
                 let novo = {...d};
                 if (novo.criado_em) {
