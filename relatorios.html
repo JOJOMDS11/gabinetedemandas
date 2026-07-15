@@ -223,11 +223,12 @@
                 </select>
             </div>
             
-            <div class="filtro-item">
-                <label>📍 Bairro</label>
-                <select id="filtroBairro" onchange="aplicarFiltros()">
-                    <option value="todos">Todos os Bairros</option>
+            <div class="filtro-item" style="flex: 1.6; min-width: 240px;">
+                <label>📍 Bairro(s) <span style="font-weight:400; text-transform:none; color:#94a3b8;">— selecione um ou mais pra ver juntos</span></label>
+                <select id="filtroBairroAdd" onchange="adicionarBairroFiltro(this)">
+                    <option value="">+ Adicionar bairro...</option>
                 </select>
+                <div id="chipsBairrosFiltro" style="display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;"></div>
             </div>
 
             <div style="display:flex; gap:8px;">
@@ -436,6 +437,7 @@
         const itensPorPagina = 5;
         let filtroErroFormato = false;
         let activeDrill = null;
+        let bairrosSelecionados = [];
 
         let colSecSort = 'total';
         let dirSecSort = -1; 
@@ -555,7 +557,7 @@
         function popularFiltrosIniciais() {
             const selMes = document.getElementById('filtroMes');
             const selSec = document.getElementById('filtroSec');
-            const selBairro = document.getElementById('filtroBairro');
+            const selBairroAdd = document.getElementById('filtroBairroAdd');
             const mesesSet = new Set();
             const secSet = new Set(secretariasOficiais);
             const bairrosSet = new Set();
@@ -569,7 +571,7 @@
 
             selMes.innerHTML = '<option value="todos">Todo o Período</option>';
             selSec.innerHTML = '<option value="todas">Todas as Secretarias</option>';
-            selBairro.innerHTML = '<option value="todos">Todos os Bairros</option>';
+            selBairroAdd.innerHTML = '<option value="">+ Adicionar bairro...</option>';
 
             Array.from(mesesSet).sort().reverse().forEach(ma => {
                 const parts = ma.split('-');
@@ -582,8 +584,33 @@
             });
 
             Array.from(bairrosSet).sort().forEach(b => {
-                selBairro.insertAdjacentHTML('beforeend', `<option value="${DOMPurify.sanitize(b)}">${DOMPurify.sanitize(b)}</option>`);
+                selBairroAdd.insertAdjacentHTML('beforeend', `<option value="${DOMPurify.sanitize(b)}">${DOMPurify.sanitize(b)}</option>`);
             });
+
+            renderChipsBairrosFiltro();
+        }
+
+        window.adicionarBairroFiltro = function(selectEl) {
+            const val = selectEl.value;
+            if (!val) return;
+            if (!bairrosSelecionados.includes(val)) {
+                bairrosSelecionados.push(val);
+                renderChipsBairrosFiltro();
+                aplicarFiltros();
+            }
+            selectEl.value = '';
+        }
+
+        window.removerBairroFiltro = function(val) {
+            bairrosSelecionados = bairrosSelecionados.filter(b => b !== val);
+            renderChipsBairrosFiltro();
+            aplicarFiltros();
+        }
+
+        function renderChipsBairrosFiltro() {
+            const cont = document.getElementById('chipsBairrosFiltro');
+            if (!cont) return;
+            cont.innerHTML = bairrosSelecionados.map(b => `<span class="chip-exec" style="background:#dbeafe; color:#1e40af;">${DOMPurify.sanitize(b)} <button type="button" title="Remover" onclick="removerBairroFiltro('${b.replace(/'/g,"")}')">✕</button></span>`).join('');
         }
 
         let debounceTimeout;
@@ -636,7 +663,6 @@
             const vMes = document.getElementById('filtroMes').value;
             const vSec = document.getElementById('filtroSec').value;
             const vStat = document.getElementById('filtroStatus').value;
-            const vBairro = document.getElementById('filtroBairro').value;
 
             let chipsHtml = '';
 
@@ -650,7 +676,7 @@
                 const labelStat = document.querySelector(`#filtroStatus option[value="${vStat}"]`).text;
                 chipsHtml += criarChip('Status: ' + labelStat, "limparGlobal('status')");
             }
-            if(vBairro !== 'todos') chipsHtml += criarChip('Bairro: ' + vBairro, "limparGlobal('bairro')");
+            if(bairrosSelecionados.length > 0) chipsHtml += criarChip('Bairros: ' + bairrosSelecionados.join(', '), "limparGlobal('bairro')");
             if(filtroErroFormato) chipsHtml += criarChip('Erros/Antigo', "limparGlobal('erro')");
 
             if(activeDrill && activeDrill.tipo !== 'todas') {
@@ -670,7 +696,7 @@
             if(tipo === 'mes') document.getElementById('filtroMes').value = 'todos';
             if(tipo === 'sec') document.getElementById('filtroSec').value = 'todas';
             if(tipo === 'status') document.getElementById('filtroStatus').value = 'todos';
-            if(tipo === 'bairro') document.getElementById('filtroBairro').value = 'todos';
+            if(tipo === 'bairro') { bairrosSelecionados = []; renderChipsBairrosFiltro(); }
             if(tipo === 'erro') {
                 filtroErroFormato = false;
                 document.getElementById('btnErroFormato').classList.remove('ativo');
@@ -689,7 +715,8 @@
             document.getElementById('filtroMes').value = 'todos';
             document.getElementById('filtroSec').value = 'todas';
             document.getElementById('filtroStatus').value = 'todos';
-            document.getElementById('filtroBairro').value = 'todos';
+            bairrosSelecionados = [];
+            renderChipsBairrosFiltro();
             filtroErroFormato = false;
             document.getElementById('btnErroFormato').classList.remove('ativo');
             activeDrill = null;
@@ -703,7 +730,6 @@
             const vMes = document.getElementById('filtroMes').value;
             const vSec = document.getElementById('filtroSec').value;
             const vStat = document.getElementById('filtroStatus').value;
-            const vBairro = document.getElementById('filtroBairro').value;
 
             demandasFiltradas = todasDemandasRAW.filter(d => {
                 let passaBusca = true, passaMes = true, passaSec = true, passaStat = true, passaErro = true, passaBairro = true;
@@ -718,7 +744,7 @@
                 
                 if (vMes !== 'todos') passaMes = getMesAnoReal(d) === vMes;
                 if (vSec !== 'todas') passaSec = d.secretaria && d.secretaria.trim() === vSec;
-                if (vBairro !== 'todos') passaBairro = d.bairro && d.bairro.trim().toUpperCase() === vBairro;
+                if (bairrosSelecionados.length > 0) passaBairro = d.bairro && bairrosSelecionados.includes(d.bairro.trim().toUpperCase());
                 
                 if (vStat === 'todos') passaStat = true;
                 else if (vStat === 'abertas_pendentes') passaStat = arrayAbertas.includes(d.status);
@@ -1668,4 +1694,3 @@
     </script>
 </body>
 </html>
-
