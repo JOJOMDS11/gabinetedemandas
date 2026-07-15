@@ -19,18 +19,20 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background-color: #f8fafc; color: #0f172a; padding-bottom: 50px; }
         
-        .navbar { background: #1a365d; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; flex-wrap: wrap; gap: 10px;}
-        .navbar h1 { font-size: 18px; font-weight: 800; color: white; margin: 0;}
-        .nav-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .navbar { background: #1a365d; padding: 12px 20px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; gap: 10px;}
+        .navbar h1 { font-size: 18px; font-weight: 800; color: white; margin: 0; justify-self: start;}
+        .nav-home-wrap { justify-self: center; }
+        .nav-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-self: end; }
         .btn-voltar { background: rgba(255,255,255,0.1); color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2); white-space: nowrap;}
         .btn-voltar:hover { background: rgba(255,255,255,0.2); }
         .btn-reset-nav { background: #fef08a; color: #854d0e; border: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); white-space: nowrap;}
         .btn-reset-nav:hover { background: #fde047; transform: translateY(-1px); }
 
         @media (max-width: 600px) {
-            .navbar { flex-direction: column; align-items: stretch; padding: 12px; }
-            .navbar h1 { text-align: center; margin-bottom: 8px; font-size: 16px; }
-            .nav-actions { justify-content: center; }
+            .navbar { grid-template-columns: 1fr; padding: 12px; }
+            .navbar h1 { text-align: center; margin-bottom: 8px; font-size: 16px; justify-self: stretch;}
+            .nav-home-wrap { justify-self: stretch; }
+            .nav-actions { justify-content: center; justify-self: stretch; }
             .btn-reset-nav, .btn-voltar, .btn-home { flex: 1; text-align: center; }
         }
 
@@ -80,15 +82,15 @@
         .lista-item:nth-child(even) { background-color: #f8fafc; }
         .lista-item:hover { background-color: #f0f9ff; }
 
-        .edicao-inline { display: flex; flex-direction: column; gap: 8px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 10px 12px; min-width: 230px; }
-        .edicao-linha { display: flex; flex-direction: column; gap: 4px; }
-        .edicao-linha label { font-size: 10px; font-weight: 700; color: #4338ca; text-transform: uppercase; letter-spacing: 0.3px; }
-        .edicao-linha select { padding: 6px 8px; border-radius: 5px; border: 1px solid #c7d2fe; font-size: 12px; background: white; color: #1e293b; }
+        .edicao-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 5px 7px; max-width: 260px; position: relative; z-index: 2; }
+        .edicao-inline select { padding: 3px 4px; border-radius: 4px; border: 1px solid #c7d2fe; font-size: 11px; background: white; color: #1e293b; max-width: 118px; cursor: pointer; position: relative; z-index: 3; }
+        .chips-executores { display: flex; flex-wrap: wrap; gap: 3px; max-width: 240px; }
+        .chip-exec { font-size: 10px; padding: 2px 5px; }
         .chips-executores { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 4px; }
         .chip-exec { display: inline-flex; align-items: center; gap: 4px; background: #f3e8ff; color: #7e22ce; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; }
         .chip-exec button { border: none; background: transparent; color: #7e22ce; cursor: pointer; font-weight: 800; font-size: 11px; line-height: 1; padding: 0; }
         .chip-exec button:hover { color: #b91c1c; }
-        .btn-salvar-inline { background: #16a34a; color: white; border: none; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-salvar-inline { background: #16a34a; color: white; border: none; padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; position: relative; z-index: 3; }
         .btn-salvar-inline:hover { background: #15803d; }
         .btn-salvar-inline.salvo { background: #0f172a; }
         .btn-home { background: #fef08a; color: #854d0e; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; border: 1px solid rgba(255,255,255,0.2); white-space: nowrap; }
@@ -163,9 +165,11 @@
 
     <div class="navbar">
         <h1>📊 Gabinete Analytics PRO</h1>
+        <div class="nav-home-wrap">
+            <a href="dashboard.html" class="btn-home">🏠 Home</a>
+        </div>
         <div class="nav-actions">
             <button class="btn-reset-nav" onclick="resetarFiltros()">🧹 Limpar Filtros / Visão Atual</button>
-            <a href="dashboard.html" class="btn-home">🏠 Home</a>
             <a href="dashboard.html" class="btn-voltar">← Voltar ao Painel</a>
         </div>
     </div>
@@ -1013,9 +1017,18 @@
                     <div class="lista-item" data-id="${d.id}">
                         <div class="lista-info" style="flex:1;">
                             <strong>${DOMPurify.sanitize(d.assunto)}</strong>
-                            <div style="margin-bottom: 8px;">
+                            <div style="margin-bottom: 8px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                                 <span class="detalhe-tag">📅 ${dataF}</span>
                                 <span class="detalhe-tag" style="background:#e0f2fe; color:#1e40af;">📍 Bairro: ${bairroTxt}</span>
+                                <div class="edicao-inline">
+                                    <select class="sel-status" title="Mudar status">${optsStatus}</select>
+                                    <div class="chips-executores">${chipsHtml}</div>
+                                    <select class="sel-add-exec" title="Adicionar executor" onchange="adicionarChipInline(this)">
+                                        <option value="">+ Executor...</option>
+                                        ${optsExec}
+                                    </select>
+                                    <button type="button" class="btn-salvar-inline" title="Salvar" onclick="salvarEdicaoInline('${d.id}', this)">💾</button>
+                                </div>
                             </div>
                             <div>
                                 <span class="detalhe-tag" style="background:#fce7f3; color:#be185d;">✍️ Ordem: ${ordemStr}</span>
@@ -1023,21 +1036,6 @@
                                 <span class="detalhe-tag" style="background:white; color:${sColor}; border:1px solid ${sColor};">🚨 ${DOMPurify.sanitize(d.status)}</span>
                                 ${tagErro}
                             </div>
-                        </div>
-                        <div class="edicao-inline">
-                            <div class="edicao-linha">
-                                <label>Status</label>
-                                <select class="sel-status">${optsStatus}</select>
-                            </div>
-                            <div class="edicao-linha">
-                                <label>Executores</label>
-                                <div class="chips-executores">${chipsHtml}</div>
-                                <select class="sel-add-exec" onchange="adicionarChipInline(this)">
-                                    <option value="">+ Adicionar executor...</option>
-                                    ${optsExec}
-                                </select>
-                            </div>
-                            <button type="button" class="btn-salvar-inline" onclick="salvarEdicaoInline('${d.id}', this)">💾 Salvar</button>
                         </div>
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap:wrap; justify-content: flex-end;">
                             ${btnLocal}
@@ -1076,7 +1074,7 @@
             const novosResponsaveis = Array.from(item.querySelectorAll('.chip-exec')).map(c => c.firstChild.textContent.trim());
 
             const txtOrig = btnSalvar.innerHTML;
-            btnSalvar.innerHTML = '⏳ Salvando...';
+            btnSalvar.innerHTML = '⏳';
             btnSalvar.disabled = true;
 
             try {
@@ -1099,7 +1097,7 @@
                     if (alvo) { alvo.status = novoStatus; alvo.responsaveis = novosResponsaveis; alvo.historico = hist; }
                 });
 
-                btnSalvar.innerHTML = '✅ Salvo!';
+                btnSalvar.innerHTML = '✅';
                 btnSalvar.classList.add('salvo');
 
                 aplicarFiltros(true);
