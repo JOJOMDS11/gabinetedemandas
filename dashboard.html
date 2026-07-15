@@ -93,13 +93,13 @@
 </head>
 <body>
     <div class="navbar bg-primary">
-        <a href="dashboard.html" class="navbar-brand">
+        <a href="dashboard.html" class="navbar-brand" style="display:flex; align-items:center;">
             <img src="https://i.imgur.com/coryuD6.png" alt="Logo">
-            <span class="brand-text"><span class="realtime-dot"></span>Gabinete Daniel</span>
+            <span style="color:white; font-size:16px; margin-left:10px;">Gabinete Daniel</span>
         </a>
         <div class="navbar-actions">
-            <span class="user-name-span" style="font-size:13px;">👤 <span id="nomeUsuario"></span></span>
-            <button class="btn-logout" id="btnGerenciarCadastros" onclick="abrirGerenciadorCadastros()" title="Gerenciar Cadastros do Sistema">⚙️</button>
+            <span style="font-size:13px; color:white; margin-right:10px;">👤 <span id="nomeUsuario"></span></span>
+            <button class="btn-logout" onclick="abrirGerenciadorCadastros()" title="Gerenciar Cadastros do Sistema">⚙️</button>
             <button class="btn-logout" id="btnLogout" title="Sair">🚪</button>
         </div>
     </div>
@@ -124,7 +124,7 @@
                 </div>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
-                <button class="btn-nova" style="background-color: #f39c12; color: white;" onclick="abrirModalWord()">📄 Gerar Ofício (Word)</button>
+                <button class="btn-nova" style="background-color: #f39c12; color: white;" onclick="abrirModalWord()">📄 Gerar Ofício</button>
                 <button class="btn-nova" style="background-color: #3b82f6; color: white;" onclick="window.location.href='relatorios.html'">📊 Relatórios BI</button>
                 <button class="btn-nova" onclick="window.location.href='nova-demanda.html'">+ Nova Demanda</button>
             </div>
@@ -189,7 +189,7 @@
             <option value="Arquivada">📦 Arquivada</option>
         </select>
         <button onclick="mudarStatusMassa(this)" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px; flex: 1;">Aplicar</button>
-        <button onclick="abrirModalWordSelecionados()" style="background:#f39c12; color:white; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px; flex: 1;">📄 Gerar Word</button>
+        <button onclick="abrirModalWordSelecionados()" style="background:#f39c12; color:white; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px; flex: 1;">📄 Gerar Ofício</button>
         <button onclick="toggleSelecao()" style="background:transparent; color:white; border:1px solid white; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:12px; flex: 1;">✕ Cancelar</button>
     </div>
 
@@ -241,8 +241,9 @@
 
     <div class="modal-overlay" id="modalWord">
         <div class="modal-box" style="max-width: 650px; text-align: left; padding: 20px;">
-            <h3 style="text-align:center; color:#185199; margin-bottom: 5px;">📄 Gerar Ofício em Word</h3>
+            <h3 style="text-align:center; color:#185199; margin-bottom: 5px;">📄 Gerar Ofício</h3>
             <p style="text-align:center; color:#666; font-size:12px; margin-bottom: 20px;">O sistema listará abaixo as demandas do seu banco de dados (excluindo as finalizadas e sem identificador).</p>
+            
             <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#555;">Secretaria Destino:</label>
@@ -252,7 +253,15 @@
                     <label style="font-size:12px; font-weight:bold; color:#555;">Nome do Secretário(a):</label>
                     <input type="text" id="wordSecretario" value="Rogel da Silva Corrêa" style="text-align: left; font-size: 14px;">
                 </div>
+                <div>
+                    <label style="font-size:12px; font-weight:bold; color:#555;">Assinado por:</label>
+                    <select id="assinaturaOficio" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;">
+                        <option value="Luana">Luana Costa Dias (Chefe de Gabinete)</option>
+                        <option value="Daniel">Daniel Daudt Schaefer (Líder do governo/Vereador do PL)</option>
+                    </select>
+                </div>
             </div>
+            
             <p style="font-size:13px; color:#555; margin-bottom:8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
                 <span>Selecione as demandas para o ofício:</span>
                 <span id="contadorWordBadge" style="background: #185199; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">0 selecionadas</span>
@@ -268,9 +277,13 @@
             </div>
             
             <div id="listaDemandasWord" style="max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px; margin-bottom: 15px;"></div>
-            <div class="modal-botoes" style="margin-top: 20px;">
-                <button style="background:#e0e0e0; color:#333; flex:0.4; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalWord()">Cancelar</button>
-                <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="gerarEBaixarWord()">⬇️ Baixar Arquivo Word</button>
+            
+            <div style="display: flex; gap: 10px;">
+                <button style="background:#e0e0e0; color:#333; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; width: 30%;" onclick="fecharModalWord()">Cancelar</button>
+                <div style="display: flex; gap: 5px; width: 70%;">
+                    <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; font-size: 13px;" onclick="gerarEBaixarWord('doc')">📄 Baixar Word</button>
+                    <button style="background:#c0392b; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; font-size: 13px;" onclick="gerarEBaixarWord('pdf')">📕 Gerar PDF</button>
+                </div>
             </div>
         </div>
     </div>
@@ -287,10 +300,21 @@
                     <label style="font-size:12px; font-weight:bold; color:#555;">Nome do Secretário(a):</label>
                     <input type="text" id="wordRespSel" value="Rogel da Silva Corrêa" style="text-align: left; font-size: 14px;">
                 </div>
+                <div>
+                    <label style="font-size:12px; font-weight:bold; color:#555;">Assinado por:</label>
+                    <select id="assinaturaOficioSel" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;">
+                        <option value="Luana">Luana Costa Dias (Chefe de Gabinete)</option>
+                        <option value="Daniel">Daniel Daudt Schaefer (Líder do governo/Vereador do PL)</option>
+                    </select>
+                </div>
             </div>
-            <div class="modal-botoes">
-                <button style="background:#e0e0e0; color:#333; flex:0.4; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharModalWordSelecionados()">Cancelar</button>
-                <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="gerarWordDosSelecionados()">⬇️ Baixar Arquivo Word</button>
+            
+            <div style="display: flex; gap: 10px;">
+                <button style="background:#e0e0e0; color:#333; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; width: 30%;" onclick="fecharModalWordSelecionados()">Cancelar</button>
+                <div style="display: flex; gap: 5px; width: 70%;">
+                    <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; font-size: 13px;" onclick="gerarWordDosSelecionados('doc')">📄 Word</button>
+                    <button style="background:#c0392b; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; font-size: 13px;" onclick="gerarWordDosSelecionados('pdf')">📕 PDF</button>
+                </div>
             </div>
         </div>
     </div>
@@ -341,6 +365,16 @@
     </div>
 
     <script>
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', event => {
+            if (event.keyCode === 123 || 
+               (event.ctrlKey && event.shiftKey && event.keyCode === 73) || 
+               (event.ctrlKey && event.shiftKey && event.keyCode === 74) || 
+               (event.ctrlKey && event.keyCode === 85)) {
+                event.preventDefault();
+            }
+        });
+
         let db, cloudName, uploadPreset;
         let todasDemandas = [];
         let listaGlobalFiltrada = []; 
@@ -365,7 +399,7 @@
 
         const tiposAgendas = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO'];
         const tiposDemandasLivre = ['DEMANDA (GERAL)', 'DEMANDA EXTERNA'];
-        const tiposLegis = ['INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+        const tiposLegis = ['INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE', 'EMENDA MODIFICATIVA'];
 
         document.getElementById('btnLogout').addEventListener('click', () => {
             localStorage.removeItem('usuarioLogado');
@@ -1248,12 +1282,13 @@
 
         window.fecharModalWord = function() { document.getElementById('modalWord').classList.remove('ativo'); }
 
-        window.gerarEBaixarWord = function() {
+        window.gerarEBaixarWord = function(formato) {
             const checkboxes = document.querySelectorAll('.check-word-demanda:checked');
             if (checkboxes.length === 0) return alert("Selecione pelo menos uma demanda!");
 
             const secNome = document.getElementById('wordSecretaria').value.trim() || 'Secretaria Destino';
             const secResp = document.getElementById('wordSecretario').value.trim() || 'Secretário(a)';
+            const assinatura = document.getElementById('assinaturaOficio').value;
             const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
 
             let trsHTML = '';
@@ -1267,9 +1302,26 @@
                 }
             });
 
+            let rodapeHTML = '';
+            if (assinatura === 'Luana') {
+                rodapeHTML = `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Luana Costa Dias</p>
+                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Chefe de Gabinete</p>`;
+            } else {
+                rodapeHTML = `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Daniel Daudt Schaefer</p>
+                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Líder do governo</p>
+                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Vereador do PL</p>`;
+            }
+
             const htmlString = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><title>Ofício Demandas</title></head>
+            <head><meta charset='utf-8'><title>Ofício Demandas</title>
+            <style>
+                @media print {
+                    @page { margin: 2cm; }
+                    body { font-size: 12pt; }
+                }
+            </style>
+            </head>
             <body>
                 <div style="font-family: Arial, sans-serif; font-size: 11pt;">
                     <br><br>
@@ -1286,20 +1338,31 @@
                     </table>
                     <br><br><br>
                     <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">______________________________</p>
-                    <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Luana Costa Dias</p>
-                    <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Chefe de Gabinete</p>
+                    ${rodapeHTML}
                 </div>
             </body></html>`;
 
-            const blob = new Blob(['\ufeff', htmlString], { type: 'application/msword' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
-            const nomeCurtoSec = secNome.split('-').pop().trim();
-            link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
-            document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
-            fecharModalWord();
+            if (formato === 'pdf') {
+                const printWindow = window.open('', '', 'width=800,height=600');
+                printWindow.document.write(htmlString);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                    fecharModalWord();
+                }, 500);
+            } else {
+                const blob = new Blob(['\ufeff', htmlString], { type: 'application/msword' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
+                const nomeCurtoSec = secNome.split('-').pop().trim();
+                link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
+                document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+                fecharModalWord();
+            }
         }
 
         window.abrirModalWordSelecionados = function() {
@@ -1309,10 +1372,11 @@
 
         window.fecharModalWordSelecionados = function() { document.getElementById('modalWordSelecionados').classList.remove('ativo'); }
 
-        window.gerarWordDosSelecionados = function() {
+        window.gerarWordDosSelecionados = function(formato) {
             if (selecionadosWord.size === 0) return alert("Nenhuma demanda selecionada!");
             const secNome = document.getElementById('wordSecSel').value.trim() || 'Secretaria Destino';
             const secResp = document.getElementById('wordRespSel').value.trim() || 'Secretário(a)';
+            const assinatura = document.getElementById('assinaturaOficioSel').value;
             const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
             let trsHTML = '';
             Array.from(selecionadosWord).forEach(id => {
@@ -1324,9 +1388,27 @@
                     trsHTML += `<tr><td style="text-align: center; border: 1px solid black; padding: 5px;">${exp}</td><td style="text-align: center; border: 1px solid black; padding: 5px;">${pdp}</td><td style="text-align: justify; border: 1px solid black; padding: 5px;">${desc}</td></tr>`;
                 }
             });
+
+            let rodapeHTML = '';
+            if (assinatura === 'Luana') {
+                rodapeHTML = `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Luana Costa Dias</p>
+                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Chefe de Gabinete</p>`;
+            } else {
+                rodapeHTML = `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Daniel Daudt Schaefer</p>
+                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Líder do governo</p>
+                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Vereador do PL</p>`;
+            }
+
             const htmlString = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><title>Ofício Demandas</title></head>
+            <head><meta charset='utf-8'><title>Ofício Demandas</title>
+            <style>
+                @media print {
+                    @page { margin: 2cm; }
+                    body { font-size: 12pt; }
+                }
+            </style>
+            </head>
             <body>
                 <div style="font-family: Arial, sans-serif; font-size: 11pt;">
                     <br><br>
@@ -1343,18 +1425,30 @@
                     </table>
                     <br><br><br>
                     <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">______________________________</p>
-                    <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Luana Costa Dias</p>
-                    <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Chefe de Gabinete</p>
+                    ${rodapeHTML}
                 </div>
             </body></html>`;
-            const blob = new Blob(['\ufeff', htmlString], { type: 'application/msword' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a'); link.href = url;
-            const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
-            const nomeCurtoSec = secNome.split('-').pop().trim();
-            link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
-            document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
-            fecharModalWordSelecionados(); toggleSelecao();
+            
+            if (formato === 'pdf') {
+                const printWindow = window.open('', '', 'width=800,height=600');
+                printWindow.document.write(htmlString);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                    fecharModalWordSelecionados(); toggleSelecao();
+                }, 500);
+            } else {
+                const blob = new Blob(['\ufeff', htmlString], { type: 'application/msword' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a'); link.href = url;
+                const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
+                const nomeCurtoSec = secNome.split('-').pop().trim();
+                link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
+                document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+                fecharModalWordSelecionados(); toggleSelecao();
+            }
         }
 
         window.assumirDemanda = async function(id, btnElement) {
