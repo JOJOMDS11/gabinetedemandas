@@ -80,7 +80,7 @@
         .btn-fechar-lista { background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold;}
         .lista-item { border-bottom: 1px solid #f1f5f9; padding: 12px 10px; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; border-radius: 6px;}
         .lista-item:nth-child(odd) { background-color: #ffffff; }
-        .lista-item:nth-child(even) { background-color: #f8fafc; }
+        .lista-item:nth-child(even) { background-color: #eef2ff; border-left: 4px solid #3b82f6; }
         .lista-item:hover { background-color: #f0f9ff; }
 
         .edicao-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 8px; max-width: 100%; position: relative; z-index: 2; margin-top: 5px;}
@@ -223,12 +223,11 @@
                 </select>
             </div>
             
-            <div class="filtro-item" style="flex: 1.6; min-width: 240px;">
-                <label>📍 Bairro(s) <span style="font-weight:400; text-transform:none; color:#94a3b8;">— selecione um ou mais pra ver juntos</span></label>
-                <select id="filtroBairroAdd" onchange="adicionarBairroFiltro(this)">
-                    <option value="">+ Adicionar bairro...</option>
+            <div class="filtro-item">
+                <label>📍 Bairro</label>
+                <select id="filtroBairro" onchange="aplicarFiltros()">
+                    <option value="todos">Todos os Bairros</option>
                 </select>
-                <div id="chipsBairrosFiltro" style="display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;"></div>
             </div>
 
             <div style="display:flex; gap:8px;">
@@ -437,7 +436,6 @@
         const itensPorPagina = 5;
         let filtroErroFormato = false;
         let activeDrill = null;
-        let bairrosSelecionados = [];
 
         let colSecSort = 'total';
         let dirSecSort = -1; 
@@ -557,7 +555,7 @@
         function popularFiltrosIniciais() {
             const selMes = document.getElementById('filtroMes');
             const selSec = document.getElementById('filtroSec');
-            const selBairroAdd = document.getElementById('filtroBairroAdd');
+            const selBairro = document.getElementById('filtroBairro');
             const mesesSet = new Set();
             const secSet = new Set(secretariasOficiais);
             const bairrosSet = new Set();
@@ -571,7 +569,7 @@
 
             selMes.innerHTML = '<option value="todos">Todo o Período</option>';
             selSec.innerHTML = '<option value="todas">Todas as Secretarias</option>';
-            selBairroAdd.innerHTML = '<option value="">+ Adicionar bairro...</option>';
+            selBairro.innerHTML = '<option value="todos">Todos os Bairros</option>';
 
             Array.from(mesesSet).sort().reverse().forEach(ma => {
                 const parts = ma.split('-');
@@ -584,33 +582,8 @@
             });
 
             Array.from(bairrosSet).sort().forEach(b => {
-                selBairroAdd.insertAdjacentHTML('beforeend', `<option value="${DOMPurify.sanitize(b)}">${DOMPurify.sanitize(b)}</option>`);
+                selBairro.insertAdjacentHTML('beforeend', `<option value="${DOMPurify.sanitize(b)}">${DOMPurify.sanitize(b)}</option>`);
             });
-
-            renderChipsBairrosFiltro();
-        }
-
-        window.adicionarBairroFiltro = function(selectEl) {
-            const val = selectEl.value;
-            if (!val) return;
-            if (!bairrosSelecionados.includes(val)) {
-                bairrosSelecionados.push(val);
-                renderChipsBairrosFiltro();
-                aplicarFiltros();
-            }
-            selectEl.value = '';
-        }
-
-        window.removerBairroFiltro = function(val) {
-            bairrosSelecionados = bairrosSelecionados.filter(b => b !== val);
-            renderChipsBairrosFiltro();
-            aplicarFiltros();
-        }
-
-        function renderChipsBairrosFiltro() {
-            const cont = document.getElementById('chipsBairrosFiltro');
-            if (!cont) return;
-            cont.innerHTML = bairrosSelecionados.map(b => `<span class="chip-exec" style="background:#dbeafe; color:#1e40af;">${DOMPurify.sanitize(b)} <button type="button" title="Remover" onclick="removerBairroFiltro('${b.replace(/'/g,"")}')">✕</button></span>`).join('');
         }
 
         let debounceTimeout;
@@ -663,6 +636,7 @@
             const vMes = document.getElementById('filtroMes').value;
             const vSec = document.getElementById('filtroSec').value;
             const vStat = document.getElementById('filtroStatus').value;
+            const vBairro = document.getElementById('filtroBairro').value;
 
             let chipsHtml = '';
 
@@ -676,7 +650,7 @@
                 const labelStat = document.querySelector(`#filtroStatus option[value="${vStat}"]`).text;
                 chipsHtml += criarChip('Status: ' + labelStat, "limparGlobal('status')");
             }
-            if(bairrosSelecionados.length > 0) chipsHtml += criarChip('Bairros: ' + bairrosSelecionados.join(', '), "limparGlobal('bairro')");
+            if(vBairro !== 'todos') chipsHtml += criarChip('Bairro: ' + vBairro, "limparGlobal('bairro')");
             if(filtroErroFormato) chipsHtml += criarChip('Erros/Antigo', "limparGlobal('erro')");
 
             if(activeDrill && activeDrill.tipo !== 'todas') {
@@ -696,7 +670,7 @@
             if(tipo === 'mes') document.getElementById('filtroMes').value = 'todos';
             if(tipo === 'sec') document.getElementById('filtroSec').value = 'todas';
             if(tipo === 'status') document.getElementById('filtroStatus').value = 'todos';
-            if(tipo === 'bairro') { bairrosSelecionados = []; renderChipsBairrosFiltro(); }
+            if(tipo === 'bairro') document.getElementById('filtroBairro').value = 'todos';
             if(tipo === 'erro') {
                 filtroErroFormato = false;
                 document.getElementById('btnErroFormato').classList.remove('ativo');
@@ -715,8 +689,7 @@
             document.getElementById('filtroMes').value = 'todos';
             document.getElementById('filtroSec').value = 'todas';
             document.getElementById('filtroStatus').value = 'todos';
-            bairrosSelecionados = [];
-            renderChipsBairrosFiltro();
+            document.getElementById('filtroBairro').value = 'todos';
             filtroErroFormato = false;
             document.getElementById('btnErroFormato').classList.remove('ativo');
             activeDrill = null;
@@ -730,6 +703,7 @@
             const vMes = document.getElementById('filtroMes').value;
             const vSec = document.getElementById('filtroSec').value;
             const vStat = document.getElementById('filtroStatus').value;
+            const vBairro = document.getElementById('filtroBairro').value;
 
             demandasFiltradas = todasDemandasRAW.filter(d => {
                 let passaBusca = true, passaMes = true, passaSec = true, passaStat = true, passaErro = true, passaBairro = true;
@@ -744,7 +718,7 @@
                 
                 if (vMes !== 'todos') passaMes = getMesAnoReal(d) === vMes;
                 if (vSec !== 'todas') passaSec = d.secretaria && d.secretaria.trim() === vSec;
-                if (bairrosSelecionados.length > 0) passaBairro = d.bairro && bairrosSelecionados.includes(d.bairro.trim().toUpperCase());
+                if (vBairro !== 'todos') passaBairro = d.bairro && d.bairro.trim().toUpperCase() === vBairro;
                 
                 if (vStat === 'todos') passaStat = true;
                 else if (vStat === 'abertas_pendentes') passaStat = arrayAbertas.includes(d.status);
@@ -995,14 +969,15 @@
                     const h = s.somaTempo / s.qtdComTempo / 3600000;
                     tempoStr = h >= 24 ? `${Math.floor(h/24)}d ${Math.floor(h%24)}h` : `${Math.floor(h)}h`;
                 }
-                let corTaxa = s.taxa > 75 ? '#16a34a' : (s.taxa > 40 ? '#d97706' : '#dc2626');
+                let corTaxa = s.taxa > 75 ? '#15803d' : (s.taxa > 40 ? '#854d0e' : '#b91c1c');
+                let bgLinha = s.taxa > 75 ? '#dcfce7' : (s.taxa > 40 ? '#fef08a' : '#fee2e2');
 
-                return `<tr onclick="lidarCliqueLista('${DOMPurify.sanitize(s.nome)}', 'secretaria')" title="Clique para ver as demandas desta Secretaria">
-                    <td><b>${DOMPurify.sanitize(s.nome)}</b></td>
-                    <td style="text-align:center">${s.total}</td>
-                    <td style="text-align:center">${s.concluidas}</td>
+                return `<tr style="background-color: ${bgLinha}; border-bottom: 2px solid white;" onclick="lidarCliqueLista('${DOMPurify.sanitize(s.nome)}', 'secretaria')" title="Clique para ver as demandas desta Secretaria">
+                    <td style="color:${corTaxa};"><b>${DOMPurify.sanitize(s.nome)}</b></td>
+                    <td style="text-align:center; color:${corTaxa};">${s.total}</td>
+                    <td style="text-align:center; color:${corTaxa};">${s.concluidas}</td>
                     <td class="tb-taxa" style="color:${corTaxa}; text-align:center;">${s.taxa}%</td>
-                    <td style="text-align:center">${tempoStr}</td>
+                    <td style="text-align:center; color:${corTaxa};">${tempoStr}</td>
                 </tr>`;
             }).join('');
         }
@@ -1038,12 +1013,31 @@
                 container.innerHTML = '<p style="color:#94a3b8; text-align:center; margin-top:20px; font-size:13px;">Sem registros.</p>'; return;
             }
             
+            const maxVal = dadosObj[chaves[0]];
+
             container.innerHTML = chaves.map((k, index) => {
                 const val = dadosObj[k];
+                let bgStyle = '';
+                let colorStyle = '#0f172a';
+                
+                if (tipoGrafico === 'secretaria_atrasada' || tipoGrafico === 'bairro') {
+                    const ratio = val / maxVal;
+                    if (ratio > 0.7) {
+                        bgStyle = 'background-color: #fee2e2; border-color: #fca5a5;'; // Red
+                        colorStyle = '#b91c1c';
+                    } else if (ratio > 0.3) {
+                        bgStyle = 'background-color: #fef08a; border-color: #fde047;'; // Yellow
+                        colorStyle = '#854d0e';
+                    } else {
+                        bgStyle = 'background-color: #dcfce7; border-color: #86efac;'; // Green
+                        colorStyle = '#15803d';
+                    }
+                }
+                
                 return `
-                    <div class="data-item" onclick="lidarCliqueLista('${DOMPurify.sanitize(k)}', '${tipoGrafico}')">
-                        <span style="font-weight:600; color:#334155;">${index + 1}. ${DOMPurify.sanitize(k)}</span>
-                        <span style="font-weight:800; color:#0f172a; font-size:16px;">${val}</span>
+                    <div class="data-item" style="${bgStyle}" onclick="lidarCliqueLista('${DOMPurify.sanitize(k)}', '${tipoGrafico}')">
+                        <span style="font-weight:600; color:${colorStyle};">${index + 1}. ${DOMPurify.sanitize(k)}</span>
+                        <span style="font-weight:800; color:${colorStyle}; font-size:16px;">${val}</span>
                     </div>
                 `;
             }).join('');
@@ -1694,3 +1688,4 @@
     </script>
 </body>
 </html>
+
