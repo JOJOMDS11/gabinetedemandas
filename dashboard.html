@@ -278,6 +278,11 @@
             
             <div id="listaDemandasWord" style="max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px; margin-bottom: 15px;"></div>
             
+            <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="checkLinksWord" style="width: 16px; height: 16px;" checked>
+                <label for="checkLinksWord" style="font-size: 13px; font-weight: bold; color: #185199; cursor: pointer;">🔗 Incluir hiperlink no documento (Legis ou Sistema)</label>
+            </div>
+
             <div style="display: flex; gap: 10px;">
                 <button style="background:#e0e0e0; color:#333; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; width: 30%;" onclick="fecharModalWord()">Cancelar</button>
                 <div style="display: flex; gap: 5px; width: 70%;">
@@ -291,7 +296,7 @@
     <div class="modal-overlay" id="modalWordSelecionados">
         <div class="modal-box" style="max-width: 450px; text-align: left; padding: 20px;">
             <h3 style="text-align:center; color:#185199; margin-bottom: 20px;">📄 Gerar Ofício (Cards Selecionados)</h3>
-            <div style="display:grid; grid-template-columns: 1fr; gap:15px; margin-bottom:20px;">
+            <div style="display:grid; grid-template-columns: 1fr; gap:15px; margin-bottom:15px;">
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#555;">Secretaria Destino:</label>
                     <input type="text" id="wordSecSel" value="Secretaria Municipal de Mobilidade e Obras - SEMOB" style="text-align: left; font-size: 14px;">
@@ -307,6 +312,11 @@
                         <option value="Daniel">Daniel Daudt Schaefer (Líder do governo/Vereador do PL)</option>
                     </select>
                 </div>
+            </div>
+            
+            <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="checkLinksWordSel" style="width: 16px; height: 16px;" checked>
+                <label for="checkLinksWordSel" style="font-size: 13px; font-weight: bold; color: #185199; cursor: pointer;">🔗 Incluir hiperlink no documento (Legis ou Sistema)</label>
             </div>
             
             <div style="display: flex; gap: 10px;">
@@ -1280,14 +1290,29 @@
             const secResp = document.getElementById('wordSecretario').value.trim() || 'Secretário(a)';
             const assinatura = document.getElementById('assinaturaOficio').value;
             const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+            const incluirLinks = document.getElementById('checkLinksWord') ? document.getElementById('checkLinksWord').checked : false;
 
             let trsHTML = '';
             checkboxes.forEach(chk => {
                 const d = todasDemandas.find(x => x.id === chk.value);
                 if (d) {
-                    const exp = DOMPurify.sanitize(d.expediente || '');
-                    const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
+                    let exp = DOMPurify.sanitize(d.expediente || '');
+                    let pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
                     const desc = DOMPurify.sanitize(d.descricao || d.assunto || '');
+                    
+                    if (incluirLinks) {
+                        const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
+                        const url = isLegisSafe ? DOMPurify.sanitize(d.link_legis) : `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${d.id}`;
+                        
+                        if (exp && exp !== 'S/Exp') {
+                            exp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">${exp}</a>`;
+                        } else if (pdp && pdp !== 'S/PDP') {
+                            pdp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">${pdp}</a>`;
+                        } else {
+                            exp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">Ver Registro</a>`;
+                        }
+                    }
+
                     trsHTML += `<tr><td style="text-align: center; border: 1px solid black; padding: 5px;">${exp}</td><td style="text-align: center; border: 1px solid black; padding: 5px;">${pdp}</td><td style="text-align: justify; border: 1px solid black; padding: 5px;">${desc}</td></tr>`;
                 }
             });
@@ -1368,13 +1393,29 @@
             const secResp = document.getElementById('wordRespSel').value.trim() || 'Secretário(a)';
             const assinatura = document.getElementById('assinaturaOficioSel').value;
             const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+            const incluirLinks = document.getElementById('checkLinksWordSel') ? document.getElementById('checkLinksWordSel').checked : false;
+            
             let trsHTML = '';
             Array.from(selecionadosWord).forEach(id => {
                 const d = todasDemandas.find(x => x.id === id);
                 if (d) {
-                    const exp = DOMPurify.sanitize(d.expediente || '');
-                    const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
+                    let exp = DOMPurify.sanitize(d.expediente || '');
+                    let pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
                     const desc = DOMPurify.sanitize(d.descricao || d.assunto || '');
+                    
+                    if (incluirLinks) {
+                        const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
+                        const url = isLegisSafe ? DOMPurify.sanitize(d.link_legis) : `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${d.id}`;
+                        
+                        if (exp && exp !== 'S/Exp') {
+                            exp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">${exp}</a>`;
+                        } else if (pdp && pdp !== 'S/PDP') {
+                            pdp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">${pdp}</a>`;
+                        } else {
+                            exp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">Ver Registro</a>`;
+                        }
+                    }
+
                     trsHTML += `<tr><td style="text-align: center; border: 1px solid black; padding: 5px;">${exp}</td><td style="text-align: center; border: 1px solid black; padding: 5px;">${pdp}</td><td style="text-align: justify; border: 1px solid black; padding: 5px;">${desc}</td></tr>`;
                 }
             });
