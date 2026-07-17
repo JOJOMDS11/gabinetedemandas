@@ -9,6 +9,7 @@
     <meta name="theme-color" content="#185199">
     <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f2f5; color: #333; }
@@ -278,9 +279,14 @@
             
             <div id="listaDemandasWord" style="max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px; margin-bottom: 15px;"></div>
             
-            <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" id="checkLinksWord" style="width: 16px; height: 16px;" checked>
-                <label for="checkLinksWord" style="font-size: 13px; font-weight: bold; color: #185199; cursor: pointer;">🔗 Incluir hiperlink no documento (Legis ou Sistema)</label>
+            <div style="margin-bottom: 15px;">
+                <label for="tipoLinkWord" style="font-size: 13px; font-weight: bold; color: #185199; display:block; margin-bottom:5px;">🔗 Hiperlink no documento:</label>
+                <select id="tipoLinkWord" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; width:100%; background:#f8fafc;">
+                    <option value="nenhum">🚫 Não incluir link</option>
+                    <option value="legis_privado" selected>🔒 Legis (com acesso/login)</option>
+                    <option value="legis_publico">🌐 Legis (link público, sem login)</option>
+                    <option value="sistema">🖥️ Sistema (Gabinete)</option>
+                </select>
             </div>
 
             <div style="display: flex; gap: 10px;">
@@ -314,9 +320,14 @@
                 </div>
             </div>
             
-            <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" id="checkLinksWordSel" style="width: 16px; height: 16px;" checked>
-                <label for="checkLinksWordSel" style="font-size: 13px; font-weight: bold; color: #185199; cursor: pointer;">🔗 Incluir hiperlink no documento (Legis ou Sistema)</label>
+            <div style="margin-bottom: 20px;">
+                <label for="tipoLinkWordSel" style="font-size: 13px; font-weight: bold; color: #185199; display:block; margin-bottom:5px;">🔗 Hiperlink no documento:</label>
+                <select id="tipoLinkWordSel" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; width:100%; background:#f8fafc;">
+                    <option value="nenhum">🚫 Não incluir link</option>
+                    <option value="legis_privado" selected>🔒 Legis (com acesso/login)</option>
+                    <option value="legis_publico">🌐 Legis (link público, sem login)</option>
+                    <option value="sistema">🖥️ Sistema (Gabinete)</option>
+                </select>
             </div>
             
             <div style="display: flex; gap: 10px;">
@@ -1238,6 +1249,65 @@
             else { badge.style.background = '#185199'; }
         }
 
+        function montarUrlLegisPublico(expedienteRaw, criadoEm) {
+            if (!expedienteRaw) return null;
+            const texto = String(expedienteRaw);
+            const comAno = texto.match(/(\d+)\s*\/\s*(\d{4})/);
+            let numero, ano;
+            if (comAno) {
+                numero = comAno[1];
+                ano = comAno[2];
+            } else {
+                numero = texto.replace(/\D/g, '');
+                if (!numero) return null;
+                ano = criadoEm ? new Date(criadoEm).getFullYear() : new Date().getFullYear();
+            }
+            return `https://legis.camarasaoleopoldo.rs.gov.br/?sec=nlistaproposicoes&expediente=${encodeURIComponent(numero)}&especie=&numero=&ano=${ano}&keyword=&id_proponente=`;
+        }
+
+        function montarLinkOficio(d, tipoLink) {
+            const linkSistema = `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${d.id}`;
+            if (tipoLink === 'legis_privado') {
+                const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
+                return isLegisSafe ? DOMPurify.sanitize(d.link_legis) : linkSistema;
+            }
+            if (tipoLink === 'legis_publico') {
+                const urlPublica = montarUrlLegisPublico(d.expediente, d.criado_em);
+                return urlPublica ? DOMPurify.sanitize(urlPublica) : linkSistema;
+            }
+            if (tipoLink === 'sistema') return linkSistema;
+            return null;
+        }
+
+        function baixarComoPDF(conteudoHTML, nomeArquivo, onDone) {
+            const temp = document.createElement('div');
+            temp.style.position = 'fixed';
+            temp.style.left = '-9999px';
+            temp.style.top = '0';
+            temp.style.width = '800px';
+            temp.style.background = '#ffffff';
+            temp.innerHTML = conteudoHTML;
+            document.body.appendChild(temp);
+
+            const opt = {
+                margin: 10,
+                filename: nomeArquivo,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            html2pdf().set(opt).from(temp).save().then(() => {
+                document.body.removeChild(temp);
+                if (onDone) onDone();
+            }).catch((err) => {
+                document.body.removeChild(temp);
+                alert('Erro ao gerar o PDF: ' + (err && err.message ? err.message : err));
+                if (onDone) onDone();
+            });
+        }
+
         window.abrirModalWord = function() {
             const statusExcluidos = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
             const demandasParaWord = todasDemandas.filter(d => {
@@ -1290,7 +1360,7 @@
             const secResp = document.getElementById('wordSecretario').value.trim() || 'Secretário(a)';
             const assinatura = document.getElementById('assinaturaOficio').value;
             const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
-            const incluirLinks = document.getElementById('checkLinksWord') ? document.getElementById('checkLinksWord').checked : false;
+            const tipoLink = document.getElementById('tipoLinkWord') ? document.getElementById('tipoLinkWord').value : 'nenhum';
 
             let trsHTML = '';
             checkboxes.forEach(chk => {
@@ -1300,16 +1370,16 @@
                     let pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
                     const desc = DOMPurify.sanitize(d.descricao || d.assunto || '');
                     
-                    if (incluirLinks) {
-                        const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
-                        const url = isLegisSafe ? DOMPurify.sanitize(d.link_legis) : `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${d.id}`;
-                        
-                        if (exp && exp !== 'S/Exp') {
-                            exp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">${exp}</a>`;
-                        } else if (pdp && pdp !== 'S/PDP') {
-                            pdp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">${pdp}</a>`;
-                        } else {
-                            exp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">Ver Registro</a>`;
+                    if (tipoLink !== 'nenhum') {
+                        const url = montarLinkOficio(d, tipoLink);
+                        if (url) {
+                            if (exp && exp !== 'S/Exp') {
+                                exp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">${exp}</a>`;
+                            } else if (pdp && pdp !== 'S/PDP') {
+                                pdp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">${pdp}</a>`;
+                            } else {
+                                exp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">Ver Registro</a>`;
+                            }
                         }
                     }
 
@@ -1327,18 +1397,8 @@
                               <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Vereador do PL</p>`;
             }
 
-            const htmlString = `
-            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><title>Ofício Demandas</title>
-            <style>
-                @media print {
-                    @page { margin: 2cm; }
-                    body { font-size: 12pt; }
-                }
-            </style>
-            </head>
-            <body>
-                <div style="font-family: Arial, sans-serif; font-size: 11pt;">
+            const conteudoHTML = `
+                <div style="font-family: Arial, sans-serif; font-size: 11pt; background:#ffffff; padding: 10px;">
                     <br><br>
                     <table style="width: 100%; border: none; margin-bottom: 20px;">
                         <tr><td style="text-align: left; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">Pedidos de providências</td><td style="text-align: right; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">São Leopoldo, ${dataHoje}</td></tr>
@@ -1348,194 +1408,4 @@
                     <p style="margin: 0; font-family: Arial, sans-serif;">SECRETÁRIO ${DOMPurify.sanitize(secResp)}.</p>
                     <br><br>
                     <table border="1" cellspacing="0" cellpadding="5" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt;">
-                        <tr style="background-color: #bfbfbf; font-weight: bold; text-align: center;"><td width="15%" style="border: 1px solid black; padding: 5px;">EXPEDIENTE</td><td width="25%" style="border: 1px solid black; padding: 5px;">PEDIDO DE PROVIDÊNCIAS</td><td width="60%" style="border: 1px solid black; padding: 5px;">ASSUNTO/DEMANDA</td></tr>
-                        ${trsHTML}
-                    </table>
-                    <br><br><br>
-                    <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">______________________________</p>
-                    ${rodapeHTML}
-                </div>
-            </body></html>`;
-
-            if (formato === 'pdf') {
-                const printWindow = window.open('', '', 'width=800,height=600');
-                printWindow.document.write(htmlString);
-                printWindow.document.close();
-                printWindow.focus();
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
-                    fecharModalWord();
-                }, 500);
-            } else {
-                const blob = new Blob(['\ufeff', htmlString], { type: 'application/msword' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
-                const nomeCurtoSec = secNome.split('-').pop().trim();
-                link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
-                document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
-                fecharModalWord();
-            }
-        }
-
-        window.abrirModalWordSelecionados = function() {
-            if(selecionadosWord.size === 0) return alert('Selecione ao menos um card!');
-            document.getElementById('modalWordSelecionados').classList.add('ativo');
-        }
-
-        window.fecharModalWordSelecionados = function() { document.getElementById('modalWordSelecionados').classList.remove('ativo'); }
-
-        window.gerarWordDosSelecionados = function(formato) {
-            if (selecionadosWord.size === 0) return alert("Nenhuma demanda selecionada!");
-            const secNome = document.getElementById('wordSecSel').value.trim() || 'Secretaria Destino';
-            const secResp = document.getElementById('wordRespSel').value.trim() || 'Secretário(a)';
-            const assinatura = document.getElementById('assinaturaOficioSel').value;
-            const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
-            const incluirLinks = document.getElementById('checkLinksWordSel') ? document.getElementById('checkLinksWordSel').checked : false;
-            
-            let trsHTML = '';
-            Array.from(selecionadosWord).forEach(id => {
-                const d = todasDemandas.find(x => x.id === id);
-                if (d) {
-                    let exp = DOMPurify.sanitize(d.expediente || '');
-                    let pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
-                    const desc = DOMPurify.sanitize(d.descricao || d.assunto || '');
-                    
-                    if (incluirLinks) {
-                        const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
-                        const url = isLegisSafe ? DOMPurify.sanitize(d.link_legis) : `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${d.id}`;
-                        
-                        if (exp && exp !== 'S/Exp') {
-                            exp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">${exp}</a>`;
-                        } else if (pdp && pdp !== 'S/PDP') {
-                            pdp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">${pdp}</a>`;
-                        } else {
-                            exp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">Ver Registro</a>`;
-                        }
-                    }
-
-                    trsHTML += `<tr><td style="text-align: center; border: 1px solid black; padding: 5px;">${exp}</td><td style="text-align: center; border: 1px solid black; padding: 5px;">${pdp}</td><td style="text-align: justify; border: 1px solid black; padding: 5px;">${desc}</td></tr>`;
-                }
-            });
-
-            let rodapeHTML = '';
-            if (assinatura === 'Luana') {
-                rodapeHTML = `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Luana Costa Dias</p>
-                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Chefe de Gabinete</p>`;
-            } else {
-                rodapeHTML = `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Daniel Daudt Schaefer</p>
-                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Líder do governo</p>
-                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Vereador do PL</p>`;
-            }
-
-            const htmlString = `
-            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><title>Ofício Demandas</title>
-            <style>
-                @media print {
-                    @page { margin: 2cm; }
-                    body { font-size: 12pt; }
-                }
-            </style>
-            </head>
-            <body>
-                <div style="font-family: Arial, sans-serif; font-size: 11pt;">
-                    <br><br>
-                    <table style="width: 100%; border: none; margin-bottom: 20px;">
-                        <tr><td style="text-align: left; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">Pedidos de providências</td><td style="text-align: right; border: none; width: 50%; font-family: Arial, sans-serif; font-size: 11pt;">São Leopoldo, ${dataHoje}</td></tr>
-                    </table>
-                    <p style="font-weight: bold; margin: 0; font-family: Arial, sans-serif;">Gabinete Vereador Daniel Daudt Schaefer</p>
-                    <p style="margin: 0; font-family: Arial, sans-serif;">Obs.: Demandas da ${DOMPurify.sanitize(secNome)}</p>
-                    <p style="margin: 0; font-family: Arial, sans-serif;">SECRETÁRIO ${DOMPurify.sanitize(secResp)}.</p>
-                    <br><br>
-                    <table border="1" cellspacing="0" cellpadding="5" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt;">
-                        <tr style="background-color: #bfbfbf; font-weight: bold; text-align: center;"><td width="15%" style="border: 1px solid black; padding: 5px;">EXPEDIENTE</td><td width="25%" style="border: 1px solid black; padding: 5px;">PEDIDO DE PROVIDÊNCIAS</td><td width="60%" style="border: 1px solid black; padding: 5px;">ASSUNTO/DEMANDA</td></tr>
-                        ${trsHTML}
-                    </table>
-                    <br><br><br>
-                    <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">______________________________</p>
-                    ${rodapeHTML}
-                </div>
-            </body></html>`;
-            
-            if (formato === 'pdf') {
-                const printWindow = window.open('', '', 'width=800,height=600');
-                printWindow.document.write(htmlString);
-                printWindow.document.close();
-                printWindow.focus();
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
-                    fecharModalWordSelecionados(); toggleSelecao();
-                }, 500);
-            } else {
-                const blob = new Blob(['\ufeff', htmlString], { type: 'application/msword' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a'); link.href = url;
-                const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
-                const nomeCurtoSec = secNome.split('-').pop().trim();
-                link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
-                document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
-                fecharModalWordSelecionados(); toggleSelecao();
-            }
-        }
-
-        window.assumirDemanda = async function(id, btnElement) {
-            btnElement.textContent = '⏳ ...'; btnElement.disabled = true;
-            const demanda = todasDemandas.find(d => d.id === id); if (!demanda) return;
-            const resp = (demanda.responsaveis || []).filter(r => r); if (resp.includes(usuarioLogado)) return;
-            await db.from('demandas').update({ responsaveis: [...resp, usuarioLogado] }).eq('id', id);
-        }
-
-        window.sairDemanda = async function(id, btnElement) {
-            btnElement.textContent = '⏳ ...'; btnElement.disabled = true;
-            const demanda = todasDemandas.find(d => d.id === id); if (!demanda) return;
-            const resp = (demanda.responsaveis || []).filter(r => r !== usuarioLogado);
-            await db.from('demandas').update({ responsaveis: resp }).eq('id', id);
-        }
-
-        window.solicitarExclusao = function(id) {
-            idParaExcluir = id;
-            document.getElementById('inputSenhaAcao').value = ''; document.getElementById('erroSenhaAcao').style.display = 'none';
-            document.getElementById('modalSenhaSegura').classList.add('ativo');
-        }
-
-        window.fecharModalExclusao = function() { document.getElementById('modalSenhaSegura').classList.remove('ativo'); idParaExcluir = null; }
-
-        window.processarExclusao = async function() {
-            const senha = document.getElementById('inputSenhaAcao').value.trim(); const btn = document.getElementById('btnConfirmarSenhaAcao');
-            if(!senha) return; btn.textContent = '⏳ Excluindo...'; btn.disabled = true;
-            try {
-                const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'validar_master', senha: senha }) });
-                if (res.ok) { await db.from('demandas').delete().eq('id', idParaExcluir); fecharModalExclusao(); carregarDemandas(); } 
-                else { document.getElementById('erroSenhaAcao').style.display = 'block'; }
-            } catch (error) { document.getElementById('erroSenhaAcao').style.display = 'block'; } 
-            finally { btn.textContent = 'Confirmar'; btn.disabled = false; }
-        }
-
-        window.copiarTexto = function(texto) { navigator.clipboard.writeText(texto).then(() => { alert('Copiado para a área de transferência!'); }).catch(err => {}); }
-
-        window.abrirModalDescricao = function(id) {
-            const demanda = todasDemandas.find(d => d.id == id); if (!demanda) return;
-            const desc = demanda.descricao ? demanda.descricao : 'Nenhuma descrição detalhada fornecida neste registro.';
-            document.getElementById('modalDescTexto').textContent = desc; 
-            document.getElementById('modalDescOverlay').classList.add('ativo');
-        }
-
-        window.fecharModalDescricao = function() { document.getElementById('modalDescOverlay').classList.remove('ativo'); }
-        window.copiarTextoModal = function() { copiarTexto(document.getElementById('modalDescTexto').textContent); }
-
-        let sessionTimeout;
-        function resetarSessao() {
-            clearTimeout(sessionTimeout);
-            sessionTimeout = setTimeout(() => { alert("Sessão expirada por inatividade. Por segurança, faça login novamente."); document.getElementById('btnLogout').click(); }, 30 * 60 * 1000);
-        }
-        document.addEventListener('mousemove', resetarSessao); document.addEventListener('keypress', resetarSessao); document.addEventListener('click', resetarSessao);
-        resetarSessao();
-
-        inicializarSistema();
-    </script>
-</body>
-</html>
+                        <tr style="background-color: #bfbfbf; font-weight: bold; text-align: center;"><td width="15%" style="border: 1px solid black; padding: 5px;">EXPEDIENTE</td><td width="25%" style="borde
