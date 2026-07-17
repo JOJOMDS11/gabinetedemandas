@@ -9,6 +9,8 @@
     <meta name="theme-color" content="#185199">
     <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+    <!-- Adicionada Biblioteca para baixar PDF direto com links -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f2f5; color: #333; }
@@ -20,13 +22,12 @@
         .navbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
         .btn-logout { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.5); padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.2s; white-space: nowrap; display: flex; align-items: center; justify-content: center;}
         .btn-logout:hover { background: rgba(255,255,255,0.1); }
-        .btn-sino { background: #e67e22; color: white; border: none; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; animation: pulse 2s infinite; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .btn-sino { background: #e67e22; color: white; border: none; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold; display: flex; align-items: gap: 5px; animation: pulse 2s infinite; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         @media (max-width: 600px) { .user-name-span, .brand-text { display: none; } }
         .container { max-width: 1200px; margin: 0 auto; padding: 25px 15px; padding-bottom: 80px; }
         .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-nova { background-color: #98ED34; color: #185199; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;}
         
-        /* Layout dos Filtros Adaptado para Celular */
         .filtros-avancados { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
         .filtros-avancados input, .filtros-avancados select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 13px; outline: none; }
         .filtros-avancados select { flex: 1; min-width: calc(50% - 10px); }
@@ -278,9 +279,13 @@
             
             <div id="listaDemandasWord" style="max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 4px; margin-bottom: 15px;"></div>
             
-            <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" id="checkLinksWord" style="width: 16px; height: 16px;" checked>
-                <label for="checkLinksWord" style="font-size: 13px; font-weight: bold; color: #185199; cursor: pointer;">🔗 Incluir hiperlink no documento (Legis ou Sistema)</label>
+            <div style="margin-bottom: 15px;">
+                <label style="font-size:12px; font-weight:bold; color:#555;">Opção de Hiperlink no Documento:</label>
+                <select id="tipoLinkWord" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; width: 100%; background: #f8fafc;">
+                    <option value="nenhum">Nenhum Link</option>
+                    <option value="legis">🔗 Link Direto pro Legis (Acesso Externo)</option>
+                    <option value="sistema">🔒 Link Interno do Sistema</option>
+                </select>
             </div>
 
             <div style="display: flex; gap: 10px;">
@@ -314,9 +319,13 @@
                 </div>
             </div>
             
-            <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" id="checkLinksWordSel" style="width: 16px; height: 16px;" checked>
-                <label for="checkLinksWordSel" style="font-size: 13px; font-weight: bold; color: #185199; cursor: pointer;">🔗 Incluir hiperlink no documento (Legis ou Sistema)</label>
+            <div style="margin-bottom: 15px;">
+                <label style="font-size:12px; font-weight:bold; color:#555;">Opção de Hiperlink no Documento:</label>
+                <select id="tipoLinkWordSel" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; width: 100%; background: #f8fafc;">
+                    <option value="nenhum">Nenhum Link</option>
+                    <option value="legis">🔗 Link Direto pro Legis (Acesso Externo)</option>
+                    <option value="sistema">🔒 Link Interno do Sistema</option>
+                </select>
             </div>
             
             <div style="display: flex; gap: 10px;">
@@ -1290,7 +1299,9 @@
             const secResp = document.getElementById('wordSecretario').value.trim() || 'Secretário(a)';
             const assinatura = document.getElementById('assinaturaOficio').value;
             const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
-            const incluirLinks = document.getElementById('checkLinksWord') ? document.getElementById('checkLinksWord').checked : false;
+            
+            // Puxa o valor do novo dropdown de links
+            const tipoLink = document.getElementById('tipoLinkWord').value;
 
             let trsHTML = '';
             checkboxes.forEach(chk => {
@@ -1300,10 +1311,16 @@
                     let pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
                     const desc = DOMPurify.sanitize(d.descricao || d.assunto || '');
                     
-                    if (incluirLinks) {
-                        const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
-                        const url = isLegisSafe ? DOMPurify.sanitize(d.link_legis) : `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${d.id}`;
-                        
+                    let url = '';
+                    let expLimpo = exp ? exp.split('/')[0].replace(/\D/g, '') : '';
+
+                    if (tipoLink === 'legis' && expLimpo) {
+                        url = `https://legis.camarasaoleopoldo.rs.gov.br/?sec=nlistaproposicoes&expediente=${expLimpo}&especie=&numero=&ano=2026&keyword=&id_proponente=`;
+                    } else if (tipoLink === 'sistema') {
+                        url = `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${d.id}`;
+                    }
+
+                    if (tipoLink !== 'nenhum' && url) {
                         if (exp && exp !== 'S/Exp') {
                             exp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">${exp}</a>`;
                         } else if (pdp && pdp !== 'S/PDP') {
@@ -1357,23 +1374,28 @@
                 </div>
             </body></html>`;
 
+            const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
+            const nomeCurtoSec = secNome.split('-').pop().trim();
+
             if (formato === 'pdf') {
-                const printWindow = window.open('', '', 'width=800,height=600');
-                printWindow.document.write(htmlString);
-                printWindow.document.close();
-                printWindow.focus();
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlString;
+                const opcoes = {
+                    margin:       15,
+                    filename:     `Demandas da ${nomeCurtoSec} ${dataArquivo}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2 },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                
+                html2pdf().set(opcoes).from(tempDiv).save().then(() => {
                     fecharModalWord();
-                }, 500);
+                });
             } else {
                 const blob = new Blob(['\ufeff', htmlString], { type: 'application/msword' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
-                const nomeCurtoSec = secNome.split('-').pop().trim();
                 link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
                 document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
                 fecharModalWord();
@@ -1393,7 +1415,9 @@
             const secResp = document.getElementById('wordRespSel').value.trim() || 'Secretário(a)';
             const assinatura = document.getElementById('assinaturaOficioSel').value;
             const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
-            const incluirLinks = document.getElementById('checkLinksWordSel') ? document.getElementById('checkLinksWordSel').checked : false;
+            
+            // Puxa o valor do dropdown de links
+            const tipoLink = document.getElementById('tipoLinkWordSel').value;
             
             let trsHTML = '';
             Array.from(selecionadosWord).forEach(id => {
@@ -1403,10 +1427,16 @@
                     let pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
                     const desc = DOMPurify.sanitize(d.descricao || d.assunto || '');
                     
-                    if (incluirLinks) {
-                        const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
-                        const url = isLegisSafe ? DOMPurify.sanitize(d.link_legis) : `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${d.id}`;
-                        
+                    let url = '';
+                    let expLimpo = exp ? exp.split('/')[0].replace(/\D/g, '') : '';
+
+                    if (tipoLink === 'legis' && expLimpo) {
+                        url = `https://legis.camarasaoleopoldo.rs.gov.br/?sec=nlistaproposicoes&expediente=${expLimpo}&especie=&numero=&ano=2026&keyword=&id_proponente=`;
+                    } else if (tipoLink === 'sistema') {
+                        url = `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${d.id}`;
+                    }
+
+                    if (tipoLink !== 'nenhum' && url) {
                         if (exp && exp !== 'S/Exp') {
                             exp = `<a href="${url}" target="_blank" style="color: #1155cc; text-decoration: underline;">${exp}</a>`;
                         } else if (pdp && pdp !== 'S/PDP') {
@@ -1460,22 +1490,27 @@
                 </div>
             </body></html>`;
             
+            const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
+            const nomeCurtoSec = secNome.split('-').pop().trim();
+
             if (formato === 'pdf') {
-                const printWindow = window.open('', '', 'width=800,height=600');
-                printWindow.document.write(htmlString);
-                printWindow.document.close();
-                printWindow.focus();
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlString;
+                const opcoes = {
+                    margin:       15,
+                    filename:     `Demandas da ${nomeCurtoSec} ${dataArquivo}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2 },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                
+                html2pdf().set(opcoes).from(tempDiv).save().then(() => {
                     fecharModalWordSelecionados(); toggleSelecao();
-                }, 500);
+                });
             } else {
                 const blob = new Blob(['\ufeff', htmlString], { type: 'application/msword' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a'); link.href = url;
-                const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '');
-                const nomeCurtoSec = secNome.split('-').pop().trim();
                 link.download = `Demandas da ${nomeCurtoSec} ${dataArquivo}.doc`;
                 document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
                 fecharModalWordSelecionados(); toggleSelecao();
