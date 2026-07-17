@@ -283,8 +283,8 @@
                 <label style="font-size:12px; font-weight:bold; color:#555;">Opção de Hiperlink no Documento:</label>
                 <select id="tipoLinkWord" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; width: 100%; background: #f8fafc;">
                     <option value="nenhum">Nenhum Link</option>
-                    <option value="legis">🔗 Link Direto pro Legis (Acesso Externo)</option>
-                    <option value="sistema">🔒 Link Interno do Sistema</option>
+                    <option value="direto">🔗 Link Direto (Aberto pela URL)</option>
+                    <option value="sistema">🔒 Link Original Legis (Já salvo no Card)</option>
                 </select>
             </div>
 
@@ -323,8 +323,8 @@
                 <label style="font-size:12px; font-weight:bold; color:#555;">Opção de Hiperlink no Documento:</label>
                 <select id="tipoLinkWordSel" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:13px; width: 100%; background: #f8fafc;">
                     <option value="nenhum">Nenhum Link</option>
-                    <option value="legis">🔗 Link Direto pro Legis (Acesso Externo)</option>
-                    <option value="sistema">🔒 Link Interno do Sistema</option>
+                    <option value="direto">🔗 Link Direto (Aberto pela URL)</option>
+                    <option value="sistema">🔒 Link Original Legis (Já salvo no Card)</option>
                 </select>
             </div>
             
@@ -1314,10 +1314,11 @@
                     let url = '';
                     let expLimpo = exp ? exp.split('/')[0].replace(/\D/g, '') : '';
 
-                    if (tipoLink === 'legis' && expLimpo) {
+                    if (tipoLink === 'direto' && expLimpo) {
                         url = `https://legis.camarasaoleopoldo.rs.gov.br/?sec=nlistaproposicoes&expediente=${expLimpo}&especie=&numero=&ano=2026&keyword=&id_proponente=`;
                     } else if (tipoLink === 'sistema') {
-                        url = `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${d.id}`;
+                        const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
+                        url = isLegisSafe ? DOMPurify.sanitize(d.link_legis) : '';
                     }
 
                     if (tipoLink !== 'nenhum' && url) {
@@ -1430,10 +1431,11 @@
                     let url = '';
                     let expLimpo = exp ? exp.split('/')[0].replace(/\D/g, '') : '';
 
-                    if (tipoLink === 'legis' && expLimpo) {
+                    if (tipoLink === 'direto' && expLimpo) {
                         url = `https://legis.camarasaoleopoldo.rs.gov.br/?sec=nlistaproposicoes&expediente=${expLimpo}&especie=&numero=&ano=2026&keyword=&id_proponente=`;
                     } else if (tipoLink === 'sistema') {
-                        url = `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${d.id}`;
+                        const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
+                        url = isLegisSafe ? DOMPurify.sanitize(d.link_legis) : '';
                     }
 
                     if (tipoLink !== 'nenhum' && url) {
