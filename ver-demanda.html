@@ -1070,7 +1070,6 @@
                                     <option value="Demanda" ${d.doc_tipo==='Demanda'?'selected':''}>Demanda</option>
                                     <option value="Emenda" ${d.doc_tipo==='Emenda'?'selected':''}>Emenda</option>
                                     <option value="Emenda Aditiva" ${d.doc_tipo==='Emenda Aditiva'?'selected':''}>Emenda Aditiva</option>
-                                    <option value="Emenda Aditiva EM" ${d.doc_tipo==='Emenda Aditiva EM'?'selected':''}>Emenda Aditiva EM</option>
                                     <option value="Emenda à Lei Orgânica" ${d.doc_tipo==='Emenda à Lei Orgânica'?'selected':''}>Emenda à Lei Orgânica</option>
                                     <option value="Indicação" ${d.doc_tipo==='Indicação'?'selected':''}>Indicação</option>
                                     <option value="Intenção de Projeto" ${d.doc_tipo==='Intenção de Projeto'?'selected':''}>Intenção de Projeto</option>
@@ -1099,6 +1098,7 @@
                             <label>Link Direto do Legis 🔗</label>
                             <div style="display:flex; gap:8px;">
                                 <input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo..." ${bloqueado}>
+                                ${(urlLegisAdmin || urlLegisPublico) ? `<button type="button" class="btn-acao laranja" style="flex:none; width:auto; text-decoration:none; display:flex; align-items:center; background:#e67e22; color:white; border:none; padding:8px 12px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="abrirModalLegis('${urlLegisAdmin}', '${urlLegisPublico}')">Acessar 🔗</button>` : ''}
                             </div>
                         </div>
                     </div>
