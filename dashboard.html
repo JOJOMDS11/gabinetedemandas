@@ -1047,7 +1047,7 @@
                 if (fotoPrincipal) {
                     mediaTag = isVideo(fotoPrincipal) ? `<video src="${fotoPrincipal}" muted loop></video>` : `<img src="${fotoPrincipal}">`;
                 } else if (primeiroPdf) {
-                    mediaTag = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: linear-gradient(135deg, #185199, #123e75); color:white;"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-bottom:8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg><span style="font-size:11px; font-weight:bold; letter-spacing: 1px;">DOCUMENTO OFICIAL</span></div>`;
+                    mediaTag = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: linear-gradient(135deg, #185199, #123e75); color:white;"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-bottom:8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2-2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg><span style="font-size:11px; font-weight:bold; letter-spacing: 1px;">DOCUMENTO OFICIAL</span></div>`;
                 } else {
                     mediaTag = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: #e2e8f0; position:relative; overflow:hidden;"><img src="https://i.imgur.com/coryuD6.png" style="position:absolute; width:120%; height:auto; opacity:0.04; top:50%; left:50%; transform:translate(-50%, -50%);"><span style="font-size:11px; font-weight:bold; color:#64748b; z-index:1; letter-spacing:1px; text-transform:uppercase;">Registro Interno</span></div>`;
                 }
@@ -1059,6 +1059,10 @@
                     if (isLegisSafe) quickLinks += `<a href="${DOMPurify.sanitize(demanda.link_legis)}" target="_blank" onclick="event.stopPropagation()" style="background:#f39c12; color:white; padding:6px 10px; border-radius:4px; text-decoration:none; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3);">🔗 Legis</a>`;
                     if (primeiroPdf) quickLinks += `<a href="${primeiroPdf}" target="_blank" onclick="event.stopPropagation()" style="background:#c0392b; color:white; padding:6px 10px; border-radius:4px; text-decoration:none; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3);">📄 Ver PDF</a>`;
                     quickLinks += `</div>`;
+                }
+                
+                if (!modoSelecao) {
+                    mediaTag = `<a href="ver-demanda.html?id=${demanda.id}" style="display:block; height:100%; width:100%; text-decoration:none; color:inherit;" onclick="event.stopPropagation()">${mediaTag}</a>`;
                 }
                 mediaTag += quickLinks;
 
@@ -1115,6 +1119,10 @@
                     checkOverlay = `<div style="position:absolute; top:10px; left:10px; z-index:3; background:white; border-radius:4px; padding:2px; box-shadow:0 2px 4px rgba(0,0,0,0.2);"><input type="checkbox" ${isSelected ? 'checked' : ''} style="width:20px; height:20px; pointer-events:none;"></div>`;
                     clickAction = `event.preventDefault(); toggleCardSelecao('${demanda.id}')`;
                 }
+                
+                const tituloHTML = !modoSelecao 
+                    ? `<a href="ver-demanda.html?id=${demanda.id}" class="titulo" style="margin-bottom:0; text-decoration:none; display:block;" onclick="event.stopPropagation()">${sAssunto}</a>` 
+                    : `<div class="titulo" style="margin-bottom:0;">${sAssunto}</div>`;
 
                 return `<div class="demanda-card ${aguardandoDaniel && !modoSelecao ? 'aguardando-daniel' : ''}" style="${cardStyle}" onclick="${clickAction}">
                             ${checkOverlay}
@@ -1126,7 +1134,7 @@
                                     <span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; margin-left:4px;">${badgePrioridade}</span>
                                 </div>
                                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:5px;">
-                                    <div class="titulo" style="margin-bottom:0;">${sAssunto}</div>
+                                    ${tituloHTML}
                                     ${!modoSelecao ? `
                                     <div style="display:flex; gap:4px; flex-shrink:0;">
                                         <button class="btn-micro" onclick="event.stopPropagation(); copiarTexto('${assuntoSafeJs}')" title="Copiar Assunto">
@@ -1300,7 +1308,6 @@
             const assinatura = document.getElementById('assinaturaOficio').value;
             const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
             
-            // Puxa o valor do novo dropdown de links
             const tipoLink = document.getElementById('tipoLinkWord').value;
 
             let trsHTML = '';
@@ -1417,7 +1424,6 @@
             const assinatura = document.getElementById('assinaturaOficioSel').value;
             const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
             
-            // Puxa o valor do dropdown de links
             const tipoLink = document.getElementById('tipoLinkWordSel').value;
             
             let trsHTML = '';
