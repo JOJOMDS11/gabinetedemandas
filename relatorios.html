@@ -485,7 +485,8 @@
         let secretariasOficiais = [...secretariasOficiaisBase];
         let secretariasValidas = new Set(secretariasOficiaisBase.map(s => s.toUpperCase()));
         
-        const tiposOficiais = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO', 'DEMANDA (GERAL)', 'DEMANDA EXTERNA', 'INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
+        // Emenda Aditiva EM incluída aqui
+        const tiposOficiais = ['AGENDA VISITA AO GABINETE', 'AGENDA VISITA EXTERNA', 'GABINETE', 'REUNIÃO', 'DEMANDA (GERAL)', 'DEMANDA EXTERNA', 'EMENDA', 'EMENDA ADITIVA', 'EMENDA ADITIVA EM', 'INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE', 'EMENDA MODIFICATIVA'];
 
         function getMesAnoReal(d) {
             if (d.data_agendada && d.data_agendada.trim() !== '') {
@@ -1023,13 +1024,13 @@
                 if (tipoGrafico === 'secretaria_atrasada' || tipoGrafico === 'bairro') {
                     const ratio = val / maxVal;
                     if (ratio > 0.7) {
-                        bgStyle = 'background-color: #fee2e2; border-color: #fca5a5;'; // Red
+                        bgStyle = 'background-color: #fee2e2; border-color: #fca5a5;'; 
                         colorStyle = '#b91c1c';
                     } else if (ratio > 0.3) {
-                        bgStyle = 'background-color: #fef08a; border-color: #fde047;'; // Yellow
+                        bgStyle = 'background-color: #fef08a; border-color: #fde047;'; 
                         colorStyle = '#854d0e';
                     } else {
-                        bgStyle = 'background-color: #dcfce7; border-color: #86efac;'; // Green
+                        bgStyle = 'background-color: #dcfce7; border-color: #86efac;'; 
                         colorStyle = '#15803d';
                     }
                 }
@@ -1078,7 +1079,8 @@
                     (d.numero_demanda||'').toLowerCase().includes(v) ||
                     (d.secretaria||'').toLowerCase().includes(v) ||
                     (d.status||'').toLowerCase().includes(v) ||
-                    (d.expediente||'').toLowerCase().includes(v) 
+                    (d.expediente||'').toLowerCase().includes(v) ||
+                    (d.solicitante_tel||'').toLowerCase().includes(v) 
                 );
             }
 
@@ -1147,6 +1149,11 @@
                 const optsExec = equipeMembros.map(m => `<option value="${DOMPurify.sanitize(m)}">${DOMPurify.sanitize(m)}</option>`).join('');
 
                 const tagTipo = d.tipo_solicitacao ? `<span class="detalhe-tag" style="background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; font-weight:700;">🏷️ Tipo: ${DOMPurify.sanitize(d.tipo_solicitacao)}</span>` : '';
+                
+                // Mostrar informações do solicitante
+                const infoSolicitante = (d.solicitante_nome || d.solicitante_tel) 
+                    ? `<span class="detalhe-tag" style="background:#fef3c7; color:#9d174d; border:1px solid #fbcfe8;">👤 De: ${DOMPurify.sanitize(d.solicitante_nome || '')} ${d.solicitante_tel ? '('+DOMPurify.sanitize(d.solicitante_tel)+')' : ''}</span>`
+                    : '';
 
                 return `
                     <div class="lista-item" data-id="${d.id}">
@@ -1159,6 +1166,7 @@
                                 <span class="detalhe-tag">📅 ${dataF}</span>
                                 <span class="detalhe-tag" style="background:#e0f2fe; color:#1e40af;">📍 Bairro: ${bairroTxt}</span>
                                 ${tagTipo}
+                                ${infoSolicitante}
                                 <div class="edicao-inline">
                                     <select class="sel-status" title="Mudar status">${optsStatus}</select>
                                     <div class="chips-executores">${chipsHtml}</div>
@@ -1630,7 +1638,10 @@
         window.exportarExcel = function() {
             if (demandasFiltradas.length === 0) return alert("Nenhum dado filtrado para exportar.");
             
-            const dadosLimpos = demandasFiltradas.map(d => ({
+            const dadosLimpos = demandasFiltradas.map(d => {
+                let linkApp = `https://jojomds11.github.io/gabinetedemandas/ver-demanda.html?id=${d.id}`;
+                
+                return {
                 'Nº Demanda': d.numero_demanda || '',
                 'Abertura / Fato': d.data_agendada ? new Date(d.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : (d.criado_em ? new Date(d.criado_em).toLocaleDateString('pt-BR') : ''),
                 'Tipo de Solicitação': d.tipo_solicitacao || '', 
@@ -1638,6 +1649,7 @@
                 'Status': d.status || '',
                 'Expediente Legis': d.expediente || '',
                 'Link Legis': d.link_legis || '',
+                'Link Nosso Sistema': linkApp,
                 'Secretaria': d.secretaria || '',
                 'Responsável Ordem': d.responsavel_ordem || '',
                 'Executores': Array.isArray(d.responsaveis) ? d.responsaveis.join(', ') : '',
@@ -1648,10 +1660,38 @@
                 'Doc Interno': d.doc_numero ? `${d.doc_tipo || 'Doc'} ${d.doc_numero}` : '',
                 'Link do PDF (Anexo)': d.pdf_url || 'Sem PDF',
                 'Links de Fotos (Anexos)': Array.isArray(d.fotos_urls) ? d.fotos_urls.join(' | ') : ''
-            }));
+                };
+            });
 
-            const ws = XLSX.utils.json_to_sheet(dadosLimpos);
             const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(dadosLimpos);
+
+            // Ajustar colunas de links para serem hyper-links na planilha
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for(let R = range.s.r + 1; R <= range.e.r; ++R) {
+                // Link Legis (coluna F: 6)
+                let cellLegis = ws[XLSX.utils.encode_cell({c: 6, r: R})];
+                if(cellLegis && cellLegis.v && (cellLegis.v.startsWith('http://') || cellLegis.v.startsWith('https://'))) {
+                    cellLegis.l = { Target: cellLegis.v };
+                    cellLegis.s = { font: { color: { rgb: "0000FF" }, underline: true } };
+                }
+                
+                // Link Nosso Sistema (coluna G: 7)
+                let cellNossoApp = ws[XLSX.utils.encode_cell({c: 7, r: R})];
+                if(cellNossoApp && cellNossoApp.v) {
+                    cellNossoApp.l = { Target: cellNossoApp.v };
+                    cellNossoApp.s = { font: { color: { rgb: "0000FF" }, underline: true } };
+                }
+
+                // Link PDF (coluna P: 16)
+                let cellPdf = ws[XLSX.utils.encode_cell({c: 16, r: R})];
+                if(cellPdf && cellPdf.v && cellPdf.v.startsWith('http')) {
+                    // Pega o primeiro se houver vários divididos por vírgula
+                    cellPdf.l = { Target: cellPdf.v.split(',')[0] };
+                    cellPdf.s = { font: { color: { rgb: "0000FF" }, underline: true } };
+                }
+            }
+
             XLSX.utils.book_append_sheet(wb, ws, "Relatório Geral");
             XLSX.writeFile(wb, `Relatorio_Gabinete_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.xlsx`);
         }
@@ -1688,4 +1728,3 @@
     </script>
 </body>
 </html>
-
