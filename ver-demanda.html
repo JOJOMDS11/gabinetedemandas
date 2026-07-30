@@ -175,6 +175,19 @@
         </div>
     </div>
 
+    <!-- Modal Escolher Legis -->
+    <div class="modal-overlay" id="modalEscolherLegis" style="z-index: 10002;">
+        <div class="modal-box">
+            <h3 style="color: #185199; margin-bottom: 10px;">🏛️ Acessar Legis</h3>
+            <p style="margin-bottom: 20px; font-size: 14px;">Qual versão do sistema você deseja abrir?</p>
+            <div class="modal-botoes" style="flex-direction: column; gap: 10px;">
+                <button id="btnLegisAdmin" style="background:#d35400; color:white; padding:12px; border-radius:4px; font-weight:bold; cursor:pointer; border:none; width: 100%;">🔒 Legis Admin (Restrito)</button>
+                <button id="btnLegisPublico" style="background:#2980b9; color:white; padding:12px; border-radius:4px; font-weight:bold; cursor:pointer; border:none; width: 100%;">🌍 Legis Público (Consulta)</button>
+                <button style="background:#e0e0e0; color:#333; padding:12px; border-radius:4px; font-weight:bold; cursor:pointer; border:none; width: 100%; margin-top: 10px;" onclick="document.getElementById('modalEscolherLegis').classList.remove('ativo')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="modalSenhaMaster" style="z-index: 10001;">
         <div class="modal-box master">
             <h3>🔐 Autenticação Master</h3>
@@ -232,7 +245,7 @@
         let acaoMasterPendente = null; 
         let temAlteracoesNaoSalvas = false;
 
-        const tiposProjetos = ['INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE', 'EMENDA MODIFICATIVA'];
+        const tiposProjetos = ['EMENDA', 'EMENDA ADITIVA', 'EMENDA MODIFICATIVA', 'INDICAÇÃO', 'MOÇÃO DE APOIO', 'PEDIDO DE PROVIDÊNCIAS', 'PROJETO DE LEI', 'PROJETO DE LEI DE VEREADOR', 'PROJETO DE RESOLUÇÃO (PR)', 'REQUERIMENTO', 'SESSÃO SOLENE'];
         
         let mediaGlobal = [];
         let indexLightboxAtual = 0;
@@ -252,14 +265,12 @@
         const adminUsers = ['Daniel', 'João Pedro', 'Luana'];
         const isAdmin = adminUsers.includes(usuarioLogado);
 
-        // FUNÇÃO NOVA: Atualiza a tela sem recarregar o navegador do zero, mantendo o scroll onde você estava!
         async function atualizarSemRecarregar() {
             const scrollPos = window.scrollY;
             await carregarDemanda(); 
             setTimeout(() => { window.scrollTo(0, scrollPos); }, 50); 
         }
 
-        // EVENTOS GLOBAIS DE TECLADO E SCROLL
         document.getElementById('inputSenhaMaster').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') confirmarAcaoMaster();
         });
@@ -651,6 +662,27 @@
             }
         }
 
+        window.abrirModalLegis = function(urlAdmin, urlPublico) {
+            const btnAdmin = document.getElementById('btnLegisAdmin');
+            const btnPublico = document.getElementById('btnLegisPublico');
+            
+            if (urlAdmin && urlAdmin !== 'null' && urlAdmin !== '') {
+                btnAdmin.style.display = 'block';
+                btnAdmin.onclick = () => { window.open(urlAdmin, '_blank'); document.getElementById('modalEscolherLegis').classList.remove('ativo'); };
+            } else {
+                btnAdmin.style.display = 'none';
+            }
+
+            if (urlPublico && urlPublico !== 'null' && urlPublico !== '') {
+                btnPublico.style.display = 'block';
+                btnPublico.onclick = () => { window.open(urlPublico, '_blank'); document.getElementById('modalEscolherLegis').classList.remove('ativo'); };
+            } else {
+                btnPublico.style.display = 'none';
+            }
+
+            document.getElementById('modalEscolherLegis').classList.add('ativo');
+        }
+
         function renderizar(d) {
             const sAssunto = DOMPurify.sanitize(d.assunto || '');
             const sDesc = DOMPurify.sanitize(d.descricao || '');
@@ -685,10 +717,23 @@
             else if(sPrioridade === 'Crítica') badgePrioridade = '🔴 Crítica';
             else badgePrioridade = '🟡 ' + DOMPurify.sanitize(sPrioridade);
 
-            let linkLegisSeguro = '';
-            const isLegisSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
-            if (isLegisSafe) {
-                linkLegisSeguro = `<a href="${DOMPurify.sanitize(d.link_legis)}" target="_blank" class="btn-link" style="background:#f39c12; color:white; border-color:#e67e22;">🔗 Ver Legis</a>`;
+            // Geração de Links do Legis
+            const expMatch = d.expediente ? d.expediente.match(/\d+/) : null;
+            const numExpediente = expMatch ? expMatch[0] : '';
+            const dataReferencia = d.data_agendada || d.criado_em || new Date().toISOString();
+            const anoExpediente = dataReferencia ? dataReferencia.substring(0, 4) : new Date().getFullYear();
+            
+            let urlLegisPublico = '';
+            if (numExpediente) {
+                urlLegisPublico = `https://legis.camarasaoleopoldo.rs.gov.br/?sec=nlistaproposicoes&expediente=${numExpediente}&especie=&numero=&ano=${anoExpediente}&ementa=&id_proponente=`;
+            }
+
+            const isLegisAdminSafe = d.link_legis && (d.link_legis.startsWith('http://') || d.link_legis.startsWith('https://'));
+            const urlLegisAdmin = isLegisAdminSafe ? DOMPurify.sanitize(d.link_legis) : '';
+
+            let linkLegisHtml = '';
+            if (urlLegisAdmin || urlLegisPublico) {
+                linkLegisHtml = `<button type="button" class="btn-link" style="background:#f39c12; color:white; border-color:#e67e22;" onclick="abrirModalLegis('${urlLegisAdmin}', '${urlLegisPublico}')">🔗 Ver Legis</button>`;
             }
 
             const primeiroPdf = d.pdf_url ? d.pdf_url.split(',')[0] : null;
@@ -834,7 +879,7 @@
 
                    <div class="links-externos">
                         <button class="btn-link" style="background:#9b59b6; color:white; border-color:#8e44ad;" onclick="copiarResumo()">📋 Copiar Resumo</button>
-                        ${linkLegisSeguro}
+                        ${linkLegisHtml}
                         ${btnVerPdfTop}
                     </div>
 
@@ -900,6 +945,8 @@
                                         <option value="DEMANDA EXTERNA" ${d.tipo_solicitacao==='DEMANDA EXTERNA'?'selected':''}>DEMANDA EXTERNA</option>
                                     </optgroup>
                                     <optgroup label="Legislativo e Projetos (Requer Aprovação)">
+                                        <option value="EMENDA" ${d.tipo_solicitacao==='EMENDA'?'selected':''}>EMENDA</option>
+                                        <option value="EMENDA ADITIVA" ${d.tipo_solicitacao==='EMENDA ADITIVA'?'selected':''}>EMENDA ADITIVA</option>
                                         <option value="EMENDA MODIFICATIVA" ${d.tipo_solicitacao==='EMENDA MODIFICATIVA'?'selected':''}>EMENDA MODIFICATIVA</option>
                                         <option value="INDICAÇÃO" ${d.tipo_solicitacao==='INDICAÇÃO'?'selected':''}>INDICAÇÃO</option>
                                         <option value="MOÇÃO DE APOIO" ${d.tipo_solicitacao==='MOÇÃO DE APOIO'?'selected':''}>MOÇÃO DE APOIO</option>
@@ -1021,6 +1068,9 @@
                                 <select id="editDocTipo" ${bloqueado}>
                                     <option value="" ${!d.doc_tipo?'selected':''}>Selecione...</option>
                                     <option value="Demanda" ${d.doc_tipo==='Demanda'?'selected':''}>Demanda</option>
+                                    <option value="Emenda" ${d.doc_tipo==='Emenda'?'selected':''}>Emenda</option>
+                                    <option value="Emenda Aditiva" ${d.doc_tipo==='Emenda Aditiva'?'selected':''}>Emenda Aditiva</option>
+                                    <option value="Emenda Aditiva EM" ${d.doc_tipo==='Emenda Aditiva EM'?'selected':''}>Emenda Aditiva EM</option>
                                     <option value="Emenda à Lei Orgânica" ${d.doc_tipo==='Emenda à Lei Orgânica'?'selected':''}>Emenda à Lei Orgânica</option>
                                     <option value="Indicação" ${d.doc_tipo==='Indicação'?'selected':''}>Indicação</option>
                                     <option value="Intenção de Projeto" ${d.doc_tipo==='Intenção de Projeto'?'selected':''}>Intenção de Projeto</option>
@@ -1049,7 +1099,6 @@
                             <label>Link Direto do Legis 🔗</label>
                             <div style="display:flex; gap:8px;">
                                 <input type="url" id="editLinkLegis" value="${d.link_legis || ''}" placeholder="Cole a URL inteira aqui: https://admin.camarasaoleopoldo..." ${bloqueado}>
-                                ${isLegisSafe ? `<a href="${DOMPurify.sanitize(d.link_legis)}" target="_blank" class="btn-acao laranja" style="flex:none; width:auto; text-decoration:none; display:flex; align-items:center;">Acessar 🔗</a>` : ''}
                             </div>
                         </div>
                     </div>
@@ -1379,7 +1428,6 @@
             document.getElementById('erroSenhaMaster').style.display = 'none';
             document.getElementById('modalSenhaMaster').classList.add('ativo');
             
-            // Foco Automático Mágico!
             setTimeout(() => { inputSenha.focus(); }, 100);
         }
 
@@ -1439,7 +1487,6 @@
             const data = await res.json(); return data.secure_url;
         }
 
-        // Exclusão por clique no botão de demands já arquivadas
         window.solicitarExclusao = function(id) {
             idParaExcluir = id;
             const inputSenha = document.getElementById('inputSenhaAcao');
@@ -1447,7 +1494,6 @@
             document.getElementById('erroSenhaAcao').style.display = 'none';
             document.getElementById('modalSenhaSegura').classList.add('ativo');
             
-            // Foco Automático Mágico!
             setTimeout(() => { inputSenha.focus(); }, 100);
         }
 
