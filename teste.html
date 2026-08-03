@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel de Demandas PRO - São Leopoldo</title>
 
-<!-- Bibliotecas Mágicas (Gráficos e Leitor de Excel) -->
+<!-- Bibliotecas Mágicas (Gráficos, Plugin de Rótulos e Leitor de Excel) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
 
@@ -180,7 +181,7 @@ tr:hover td { background: rgba(255,255,255,0.05); }
         <label for="inputExcel" class="btn-importar">📥 IMPORTAR EXCEL</label>
         <input type="file" id="inputExcel" accept=".xlsx, .xls">
         
-        <!-- BOTÃO DE LIMPAR FILTRO QUE APARECE QUANDO CLICA EM ALGO -->
+        <!-- BOTÃO DE LIMPAR FILTRO GIGANTE -->
         <button id="btnLimparFiltro" class="aviso-filtro" onclick="limparTodosFiltros()">
           ✖ FILTRO ATIVO: <span id="nomeDoFiltro">Nenhum</span> (CLIQUE PARA LIMPAR)
         </button>
@@ -286,7 +287,6 @@ tr:hover td { background: rgba(255,255,255,0.05); }
     <div class="caixa-3d aviso-gigante">
       <h1>📊 Central de Relatórios</h1>
       <p style="margin-bottom: 20px;">Use esta área para exportar a visão atual (com os filtros que você aplicou) para enviar para a equipe.</p>
-      <!-- Botão simbólico de exportar que podemos programar depois -->
       <button class="btn-importar" style="background: var(--cor-verde); border-color: var(--cor-verde); color: white;" onclick="alert('Funcionalidade de Download Excel pronta para ser conectada!')">
         📥 BAIXAR RELATÓRIO FILTRADO (EXCEL)
       </button>
@@ -300,11 +300,14 @@ tr:hover td { background: rgba(255,255,255,0.05); }
    CÓDIGO DE FUNCIONAMENTO (FÁCIL DE ENTENDER E MANTER)
    ========================================================================= */
 
+// Registrar o plugin de Rótulos de Dados nos Gráficos (DataLabels)
+Chart.register(ChartDataLabels);
+
 // Bancos de Dados na Memória do Navegador
 let BD_ORIGINAL = []; 
 let BD_FILTRADO = [];
 
-// Gráficos
+// Configurações padrão dos Gráficos
 Chart.defaults.color = '#94a3b8';
 Chart.defaults.font.family = "'Inter', sans-serif";
 let grafStatus, grafSec, grafTipo, grafLinha;
@@ -441,7 +444,7 @@ function calcularNumerosKPI() {
   document.getElementById('valPen').innerText = p; document.getElementById('pctPen').innerText = pC(p);
 }
 
-// GRÁFICOS INTERATIVOS COM ONCLICK - CORREÇÃO APLICADA AQUI (elementos no lugar de elements)
+// GRÁFICOS INTERATIVOS COM NÚMEROS (DATALABELS)
 function montarGraficoStatus() {
   let c = {'Resolvida':0, 'Andamento':0, 'Pendente':0};
   BD_FILTRADO.forEach(d => c[d.status]++);
@@ -451,7 +454,11 @@ function montarGraficoStatus() {
     type: 'doughnut',
     data: { labels: ['Resolvida', 'Andamento', 'Pendente'], datasets: [{ data: [c['Resolvida'], c['Andamento'], c['Pendente']], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
     options: { 
-      cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#f8fafc' } } },
+      cutout: '70%', 
+      plugins: { 
+        legend: { position: 'bottom', labels: { color: '#f8fafc' } },
+        datalabels: { color: '#ffffff', font: { weight: 'bold', size: 14 }, formatter: (value) => value > 0 ? value : '' }
+      },
       onClick: (evento, elementos) => { if(elementos.length > 0) filtrarDados('status', grafStatus.data.labels[elementos[0].index]); }
     }
   });
@@ -466,7 +473,13 @@ function montarGraficoSecretarias() {
     type: 'bar',
     data: { labels: ord.map(i=>i[0]), datasets: [{ data: ord.map(i=>i[1]), backgroundColor: '#3b82f6', borderRadius: 4 }] },
     options: { 
-      indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { display: false, grid:{display:false} }, y: { grid:{display:false}, ticks:{color:'#f8fafc', font:{size:10}} } },
+      indexAxis: 'y', 
+      layout: { padding: { right: 30 } }, // Dá espaço para o número no final da barra
+      plugins: { 
+        legend: { display: false },
+        datalabels: { color: '#f8fafc', anchor: 'end', align: 'right', font: { weight: 'bold', size: 12 }, formatter: (value) => value > 0 ? value : '' }
+      }, 
+      scales: { x: { display: false, grid:{display:false} }, y: { grid:{display:false}, ticks:{color:'#f8fafc', font:{size:10}} } },
       onClick: (evento, elementos) => { if(elementos.length > 0) filtrarDados('secretaria', grafSec.data.labels[elementos[0].index]); }
     }
   });
@@ -481,7 +494,11 @@ function montarGraficoTipos() {
     type: 'doughnut',
     data: { labels: ord.map(i=>i[0]), datasets: [{ data: ord.map(i=>i[1]), backgroundColor: ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ec4899'], borderWidth: 0 }] },
     options: { 
-      cutout: '70%', plugins: { legend: { position: 'right', labels: { color: '#f8fafc', font:{size:10} } } },
+      cutout: '70%', 
+      plugins: { 
+        legend: { position: 'right', labels: { color: '#f8fafc', font:{size:10} } },
+        datalabels: { color: '#ffffff', font: { weight: 'bold', size: 14 }, formatter: (value) => value > 0 ? value : '' }
+      },
       onClick: (evento, elementos) => { if(elementos.length > 0) filtrarDados('tipo', grafTipo.data.labels[elementos[0].index]); }
     }
   });
@@ -495,7 +512,15 @@ function montarGraficoLinha() {
   grafLinha = new Chart(document.getElementById('graficoLinha'), {
     type: 'line',
     data: { labels: labels, datasets: [{ data: valores, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 3, tension: 0.3, fill: true, pointBackgroundColor: '#131826', pointRadius: 4 }] },
-    options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: {display: false} }, y: { grid: {color: 'rgba(255,255,255,0.05)'} } } }
+    options: { 
+      maintainAspectRatio: false, 
+      layout: { padding: { top: 25 } }, // Dá espaço para o número no topo
+      plugins: { 
+        legend: { display: false },
+        datalabels: { color: '#3b82f6', anchor: 'end', align: 'top', font: { weight: 'bold', size: 11 }, formatter: (value) => value > 0 ? value : '' }
+      }, 
+      scales: { x: { grid: {display: false} }, y: { grid: {color: 'rgba(255,255,255,0.05)'} } } 
+    }
   });
 }
 
