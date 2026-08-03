@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel de Demandas - Gabinete</title>
+<title>Painel de Demandas - São Leopoldo</title>
 
-<!-- Bibliotecas (Corrigidas) -->
+<!-- Bibliotecas para Gráficos e Excel -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
@@ -13,217 +13,341 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <style>
-/* TEMA NEUMORPHISM ESCURO (Visual 3D da foto) */
+/* =========================================================
+   TEMA NEUMORPHISM ESCURO (O efeito 3D da foto)
+   ========================================================= */
 :root {
-  --bg-dark: #0f1524;
-  --bg-panel: #161e31;
-  --border-light: rgba(255, 255, 255, 0.05);
-  --shadow-3d: 6px 6px 15px rgba(0, 0, 0, 0.4), -4px -4px 12px rgba(255, 255, 255, 0.03);
-  --text-main: #f1f5f9;
-  --text-muted: #94a3b8;
+  --bg-main: #131826;       /* Azul muito escuro do fundo */
+  --bg-panel: #1a2235;      /* Cor dos blocos */
+  --text-white: #f8fafc;
+  --text-gray: #94a3b8;
   
-  --color-blue: #3b82f6;
-  --color-green: #10b981;
-  --color-orange: #f59e0b;
-  --color-red: #ef4444;
+  /* Cores Neon dos Gráficos */
+  --neon-blue: #3b82f6;
+  --neon-green: #10b981;
+  --neon-orange: #f59e0b;
+  --neon-red: #ef4444;
+  --neon-purple: #8b5cf6;
+
+  /* Sombra mágica que cria o efeito 3D */
+  --shadow-3d: 6px 6px 14px rgba(0, 0, 0, 0.5), -4px -4px 10px rgba(255, 255, 255, 0.03);
+  --shadow-inset: inset 4px 4px 10px rgba(0, 0, 0, 0.5), inset -4px -4px 10px rgba(255, 255, 255, 0.03);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; padding: 20px; }
+body { background-color: var(--bg-main); color: var(--text-white); display: flex; height: 100vh; overflow: hidden; }
 
-.container { max-width: 1400px; margin: 0 auto; }
-
-/* HEADER SIMPLES E DIRETO */
-.header {
-  display: flex; justify-content: space-between; align-items: center; 
-  background: var(--bg-panel); padding: 20px 30px; border-radius: 20px;
-  box-shadow: var(--shadow-3d); margin-bottom: 25px; border: 1px solid var(--border-light);
+/* =========================================================
+   MENU LATERAL (SIDEBAR)
+   ========================================================= */
+.sidebar {
+  width: 260px;
+  background-color: var(--bg-main);
+  border-right: 2px solid rgba(255,255,255,0.02);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 15px;
+  box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+  z-index: 10;
 }
-.header-titles h1 { font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
-.header-titles p { color: var(--text-muted); font-size: 14px; margin-top: 5px; }
 
-/* BOTÃO DE IMPORTAR EXCEL */
-.upload-btn {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white;
-  padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 15px;
-  cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: none;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); transition: 0.2s;
+.logo-area { text-align: center; margin-bottom: 30px; }
+.logo-area h2 { font-size: 14px; font-weight: 800; color: var(--text-gray); text-transform: uppercase; letter-spacing: 1px; }
+.logo-area h1 { font-size: 20px; font-weight: 800; color: var(--text-white); }
+
+.menu-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: 12px;
+  color: var(--text-gray); font-weight: 600; font-size: 14px;
+  cursor: pointer; transition: 0.3s; margin-bottom: 8px;
 }
-.upload-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6); filter: brightness(1.1); }
+.menu-item:hover { color: var(--text-white); background: rgba(255,255,255,0.05); }
+.menu-item.active {
+  background: var(--neon-blue);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+.menu-icon { font-size: 18px; }
+
+.sidebar-bottom { margin-top: auto; padding: 15px; background: var(--bg-panel); border-radius: 12px; box-shadow: var(--shadow-inset); font-size: 12px; color: var(--text-gray); text-align: center; }
+
+/* =========================================================
+   ÁREA PRINCIPAL (ONDE FICAM OS GRÁFICOS)
+   ========================================================= */
+.main-content {
+  flex: 1;
+  padding: 25px 35px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+.main-content::-webkit-scrollbar { width: 8px; }
+.main-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+/* Caixas 3D genéricas */
+.neo-box {
+  background: var(--bg-panel);
+  border-radius: 16px;
+  box-shadow: var(--shadow-3d);
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,0.02);
+}
+
+/* CABEÇALHO DO PAINEL */
+.top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.header-titles h1 { font-size: 26px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+.header-titles h2 { font-size: 16px; color: var(--neon-blue); font-weight: 600; margin-bottom: 5px; }
+.header-titles p { color: var(--text-gray); font-size: 13px; }
+
+.missao-box { display: flex; align-items: center; gap: 15px; max-width: 350px; }
+.missao-icon { font-size: 24px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 50%; box-shadow: var(--shadow-inset); }
+.missao-text h4 { font-size: 12px; color: var(--text-gray); text-transform: uppercase; margin-bottom: 2px; }
+.missao-text p { font-size: 11px; line-height: 1.4; color: var(--text-white); }
+
+/* BOTÃO IMPORTAR */
+.btn-import {
+  background: transparent; color: var(--neon-blue); border: 2px dashed var(--neon-blue);
+  padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.3s;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-import:hover { background: var(--neon-blue); color: white; }
 input[type="file"] { display: none; }
 
-/* CARDS DE RESUMO (KPIs) */
-.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
-.kpi-card {
-  background: var(--bg-panel); border-radius: 20px; padding: 25px; cursor: pointer;
-  box-shadow: var(--shadow-3d); border: 1px solid var(--border-light);
-  border-bottom: 4px solid var(--accent); transition: 0.3s;
-}
-.kpi-card:hover { transform: translateY(-5px); filter: brightness(1.1); }
-.kpi-card.active { background: rgba(255, 255, 255, 0.05); }
+/* ROW 1: KPIs */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
+.kpi-card { display: flex; flex-direction: column; border-bottom: 4px solid var(--cor-destaque); cursor: pointer; transition: 0.2s;}
+.kpi-card:hover { transform: translateY(-3px); filter: brightness(1.1); }
+.kpi-card.ativo { box-shadow: var(--shadow-inset); border: 1px solid var(--cor-destaque); }
 
-.kpi-header { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
-.kpi-icon { font-size: 20px; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 10px; }
-.kpi-value { font-size: 42px; font-weight: 800; margin-top: 10px; color: var(--text-main); }
-.kpi-desc { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+.kpi-top { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+.kpi-icon { background: var(--cor-destaque); color: white; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 10px var(--cor-destaque); }
+.kpi-title { font-size: 11px; font-weight: 800; color: var(--cor-destaque); text-transform: uppercase; letter-spacing: 0.5px;}
+.kpi-value { font-size: 38px; font-weight: 800; line-height: 1; }
+.kpi-desc { font-size: 11px; color: var(--text-gray); margin-top: 5px; font-weight: 600;}
 
-.kpi-total { --accent: var(--color-blue); }
-.kpi-resolvida { --accent: var(--color-green); }
-.kpi-andamento { --accent: var(--color-orange); }
-.kpi-pendente { --accent: var(--color-red); }
+/* ROW 2: GRÁFICOS MEIO */
+.middle-grid { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 20px; margin-bottom: 25px; }
+.chart-box h3 { font-size: 13px; color: var(--text-white); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; text-align: center; font-weight: 700;}
+.canvas-wrap { position: relative; height: 220px; width: 100%; display: flex; justify-content: center; align-items: center; }
 
-/* GRID DE GRÁFICOS */
-.charts-grid { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 20px; margin-bottom: 25px; }
-.chart-panel {
-  background: var(--bg-panel); border-radius: 20px; padding: 25px;
-  box-shadow: var(--shadow-3d); border: 1px solid var(--border-light);
-  display: flex; flex-direction: column;
-}
-.chart-panel h3 { font-size: 15px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; text-align: center; }
-.canvas-container { position: relative; flex: 1; min-height: 250px; display: flex; justify-content: center; align-items: center;}
+/* ROW 3: GRÁFICO LINHA + RESUMO */
+.bottom-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.resumo-box h3 { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--neon-green); margin-bottom: 15px; text-transform: uppercase;}
+.resumo-lista { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.resumo-lista li { display: flex; gap: 10px; font-size: 12px; line-height: 1.5; color: #cbd5e1; }
+.resumo-lista li::before { content: "✅"; font-size: 12px; }
 
-/* ÁREA DE FILTROS */
-.filtros-ativos { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
-.btn-limpar { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
-
-/* TABELA MINIMALISTA */
-.tabela-panel {
-  background: var(--bg-panel); border-radius: 20px; padding: 25px;
-  box-shadow: var(--shadow-3d); border: 1px solid var(--border-light);
-}
-.table-scroll { max-height: 400px; overflow-y: auto; margin-top: 15px; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-th { position: sticky; top: 0; background: #0f1524; color: var(--text-muted); padding: 15px; font-weight: 700; text-transform: uppercase; font-size: 11px; }
-td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; }
+/* TABELA DA TELA "DEMANDAS" */
+.tabela-wrapper { max-height: 600px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+th { background: #0f1524; color: var(--text-gray); padding: 15px; font-weight: 800; text-transform: uppercase; position: sticky; top: 0; }
+td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.03); color: #e2e8f0; }
 tr:hover td { background: rgba(255,255,255,0.02); }
 
 .tag { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-block; }
-.tag.Resolvida { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-.tag.Andamento { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-.tag.Pendente { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+.tag.Resolvida { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid #10b981; }
+.tag.Andamento { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid #f59e0b; }
+.tag.Pendente { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #ef4444; }
 
-.empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); font-size: 18px; border: 2px dashed rgba(255,255,255,0.1); border-radius: 20px; }
+/* Esconde telas inativas */
+.tela { display: none; animation: fadeIn 0.4s ease; }
+.tela.ativa { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* SCROLLBAR INVISÍVEL */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--bg-dark); }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+/* Aviso Gigante Inicial */
+.aviso-vazio { text-align: center; padding: 100px 20px; }
+.aviso-vazio h1 { font-size: 30px; color: var(--text-gray); margin-bottom: 20px; }
+
 </style>
 </head>
 <body>
 
-<div class="container">
-  
-  <!-- CABEÇALHO -->
-  <div class="header">
+<!-- MENU LATERAL ESQUERDO -->
+<aside class="sidebar">
+  <div class="logo-area">
+    <h2>Câmara de Vereadores de</h2>
+    <h1>SÃO LEOPOLDO</h1>
+  </div>
+
+  <nav>
+    <div class="menu-item active" id="btn-visao" onclick="mudarTela('tela-visao', 'btn-visao')">
+      <span class="menu-icon">🎛️</span> Visão Geral
+    </div>
+    <div class="menu-item" id="btn-demandas" onclick="mudarTela('tela-demandas', 'btn-demandas')">
+      <span class="menu-icon">📄</span> Demandas
+    </div>
+    <div class="menu-item">
+      <span class="menu-icon">🏢</span> Secretarias
+    </div>
+    <div class="menu-item">
+      <span class="menu-icon">🥧</span> Tipos de Solicitação
+    </div>
+    <div class="menu-item">
+      <span class="menu-icon">📊</span> Relatórios
+    </div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <p>⏱️ Última atualização</p>
+    <b id="dataAtualizacao">Aguardando dados...</b>
+  </div>
+</aside>
+
+<!-- ÁREA CENTRAL DO PAINEL -->
+<main class="main-content">
+
+  <!-- CABEÇALHO COMUM A TODAS AS TELAS -->
+  <header class="top-header">
     <div class="header-titles">
-      <h1>🏛️ Painel de Demandas</h1>
-      <p id="info-texto">Importe a planilha para visualizar os gráficos.</p>
+      <h2>CÂMARA DE VEREADORES DE SÃO LEOPOLDO</h2>
+      <h1>PAINEL DE DEMANDAS</h1>
+      <p style="margin-top: 8px; display: flex; align-items: center; gap: 10px;">
+        Período: <span id="periodoTexto">Aguardando importação...</span> 
+        <label for="uploadExcel" class="btn-import">📥 IMPORTAR EXCEL</label>
+        <input type="file" id="uploadExcel" accept=".xlsx, .xls">
+        <button class="btn-import" id="btnLimpar" onclick="limparFiltroStatus()" style="display:none; border-color: var(--neon-red); color: var(--neon-red);">✖ LIMPAR FILTRO</button>
+      </p>
     </div>
-    <div>
-      <label for="uploadExcel" class="upload-btn">
-        📥 Importar Excel
-      </label>
-      <input type="file" id="uploadExcel" accept=".xlsx, .xls">
+
+    <div class="neo-box missao-box">
+      <div class="missao-icon">🏛️</div>
+      <div class="missao-text">
+        <h4>Nossa Missão</h4>
+        <p>Representar a comunidade, fiscalizar o poder público e promover o desenvolvimento de São Leopoldo.</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- TELA 0: MENSAGEM INICIAL ANTES DE CARREGAR O EXCEL -->
+  <div id="tela-vazia" class="tela ativa">
+    <div class="aviso-vazio neo-box">
+      <h1>👋 Olá! O painel está vazio.</h1>
+      <p style="color: var(--text-gray); font-size: 16px;">Clique no botão "IMPORTAR EXCEL" ali em cima para carregar a planilha do Gabinete e gerar os gráficos automaticamente.</p>
     </div>
   </div>
 
-  <!-- AVISO ANTES DE IMPORTAR -->
-  <div id="avisoVazio" class="empty-state">
-    <h1>📊 O Painel está vazio</h1>
-    <p style="margin-top: 10px;">Clique no botão azul acima e selecione o seu arquivo Excel do Gabinete.</p>
-  </div>
-
-  <!-- CONTEÚDO DO PAINEL (Escondido até carregar) -->
-  <div id="painelConteudo" style="display: none;">
+  <!-- TELA 1: VISÃO GERAL (DASHBOARD) -->
+  <div id="tela-visao" class="tela">
     
-    <div class="filtros-ativos" id="areaFiltros" style="display: none;">
-      <span style="color: var(--text-muted); font-size: 14px;">🔎 Filtrando por: <b id="nomeFiltro" style="color: white;"></b></span>
-      <button class="btn-limpar" onclick="limparFiltros()">✖ Limpar Filtro</button>
-    </div>
+    <!-- 4 CARTÕES SUPERIORES (KPIs) -->
+    <div class="kpi-grid">
+      <div class="neo-box kpi-card" style="--cor-destaque: var(--neon-blue);" onclick="filtrarPeloCartao('Todos', this)">
+        <div class="kpi-top">
+          <div class="kpi-icon">📄</div>
+          <div class="kpi-title">Total de Demandas</div>
+        </div>
+        <div class="kpi-value" id="kTotal">0</div>
+        <div class="kpi-desc">100% do total importado</div>
+      </div>
 
-    <!-- BLOCOS DE NÚMEROS (KPIs) -->
-    <div class="kpis">
-      <div class="kpi-card kpi-total" onclick="filtrarStatus('Todos')">
-        <div class="kpi-header"><span class="kpi-icon">📄</span> Total de Demandas</div>
-        <div class="kpi-value" id="kpiTotal">0</div>
-        <div class="kpi-desc">100% dos registros lidos</div>
+      <div class="neo-box kpi-card" style="--cor-destaque: var(--neon-green);" onclick="filtrarPeloCartao('Resolvida', this)">
+        <div class="kpi-top">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-title">Demandas Resolvidas</div>
+        </div>
+        <div class="kpi-value" id="kRes">0</div>
+        <div class="kpi-desc" id="pRes">0% do total</div>
       </div>
-      <div class="kpi-card kpi-resolvida" onclick="filtrarStatus('Resolvida')">
-        <div class="kpi-header"><span class="kpi-icon">✅</span> Resolvidas</div>
-        <div class="kpi-value" id="kpiResolvidas">0</div>
-        <div class="kpi-desc" id="kpiResolvidasPct">0% do total</div>
-      </div>
-      <div class="kpi-card kpi-andamento" onclick="filtrarStatus('Andamento')">
-        <div class="kpi-header"><span class="kpi-icon">⏳</span> Em Andamento</div>
-        <div class="kpi-value" id="kpiAndamento">0</div>
-        <div class="kpi-desc" id="kpiAndamentoPct">0% do total</div>
-      </div>
-      <div class="kpi-card kpi-pendente" onclick="filtrarStatus('Pendente')">
-        <div class="kpi-header"><span class="kpi-icon">🚨</span> Pendentes</div>
-        <div class="kpi-value" id="kpiPendentes">0</div>
-        <div class="kpi-desc" id="kpiPendentesPct">0% do total</div>
-      </div>
-    </div>
 
-    <!-- GRÁFICOS -->
-    <div class="charts-grid">
-      <div class="chart-panel">
-        <h3>Qual a situação atual?</h3>
-        <div class="canvas-container"><canvas id="graficoStatus"></canvas></div>
+      <div class="neo-box kpi-card" style="--cor-destaque: var(--neon-orange);" onclick="filtrarPeloCartao('Andamento', this)">
+        <div class="kpi-top">
+          <div class="kpi-icon">⏱️</div>
+          <div class="kpi-title">Em Andamento</div>
+        </div>
+        <div class="kpi-value" id="kAnd">0</div>
+        <div class="kpi-desc" id="pAnd">0% do total</div>
       </div>
-      <div class="chart-panel">
-        <h3>Quem está cuidando? (Secretarias)</h3>
-        <div class="canvas-container"><canvas id="graficoSecretaria"></canvas></div>
-      </div>
-      <div class="chart-panel">
-        <h3>O que mais pedem?</h3>
-        <div class="canvas-container"><canvas id="graficoTipo"></canvas></div>
+
+      <div class="neo-box kpi-card" style="--cor-destaque: var(--neon-red);" onclick="filtrarPeloCartao('Pendente', this)">
+        <div class="kpi-top">
+          <div class="kpi-icon">⏳</div>
+          <div class="kpi-title">Pendentes</div>
+        </div>
+        <div class="kpi-value" id="kPen">0</div>
+        <div class="kpi-desc" id="pPen">0% do total</div>
       </div>
     </div>
 
-    <!-- TABELA -->
-    <div class="tabela-panel">
-      <h3 style="font-size: 16px; margin-bottom: 10px;">📋 Lista de Demandas (<span id="totalTabela">0</span>)</h3>
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Status</th>
-              <th>Assunto Principal</th>
-              <th>Data</th>
-              <th>Secretaria</th>
-              <th>Tipo</th>
-              <th>Bairro</th>
-            </tr>
-          </thead>
-          <tbody id="corpoTabela"></tbody>
-        </table>
+    <!-- LINHA DO MEIO: 3 GRÁFICOS -->
+    <div class="middle-grid">
+      <div class="neo-box chart-box">
+        <h3>Status das Demandas</h3>
+        <div class="canvas-wrap"><canvas id="grafico1"></canvas></div>
+      </div>
+      <div class="neo-box chart-box">
+        <h3>Demandas por Secretaria</h3>
+        <div class="canvas-wrap"><canvas id="grafico2"></canvas></div>
+      </div>
+      <div class="neo-box chart-box">
+        <h3>Tipos de Solicitação</h3>
+        <div class="canvas-wrap"><canvas id="grafico3"></canvas></div>
       </div>
     </div>
 
+    <!-- LINHA DE BAIXO: LINHA E RESUMO -->
+    <div class="bottom-grid">
+      <div class="neo-box chart-box">
+        <h3>Evolução Mensal das Demandas</h3>
+        <div class="canvas-wrap" style="height: 250px;"><canvas id="grafico4"></canvas></div>
+      </div>
+      <div class="neo-box resumo-box">
+        <h3>📊 Resumo Executivo</h3>
+        <ul class="resumo-lista" id="textoResumo">
+          <li>Aguardando dados da planilha para gerar os insights automáticos da câmara.</li>
+        </ul>
+      </div>
+    </div>
   </div>
-</div>
+
+  <!-- TELA 2: TABELA DE DEMANDAS -->
+  <div id="tela-demandas" class="tela">
+    <div class="neo-box tabela-wrapper">
+      <h3 style="margin-bottom: 20px; font-size: 16px;">📑 Base de Dados (<span id="totalTabela">0</span> registros)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Data</th>
+            <th>Assunto</th>
+            <th>Secretaria</th>
+            <th>Bairro</th>
+          </tr>
+        </thead>
+        <tbody id="corpoTabela">
+          <tr><td colspan="5" style="text-align: center;">Nenhum dado importado ainda.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
 
 <script>
-// Variáveis Globais
+// ==========================================
+// 1. NAVEGAÇÃO DO MENU LATERAL (INTERATIVIDADE)
+// ==========================================
+function mudarTela(idTela, idBotao) {
+  if(DADOS_GLOBAIS.length === 0) return; // Só navega se tiver dado
+
+  // Esconde todas as telas
+  document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+  // Tira o azul de todos os botões do menu
+  document.querySelectorAll('.menu-item').forEach(b => b.classList.remove('active'));
+
+  // Mostra a tela certa e pinta o botão clicado
+  document.getElementById(idTela).classList.add('ativa');
+  document.getElementById(idBotao).classList.add('active');
+}
+
+// ==========================================
+// 2. LÓGICA DE LEITURA DOS DADOS (EXCEL)
+// ==========================================
 let DADOS_GLOBAIS = [];
 let DADOS_FILTRADOS = [];
-let filtroAtual = null;
 
-// Configuração padrão do Chart.js para ficar bonito no fundo escuro
 Chart.defaults.color = '#94a3b8';
 Chart.defaults.font.family = "'Inter', sans-serif";
+let chartStatus, chartSec, chartTipo, chartLinha;
 
-let myChartStatus = null;
-let myChartSecretaria = null;
-let myChartTipo = null;
-
-// CORES NEON
-const coresStatus = { 'Resolvida': '#10b981', 'Andamento': '#f59e0b', 'Pendente': '#ef4444' };
-const coresDiversas = ['#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b', '#ef4444', '#6366f1', '#84cc16'];
-
-// 1. LEITURA DO EXCEL
 document.getElementById('uploadExcel').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if(!file) return;
@@ -234,27 +358,34 @@ document.getElementById('uploadExcel').addEventListener('change', function(e) {
     const workbook = XLSX.read(data, {type: 'array'});
     const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {defval: ""});
     
-    processarDadosExcel(json);
+    processarDados(json);
   };
   reader.readAsArrayBuffer(file);
 });
 
-// 2. PROCESSAR E LIMPAR OS DADOS PARA UMA LINGUAGEM SIMPLES
-function processarDadosExcel(json) {
+function processarDados(json) {
   const statusResolvidos = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
   const statusPendentes = ['Pendente', 'Aguardando Aprovação'];
 
   DADOS_GLOBAIS = json.map(linha => {
     let statusOriginal = linha['Status'] || '';
-    let statusSimples = 'Andamento'; // Padrão
-    
-    if(statusResolvidos.includes(statusOriginal)) statusSimples = 'Resolvida';
-    else if(statusPendentes.includes(statusOriginal)) statusSimples = 'Pendente';
+    let stCat = 'Andamento'; 
+    if(statusResolvidos.includes(statusOriginal)) stCat = 'Resolvida';
+    else if(statusPendentes.includes(statusOriginal)) stCat = 'Pendente';
+
+    // Arruma a data para poder agrupar no grafico de linha
+    let dataBr = linha['Abertura / Fato'] || '';
+    let mesAno = 'Sem Data';
+    if(dataBr.includes('/')) {
+      let parts = dataBr.split('/');
+      mesAno = `${parts[1]}/${parts[2]}`; // MM/YYYY
+    }
 
     return {
-      data: linha['Abertura / Fato'] || 'Sem Data',
+      data: dataBr,
+      mesAno: mesAno,
       assunto: linha['Assunto'] || 'Sem Assunto',
-      status: statusSimples,
+      status: stCat,
       secretaria: linha['Secretaria'] || 'Não Informada',
       tipo: linha['Tipo de Solicitação'] || 'Outros',
       bairro: linha['Bairro'] || 'Não Informado'
@@ -263,185 +394,209 @@ function processarDadosExcel(json) {
 
   DADOS_FILTRADOS = [...DADOS_GLOBAIS];
   
-  document.getElementById('avisoVazio').style.display = 'none';
-  document.getElementById('painelConteudo').style.display = 'block';
-  document.getElementById('info-texto').innerText = `Planilha carregada com sucesso! ${DADOS_GLOBAIS.length} registros.`;
-  
-  atualizarTudo();
+  // Atualiza datas no cabeçalho
+  let hoje = new Date();
+  document.getElementById('dataAtualizacao').innerText = hoje.toLocaleString('pt-BR');
+  document.getElementById('periodoTexto').innerText = `Base completa carregada`;
+
+  // Troca a tela vazia pela tela de Visão Geral
+  document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+  document.getElementById('tela-visao').classList.add('ativa');
+
+  atualizarPainel();
 }
 
-// 3. FUNÇÕES DE FILTRO
-function filtrarStatus(status) {
-  if(status === 'Todos') {
-    limparFiltros();
-    return;
+// ==========================================
+// 3. ATUALIZAÇÃO DA TELA (NÚMEROS, GRÁFICOS E TABELA)
+// ==========================================
+function atualizarPainel() {
+  atualizarCards();
+  desenharGraficoRoscaStatus();
+  desenharGraficoBarrasSec();
+  desenharGraficoRoscaTipo();
+  desenharGraficoLinha();
+  escreverResumoAutomatico();
+  atualizarTabela();
+}
+
+function atualizarCards() {
+  const totalGeral = DADOS_GLOBAIS.length;
+  const total = DADOS_FILTRADOS.length;
+  let res = 0, and = 0, pen = 0;
+  
+  DADOS_FILTRADOS.forEach(d => {
+    if(d.status === 'Resolvida') res++;
+    else if(d.status === 'Andamento') and++;
+    else pen++;
+  });
+
+  const calcPct = (valor) => total > 0 ? ((valor/total)*100).toFixed(1).replace('.0','') + '%' : '0%';
+
+  document.getElementById('kTotal').innerText = total;
+  document.getElementById('kRes').innerText = res;
+  document.getElementById('pRes').innerText = `${calcPct(res)} do total`;
+  document.getElementById('kAnd').innerText = and;
+  document.getElementById('pAnd').innerText = `${calcPct(and)} do total`;
+  document.getElementById('kPen').innerText = pen;
+  document.getElementById('pPen').innerText = `${calcPct(pen)} do total`;
+}
+
+// ==========================================
+// 4. LÓGICA DE FILTRAR CLICANDO NO CARTÃO
+// ==========================================
+function filtrarPeloCartao(statusDesejado, elementoHtml) {
+  // Pinta o cartão clicado (fazendo ele "afundar")
+  document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
+  elementoHtml.classList.add('ativo');
+
+  if(statusDesejado === 'Todos') {
+    DADOS_FILTRADOS = [...DADOS_GLOBAIS];
+    document.getElementById('btnLimpar').style.display = 'none';
+  } else {
+    DADOS_FILTRADOS = DADOS_GLOBAIS.filter(d => d.status === statusDesejado);
+    document.getElementById('btnLimpar').style.display = 'inline-flex';
   }
   
-  DADOS_FILTRADOS = DADOS_GLOBAIS.filter(d => d.status === status);
-  document.getElementById('areaFiltros').style.display = 'flex';
-  
-  let emoji = status === 'Resolvida' ? '✅' : (status === 'Andamento' ? '⏳' : '🚨');
-  document.getElementById('nomeFiltro').innerText = `${emoji} Status: ${status}`;
-  
-  atualizarTudo();
+  atualizarPainel();
 }
 
-function limparFiltros() {
+function limparFiltroStatus() {
+  document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('ativo'));
+  document.querySelector('.kpi-total').classList.add('ativo');
   DADOS_FILTRADOS = [...DADOS_GLOBAIS];
-  document.getElementById('areaFiltros').style.display = 'none';
-  atualizarTudo();
+  document.getElementById('btnLimpar').style.display = 'none';
+  atualizarPainel();
 }
 
-// 4. ATUALIZAR A TELA (KPIs, Gráficos e Tabela)
-function atualizarTudo() {
-  atualizarKPIs();
-  desenharGraficoStatus();
-  desenharGraficoSecretarias();
-  desenharGraficoTipos();
-  montarTabela();
-}
+// ==========================================
+// 5. CÓDIGO DOS GRÁFICOS (EXATAMENTE COMO A FOTO)
+// ==========================================
+function desenharGraficoRoscaStatus() {
+  let c = {'Resolvida':0, 'Andamento':0, 'Pendente':0};
+  DADOS_FILTRADOS.forEach(d => c[d.status]++);
 
-// 5. ATUALIZAR OS 4 BLOCOS LÁ DE CIMA
-function atualizarKPIs() {
-  const totalGeral = DADOS_GLOBAIS.length;
-  const totalFiltro = DADOS_FILTRADOS.length;
-  
-  let resolvidas = 0, andamento = 0, pendentes = 0;
-  DADOS_FILTRADOS.forEach(d => {
-    if(d.status === 'Resolvida') resolvidas++;
-    else if(d.status === 'Andamento') andamento++;
-    else pendentes++;
-  });
-
-  document.getElementById('kpiTotal').innerText = totalFiltro;
-  
-  document.getElementById('kpiResolvidas').innerText = resolvidas;
-  document.getElementById('kpiResolvidasPct').innerText = totalFiltro > 0 ? `${Math.round((resolvidas/totalFiltro)*100)}%` : '0%';
-  
-  document.getElementById('kpiAndamento').innerText = andamento;
-  document.getElementById('kpiAndamentoPct').innerText = totalFiltro > 0 ? `${Math.round((andamento/totalFiltro)*100)}%` : '0%';
-  
-  document.getElementById('kpiPendentes').innerText = pendentes;
-  document.getElementById('kpiPendentesPct').innerText = totalFiltro > 0 ? `${Math.round((pendentes/totalFiltro)*100)}%` : '0%';
-}
-
-// 6. GRÁFICO 1: STATUS (Rosca)
-function desenharGraficoStatus() {
-  let contagem = { 'Resolvida': 0, 'Andamento': 0, 'Pendente': 0 };
-  DADOS_FILTRADOS.forEach(d => contagem[d.status]++);
-
-  const ctx = document.getElementById('graficoStatus').getContext('2d');
-  if(myChartStatus) myChartStatus.destroy();
-
-  myChartStatus = new Chart(ctx, {
+  if(chartStatus) chartStatus.destroy();
+  chartStatus = new Chart(document.getElementById('grafico1'), {
     type: 'doughnut',
     data: {
-      labels: ['✅ Resolvidas', '⏳ Andamento', '🚨 Pendentes'],
-      datasets: [{
-        data: [contagem['Resolvida'], contagem['Andamento'], contagem['Pendente']],
-        backgroundColor: [coresStatus['Resolvida'], coresStatus['Andamento'], coresStatus['Pendente']],
-        borderWidth: 0 // Tira as bordas brancas para dar visual moderno
-      }]
+      labels: ['Resolvidas', 'Em Andamento', 'Pendentes'],
+      datasets: [{ data: [c['Resolvida'], c['Andamento'], c['Pendente']], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }]
     },
-    options: {
-      cutout: '75%', // Deixa o furo no meio maior
-      plugins: { legend: { position: 'bottom', labels: { color: '#f1f5f9', font: {size: 12} } } }
-    }
+    options: { cutout: '65%', plugins: { legend: { position: 'right', labels: { color: '#f8fafc', font: {size: 11} } } } }
   });
 }
 
-// 7. GRÁFICO 2: SECRETARIAS (Barras Deitadas)
-function desenharGraficoSecretarias() {
-  let contagem = {};
-  DADOS_FILTRADOS.forEach(d => {
-    let sec = d.secretaria.trim() === '' ? 'Outros' : d.secretaria;
-    contagem[sec] = (contagem[sec] || 0) + 1;
-  });
+function desenharGraficoBarrasSec() {
+  let c = {};
+  DADOS_FILTRADOS.forEach(d => { let sec = d.secretaria.trim()||'Outros'; c[sec] = (c[sec]||0)+1; });
+  let ord = Object.keys(c).map(k => [k, c[k]]).sort((a,b)=>b[1]-a[1]).slice(0,12);
 
-  // Pega só as Top 10 para não ficar feio
-  let ordenado = Object.keys(contagem).map(k => [k, contagem[k]]).sort((a,b) => b[1] - a[1]).slice(0, 10);
-  let labels = ordenado.map(i => i[0]);
-  let valores = ordenado.map(i => i[1]);
-
-  const ctx = document.getElementById('graficoSecretaria').getContext('2d');
-  if(myChartSecretaria) myChartSecretaria.destroy();
-
-  myChartSecretaria = new Chart(ctx, {
+  if(chartSec) chartSec.destroy();
+  chartSec = new Chart(document.getElementById('grafico2'), {
     type: 'bar',
     data: {
-      labels: labels,
-      datasets: [{
-        data: valores,
-        backgroundColor: '#3b82f6',
-        borderRadius: 6 // Arredonda a ponta da barra
-      }]
+      labels: ord.map(i=>i[0]),
+      datasets: [{ data: ord.map(i=>i[1]), backgroundColor: '#3b82f6', borderRadius: 4 }]
     },
     options: {
-      indexAxis: 'y', // Deita a barra
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { display: false, grid: {display: false} }, // Esconde a linha do fundo
-        y: { grid: {display: false}, ticks: {color: '#f1f5f9'} }
-      }
+      indexAxis: 'y', plugins: { legend: { display: false } },
+      scales: { x: { display: false, grid: {display: false} }, y: { grid: {display: false}, ticks: {color: '#f8fafc', font: {size: 10}} } }
     }
   });
 }
 
-// 8. GRÁFICO 3: TIPO DE SOLICITAÇÃO (Rosca)
-function desenharGraficoTipos() {
-  let contagem = {};
-  DADOS_FILTRADOS.forEach(d => { contagem[d.tipo] = (contagem[d.tipo] || 0) + 1; });
+function desenharGraficoRoscaTipo() {
+  let c = {};
+  DADOS_FILTRADOS.forEach(d => { c[d.tipo] = (c[d.tipo]||0)+1; });
+  let ord = Object.keys(c).map(k => [k, c[k]]).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
-  let ordenado = Object.keys(contagem).map(k => [k, contagem[k]]).sort((a,b) => b[1] - a[1]).slice(0, 6);
-  let labels = ordenado.map(i => i[0]);
-  let valores = ordenado.map(i => i[1]);
-
-  const ctx = document.getElementById('graficoTipo').getContext('2d');
-  if(myChartTipo) myChartTipo.destroy();
-
-  myChartTipo = new Chart(ctx, {
+  if(chartTipo) chartTipo.destroy();
+  chartTipo = new Chart(document.getElementById('grafico3'), {
     type: 'doughnut',
+    data: {
+      labels: ord.map(i=>i[0]),
+      datasets: [{ data: ord.map(i=>i[1]), backgroundColor: ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ec4899'], borderWidth: 0 }]
+    },
+    options: { cutout: '65%', plugins: { legend: { position: 'right', labels: { color: '#f8fafc', font: {size: 10} } } } }
+  });
+}
+
+function desenharGraficoLinha() {
+  let c = {};
+  DADOS_FILTRADOS.forEach(d => { if(d.mesAno !== 'Sem Data') c[d.mesAno] = (c[d.mesAno]||0)+1; });
+  // Ordena os meses alfabeticamente (simplificado)
+  let labels = Object.keys(c).sort(); 
+  let valores = labels.map(l => c[l]);
+
+  if(chartLinha) chartLinha.destroy();
+  chartLinha = new Chart(document.getElementById('grafico4'), {
+    type: 'line',
     data: {
       labels: labels,
       datasets: [{
-        data: valores,
-        backgroundColor: coresDiversas,
-        borderWidth: 0
+        data: valores, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        borderWidth: 3, tension: 0.3, fill: true, pointBackgroundColor: '#131826', pointBorderColor: '#3b82f6', pointRadius: 5
       }]
     },
     options: {
-      cutout: '75%',
-      plugins: { legend: { position: 'right', labels: { color: '#f1f5f9', font: {size: 11} } } }
+      maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { grid: {display: false} }, y: { grid: {color: 'rgba(255,255,255,0.05)'}, beginAtZero: true } }
     }
   });
 }
 
-// 9. MONTAR A TABELA
-function montarTabela() {
+// ==========================================
+// 6. TEXTO INTELIGENTE DO RESUMO EXECUTIVO
+// ==========================================
+function escreverResumoAutomatico() {
+  let c = {'Resolvida':0, 'Andamento':0, 'Pendente':0};
+  let cSec = {};
+  let cTipo = {};
+  
+  DADOS_FILTRADOS.forEach(d => {
+    c[d.status]++;
+    let sec = d.secretaria.trim()||'Outros'; cSec[sec] = (cSec[sec]||0)+1;
+    cTipo[d.tipo] = (cTipo[d.tipo]||0)+1;
+  });
+
+  const tot = DADOS_FILTRADOS.length;
+  if(tot === 0) return;
+
+  const pct = (val) => ((val/tot)*100).toFixed(1).replace('.0','') + '%';
+  
+  let topSec = Object.keys(cSec).sort((a,b)=>cSec[b]-cSec[a])[0];
+  let topTipo = Object.keys(cTipo).sort((a,b)=>cTipo[b]-cTipo[a])[0];
+
+  document.getElementById('textoResumo').innerHTML = `
+    <li>Foram registrados <b>${tot} demandas</b> nesta análise.</li>
+    <li><b>${pct(c['Resolvida'])}</b> das demandas já foram resolvidas com sucesso.</li>
+    <li>Temos <b>${pct(c['Andamento'])}</b> em andamento e <b>${pct(c['Pendente'])}</b> pendentes.</li>
+    <li>A secretaria que mais recebe demandas é a <b>${topSec}</b> (${cSec[topSec]} registros).</li>
+    <li>O tipo de solicitação mais recorrente é <b>${topTipo}</b> (${pct(cTipo[topTipo])}).</li>
+  `;
+}
+
+// ==========================================
+// 7. GERAR A TABELA (TELA DEMANDAS)
+// ==========================================
+function atualizarTabela() {
   const corpo = document.getElementById('corpoTabela');
   corpo.innerHTML = '';
   document.getElementById('totalTabela').innerText = DADOS_FILTRADOS.length;
 
   if(DADOS_FILTRADOS.length === 0) {
-    corpo.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 30px;">Nenhuma demanda encontrada neste filtro.</td></tr>';
+    corpo.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum dado encontrado.</td></tr>';
     return;
   }
 
-  // Mostra os primeiros 100 para não travar o PC
-  let exibir = DADOS_FILTRADOS.slice(0, 100);
-
-  exibir.forEach(d => {
+  // Mostra as 100 primeiras para ficar rápido
+  DADOS_FILTRADOS.slice(0, 100).forEach(d => {
     let tr = document.createElement('tr');
-    
-    // Deixa o status bonito com a tag de cor
-    let tagStatus = `<span class="tag ${d.status}">${d.status}</span>`;
-    
     tr.innerHTML = `
-      <td>${tagStatus}</td>
-      <td style="font-weight: 700; color: white; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${d.assunto}</td>
+      <td><span class="tag ${d.status}">${d.status}</span></td>
       <td>${d.data}</td>
+      <td style="font-weight: 700; color: white;">${d.assunto}</td>
       <td>${d.secretaria}</td>
-      <td>${d.tipo}</td>
       <td>${d.bairro}</td>
     `;
     corpo.appendChild(tr);
