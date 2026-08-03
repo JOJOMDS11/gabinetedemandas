@@ -3,259 +3,228 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel de Demandas — Gabinete</title>
+<title>Painel de Demandas - Gabinete</title>
 
-<!-- Bibliotecas para Gráficos e Leitura de Excel -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<!-- Bibliotecas (Corrigidas) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <style>
-:root{
-  --bg-0:#080b14;
-  --bg-1:#0d1220;
-  --panel:rgba(255,255,255,0.035);
-  --panel-border:rgba(255,255,255,0.09);
-  --text-0:#eaf0fb;
-  --text-1:#9aa7c2;
-  --text-2:#5d6883;
-  --blue:#3b82f6;
-  --green:#22c55e;
-  --amber:#f5a623;
-  --red:#ef4444;
-  --purple:#8b6cf6;
-  --cyan:#22d3ee;
+/* TEMA NEUMORPHISM ESCURO (Visual 3D da foto) */
+:root {
+  --bg-dark: #0f1524;
+  --bg-panel: #161e31;
+  --border-light: rgba(255, 255, 255, 0.05);
+  --shadow-3d: 6px 6px 15px rgba(0, 0, 0, 0.4), -4px -4px 12px rgba(255, 255, 255, 0.03);
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  
+  --color-blue: #3b82f6;
+  --color-green: #10b981;
+  --color-orange: #f59e0b;
+  --color-red: #ef4444;
 }
-*{box-sizing:border-box; margin:0; padding:0;}
-html,body{height:100%;}
-body{
-  font-family:'Inter',sans-serif;
-  color:var(--text-0);
-  background:
-    radial-gradient(1200px 600px at 15% -10%, rgba(59,130,246,0.12), transparent 60%),
-    radial-gradient(1000px 500px at 100% 0%, rgba(139,108,246,0.10), transparent 55%),
-    linear-gradient(180deg, var(--bg-1), var(--bg-0) 40%);
-  min-height:100vh;
-  background-attachment:fixed;
-}
-.grid-overlay{
-  position:fixed; inset:0; pointer-events:none; z-index:0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
-  background-size:42px 42px;
-  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
-}
-.wrap{position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:28px 32px 80px;}
 
-/* HEADER & UPLOAD */
-header.top{display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:26px;}
-.brand{display:flex; align-items:center; gap:16px;}
-.brand-mark{
-  width:52px; height:52px; border-radius:14px;
-  background:linear-gradient(135deg, var(--blue), var(--purple));
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Sora',sans-serif; font-weight:800; font-size:20px; color:#fff;
-  box-shadow:0 8px 24px -6px rgba(59,130,246,0.55);
-}
-.brand h1{font-family:'Sora',sans-serif; font-weight:700; font-size:22px; letter-spacing:0.2px;}
-.brand .eyebrow{font-size:11px; text-transform:uppercase; letter-spacing:2.2px; color:var(--cyan); font-weight:600; margin-bottom:2px;}
-.brand .sub{font-size:12.5px; color:var(--text-1); margin-top:4px;}
-.meta{text-align:right; font-size:12px; color:var(--text-1); display: flex; flex-direction: column; gap: 8px; align-items: flex-end;}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; padding: 20px; }
 
+.container { max-width: 1400px; margin: 0 auto; }
+
+/* HEADER SIMPLES E DIRETO */
+.header {
+  display: flex; justify-content: space-between; align-items: center; 
+  background: var(--bg-panel); padding: 20px 30px; border-radius: 20px;
+  box-shadow: var(--shadow-3d); margin-bottom: 25px; border: 1px solid var(--border-light);
+}
+.header-titles h1 { font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+.header-titles p { color: var(--text-muted); font-size: 14px; margin-top: 5px; }
+
+/* BOTÃO DE IMPORTAR EXCEL */
 .upload-btn {
-  background: linear-gradient(135deg, var(--blue), var(--purple));
-  color: white; padding: 10px 20px; border-radius: 12px; font-weight: 600; font-size: 14px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white;
+  padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 15px;
   cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: none;
-  box-shadow: 0 4px 15px rgba(59,130,246,0.3); transition: 0.2s;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); transition: 0.2s;
 }
-.upload-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.5); }
+.upload-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6); filter: brightness(1.1); }
 input[type="file"] { display: none; }
 
-/* KPI CARDS */
-.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px;}
-.kpi{
-  background:var(--panel); border:1px solid var(--panel-border); border-radius:16px;
-  padding:20px 22px; cursor:pointer; position:relative; overflow:hidden;
-  transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+/* CARDS DE RESUMO (KPIs) */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
+.kpi-card {
+  background: var(--bg-panel); border-radius: 20px; padding: 25px; cursor: pointer;
+  box-shadow: var(--shadow-3d); border: 1px solid var(--border-light);
+  border-bottom: 4px solid var(--accent); transition: 0.3s;
 }
-.kpi:hover{transform:translateY(-3px) rotateX(2deg); box-shadow:0 14px 30px -12px rgba(0,0,0,0.5);}
-.kpi.active{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 14px 34px -14px var(--accent);}
-.kpi .icon{
-  width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;
-  font-size:17px; margin-bottom:14px; background:color-mix(in srgb, var(--accent) 18%, transparent);
-  color:var(--accent);
+.kpi-card:hover { transform: translateY(-5px); filter: brightness(1.1); }
+.kpi-card.active { background: rgba(255, 255, 255, 0.05); }
+
+.kpi-header { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
+.kpi-icon { font-size: 20px; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 10px; }
+.kpi-value { font-size: 42px; font-weight: 800; margin-top: 10px; color: var(--text-main); }
+.kpi-desc { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+
+.kpi-total { --accent: var(--color-blue); }
+.kpi-resolvida { --accent: var(--color-green); }
+.kpi-andamento { --accent: var(--color-orange); }
+.kpi-pendente { --accent: var(--color-red); }
+
+/* GRID DE GRÁFICOS */
+.charts-grid { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 20px; margin-bottom: 25px; }
+.chart-panel {
+  background: var(--bg-panel); border-radius: 20px; padding: 25px;
+  box-shadow: var(--shadow-3d); border: 1px solid var(--border-light);
+  display: flex; flex-direction: column;
 }
-.kpi .label{font-size:11.5px; text-transform:uppercase; letter-spacing:1.3px; color:var(--text-1); font-weight:600;}
-.kpi .value{font-family:'JetBrains Mono',monospace; font-size:34px; font-weight:700; margin:6px 0 8px; color:var(--text-0);}
-.kpi .bar{height:5px; border-radius:4px; background:rgba(255,255,255,0.07); overflow:hidden;}
-.kpi .bar>span{display:block; height:100%; background:var(--accent); border-radius:4px; transition:width .6s ease;}
-.kpi .pct{font-size:11.5px; color:var(--text-1); margin-top:6px;}
-.kpi[data-k="total"]{--accent:var(--blue);}
-.kpi[data-k="Resolvida"]{--accent:var(--green);}
-.kpi[data-k="Em Andamento"]{--accent:var(--amber);}
-.kpi[data-k="Pendente"]{--accent:var(--red);}
+.chart-panel h3 { font-size: 15px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; text-align: center; }
+.canvas-container { position: relative; flex: 1; min-height: 250px; display: flex; justify-content: center; align-items: center;}
 
-.empty-state { text-align: center; padding: 60px 20px; color: var(--text-2); font-size: 18px; grid-column: 1 / -1; border: 1px dashed var(--panel-border); border-radius: 16px; background: var(--panel); }
+/* ÁREA DE FILTROS */
+.filtros-ativos { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+.btn-limpar { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
 
-/* FILTER BAR */
-.filterbar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-height:34px; margin-bottom:22px;}
-.filterbar .hint{font-size:12px; color:var(--text-2);}
-.chip{display:flex; align-items:center; gap:8px; background:rgba(59,130,246,0.14); border:1px solid rgba(59,130,246,0.4); color:#cfe0ff; font-size:12.5px; padding:6px 10px 6px 12px; border-radius:20px; font-weight:500;}
-.chip b{color:#fff;}
-.chip button{background:none; border:none; color:#cfe0ff; cursor:pointer; font-size:14px; line-height:1; opacity:0.75;}
-.chip button:hover{opacity:1;}
-.clearall{font-size:12px; color:var(--text-1); background:none; border:1px solid var(--panel-border); border-radius:20px; padding:6px 12px; cursor:pointer;}
-.clearall:hover{color:var(--text-0); border-color:var(--text-1);}
-
-/* PANELS */
-.row{display:grid; gap:16px; margin-bottom:16px;}
-.row.r1{grid-template-columns:1.1fr 1.5fr 1.1fr;}
-.row.r2{grid-template-columns:1.6fr 1fr;}
-.panel{background:var(--panel); border:1px solid var(--panel-border); border-radius:16px; padding:20px 20px 12px; display:flex; flex-direction:column;}
-.panel h3{font-family:'Sora',sans-serif; font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--text-1); font-weight:600; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;}
-.panel h3 span.count{font-family:'JetBrains Mono',monospace; color:var(--text-2); font-size:11px; text-transform:none; letter-spacing:0;}
-.chartbox{position:relative; flex:1; min-height:220px;}
-.legend-list{display:flex; flex-direction:column; gap:8px; margin-top:14px; font-size:12.5px;}
-.legend-list .li{display:flex; align-items:center; gap:8px; color:var(--text-1); cursor:pointer; padding:3px 4px; border-radius:6px;}
-.legend-list .li:hover{background:rgba(255,255,255,0.04); color:var(--text-0);}
-.legend-list .sw{width:9px; height:9px; border-radius:3px; flex:none;}
-.legend-list .li b{margin-left:auto; color:var(--text-0); font-family:'JetBrains Mono',monospace; font-weight:500;}
-
-/* TABLE */
-.tablepanel{margin-top:4px;}
-.table-scroll{max-height:420px; overflow-y:auto; border-radius:12px; border:1px solid var(--panel-border);}
-table{width:100%; border-collapse:collapse; font-size:12.5px;}
-thead th{position:sticky; top:0; background:#0f1729; text-align:left; padding:11px 14px; color:var(--text-1); font-weight:600; text-transform:uppercase; letter-spacing:0.6px; font-size:10.5px; border-bottom:1px solid var(--panel-border); z-index:2;}
-tbody td{padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05); color:var(--text-1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;}
-tbody tr{cursor:pointer; transition:background .15s;}
-tbody tr:hover{background:rgba(59,130,246,0.08);}
-tbody td.assunto{white-space:normal; max-width:420px;}
-.badge{display:inline-block; padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:600;}
-.badge.Resolvida{background:rgba(34,197,94,0.16); color:#6ee7a0;}
-.badge.EmAndamento{background:rgba(245,166,35,0.16); color:#ffcb7a;}
-.badge.Pendente{background:rgba(239,68,68,0.16); color:#ff9c9c;}
-.empty-row td{text-align:center; padding:32px; color:var(--text-2);}
-
-/* MODAL */
-.modal-bg{position:fixed; inset:0; background:rgba(4,6,12,0.65); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:50; padding:20px;}
-.modal-bg.open{display:flex;}
-.modal{width:100%; max-width:560px; background:#0f1729; border:1px solid var(--panel-border); border-radius:18px; padding:26px 28px; box-shadow:0 30px 60px -20px rgba(0,0,0,0.7);}
-.modal h4{font-family:'Sora',sans-serif; font-size:17px; margin-bottom:4px; padding-right:20px;}
-.modal .mid{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--text-2); margin-bottom:18px;}
-.modal .kv{display:grid; grid-template-columns:110px 1fr; gap:8px 12px; font-size:13px; margin-bottom:8px;}
-.modal .kv b{color:var(--text-1); font-weight:600;}
-.modal .kv span{color:var(--text-0);}
-.modal-close{position:absolute; top:18px; right:18px; background:none; border:none; color:var(--text-1); font-size:20px; cursor:pointer;}
-.modal-actions{display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;}
-.modal-actions a{font-size:12.5px; padding:9px 14px; border-radius:9px; border:1px solid var(--panel-border); color:var(--text-0); text-decoration:none; background:rgba(255,255,255,0.04); cursor:pointer;}
-.modal-actions a:hover{border-color:var(--blue); color:#cfe0ff;}
-
-footer{text-align:center; font-size:11.5px; color:var(--text-2); margin-top:30px;}
-
-@media (max-width:1180px){
-  .row.r1{grid-template-columns:1fr 1fr;}
-  .row.r1 .panel:nth-child(2){grid-column:1/-1;}
-  .row.r2{grid-template-columns:1fr;}
+/* TABELA MINIMALISTA */
+.tabela-panel {
+  background: var(--bg-panel); border-radius: 20px; padding: 25px;
+  box-shadow: var(--shadow-3d); border: 1px solid var(--border-light);
 }
-@media (max-width:720px){
-  .kpis{grid-template-columns:1fr 1fr;}
-  .row.r1{grid-template-columns:1fr;}
-  .wrap{padding:20px 14px 60px;}
-}
+.table-scroll { max-height: 400px; overflow-y: auto; margin-top: 15px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+th { position: sticky; top: 0; background: #0f1524; color: var(--text-muted); padding: 15px; font-weight: 700; text-transform: uppercase; font-size: 11px; }
+td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+.tag { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-block; }
+.tag.Resolvida { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.tag.Andamento { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.tag.Pendente { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+.empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); font-size: 18px; border: 2px dashed rgba(255,255,255,0.1); border-radius: 20px; }
+
+/* SCROLLBAR INVISÍVEL */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 </style>
 </head>
 <body>
-<div class="grid-overlay"></div>
-<div class="wrap">
 
-  <header class="top">
-    <div class="brand">
-      <div class="brand-mark">PD</div>
-      <div>
-        <div class="eyebrow">Gabinete · São Leopoldo</div>
-        <h1>Painel de Demandas</h1>
-        <div class="sub" id="periodoLabel">Aguardando importação...</div>
+<div class="container">
+  
+  <!-- CABEÇALHO -->
+  <div class="header">
+    <div class="header-titles">
+      <h1>🏛️ Painel de Demandas</h1>
+      <p id="info-texto">Importe a planilha para visualizar os gráficos.</p>
+    </div>
+    <div>
+      <label for="uploadExcel" class="upload-btn">
+        📥 Importar Excel
+      </label>
+      <input type="file" id="uploadExcel" accept=".xlsx, .xls">
+    </div>
+  </div>
+
+  <!-- AVISO ANTES DE IMPORTAR -->
+  <div id="avisoVazio" class="empty-state">
+    <h1>📊 O Painel está vazio</h1>
+    <p style="margin-top: 10px;">Clique no botão azul acima e selecione o seu arquivo Excel do Gabinete.</p>
+  </div>
+
+  <!-- CONTEÚDO DO PAINEL (Escondido até carregar) -->
+  <div id="painelConteudo" style="display: none;">
+    
+    <div class="filtros-ativos" id="areaFiltros" style="display: none;">
+      <span style="color: var(--text-muted); font-size: 14px;">🔎 Filtrando por: <b id="nomeFiltro" style="color: white;"></b></span>
+      <button class="btn-limpar" onclick="limparFiltros()">✖ Limpar Filtro</button>
+    </div>
+
+    <!-- BLOCOS DE NÚMEROS (KPIs) -->
+    <div class="kpis">
+      <div class="kpi-card kpi-total" onclick="filtrarStatus('Todos')">
+        <div class="kpi-header"><span class="kpi-icon">📄</span> Total de Demandas</div>
+        <div class="kpi-value" id="kpiTotal">0</div>
+        <div class="kpi-desc">100% dos registros lidos</div>
+      </div>
+      <div class="kpi-card kpi-resolvida" onclick="filtrarStatus('Resolvida')">
+        <div class="kpi-header"><span class="kpi-icon">✅</span> Resolvidas</div>
+        <div class="kpi-value" id="kpiResolvidas">0</div>
+        <div class="kpi-desc" id="kpiResolvidasPct">0% do total</div>
+      </div>
+      <div class="kpi-card kpi-andamento" onclick="filtrarStatus('Andamento')">
+        <div class="kpi-header"><span class="kpi-icon">⏳</span> Em Andamento</div>
+        <div class="kpi-value" id="kpiAndamento">0</div>
+        <div class="kpi-desc" id="kpiAndamentoPct">0% do total</div>
+      </div>
+      <div class="kpi-card kpi-pendente" onclick="filtrarStatus('Pendente')">
+        <div class="kpi-header"><span class="kpi-icon">🚨</span> Pendentes</div>
+        <div class="kpi-value" id="kpiPendentes">0</div>
+        <div class="kpi-desc" id="kpiPendentesPct">0% do total</div>
       </div>
     </div>
-    <div class="meta">
-      <label for="excelUpload" class="upload-btn">📥 Importar Excel (Gabinete)</label>
-      <input type="file" id="excelUpload" accept=".xlsx, .xls" />
+
+    <!-- GRÁFICOS -->
+    <div class="charts-grid">
+      <div class="chart-panel">
+        <h3>Qual a situação atual?</h3>
+        <div class="canvas-container"><canvas id="graficoStatus"></canvas></div>
+      </div>
+      <div class="chart-panel">
+        <h3>Quem está cuidando? (Secretarias)</h3>
+        <div class="canvas-container"><canvas id="graficoSecretaria"></canvas></div>
+      </div>
+      <div class="chart-panel">
+        <h3>O que mais pedem?</h3>
+        <div class="canvas-container"><canvas id="graficoTipo"></canvas></div>
+      </div>
     </div>
-  </header>
 
-  <div class="kpis" id="kpiRow">
-    <div class="empty-state">👆 Faça o upload da planilha Excel do Gabinete ali em cima para gerar o painel.</div>
-  </div>
-
-  <div class="filterbar" id="filterBar" style="display: none;">
-    <span class="hint">Clique em um card, fatia ou barra para filtrar</span>
-  </div>
-
-  <div id="dashboardContent" style="display: none;">
-      <div class="row r1">
-        <div class="panel">
-          <h3>Status das demandas</h3>
-          <div class="chartbox"><canvas id="chartStatus"></canvas></div>
-          <div class="legend-list" id="legendStatus"></div>
-        </div>
-        <div class="panel">
-          <h3>Demandas por secretaria <span class="count" id="countSecretaria"></span></h3>
-          <div class="chartbox"><canvas id="chartSecretaria"></canvas></div>
-        </div>
-        <div class="panel">
-          <h3>Tipos de solicitação</h3>
-          <div class="chartbox"><canvas id="chartTipo"></canvas></div>
-          <div class="legend-list" id="legendTipo"></div>
-        </div>
+    <!-- TABELA -->
+    <div class="tabela-panel">
+      <h3 style="font-size: 16px; margin-bottom: 10px;">📋 Lista de Demandas (<span id="totalTabela">0</span>)</h3>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Assunto Principal</th>
+              <th>Data</th>
+              <th>Secretaria</th>
+              <th>Tipo</th>
+              <th>Bairro</th>
+            </tr>
+          </thead>
+          <tbody id="corpoTabela"></tbody>
+        </table>
       </div>
+    </div>
 
-      <div class="row r2">
-        <div class="panel">
-          <h3>Evolução mensal das demandas</h3>
-          <div class="chartbox"><canvas id="chartEvolucao"></canvas></div>
-        </div>
-        <div class="panel">
-          <h3>Top bairros</h3>
-          <div class="chartbox"><canvas id="chartBairro"></canvas></div>
-        </div>
-      </div>
-
-      <div class="panel tablepanel">
-        <h3>Demandas filtradas <span class="count" id="countTabela"></span></h3>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr><th>Data</th><th>Tipo</th><th>Assunto</th><th>Secretaria</th><th>Status</th><th>Bairro</th></tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
-      </div>
-  </div>
-
-  <footer>Sistema de Inteligência do Gabinete — São Leopoldo/RS</footer>
-</div>
-
-<div class="modal-bg" id="modalBg">
-  <div class="modal" style="position:relative;">
-    <button class="modal-close" id="modalClose">✕</button>
-    <div id="modalBody"></div>
   </div>
 </div>
 
 <script>
-// Variável Global que vai guardar os dados após a importação
-let DATA = []; 
-const COLORS = { Resolvida:'#22c55e', 'Em Andamento':'#f5a623', Pendente:'#ef4444', blue:'#3b82f6', purple:'#8b6cf6', cyan:'#22d3ee', pink:'#f472b6', teal:'#2dd4bf', gray:'#94a3b8' };
-const PALETTE = ['#3b82f6','#8b6cf6','#22d3ee','#f472b6','#2dd4bf','#f5a623','#94a3b8','#60a5fa','#c084fc','#34d399'];
-let filters = { statusCat:null, secretaria:null, tipo:null, bairro:null, mes:null };
-let charts = {};
+// Variáveis Globais
+let DADOS_GLOBAIS = [];
+let DADOS_FILTRADOS = [];
+let filtroAtual = null;
 
-// LOGICA DE IMPORTAÇÃO DO EXCEL
-document.getElementById('excelUpload').addEventListener('change', function(e) {
+// Configuração padrão do Chart.js para ficar bonito no fundo escuro
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = "'Inter', sans-serif";
+
+let myChartStatus = null;
+let myChartSecretaria = null;
+let myChartTipo = null;
+
+// CORES NEON
+const coresStatus = { 'Resolvida': '#10b981', 'Andamento': '#f59e0b', 'Pendente': '#ef4444' };
+const coresDiversas = ['#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b', '#ef4444', '#6366f1', '#84cc16'];
+
+// 1. LEITURA DO EXCEL
+document.getElementById('uploadExcel').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if(!file) return;
   
@@ -263,320 +232,220 @@ document.getElementById('excelUpload').addEventListener('change', function(e) {
   reader.onload = function(evt) {
     const data = new Uint8Array(evt.target.result);
     const workbook = XLSX.read(data, {type: 'array'});
-    const firstSheet = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[firstSheet];
+    const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {defval: ""});
     
-    // Converte a aba para JSON (raw: false puxa a data formatada certinha)
-    const rawJson = XLSX.utils.sheet_to_json(worksheet, {raw: false, defval: ""});
-    
-    formatarDados(rawJson);
+    processarDadosExcel(json);
   };
   reader.readAsArrayBuffer(file);
 });
 
-function formatarDados(rawJson) {
-   const concluidas = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
-   const pendentes = ['Pendente', 'Aguardando Aprovação'];
+// 2. PROCESSAR E LIMPAR OS DADOS PARA UMA LINGUAGEM SIMPLES
+function processarDadosExcel(json) {
+  const statusResolvidos = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
+  const statusPendentes = ['Pendente', 'Aguardando Aprovação'];
 
-   DATA = rawJson.map(row => {
-       // Ajusta a data para o formato de ordenação (YYYY-MM-DD)
-       let dataBr = row['Abertura / Fato'] || '';
-       let dataOrd = '';
-       if(dataBr) {
-           let parts = dataBr.split('/');
-           if(parts.length === 3) dataOrd = `${parts[2]}-${parts[1]}-${parts[0]}`;
-           else dataOrd = dataBr; 
-       }
+  DADOS_GLOBAIS = json.map(linha => {
+    let statusOriginal = linha['Status'] || '';
+    let statusSimples = 'Andamento'; // Padrão
+    
+    if(statusResolvidos.includes(statusOriginal)) statusSimples = 'Resolvida';
+    else if(statusPendentes.includes(statusOriginal)) statusSimples = 'Pendente';
 
-       // Mapeamento de Status
-       let st = row['Status'] || 'Sem Status';
-       let stCat = 'Em Andamento';
-       if(concluidas.includes(st)) stCat = 'Resolvida';
-       else if(pendentes.includes(st)) stCat = 'Pendente';
-
-       return {
-           id: row['Nº Demanda'] || 'S/N',
-           data: dataBr,
-           dataOrd: dataOrd,
-           tipo: row['Tipo de Solicitação'] || 'Outros',
-           assunto: row['Assunto'] || 'Sem Assunto',
-           status: st,
-           statusCat: stCat,
-           secretaria: row['Secretaria'] || 'Não Informada',
-           solicitante: row['Solicitante'] || 'Não Informado',
-           telefone: row['Telefone'] || '',
-           bairro: row['Bairro'] || 'Não Informado',
-           protocolo: row['Protocolo 156'] || '',
-           linkSistema: row['Link Nosso Sistema'] || '',
-           linkPdf: row['Link do PDF (Anexo)'] || ''
-       };
-   });
-   
-   document.getElementById('dashboardContent').style.display = 'block';
-   document.getElementById('filterBar').style.display = 'flex';
-   
-   renderPeriodo();
-   render();
-}
-
-function fmtMesLabel(ord){ 
-  if(!ord) return '';
-  const parts = ord.split('-');
-  if(parts.length < 2) return ord;
-  const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-  return meses[parseInt(parts[1],10)-1] + '/' + parts[0].slice(2);
-}
-
-function applyFilters(data){
-  return data.filter(d=>{
-    if(filters.statusCat && d.statusCat!==filters.statusCat) return false;
-    if(filters.secretaria && d.secretaria!==filters.secretaria) return false;
-    if(filters.tipo && d.tipo!==filters.tipo) return false;
-    if(filters.bairro && d.bairro!==filters.bairro) return false;
-    if(filters.mes && (!d.dataOrd || d.dataOrd.slice(0,7)!==filters.mes)) return false;
-    return true;
+    return {
+      data: linha['Abertura / Fato'] || 'Sem Data',
+      assunto: linha['Assunto'] || 'Sem Assunto',
+      status: statusSimples,
+      secretaria: linha['Secretaria'] || 'Não Informada',
+      tipo: linha['Tipo de Solicitação'] || 'Outros',
+      bairro: linha['Bairro'] || 'Não Informado'
+    };
   });
+
+  DADOS_FILTRADOS = [...DADOS_GLOBAIS];
+  
+  document.getElementById('avisoVazio').style.display = 'none';
+  document.getElementById('painelConteudo').style.display = 'block';
+  document.getElementById('info-texto').innerText = `Planilha carregada com sucesso! ${DADOS_GLOBAIS.length} registros.`;
+  
+  atualizarTudo();
 }
 
-function count(arr, key){
-  const m = {};
-  arr.forEach(d=>{
-    let v = d[key] || 'Não informado';
-    if(v.trim() === '') v = 'Não informado';
-    m[v] = (m[v]||0)+1;
-  });
-  return m;
-}
-
-function toggleFilter(key, value){
-  filters[key] = (filters[key]===value) ? null : value;
-  render();
-}
-
-function clearAll(){
-  filters = { statusCat:null, secretaria:null, tipo:null, bairro:null, mes:null };
-  render();
-}
-
-function renderFilterBar(){
-  const bar = document.getElementById('filterBar');
-  bar.innerHTML = '';
-  const labels = { statusCat:'Status', secretaria:'Secretaria', tipo:'Tipo', bairro:'Bairro', mes:'Mês' };
-  let any = false;
-  Object.keys(filters).forEach(k=>{
-    if(filters[k]){
-      any = true;
-      const chip = document.createElement('div');
-      chip.className = 'chip';
-      const label = k==='mes' ? fmtMesLabel(filters[k]) : filters[k];
-      chip.innerHTML = `${labels[k]}: <b>${label}</b> <button data-k="${k}">✕</button>`;
-      chip.querySelector('button').onclick = ()=>{ filters[k]=null; render(); };
-      bar.appendChild(chip);
-    }
-  });
-  if(any){
-    const btn = document.createElement('button');
-    btn.className='clearall'; btn.textContent='Limpar tudo';
-    btn.onclick = clearAll;
-    bar.appendChild(btn);
-  } else {
-    bar.innerHTML = '<span class="hint">Clique em um card, fatia ou barra para filtrar os resultados abaixo</span>';
-  }
-}
-
-function renderKPIs(filtered){
-  const total = filtered.length;
-  const byStatus = count(filtered,'statusCat');
-  const order = [
-    {key:'total', label:'Total de demandas', icon:'▣', value: total, denom: DATA.length},
-    {key:'Resolvida', label:'Resolvidas', icon:'✓', value: byStatus['Resolvida']||0, denom: total},
-    {key:'Em Andamento', label:'Em andamento', icon:'◔', value: byStatus['Em Andamento']||0, denom: total},
-    {key:'Pendente', label:'Pendentes', icon:'!', value: byStatus['Pendente']||0, denom: total},
-  ];
-  const row = document.getElementById('kpiRow');
-  row.innerHTML = '';
-  order.forEach(o=>{
-    const pct = o.denom ? Math.round((o.value/o.denom)*1000)/10 : 0;
-    const active = o.key==='total' ? false : filters.statusCat===o.key;
-    const div = document.createElement('div');
-    div.className = 'kpi' + (active?' active':'');
-    div.setAttribute('data-k', o.key);
-    div.innerHTML = `
-      <div class="icon">${o.icon}</div>
-      <div class="label">${o.label}</div>
-      <div class="value">${o.value}</div>
-      <div class="bar"><span style="width:${pct}%"></span></div>
-      <div class="pct">${pct}% ${o.key==='total' ? 'do total importado' : 'do filtro atual'}</div>
-    `;
-    if(o.key!=='total') div.onclick = ()=> toggleFilter('statusCat', o.key);
-    row.appendChild(div);
-  });
-}
-
-function donut(id, dataMap, filterKey, colorFn){
-  const ctx = document.getElementById(id);
-  const labels = Object.keys(dataMap);
-  const values = Object.values(dataMap);
-  const colors = labels.map((l,i)=>colorFn(l,i));
-  if(charts[id]) charts[id].destroy();
-  charts[id] = new Chart(ctx, {
-    type:'doughnut',
-    data:{ labels, datasets:[{ data:values, backgroundColor:colors, borderColor:'#0d1220', borderWidth:3, hoverOffset:8 }] },
-    options:{
-      cutout:'68%',
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=> `${c.label}: ${c.parsed} (${(c.parsed/values.reduce((a,b)=>a+b,0)*100).toFixed(1)}%)`}} },
-      onClick:(evt, els)=>{ if(els.length){ const lbl = labels[els[0].index]; toggleFilter(filterKey, lbl); } },
-      animation:{ duration:500 }
-    }
-  });
-  return {labels, values, colors};
-}
-
-function renderLegend(elId, labels, values, colors, filterKey){
-  const el = document.getElementById(elId);
-  const total = values.reduce((a,b)=>a+b,0);
-  el.innerHTML = '';
-  labels.forEach((l,i)=>{
-    const div = document.createElement('div');
-    div.className='li';
-    if(filters[filterKey]===l) div.style.color = '#fff';
-    const pct = total ? ((values[i]/total)*100).toFixed(1) : '0.0';
-    div.innerHTML = `<span class="sw" style="background:${colors[i]}"></span> ${l} <b>${pct}%</b>`;
-    div.onclick = ()=> toggleFilter(filterKey, l);
-    el.appendChild(div);
-  });
-}
-
-function barH(id, dataMap, filterKey, topN){
-  let entries = Object.entries(dataMap).sort((a,b)=>b[1]-a[1]);
-  if(topN) entries = entries.slice(0, topN);
-  const labels = entries.map(e=>e[0]);
-  const values = entries.map(e=>e[1]);
-  const ctx = document.getElementById(id);
-  if(charts[id]) charts[id].destroy();
-  charts[id] = new Chart(ctx, {
-    type:'bar',
-    data:{ labels, datasets:[{ data:values, backgroundColor: labels.map(l=> filters[filterKey]===l ? '#60a5fa' : 'rgba(59,130,246,0.55)'), borderRadius:5, barThickness:14 }] },
-    options:{
-      indexAxis:'y',
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=>`${c.parsed.x} demandas`}} },
-      scales:{
-        x:{ grid:{color:'rgba(255,255,255,0.06)'}, ticks:{color:'#9aa7c2', font:{size:11}} },
-        y:{ grid:{display:false}, ticks:{color:'#cdd6e8', font:{size:11.5}} }
-      },
-      onClick:(evt, els)=>{ if(els.length){ const lbl = labels[els[0].index]; toggleFilter(filterKey, lbl); } },
-      animation:{ duration:500 }
-    }
-  });
-}
-
-function lineEvol(id, filtered){
-  const byMonth = {};
-  filtered.forEach(d=>{
-    if(!d.dataOrd) return;
-    const key = d.dataOrd.slice(0,7);
-    byMonth[key] = (byMonth[key]||0)+1;
-  });
-  const keys = Object.keys(byMonth).sort();
-  const labels = keys.map(fmtMesLabel);
-  const values = keys.map(k=>byMonth[k]);
-  const ctx = document.getElementById(id);
-  if(charts[id]) charts[id].destroy();
-  const gradient = ctx.getContext('2d').createLinearGradient(0,0,0,220);
-  gradient.addColorStop(0,'rgba(59,130,246,0.35)');
-  gradient.addColorStop(1,'rgba(59,130,246,0)');
-  charts[id] = new Chart(ctx, {
-    type:'line',
-    data:{ labels, datasets:[{ data:values, borderColor:'#3b82f6', backgroundColor:gradient, fill:true, tension:0.35, pointBackgroundColor:'#0d1220', pointBorderColor:'#3b82f6', pointBorderWidth:2, pointRadius:4, pointHoverRadius:6 }] },
-    options:{
-      plugins:{ legend:{display:false} },
-      scales:{
-        x:{ grid:{display:false}, ticks:{color:'#9aa7c2', font:{size:10.5}, maxRotation:0} },
-        y:{ grid:{color:'rgba(255,255,255,0.06)'}, ticks:{color:'#9aa7c2', font:{size:11}}, beginAtZero:true }
-      },
-      onClick:(evt, els)=>{ if(els.length){ const k = keys[els[0].index]; toggleFilter('mes', k); } },
-      animation:{ duration:500 }
-    }
-  });
-}
-
-function renderTable(filtered){
-  document.getElementById('countTabela').textContent = `${filtered.length} registro(s)`;
-  const tbody = document.getElementById('tbody');
-  tbody.innerHTML = '';
-  if(!filtered.length){
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">Nenhuma demanda encontrada para os filtros.</td></tr>`;
+// 3. FUNÇÕES DE FILTRO
+function filtrarStatus(status) {
+  if(status === 'Todos') {
+    limparFiltros();
     return;
   }
-  const sorted = [...filtered].sort((a,b)=> (b.dataOrd||'').localeCompare(a.dataOrd||''));
-  const max = 200;
-  sorted.slice(0,max).forEach(d=>{
-    const tr = document.createElement('tr');
-    const badgeClass = d.statusCat.replace(/\s+/g,'');
-    tr.innerHTML = `
-      <td>${d.data||'—'}</td>
-      <td>${d.tipo}</td>
-      <td class="assunto">${d.assunto||''}</td>
-      <td>${d.secretaria}</td>
-      <td><span class="badge ${badgeClass}">${d.statusCat}</span></td>
-      <td>${d.bairro||'—'}</td>
-    `;
-    tr.onclick = ()=> openModal(d);
-    tbody.appendChild(tr);
+  
+  DADOS_FILTRADOS = DADOS_GLOBAIS.filter(d => d.status === status);
+  document.getElementById('areaFiltros').style.display = 'flex';
+  
+  let emoji = status === 'Resolvida' ? '✅' : (status === 'Andamento' ? '⏳' : '🚨');
+  document.getElementById('nomeFiltro').innerText = `${emoji} Status: ${status}`;
+  
+  atualizarTudo();
+}
+
+function limparFiltros() {
+  DADOS_FILTRADOS = [...DADOS_GLOBAIS];
+  document.getElementById('areaFiltros').style.display = 'none';
+  atualizarTudo();
+}
+
+// 4. ATUALIZAR A TELA (KPIs, Gráficos e Tabela)
+function atualizarTudo() {
+  atualizarKPIs();
+  desenharGraficoStatus();
+  desenharGraficoSecretarias();
+  desenharGraficoTipos();
+  montarTabela();
+}
+
+// 5. ATUALIZAR OS 4 BLOCOS LÁ DE CIMA
+function atualizarKPIs() {
+  const totalGeral = DADOS_GLOBAIS.length;
+  const totalFiltro = DADOS_FILTRADOS.length;
+  
+  let resolvidas = 0, andamento = 0, pendentes = 0;
+  DADOS_FILTRADOS.forEach(d => {
+    if(d.status === 'Resolvida') resolvidas++;
+    else if(d.status === 'Andamento') andamento++;
+    else pendentes++;
+  });
+
+  document.getElementById('kpiTotal').innerText = totalFiltro;
+  
+  document.getElementById('kpiResolvidas').innerText = resolvidas;
+  document.getElementById('kpiResolvidasPct').innerText = totalFiltro > 0 ? `${Math.round((resolvidas/totalFiltro)*100)}%` : '0%';
+  
+  document.getElementById('kpiAndamento').innerText = andamento;
+  document.getElementById('kpiAndamentoPct').innerText = totalFiltro > 0 ? `${Math.round((andamento/totalFiltro)*100)}%` : '0%';
+  
+  document.getElementById('kpiPendentes').innerText = pendentes;
+  document.getElementById('kpiPendentesPct').innerText = totalFiltro > 0 ? `${Math.round((pendentes/totalFiltro)*100)}%` : '0%';
+}
+
+// 6. GRÁFICO 1: STATUS (Rosca)
+function desenharGraficoStatus() {
+  let contagem = { 'Resolvida': 0, 'Andamento': 0, 'Pendente': 0 };
+  DADOS_FILTRADOS.forEach(d => contagem[d.status]++);
+
+  const ctx = document.getElementById('graficoStatus').getContext('2d');
+  if(myChartStatus) myChartStatus.destroy();
+
+  myChartStatus = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['✅ Resolvidas', '⏳ Andamento', '🚨 Pendentes'],
+      datasets: [{
+        data: [contagem['Resolvida'], contagem['Andamento'], contagem['Pendente']],
+        backgroundColor: [coresStatus['Resolvida'], coresStatus['Andamento'], coresStatus['Pendente']],
+        borderWidth: 0 // Tira as bordas brancas para dar visual moderno
+      }]
+    },
+    options: {
+      cutout: '75%', // Deixa o furo no meio maior
+      plugins: { legend: { position: 'bottom', labels: { color: '#f1f5f9', font: {size: 12} } } }
+    }
   });
 }
 
-function openModal(d){
-  const body = document.getElementById('modalBody');
-  body.innerHTML = `
-    <h4>${d.assunto || 'Sem assunto informado'}</h4>
-    <div class="mid">Demanda nº ${d.id} ${d.protocolo ? ' · Protocolo 156: '+d.protocolo : ''}</div>
-    <div class="kv"><b>Data</b><span>${d.data||'—'}</span></div>
-    <div class="kv"><b>Tipo</b><span>${d.tipo}</span></div>
-    <div class="kv"><b>Status</b><span>${d.status}</span></div>
-    <div class="kv"><b>Secretaria</b><span>${d.secretaria}</span></div>
-    <div class="kv"><b>Bairro</b><span>${d.bairro||'—'}</span></div>
-    <div class="kv"><b>Solicitante</b><span>${d.solicitante||'—'}</span></div>
-    <div class="kv"><b>Telefone</b><span>${d.telefone||'—'}</span></div>
-    <div class="modal-actions">
-      ${d.linkSistema ? `<a href="${d.linkSistema}" target="_blank" rel="noopener">Ver no sistema →</a>` : ''}
-      ${d.linkPdf ? `<a href="${d.linkPdf}" target="_blank" rel="noopener">Ver PDF anexo →</a>` : ''}
-    </div>
-  `;
-  document.getElementById('modalBg').classList.add('open');
-}
-document.getElementById('modalClose').onclick = ()=> document.getElementById('modalBg').classList.remove('open');
-document.getElementById('modalBg').onclick = (e)=>{ if(e.target.id==='modalBg') e.target.classList.remove('open'); };
+// 7. GRÁFICO 2: SECRETARIAS (Barras Deitadas)
+function desenharGraficoSecretarias() {
+  let contagem = {};
+  DADOS_FILTRADOS.forEach(d => {
+    let sec = d.secretaria.trim() === '' ? 'Outros' : d.secretaria;
+    contagem[sec] = (contagem[sec] || 0) + 1;
+  });
 
-function renderPeriodo(){
-  const datas = DATA.map(d=>d.dataOrd).filter(Boolean).sort();
-  if(datas.length){
-    const min = datas[0].split('-').reverse().join('/');
-    const max = datas[datas.length-1].split('-').reverse().join('/');
-    document.getElementById('periodoLabel').textContent = `Período importado: ${min} a ${max}`;
+  // Pega só as Top 10 para não ficar feio
+  let ordenado = Object.keys(contagem).map(k => [k, contagem[k]]).sort((a,b) => b[1] - a[1]).slice(0, 10);
+  let labels = ordenado.map(i => i[0]);
+  let valores = ordenado.map(i => i[1]);
+
+  const ctx = document.getElementById('graficoSecretaria').getContext('2d');
+  if(myChartSecretaria) myChartSecretaria.destroy();
+
+  myChartSecretaria = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: valores,
+        backgroundColor: '#3b82f6',
+        borderRadius: 6 // Arredonda a ponta da barra
+      }]
+    },
+    options: {
+      indexAxis: 'y', // Deita a barra
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false, grid: {display: false} }, // Esconde a linha do fundo
+        y: { grid: {display: false}, ticks: {color: '#f1f5f9'} }
+      }
+    }
+  });
+}
+
+// 8. GRÁFICO 3: TIPO DE SOLICITAÇÃO (Rosca)
+function desenharGraficoTipos() {
+  let contagem = {};
+  DADOS_FILTRADOS.forEach(d => { contagem[d.tipo] = (contagem[d.tipo] || 0) + 1; });
+
+  let ordenado = Object.keys(contagem).map(k => [k, contagem[k]]).sort((a,b) => b[1] - a[1]).slice(0, 6);
+  let labels = ordenado.map(i => i[0]);
+  let valores = ordenado.map(i => i[1]);
+
+  const ctx = document.getElementById('graficoTipo').getContext('2d');
+  if(myChartTipo) myChartTipo.destroy();
+
+  myChartTipo = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: valores,
+        backgroundColor: coresDiversas,
+        borderWidth: 0
+      }]
+    },
+    options: {
+      cutout: '75%',
+      plugins: { legend: { position: 'right', labels: { color: '#f1f5f9', font: {size: 11} } } }
+    }
+  });
+}
+
+// 9. MONTAR A TABELA
+function montarTabela() {
+  const corpo = document.getElementById('corpoTabela');
+  corpo.innerHTML = '';
+  document.getElementById('totalTabela').innerText = DADOS_FILTRADOS.length;
+
+  if(DADOS_FILTRADOS.length === 0) {
+    corpo.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 30px;">Nenhuma demanda encontrada neste filtro.</td></tr>';
+    return;
   }
-}
 
-function render(){
-  if(DATA.length === 0) return; // Se não tiver dados, nem tenta renderizar os gráficos
+  // Mostra os primeiros 100 para não travar o PC
+  let exibir = DADOS_FILTRADOS.slice(0, 100);
 
-  const filtered = applyFilters(DATA);
-  renderKPIs(filtered);
-  renderFilterBar();
-
-  const statusData = donut('chartStatus', count(filtered,'statusCat'), 'statusCat', (l)=>COLORS[l]||'#94a3b8');
-  renderLegend('legendStatus', statusData.labels, statusData.values, statusData.colors, 'statusCat');
-
-  const tipoData = donut('chartTipo', count(filtered,'tipo'), 'tipo', (l,i)=>PALETTE[i%PALETTE.length]);
-  renderLegend('legendTipo', tipoData.labels, tipoData.values, tipoData.colors, 'tipo');
-
-  const secMap = count(filtered,'secretaria');
-  document.getElementById('countSecretaria').textContent = Object.keys(secMap).length + ' secretaria(s)';
-  barH('chartSecretaria', secMap, 'secretaria', null);
-
-  barH('chartBairro', count(filtered,'bairro'), 'bairro', 10);
-  lineEvol('chartEvolucao', filtered);
-  renderTable(filtered);
+  exibir.forEach(d => {
+    let tr = document.createElement('tr');
+    
+    // Deixa o status bonito com a tag de cor
+    let tagStatus = `<span class="tag ${d.status}">${d.status}</span>`;
+    
+    tr.innerHTML = `
+      <td>${tagStatus}</td>
+      <td style="font-weight: 700; color: white; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${d.assunto}</td>
+      <td>${d.data}</td>
+      <td>${d.secretaria}</td>
+      <td>${d.tipo}</td>
+      <td>${d.bairro}</td>
+    `;
+    corpo.appendChild(tr);
+  });
 }
 </script>
 </body>
