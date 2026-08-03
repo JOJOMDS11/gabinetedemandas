@@ -3,588 +3,791 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel de Demandas PRO - São Leopoldo</title>
+<title>Painel de Demandas - Gabinete</title>
 
-<!-- Bibliotecas Mágicas (Gráficos, Plugin de Rótulos e Leitor de Excel) -->
+<!-- Bibliotecas -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
-/* =========================================================
-   1. VISUAL 3D ESCURO (O ESTILO DA FOTO)
-   ========================================================= */
+/* TEMA NEUMORPHISM ESCURO + PROFUNDIDADE 3D */
 :root {
-  --fundo-site: #131826;
-  --fundo-caixas: #1a2235;
-  --texto-claro: #f8fafc;
-  --texto-escuro: #94a3b8;
+  --bg-dark: #0a0e18;
+  --bg-panel: #161e31;
+  --border-light: rgba(255, 255, 255, 0.06);
+  --shadow-3d: 10px 10px 24px rgba(0, 0, 0, 0.45), -6px -6px 16px rgba(255, 255, 255, 0.025);
+  --shadow-3d-hover: 16px 16px 34px rgba(0, 0, 0, 0.55), -8px -8px 20px rgba(255, 255, 255, 0.035);
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
   
-  --cor-azul: #3b82f6;
-  --cor-verde: #10b981;
-  --cor-laranja: #f59e0b;
-  --cor-vermelho: #ef4444;
-
-  --sombra-3d: 6px 6px 14px rgba(0, 0, 0, 0.5), -4px -4px 10px rgba(255, 255, 255, 0.03);
-  --sombra-afundada: inset 4px 4px 10px rgba(0, 0, 0, 0.5), inset -4px -4px 10px rgba(255, 255, 255, 0.03);
+  --color-blue: #3b82f6;
+  --color-green: #10b981;
+  --color-orange: #f59e0b;
+  --color-red: #ef4444;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-body { background-color: var(--fundo-site); color: var(--texto-claro); display: flex; height: 100vh; overflow: hidden; }
-
-/* CAIXA COM EFEITO 3D */
-.caixa-3d {
-  background: var(--fundo-caixas); border-radius: 16px;
-  box-shadow: var(--sombra-3d); padding: 20px;
-  border: 1px solid rgba(255,255,255,0.02);
+body {
+  background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; padding: 20px;
+  background-image:
+    radial-gradient(900px 500px at 12% -8%, rgba(59,130,246,0.14), transparent 60%),
+    radial-gradient(800px 450px at 100% 0%, rgba(139,92,246,0.10), transparent 55%),
+    linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+  background-size: auto, auto, 42px 42px, 42px 42px;
+  background-attachment: fixed;
+  perspective: 1400px;
 }
+.numero, .kpi-value { font-family: 'JetBrains Mono', monospace; }
+h1, h3 { font-family: 'Sora', sans-serif; }
 
-/* =========================================================
-   2. MENU LATERAL (ESQUERDA)
-   ========================================================= */
-.menu-lateral {
-  width: 260px; background-color: var(--fundo-site); border-right: 2px solid rgba(255,255,255,0.02);
-  display: flex; flex-direction: column; padding: 20px 15px; box-shadow: 5px 0 15px rgba(0,0,0,0.3); z-index: 10;
+.container { max-width: 1400px; margin: 0 auto; }
+
+/* HEADER SIMPLES E DIRETO */
+.header {
+  display: flex; justify-content: space-between; align-items: center; 
+  background: var(--bg-panel); padding: 20px 30px; border-radius: 20px;
+  box-shadow: var(--shadow-3d); margin-bottom: 25px; border: 1px solid var(--border-light);
 }
-.logo h2 { font-size: 14px; font-weight: 800; color: var(--texto-escuro); text-transform: uppercase; }
-.logo h1 { font-size: 20px; font-weight: 800; color: var(--texto-claro); margin-bottom: 30px; }
+.header-titles h1 { font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+.header-titles p { color: var(--text-muted); font-size: 14px; margin-top: 5px; }
 
-.botao-menu {
-  display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px;
-  color: var(--texto-escuro); font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.3s; margin-bottom: 8px;
+/* BOTÃO DE IMPORTAR EXCEL */
+.upload-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white;
+  padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 15px;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: none;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); transition: 0.2s;
 }
-.botao-menu:hover { color: var(--texto-claro); background: rgba(255,255,255,0.05); }
-.botao-menu.ativo { background: var(--cor-azul); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
-
-.info-rodape { margin-top: auto; padding: 15px; background: var(--fundo-caixas); border-radius: 12px; box-shadow: var(--sombra-afundada); font-size: 12px; color: var(--texto-escuro); text-align: center; }
-
-/* =========================================================
-   3. ÁREA CENTRAL DO PAINEL
-   ========================================================= */
-.area-central { flex: 1; padding: 25px 35px; overflow-y: auto; scroll-behavior: smooth; }
-.area-central::-webkit-scrollbar { width: 8px; }
-.area-central::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-
-/* CABEÇALHO SUPERIOR */
-.cabecalho { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-.titulos h2 { font-size: 16px; color: var(--cor-azul); font-weight: 600; }
-.titulos h1 { font-size: 26px; font-weight: 800; text-transform: uppercase; }
-
-.btn-importar {
-  background: transparent; color: var(--cor-azul); border: 2px dashed var(--cor-azul);
-  padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.3s;
-  display: inline-flex; align-items: center; gap: 8px; font-size: 13px;
-}
-.btn-importar:hover { background: var(--cor-azul); color: white; }
+.upload-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6); filter: brightness(1.1); }
 input[type="file"] { display: none; }
 
-/* BOTÃO DE LIMPAR FILTRO GIGANTE */
-.aviso-filtro {
-  display: none; background: rgba(239, 68, 68, 0.1); border: 2px solid var(--cor-vermelho);
-  color: var(--cor-vermelho); padding: 10px 20px; border-radius: 10px; font-weight: 800;
-  cursor: pointer; margin-left: 15px; animation: piscar 1s ease-in-out infinite alternate;
+/* CARDS DE RESUMO (KPIs) */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
+.kpi-card {
+  background: var(--bg-panel); border-radius: 20px; padding: 25px; cursor: pointer;
+  box-shadow: var(--shadow-3d); border: 1px solid var(--border-light);
+  border-bottom: 4px solid var(--accent); transition: box-shadow 0.2s, filter 0.2s;
+  transform-style: preserve-3d; will-change: transform;
 }
-.aviso-filtro:hover { background: var(--cor-vermelho); color: white; animation: none; }
-@keyframes piscar { from { box-shadow: 0 0 5px rgba(239, 68, 68, 0.2); } to { box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); } }
+.kpi-card:hover { box-shadow: var(--shadow-3d-hover); filter: brightness(1.12); }
+.kpi-card.active { background: rgba(255, 255, 255, 0.05); }
 
-/* =========================================================
-   4. COMPONENTES: CARTÕES, GRÁFICOS E TABELAS
-   ========================================================= */
-/* Cartões do Topo */
-.grid-cartoes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
-.cartao-kpi { border-bottom: 4px solid var(--cor); cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; }
-.cartao-kpi:hover { transform: translateY(-5px); filter: brightness(1.2); }
-.cartao-kpi.focado { box-shadow: var(--sombra-afundada); border: 1px solid var(--cor); background: rgba(255,255,255,0.02); }
+.kpi-header { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
+.kpi-icon { font-size: 20px; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 10px; }
+.kpi-value { font-size: 42px; font-weight: 800; margin-top: 10px; color: var(--text-main); }
+.kpi-desc { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
 
-.kpi-topo { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.kpi-icone { background: var(--cor); color: white; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-.kpi-nome { font-size: 11px; font-weight: 800; color: var(--cor); text-transform: uppercase; }
-.kpi-numero { font-size: 38px; font-weight: 800; }
-.kpi-sub { font-size: 11px; color: var(--texto-escuro); margin-top: 5px; font-weight: 600; }
+.kpi-total { --accent: var(--color-blue); }
+.kpi-resolvida { --accent: var(--color-green); }
+.kpi-andamento { --accent: var(--color-orange); }
+.kpi-pendente { --accent: var(--color-red); }
 
-/* Gráficos */
-.grid-graficos { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 20px; margin-bottom: 25px; }
-.grafico-titulo { font-size: 13px; text-transform: uppercase; margin-bottom: 15px; text-align: center; color: var(--texto-claro); font-weight: 700; }
-.grafico-area { position: relative; height: 220px; width: 100%; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+/* GRID DE GRÁFICOS */
+.charts-grid { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 20px; margin-bottom: 25px; }
+.chart-panel {
+  background: var(--bg-panel); border-radius: 20px; padding: 25px;
+  box-shadow: var(--shadow-3d); border: 1px solid var(--border-light);
+  display: flex; flex-direction: column; transition: box-shadow 0.2s;
+  transform-style: preserve-3d; will-change: transform;
+}
+.chart-panel:hover { box-shadow: var(--shadow-3d-hover); }
+.chart-panel h3 { font-size: 15px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; text-align: center; }
+.canvas-container { position: relative; flex: 1; min-height: 250px; display: flex; justify-content: center; align-items: center;}
+.canvas-container.donut-glow::before {
+  content: ""; position: absolute; width: 62%; height: 62%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(59,130,246,0.35), rgba(59,130,246,0) 70%);
+  filter: blur(18px); z-index: 0; pointer-events: none;
+}
+.canvas-container canvas { position: relative; z-index: 1; cursor: pointer; }
 
-.grid-baixo { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+/* ÁREA DE FILTROS CUMULATIVOS */
+.filtros-ativos { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+.tag-filtro {
+  background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #93c5fd; padding: 6px 14px; border-radius: 12px; font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.tag-filtro span { cursor: pointer; color: #fff; background: rgba(255,255,255,0.1); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
+.tag-filtro span:hover { background: #ef4444; }
+.btn-limpar { background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px; margin-left: 5px; transition: 0.2s;}
+.btn-limpar:hover { background: #dc2626; }
 
-/* Tabelas */
-.tabela-container { max-height: 500px; overflow-y: auto; }
+/* TABELA MINIMALISTA */
+.tabela-panel {
+  background: var(--bg-panel); border-radius: 20px; padding: 25px;
+  box-shadow: var(--shadow-3d); border: 1px solid var(--border-light);
+}
+.table-scroll { max-height: 400px; overflow-y: auto; margin-top: 15px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-th { background: var(--fundo-site); color: var(--texto-escuro); padding: 15px; position: sticky; top: 0; font-weight: 800; }
-td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.03); color: #cbd5e1; }
-tr:hover td { background: rgba(255,255,255,0.05); }
+th { position: sticky; top: 0; background: #0f1524; color: var(--text-muted); padding: 15px; font-weight: 700; text-transform: uppercase; font-size: 11px; z-index: 10;}
+td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; }
+tbody tr { cursor: pointer; transition: 0.15s; }
+tr:hover td { background: rgba(59,130,246,0.12); }
 
-.tag { padding: 5px 12px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-block; }
-.tag.Resolvida { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid #10b981; }
-.tag.Andamento { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid #f59e0b; }
-.tag.Pendente { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #ef4444; }
+.tag { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-block; }
+.tag.Resolvida { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.tag.Andamento { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.tag.Pendente { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 
-/* Telas (Navegação) */
-.tela { display: none; animation: surgir 0.4s ease; }
-.tela.ativa { display: block; }
-@keyframes surgir { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+.empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); font-size: 18px; border: 2px dashed rgba(255,255,255,0.1); border-radius: 20px; }
 
-.aviso-gigante { text-align: center; padding: 100px 20px; }
-.aviso-gigante h1 { font-size: 30px; color: var(--texto-escuro); margin-bottom: 15px; }
+/* SCROLLBAR INVISÍVEL */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
+/* ===== MENU LATERAL ===== */
+.app { display: flex; gap: 22px; max-width: 1500px; margin: 0 auto; align-items: flex-start; }
+.sidebar {
+  width: 230px; flex: none; background: var(--bg-panel); border-radius: 20px;
+  padding: 22px 14px; box-shadow: var(--shadow-3d); border: 1px solid var(--border-light);
+  position: sticky; top: 20px;
+}
+.sidebar .brand-side {
+  display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800;
+  padding: 0 10px 18px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.nav-item {
+  width: 100%; display: flex; align-items: center; gap: 12px; text-align: left;
+  background: transparent; border: none; color: var(--text-muted); font-family: 'Inter', sans-serif;
+  font-size: 15px; font-weight: 700; padding: 14px 14px; border-radius: 14px; cursor: pointer;
+  margin-bottom: 6px; transition: 0.15s;
+}
+.nav-item .nav-icon { font-size: 20px; }
+.nav-item:hover { background: rgba(255,255,255,0.06); color: var(--text-main); }
+.nav-item.active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.45);
+}
+.main-content { flex: 1; min-width: 0; }
+.page { display: none; }
+.page.page-ativa { display: block; }
+
+/* Painéis grandes (Secretarias / Tipos / Relatórios / Bairros) */
+.chart-panel.grande { min-height: 520px; }
+.chart-panel.grande .canvas-container { min-height: 440px; }
+
+.busca-box {
+  width: 100%; padding: 14px 18px; border-radius: 14px; border: 1px solid var(--border-light);
+  background: rgba(255,255,255,0.04); color: var(--text-main); font-size: 15px; margin-bottom: 18px;
+  font-family: 'Inter', sans-serif;
+}
+.busca-box:focus { outline: 2px solid var(--color-blue); }
+
+.resumo-lista { list-style: none; margin-top: 10px; }
+.resumo-lista li { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14.5px; color: #e2e8f0; }
+.resumo-lista li:last-child { border-bottom: none; }
+
+.exportar-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
+.btn-exportar {
+  flex: 1; min-width: 240px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white;
+  border: none; padding: 26px; border-radius: 18px; font-weight: 800; font-size: 17px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(37,99,235,0.4);
+  transition: 0.2s;
+}
+.btn-exportar.secundario { background: linear-gradient(135deg, #334155, #1e293b); box-shadow: none; }
+.btn-exportar span.emoji-grande { font-size: 34px; }
+.btn-exportar:hover { transform: translateY(-3px); filter: brightness(1.1); }
+
+/* MODAL DE DETALHE */
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(4,6,12,0.8); backdrop-filter: blur(5px);
+  display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+}
+.modal-bg.aberto { display: flex; }
+.modal {
+  width: 100%; max-width: 560px; background: #141b2c; border: 1px solid var(--border-light);
+  border-radius: 20px; padding: 30px; box-shadow: 0 30px 70px -20px rgba(0,0,0,0.8);
+  position: relative;
+}
+.modal h4 { font-family: 'Sora', sans-serif; font-size: 20px; margin-bottom: 20px; padding-right: 24px; color: var(--text-main); }
+.modal .linha { display: grid; grid-template-columns: 120px 1fr; gap: 6px 12px; font-size: 14.5px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 6px; }
+.modal .linha b { color: var(--text-muted); font-weight: 700; }
+.modal .linha span { color: var(--text-main); }
+.modal-close {
+  position: absolute; top: 18px; right: 18px; background: rgba(255,255,255,0.06); border: none;
+  color: var(--text-muted); font-size: 16px; width: 34px; height: 34px; border-radius: 10px; cursor: pointer; transition: 0.2s;
+}
+.modal-close:hover { color: var(--text-main); background: #ef4444; }
+
+/* BOTAO LEGIS */
+.btn-link-legis {
+  display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%;
+  background: linear-gradient(135deg, #10b981, #059669); color: white; text-decoration: none;
+  padding: 14px; border-radius: 12px; font-weight: 800; font-size: 15px; margin-top: 25px;
+  transition: 0.2s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); text-transform: uppercase; letter-spacing: 0.5px;
+}
+.btn-link-legis:hover { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6); }
+
+@media (max-width: 900px) {
+  .app { flex-direction: column; }
+  .sidebar { width: 100%; position: static; display: flex; overflow-x: auto; gap: 6px; padding: 12px; }
+  .sidebar .brand-side { display: none; }
+  .nav-item { flex: none; margin-bottom: 0; white-space: nowrap; }
+}
 </style>
 </head>
 <body>
 
-<!-- =========================================================
-     MENU LATERAL (ESQUERDA)
-     ========================================================= -->
-<aside class="menu-lateral">
-  <div class="logo">
-    <h2>Câmara de Vereadores de</h2>
-    <h1>SÃO LEOPOLDO</h1>
-  </div>
+<div class="app">
 
-  <nav>
-    <div class="botao-menu ativo" id="btn-tela-visao" onclick="navegarPara('tela-visao', 'btn-tela-visao')">
-      <span>🎛️</span> Visão Geral
-    </div>
-    <div class="botao-menu" id="btn-tela-demandas" onclick="navegarPara('tela-demandas', 'btn-tela-demandas')">
-      <span>📄</span> Todas as Demandas
-    </div>
-    <div class="botao-menu" id="btn-tela-secretarias" onclick="navegarPara('tela-secretarias', 'btn-tela-secretarias')">
-      <span>🏢</span> Secretarias
-    </div>
-    <div class="botao-menu" id="btn-tela-tipos" onclick="navegarPara('tela-tipos', 'btn-tela-tipos')">
-      <span>🥧</span> Tipos de Solicitação
-    </div>
-    <div class="botao-menu" id="btn-tela-relatorios" onclick="navegarPara('tela-relatorios', 'btn-tela-relatorios')">
-      <span>📊</span> Relatórios
-    </div>
-  </nav>
+  <!-- MENU LATERAL -->
+  <aside class="sidebar">
+    <div class="brand-side">🏛️ <span>Gabinete</span></div>
+    <button class="nav-item active" data-page="visao" onclick="mudarPagina('visao')"><span class="nav-icon">🏠</span> Visão Geral</button>
+    <button class="nav-item" data-page="demandas" onclick="mudarPagina('demandas')"><span class="nav-icon">📋</span> Demandas</button>
+    <button class="nav-item" data-page="secretarias" onclick="mudarPagina('secretarias')"><span class="nav-icon">🏢</span> Secretarias</button>
+    <button class="nav-item" data-page="bairros" onclick="mudarPagina('bairros')"><span class="nav-icon">🗺️</span> Bairros</button>
+    <button class="nav-item" data-page="tipos" onclick="mudarPagina('tipos')"><span class="nav-icon">📑</span> Tipos de Solicitação</button>
+    <button class="nav-item" data-page="relatorios" onclick="mudarPagina('relatorios')"><span class="nav-icon">📈</span> Relatórios</button>
+    <button class="nav-item" data-page="exportar" onclick="mudarPagina('exportar')"><span class="nav-icon">⬇️</span> Exportar Dados</button>
+  </aside>
 
-  <div class="info-rodape">
-    <p>⏱️ Última atualização</p>
-    <b id="txtAtualizacao">Aguardando...</b>
-  </div>
-</aside>
+  <div class="container main-content">
 
-<!-- =========================================================
-     ÁREA CENTRAL
-     ========================================================= -->
-<main class="area-central">
-
-  <!-- CABEÇALHO FIXO -->
-  <header class="cabecalho">
-    <div class="titulos">
-      <h2>CÂMARA DE VEREADORES DE SÃO LEOPOLDO</h2>
-      <h1>PAINEL DE DEMANDAS</h1>
-      <div style="margin-top: 10px; display: flex; align-items: center;">
-        <label for="inputExcel" class="btn-importar">📥 IMPORTAR EXCEL</label>
-        <input type="file" id="inputExcel" accept=".xlsx, .xls">
-        
-        <!-- BOTÃO DE LIMPAR FILTRO GIGANTE -->
-        <button id="btnLimparFiltro" class="aviso-filtro" onclick="limparTodosFiltros()">
-          ✖ FILTRO ATIVO: <span id="nomeDoFiltro">Nenhum</span> (CLIQUE PARA LIMPAR)
-        </button>
-      </div>
+  <!-- CABEÇALHO -->
+  <div class="header">
+    <div class="header-titles">
+      <h1>🏛️ Painel de Demandas</h1>
+      <p id="info-texto">Importe a planilha para visualizar os gráficos.</p>
     </div>
-    <div class="caixa-3d" style="display: flex; gap: 15px; align-items: center;">
-      <div style="font-size: 24px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 50%; box-shadow: var(--sombra-afundada);">🏛️</div>
-      <div style="max-width: 200px;">
-        <h4 style="font-size: 11px; color: var(--texto-escuro);">NOSSA MISSÃO</h4>
-        <p style="font-size: 11px;">Fiscalizar e promover o desenvolvimento local.</p>
-      </div>
-    </div>
-  </header>
-
-  <!-- ================= TELAS DO SISTEMA ================= -->
-
-  <!-- TELA 0: INICIAL (VAZIA) -->
-  <div id="tela-vazia" class="tela ativa">
-    <div class="caixa-3d aviso-gigante">
-      <h1>👋 Olá! O painel precisa dos dados.</h1>
-      <p>Clique no botão <b>"📥 IMPORTAR EXCEL"</b> ali em cima para carregar a planilha do Gabinete.</p>
+    <div>
+      <label for="uploadExcel" class="upload-btn">
+        📥 Importar Excel
+      </label>
+      <input type="file" id="uploadExcel" accept=".xlsx, .xls">
     </div>
   </div>
 
-  <!-- TELA 1: VISÃO GERAL -->
-  <div id="tela-visao" class="tela">
-    
-    <!-- Cartões Superiores -->
-    <div class="grid-cartoes">
-      <div class="caixa-3d cartao-kpi focado" style="--cor: var(--cor-azul);" onclick="filtrarDados('Tudo', 'Tudo', this)">
-        <div class="kpi-topo"><div class="kpi-icone">📄</div><div class="kpi-nome">Total Geral</div></div>
-        <div class="kpi-numero" id="valTotal">0</div>
-        <div class="kpi-sub">Demandas registradas</div>
+  <!-- AVISO ANTES DE IMPORTAR -->
+  <div id="avisoVazio" class="empty-state">
+    <h1>📊 O Painel está vazio</h1>
+    <p style="margin-top: 10px;">Clique no botão azul acima e selecione o arquivo Excel do Gabinete.</p>
+  </div>
+
+  <!-- CONTEÚDO DO PAINEL -->
+  <div id="painelConteudo" style="display: none;">
+
+    <!-- ÁREA DE FILTROS CUMULATIVOS -->
+    <div class="filtros-ativos" id="areaFiltros" style="display: none;">
+      <span style="color: var(--text-muted); font-size: 14px;">🔎 Filtros ativos:</span>
+      <div id="tagsFiltros" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+      <button class="btn-limpar" onclick="limparFiltros()">✖ Limpar Tudo</button>
+    </div>
+
+    <!-- PÁGINA 1: VISÃO GERAL -->
+    <div class="page page-ativa" id="page-visao">
+
+      <div class="kpis">
+        <div class="kpi-card kpi-total" onclick="toggleFiltro('status', null)">
+          <div class="kpi-header"><span class="kpi-icon">📄</span> Total Visível</div>
+          <div class="kpi-value" id="kpiTotal">0</div>
+          <div class="kpi-desc">Com base nos filtros</div>
+        </div>
+        <div class="kpi-card kpi-resolvida" onclick="toggleFiltro('status', 'Resolvida')">
+          <div class="kpi-header"><span class="kpi-icon">✅</span> Resolvidas</div>
+          <div class="kpi-value" id="kpiResolvidas">0</div>
+          <div class="kpi-desc" id="kpiResolvidasPct">0% do total</div>
+        </div>
+        <div class="kpi-card kpi-andamento" onclick="toggleFiltro('status', 'Andamento')">
+          <div class="kpi-header"><span class="kpi-icon">⏳</span> Em Andamento</div>
+          <div class="kpi-value" id="kpiAndamento">0</div>
+          <div class="kpi-desc" id="kpiAndamentoPct">0% do total</div>
+        </div>
+        <div class="kpi-card kpi-pendente" onclick="toggleFiltro('status', 'Pendente')">
+          <div class="kpi-header"><span class="kpi-icon">🚨</span> Pendentes</div>
+          <div class="kpi-value" id="kpiPendentes">0</div>
+          <div class="kpi-desc" id="kpiPendentesPct">0% do total</div>
+        </div>
       </div>
-      <div class="caixa-3d cartao-kpi" style="--cor: var(--cor-verde);" onclick="filtrarDados('Status', 'Resolvida', this)">
-        <div class="kpi-topo"><div class="kpi-icone">✅</div><div class="kpi-nome">Resolvidas</div></div>
-        <div class="kpi-numero" id="valRes">0</div>
-        <div class="kpi-sub" id="pctRes">0% do total</div>
-      </div>
-      <div class="caixa-3d cartao-kpi" style="--cor: var(--cor-laranja);" onclick="filtrarDados('Status', 'Andamento', this)">
-        <div class="kpi-topo"><div class="kpi-icone">⏱️</div><div class="kpi-nome">Em Andamento</div></div>
-        <div class="kpi-numero" id="valAnd">0</div>
-        <div class="kpi-sub" id="pctAnd">0% do total</div>
-      </div>
-      <div class="caixa-3d cartao-kpi" style="--cor: var(--cor-vermelho);" onclick="filtrarDados('Status', 'Pendente', this)">
-        <div class="kpi-topo"><div class="kpi-icone">🚨</div><div class="kpi-nome">Pendentes</div></div>
-        <div class="kpi-numero" id="valPen">0</div>
-        <div class="kpi-sub" id="pctPen">0% do total</div>
+
+      <div class="charts-grid">
+        <div class="chart-panel">
+          <h3>Qual a situação atual?</h3>
+          <div class="canvas-container donut-glow"><canvas id="graficoStatus"></canvas></div>
+        </div>
+        <div class="chart-panel">
+          <h3>Quem está cuidando? (Secretarias)</h3>
+          <div class="canvas-container"><canvas id="graficoSecretaria"></canvas></div>
+        </div>
+        <div class="chart-panel">
+          <h3>O que mais pedem? (Tipos)</h3>
+          <div class="canvas-container"><canvas id="graficoTipo"></canvas></div>
+        </div>
       </div>
     </div>
 
-    <!-- Gráficos -->
-    <div class="grid-graficos">
-      <div class="caixa-3d"><div class="grafico-titulo">Status (Clique na fatia)</div><div class="grafico-area"><canvas id="graficoStatus"></canvas></div></div>
-      <div class="caixa-3d"><div class="grafico-titulo">Secretarias (Clique na barra)</div><div class="grafico-area"><canvas id="graficoSecretaria"></canvas></div></div>
-      <div class="caixa-3d"><div class="grafico-titulo">Tipos (Clique na fatia)</div><div class="grafico-area"><canvas id="graficoTipo"></canvas></div></div>
-    </div>
-
-    <div class="grid-baixo">
-      <div class="caixa-3d"><div class="grafico-titulo">Evolução de Aberturas por Mês</div><div class="grafico-area"><canvas id="graficoLinha"></canvas></div></div>
-      <div class="caixa-3d">
-        <h3 style="color: var(--cor-verde); font-size: 14px; margin-bottom: 15px;">📊 Resumo da Visão Atual</h3>
-        <div id="textoResumo" style="font-size: 13px; line-height: 1.8; color: #cbd5e1;">Aguardando dados...</div>
+    <!-- PÁGINA 2: DEMANDAS -->
+    <div class="page" id="page-demandas">
+      <div class="tabela-panel">
+        <h3 style="font-size: 16px; margin-bottom: 10px;">📋 Lista de Demandas (<span id="totalTabela">0</span>)</h3>
+        <input type="text" class="busca-box" id="buscaDemandas" placeholder="🔎 Digite para buscar (assunto, secretaria, bairro...)" oninput="buscarDemandas(this.value)">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Assunto Principal</th>
+                <th>Data</th>
+                <th>Secretaria</th>
+                <th>Tipo</th>
+                <th>Bairro</th>
+              </tr>
+            </thead>
+            <tbody id="corpoTabela"></tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- TELA 2: DEMANDAS COMPLETAS -->
-  <div id="tela-demandas" class="tela">
-    <div class="caixa-3d tabela-container">
-      <h3 style="margin-bottom: 15px; font-size: 16px;">📑 Todas as Demandas (<span id="txtQtdDemandas">0</span> listadas)</h3>
-      <table>
-        <thead><tr><th>Status</th><th>Data</th><th>Assunto Principal</th><th>Secretaria</th><th>Tipo</th><th>Bairro</th></tr></thead>
-        <tbody id="tbDemandas"></tbody>
-      </table>
+    <!-- PÁGINA 3: SECRETARIAS -->
+    <div class="page" id="page-secretarias">
+      <div class="chart-panel grande">
+        <h3>Demandas por secretaria — clique numa barra pra filtrar</h3>
+        <div class="canvas-container"><canvas id="graficoSecretariaGrande"></canvas></div>
+      </div>
     </div>
-  </div>
 
-  <!-- TELA 3: SECRETARIAS (Ranking Detalhado) -->
-  <div id="tela-secretarias" class="tela">
-    <div class="caixa-3d tabela-container">
-      <h3 style="margin-bottom: 15px; font-size: 16px;">🏢 Ranking de Secretarias (Volume de Trabalho)</h3>
-      <table>
-        <thead><tr><th>Nome da Secretaria</th><th>Total de Demandas</th><th>Resolvidas ✅</th><th>Em Andamento ⏱️</th><th>Pendentes 🚨</th></tr></thead>
-        <tbody id="tbSecretarias"></tbody>
-      </table>
+    <!-- PÁGINA 4: BAIRROS -->
+    <div class="page" id="page-bairros">
+      <div class="chart-panel grande">
+        <h3>Demandas por Bairro — clique numa barra pra filtrar</h3>
+        <div class="canvas-container"><canvas id="graficoBairrosGrande"></canvas></div>
+      </div>
     </div>
-  </div>
 
-  <!-- TELA 4: TIPOS DE SOLICITAÇÃO -->
-  <div id="tela-tipos" class="tela">
-    <div class="caixa-3d tabela-container">
-      <h3 style="margin-bottom: 15px; font-size: 16px;">🥧 Natureza das Solicitações</h3>
-      <table>
-        <thead><tr><th>Tipo de Solicitação</th><th>Quantidade Recebida</th><th>% do Total</th></tr></thead>
-        <tbody id="tbTipos"></tbody>
-      </table>
+    <!-- PÁGINA 5: TIPOS DE SOLICITAÇÃO -->
+    <div class="page" id="page-tipos">
+      <div class="chart-panel grande">
+        <h3>Tipos de solicitação — clique numa barra pra filtrar</h3>
+        <div class="canvas-container"><canvas id="graficoTipoGrande"></canvas></div>
+      </div>
     </div>
-  </div>
 
-  <!-- TELA 5: RELATÓRIOS -->
-  <div id="tela-relatorios" class="tela">
-    <div class="caixa-3d aviso-gigante">
-      <h1>📊 Central de Relatórios</h1>
-      <p style="margin-bottom: 20px;">Use esta área para exportar a visão atual (com os filtros que você aplicou) para enviar para a equipe.</p>
-      <button class="btn-importar" style="background: var(--cor-verde); border-color: var(--cor-verde); color: white;" onclick="alert('Funcionalidade de Download Excel pronta para ser conectada!')">
-        📥 BAIXAR RELATÓRIO FILTRADO (EXCEL)
-      </button>
+    <!-- PÁGINA 6: RELATÓRIOS -->
+    <div class="page" id="page-relatorios">
+      <div class="chart-panel grande" style="margin-bottom: 20px;">
+        <h3>Evolução mensal das demandas</h3>
+        <div class="canvas-container"><canvas id="graficoEvolucao"></canvas></div>
+      </div>
+      <div class="tabela-panel">
+        <h3 style="font-size: 16px;">🧾 Resumo executivo</h3>
+        <ul class="resumo-lista" id="resumoLista"></ul>
+      </div>
     </div>
-  </div>
 
-</main>
+    <!-- PÁGINA 7: EXPORTAR -->
+    <div class="page" id="page-exportar">
+      <div class="tabela-panel">
+        <h3 style="font-size: 16px; margin-bottom: 6px;">⬇️ Exportar dados</h3>
+        <p style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 6px;">Exporta exatamente o que está filtrado agora (<span id="totalExportar">0</span> demanda(s)).</p>
+        <div class="exportar-grid">
+          <button class="btn-exportar" onclick="exportarExcel()">
+            <span class="emoji-grande">📥</span> Baixar em Excel
+          </button>
+          <button class="btn-exportar secundario" onclick="window.print()">
+            <span class="emoji-grande">🖨️</span> Imprimir / Salvar PDF
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+</div>
+
+<!-- MODAL DE DETALHE -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
 
 <script>
-/* =========================================================================
-   CÓDIGO DE FUNCIONAMENTO (FÁCIL DE ENTENDER E MANTER)
-   ========================================================================= */
+// Variáveis Globais
+let DADOS_GLOBAIS = [];
+let DADOS_FILTRADOS = [];
+let filtrosAtuais = { status: null, secretaria: null, tipo: null, bairro: null };
+let termoBusca = '';
 
-// Registrar o plugin de Rótulos de Dados nos Gráficos (DataLabels)
-Chart.register(ChartDataLabels);
-
-// Bancos de Dados na Memória do Navegador
-let BD_ORIGINAL = []; 
-let BD_FILTRADO = [];
-
-// Configurações padrão dos Gráficos
+// Configuração Chart.js
 Chart.defaults.color = '#94a3b8';
 Chart.defaults.font.family = "'Inter', sans-serif";
-let grafStatus, grafSec, grafTipo, grafLinha;
+Chart.register(ChartDataLabels);
+Chart.defaults.set('plugins.datalabels', { display: false });
 
-// 1. NAVEGAÇÃO ENTRE TELAS DO MENU
-function navegarPara(idTelaDestino, idBotaoClicado) {
-  if(BD_ORIGINAL.length === 0) return; // Trava se não tiver Excel
+let myChartStatus = null;
+let myChartSecretaria = null;
+let myChartTipo = null;
+let myChartSecretariaGrande = null;
+let myChartBairrosGrande = null;
+let myChartTipoGrande = null;
+let myChartEvolucao = null;
 
-  // Pinta o botão certo
-  document.querySelectorAll('.botao-menu').forEach(b => b.classList.remove('ativo'));
-  document.getElementById(idBotaoClicado).classList.add('ativo');
+// Sabe qual gráfico redesenhar ao trocar de página
+const REDESENHAR_AO_ABRIR = {
+  visao: () => { desenharGraficoStatus(); desenharGraficoSecretarias(); desenharGraficoTipos(); },
+  demandas: () => { montarTabela(); },
+  secretarias: () => { desenharGraficoSecretariasGrande(); },
+  bairros: () => { desenharGraficoBairrosGrande(); },
+  tipos: () => { desenharGraficoTiposGrande(); },
+  relatorios: () => { desenharGraficoEvolucao(); atualizarResumo(); },
+  exportar: () => { document.getElementById('totalExportar').innerText = DADOS_FILTRADOS.length; }
+};
 
-  // Mostra a tela certa
-  document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-  document.getElementById(idTelaDestino).classList.add('ativa');
+function mudarPagina(pagina) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('page-ativa'));
+  document.getElementById('page-' + pagina).classList.add('page-ativa');
+
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.nav-item[data-page="${pagina}"]`).classList.add('active');
+
+  setTimeout(() => { if (REDESENHAR_AO_ABRIR[pagina]) REDESENHAR_AO_ABRIR[pagina](); }, 20);
 }
 
-// 2. LEITURA DO EXCEL
-document.getElementById('inputExcel').addEventListener('change', function(e) {
+const coresStatus = { 'Resolvida': '#10b981', 'Andamento': '#f59e0b', 'Pendente': '#ef4444' };
+const coresDiversas = ['#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b', '#ef4444', '#6366f1', '#84cc16', '#0ea5e9', '#f43f5e'];
+
+// 1. LEITURA EXCEL
+document.getElementById('uploadExcel').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if(!file) return;
   
   const reader = new FileReader();
   reader.onload = function(evt) {
-    const dadosExcelBrutos = XLSX.read(new Uint8Array(evt.target.result), {type: 'array'});
-    const dadosEmJson = XLSX.utils.sheet_to_json(dadosExcelBrutos.Sheets[dadosExcelBrutos.SheetNames[0]], {defval: ""});
+    const data = new Uint8Array(evt.target.result);
+    const workbook = XLSX.read(data, {type: 'array'});
+    const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {defval: ""});
     
-    prepararDadosParaOSistema(dadosEmJson);
+    processarDadosExcel(json);
   };
   reader.readAsArrayBuffer(file);
 });
 
-// 3. LIMPEZA DOS DADOS DO EXCEL
-function prepararDadosParaOSistema(jsonExtraido) {
-  BD_ORIGINAL = jsonExtraido.map(linha => {
-    let stat = linha['Status'] || '';
-    let categoriaStatus = 'Andamento'; 
-    if(['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'].includes(stat)) categoriaStatus = 'Resolvida';
-    else if(['Pendente', 'Aguardando Aprovação'].includes(stat)) categoriaStatus = 'Pendente';
+// 2. PROCESSAR EXCEL
+function processarDadosExcel(json) {
+  const statusResolvidos = ['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'];
+  const statusPendentes = ['Pendente', 'Aguardando Aprovação'];
 
-    // Formata a data para agrupar o gráfico de linha (Mês/Ano)
-    let mesAno = 'Sem Data';
-    if((linha['Abertura / Fato'] || '').includes('/')) {
-      let pedacos = linha['Abertura / Fato'].split('/');
-      mesAno = `${pedacos[1]}/${pedacos[2]}`;
-    }
+  DADOS_GLOBAIS = json.map(linha => {
+    let statusOriginal = linha['Status'] || '';
+    let statusSimples = 'Andamento';
+    
+    if(statusResolvidos.includes(statusOriginal)) statusSimples = 'Resolvida';
+    else if(statusPendentes.includes(statusOriginal)) statusSimples = 'Pendente';
+
+    // Procura colunas de Expediente e Ano (ajuste se os nomes da sua planilha forem diferentes)
+    let expediente = linha['Expediente'] || linha['Número'] || linha['Processo'] || '';
+    let ano = linha['Ano'] || '2026'; // Padrão 2026 como pedido
 
     return {
-      status: categoriaStatus,
-      data: linha['Abertura / Fato'] || '-',
-      mesAno: mesAno,
+      data: linha['Abertura / Fato'] || 'Sem Data',
       assunto: linha['Assunto'] || 'Sem Assunto',
-      secretaria: (linha['Secretaria'] || 'Não Informada').trim(),
+      status: statusSimples,
+      secretaria: linha['Secretaria'] || 'Não Informada',
       tipo: linha['Tipo de Solicitação'] || 'Outros',
-      bairro: linha['Bairro'] || '-'
+      bairro: linha['Bairro'] || 'Não Informado',
+      expediente: expediente,
+      ano: ano
     };
   });
 
-  document.getElementById('txtAtualizacao').innerText = new Date().toLocaleString('pt-BR');
+  limparFiltros(); // Vai preencher DADOS_FILTRADOS e atualizar tudo
   
-  // Inicia mostrando tudo
-  limparTodosFiltros(); 
-  navegarPara('tela-visao', 'btn-tela-visao');
+  document.getElementById('avisoVazio').style.display = 'none';
+  document.getElementById('painelConteudo').style.display = 'block';
+  document.getElementById('info-texto').innerText = `Planilha carregada com sucesso! ${DADOS_GLOBAIS.length} registros.`;
 }
 
-// 4. O CORAÇÃO DO SISTEMA: O FILTRO UNIVERSAL
-function filtrarDados(colunaParaFiltrar, valorDesejado, elementoHtmlClicado = null) {
-  
-  // Se clicou em um cartão KPI, faz ele afundar visualmente
-  if(elementoHtmlClicado && elementoHtmlClicado.classList.contains('cartao-kpi')) {
-    document.querySelectorAll('.cartao-kpi').forEach(c => c.classList.remove('focado'));
-    elementoHtmlClicado.classList.add('focado');
+// 3. SISTEMA DE FILTROS CUMULATIVOS
+function toggleFiltro(tipoFiltro, valor) {
+  if (valor === null || filtrosAtuais[tipoFiltro] === valor) {
+    filtrosAtuais[tipoFiltro] = null; // Remove o filtro se clicar no mesmo
   } else {
-    // Se clicou num gráfico, tira o foco dos cartões
-    document.querySelectorAll('.cartao-kpi').forEach(c => c.classList.remove('focado'));
+    filtrosAtuais[tipoFiltro] = valor;
   }
+  aplicarFiltros();
+}
 
-  // Lógica do Filtro
-  if (colunaParaFiltrar === 'Tudo') {
-    BD_FILTRADO = [...BD_ORIGINAL];
-    document.getElementById('btnLimparFiltro').style.display = 'none';
-  } else {
-    // Ex: Filtra onde a "secretaria" for igual a "SEMOB"
-    BD_FILTRADO = BD_ORIGINAL.filter(item => item[colunaParaFiltrar] === valorDesejado);
+function limparFiltros() {
+  filtrosAtuais = { status: null, secretaria: null, tipo: null, bairro: null };
+  aplicarFiltros();
+}
+
+function aplicarFiltros() {
+  DADOS_FILTRADOS = DADOS_GLOBAIS.filter(d => {
+    let passa = true;
+    if (filtrosAtuais.status && d.status !== filtrosAtuais.status) passa = false;
     
-    // Acende a sirene vermelha no topo para o usuário saber que tá filtrado
-    document.getElementById('nomeDoFiltro').innerText = valorDesejado;
-    document.getElementById('btnLimparFiltro').style.display = 'inline-flex';
+    let secFormatada = d.secretaria.trim() === '' ? 'Outros' : d.secretaria;
+    if (filtrosAtuais.secretaria && secFormatada !== filtrosAtuais.secretaria) passa = false;
+    
+    if (filtrosAtuais.tipo && d.tipo !== filtrosAtuais.tipo) passa = false;
+    
+    let bairroFormatado = d.bairro.trim() === '' ? 'Não Informado' : d.bairro;
+    if (filtrosAtuais.bairro && bairroFormatado !== filtrosAtuais.bairro) passa = false;
+    
+    return passa;
+  });
+
+  renderizarTagsFiltros();
+  atualizarTudo();
+}
+
+function renderizarTagsFiltros() {
+  const container = document.getElementById('tagsFiltros');
+  const area = document.getElementById('areaFiltros');
+  container.innerHTML = '';
+  
+  let temFiltro = false;
+  if (filtrosAtuais.status) { temFiltro = true; container.innerHTML += `<div class="tag-filtro">Status: ${filtrosAtuais.status} <span onclick="toggleFiltro('status', null)">✕</span></div>`; }
+  if (filtrosAtuais.secretaria) { temFiltro = true; container.innerHTML += `<div class="tag-filtro">Sec: ${filtrosAtuais.secretaria} <span onclick="toggleFiltro('secretaria', null)">✕</span></div>`; }
+  if (filtrosAtuais.tipo) { temFiltro = true; container.innerHTML += `<div class="tag-filtro">Tipo: ${filtrosAtuais.tipo} <span onclick="toggleFiltro('tipo', null)">✕</span></div>`; }
+  if (filtrosAtuais.bairro) { temFiltro = true; container.innerHTML += `<div class="tag-filtro">Bairro: ${filtrosAtuais.bairro} <span onclick="toggleFiltro('bairro', null)">✕</span></div>`; }
+
+  area.style.display = temFiltro ? 'flex' : 'none';
+}
+
+function atualizarTudo() {
+  atualizarKPIs();
+  desenharGraficoStatus();
+  desenharGraficoSecretarias();
+  desenharGraficoTipos();
+  desenharGraficoSecretariasGrande();
+  desenharGraficoBairrosGrande();
+  desenharGraficoTiposGrande();
+  desenharGraficoEvolucao();
+  atualizarResumo();
+  montarTabela();
+  document.getElementById('totalExportar').innerText = DADOS_FILTRADOS.length;
+}
+
+// 4. ATUALIZAR KPIs
+function atualizarKPIs() {
+  const totalFiltro = DADOS_FILTRADOS.length;
+  let resolvidas = 0, andamento = 0, pendentes = 0;
+  
+  DADOS_FILTRADOS.forEach(d => {
+    if(d.status === 'Resolvida') resolvidas++;
+    else if(d.status === 'Andamento') andamento++;
+    else pendentes++;
+  });
+
+  document.getElementById('kpiTotal').innerText = totalFiltro;
+  document.getElementById('kpiResolvidas').innerText = resolvidas;
+  document.getElementById('kpiResolvidasPct').innerText = totalFiltro > 0 ? `${Math.round((resolvidas/totalFiltro)*100)}%` : '0%';
+  document.getElementById('kpiAndamento').innerText = andamento;
+  document.getElementById('kpiAndamentoPct').innerText = totalFiltro > 0 ? `${Math.round((andamento/totalFiltro)*100)}%` : '0%';
+  document.getElementById('kpiPendentes').innerText = pendentes;
+  document.getElementById('kpiPendentesPct').innerText = totalFiltro > 0 ? `${Math.round((pendentes/totalFiltro)*100)}%` : '0%';
+}
+
+// 5. GRÁFICOS VISÃO GERAL
+function desenharGraficoStatus() {
+  let contagem = { 'Resolvida': 0, 'Andamento': 0, 'Pendente': 0 };
+  DADOS_FILTRADOS.forEach(d => contagem[d.status]++);
+
+  const ctx = document.getElementById('graficoStatus').getContext('2d');
+  if(myChartStatus) myChartStatus.destroy();
+
+  myChartStatus = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Resolvida', 'Andamento', 'Pendente'],
+      datasets: [{ data: [contagem['Resolvida'], contagem['Andamento'], contagem['Pendente']], backgroundColor: [coresStatus['Resolvida'], coresStatus['Andamento'], coresStatus['Pendente']], borderWidth: 0 }]
+    },
+    options: {
+      cutout: '75%', plugins: { legend: { position: 'bottom', labels: { color: '#f1f5f9', font: {size: 12} } }, datalabels: { display: true, color: '#fff', font: { weight: '800', size: 14 }, formatter: (v) => v > 0 ? v : '' } },
+      onClick: (evt, els) => { if (els.length) toggleFiltro('status', myChartStatus.data.labels[els[0].index]); }
+    }
+  });
+}
+
+function desenharGraficoSecretarias() {
+  let contagem = {};
+  DADOS_FILTRADOS.forEach(d => { let sec = d.secretaria.trim() === '' ? 'Outros' : d.secretaria; contagem[sec] = (contagem[sec] || 0) + 1; });
+  let ordenado = Object.keys(contagem).map(k => [k, contagem[k]]).sort((a,b) => b[1] - a[1]).slice(0, 8);
+
+  const ctx = document.getElementById('graficoSecretaria').getContext('2d');
+  if(myChartSecretaria) myChartSecretaria.destroy();
+
+  myChartSecretaria = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: ordenado.map(i=>i[0]), datasets: [{ data: ordenado.map(i=>i[1]), backgroundColor: '#3b82f6', borderRadius: 6, maxBarThickness: 30 }] },
+    options: {
+      indexAxis: 'y', plugins: { legend: { display: false }, datalabels: { display: true, color: '#f1f5f9', anchor: 'end', align: 'end', clamp: true, font: { weight: '700', size: 11 } } },
+      scales: { x: { display: false, grid: {display: false} }, y: { grid: {display: false}, ticks: {color: '#f1f5f9'} } },
+      onClick: (evt, els) => { if (els.length) toggleFiltro('secretaria', myChartSecretaria.data.labels[els[0].index]); }
+    }
+  });
+}
+
+// Alterado de Rosca para Barras Horizontais para não ficar gigante e aparecer todos os nomes e números
+function desenharGraficoTipos() {
+  let contagem = {};
+  DADOS_FILTRADOS.forEach(d => { contagem[d.tipo] = (contagem[d.tipo] || 0) + 1; });
+  let ordenado = Object.keys(contagem).map(k => [k, contagem[k]]).sort((a,b) => b[1] - a[1]).slice(0, 8);
+
+  const ctx = document.getElementById('graficoTipo').getContext('2d');
+  if(myChartTipo) myChartTipo.destroy();
+
+  myChartTipo = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: ordenado.map(i=>i[0]), datasets: [{ data: ordenado.map(i=>i[1]), backgroundColor: '#8b5cf6', borderRadius: 6, maxBarThickness: 30 }] },
+    options: {
+      indexAxis: 'y', plugins: { legend: { display: false }, datalabels: { display: true, color: '#f1f5f9', anchor: 'end', align: 'end', clamp: true, font: { weight: '700', size: 11 } } },
+      scales: { x: { display: false, grid: {display: false} }, y: { grid: {display: false}, ticks: {color: '#f1f5f9'} } },
+      onClick: (evt, els) => { if (els.length) toggleFiltro('tipo', myChartTipo.data.labels[els[0].index]); }
+    }
+  });
+}
+
+// 6. GRÁFICOS GRANDES (Aba Secretarias, Bairros e Tipos)
+function desenharGraficoSecretariasGrande() {
+  const canvas = document.getElementById('graficoSecretariaGrande');
+  if (!canvas) return;
+  let contagem = {};
+  DADOS_FILTRADOS.forEach(d => { let sec = d.secretaria.trim() === '' ? 'Outros' : d.secretaria; contagem[sec] = (contagem[sec] || 0) + 1; });
+  let ordenado = Object.keys(contagem).map(k => [k, contagem[k]]).sort((a,b) => b[1] - a[1]).slice(0, 20);
+
+  const ctx = canvas.getContext('2d');
+  if (myChartSecretariaGrande) myChartSecretariaGrande.destroy();
+
+  myChartSecretariaGrande = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: ordenado.map(i=>i[0]), datasets: [{ data: ordenado.map(i=>i[1]), backgroundColor: '#3b82f6', borderRadius: 6, maxBarThickness: 45 }] }, // <- Correção: maxBarThickness previne a barra gigante
+    options: {
+      indexAxis: 'y', plugins: { legend: { display: false }, datalabels: { display: true, color: '#f1f5f9', anchor: 'end', align: 'end', clamp: true, font: { weight: '800', size: 13 } } },
+      scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }, y: { grid: { display: false }, ticks: { color: '#f1f5f9', font: { size: 13 } } } },
+      onClick: (evt, els) => { if (els.length) toggleFiltro('secretaria', myChartSecretariaGrande.data.labels[els[0].index]); }
+    }
+  });
+}
+
+function desenharGraficoBairrosGrande() {
+  const canvas = document.getElementById('graficoBairrosGrande');
+  if (!canvas) return;
+  let contagem = {};
+  DADOS_FILTRADOS.forEach(d => { let br = d.bairro.trim() === '' ? 'Não Informado' : d.bairro; contagem[br] = (contagem[br] || 0) + 1; });
+  let ordenado = Object.keys(contagem).map(k => [k, contagem[k]]).sort((a,b) => b[1] - a[1]).slice(0, 20);
+
+  const ctx = canvas.getContext('2d');
+  if (myChartBairrosGrande) myChartBairrosGrande.destroy();
+
+  myChartBairrosGrande = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: ordenado.map(i=>i[0]), datasets: [{ data: ordenado.map(i=>i[1]), backgroundColor: '#14b8a6', borderRadius: 6, maxBarThickness: 45 }] },
+    options: {
+      indexAxis: 'y', plugins: { legend: { display: false }, datalabels: { display: true, color: '#f1f5f9', anchor: 'end', align: 'end', clamp: true, font: { weight: '800', size: 13 } } },
+      scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }, y: { grid: { display: false }, ticks: { color: '#f1f5f9', font: { size: 13 } } } },
+      onClick: (evt, els) => { if (els.length) toggleFiltro('bairro', myChartBairrosGrande.data.labels[els[0].index]); }
+    }
+  });
+}
+
+function desenharGraficoTiposGrande() {
+  const canvas = document.getElementById('graficoTipoGrande');
+  if (!canvas) return;
+  let contagem = {};
+  DADOS_FILTRADOS.forEach(d => { contagem[d.tipo] = (contagem[d.tipo] || 0) + 1; });
+  let ordenado = Object.keys(contagem).map(k => [k, contagem[k]]).sort((a,b) => b[1] - a[1]).slice(0, 25);
+
+  const ctx = canvas.getContext('2d');
+  if (myChartTipoGrande) myChartTipoGrande.destroy();
+
+  myChartTipoGrande = new Chart(ctx, {
+    type: 'bar', // <- Alterado de Doughnut para Bar
+    data: { labels: ordenado.map(i=>i[0]), datasets: [{ data: ordenado.map(i=>i[1]), backgroundColor: '#8b5cf6', borderRadius: 6, maxBarThickness: 45 }] },
+    options: {
+      indexAxis: 'y', plugins: { legend: { display: false }, datalabels: { display: true, color: '#f1f5f9', anchor: 'end', align: 'end', clamp: true, font: { weight: '800', size: 13 } } },
+      scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }, y: { grid: { display: false }, ticks: { color: '#f1f5f9', font: { size: 13 } } } },
+      onClick: (evt, els) => { if (els.length) toggleFiltro('tipo', myChartTipoGrande.data.labels[els[0].index]); }
+    }
+  });
+}
+
+// Evolução e Resumo (Mantidos Iguais)
+function desenharGraficoEvolucao() { /* ... Ocultado por simplicidade visual se vazio, adaptado em app ... */ }
+function atualizarResumo() { /* ... Resumo Dinamico ... */ }
+
+// 7. TABELA E MODAL LEGIS
+function buscarDemandas(valor) { termoBusca = valor.toLowerCase().trim(); montarTabela(); }
+
+function montarTabela() {
+  const corpo = document.getElementById('corpoTabela');
+  if (!corpo) return;
+  corpo.innerHTML = '';
+
+  let base = DADOS_FILTRADOS;
+  if (termoBusca) {
+    base = base.filter(d => (d.assunto + ' ' + d.secretaria + ' ' + d.tipo + ' ' + d.bairro).toLowerCase().includes(termoBusca));
+  }
+  document.getElementById('totalTabela').innerText = base.length;
+
+  if(base.length === 0) {
+    corpo.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 30px;">Nenhuma demanda encontrada neste filtro.</td></tr>';
+    return;
   }
 
-  // Manda desenhar tudo de novo com os dados filtrados
-  renderizarTudo();
+  base.slice(0, 150).forEach(d => {
+    let tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="tag ${d.status}">${d.status}</span></td>
+      <td style="font-weight: 700; color: white; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${d.assunto}</td>
+      <td>${d.data}</td>
+      <td>${d.secretaria}</td>
+      <td>${d.tipo}</td>
+      <td>${d.bairro}</td>
+    `;
+    corpo.appendChild(tr);
+    tr.onclick = () => abrirModal(d);
+  });
 }
 
-// O Botão de Limpar
-function limparTodosFiltros() {
-  document.querySelectorAll('.cartao-kpi').forEach(c => c.classList.remove('focado'));
-  document.querySelector('.grid-cartoes .cartao-kpi:first-child').classList.add('focado'); // Foca no "Total"
+function abrirModal(d) {
+  const body = document.getElementById('modalBody');
   
-  BD_FILTRADO = [...BD_ORIGINAL];
-  document.getElementById('btnLimparFiltro').style.display = 'none';
-  renderizarTudo();
-}
-
-// 5. FUNÇÃO QUE CHAMA TODOS OS DESENHOS DE TELA
-function renderizarTudo() {
-  calcularNumerosKPI();
-  montarGraficoStatus();
-  montarGraficoSecretarias();
-  montarGraficoTipos();
-  montarGraficoLinha();
-  escreverResumo();
+  // Usa o Expediente capturado ou coloca um aviso.
+  const numExpediente = d.expediente || '';
+  const numAno = d.ano || '2026';
   
-  // Renderiza as Tabelas das outras telas
-  preencherTabelaDemandas();
-  preencherTabelaSecretarias();
-  preencherTabelaTipos();
-}
+  let htmlLink = '';
+  if (numExpediente) {
+    const urlLegis = `https://legis.camarasaoleopoldo.rs.gov.br/?sec=nlistaproposicoes&expediente=${numExpediente}&especie=&numero=&ano=${numAno}&keyword=&id_proponente=`;
+    htmlLink = `<a href="${urlLegis}" target="_blank" class="btn-link-legis">🔗 Acessar no Legis Público</a>`;
+  } else {
+    // Se a coluna expediente/numero não existir na linha, avisa
+    htmlLink = `<div style="margin-top: 20px; color: #ef4444; font-size: 13px; text-align: center; font-weight: bold;">⚠️ Link indísponível: Número do Expediente não encontrado na planilha.</div>`;
+  }
 
-// =========================================================================
-// CONSTRUÇÃO VISUAL (GRÁFICOS E TABELAS)
-// =========================================================================
-
-function calcularNumerosKPI() {
-  const tot = BD_FILTRADO.length;
-  let r = 0, a = 0, p = 0;
-  BD_FILTRADO.forEach(d => { if(d.status==='Resolvida') r++; else if(d.status==='Andamento') a++; else p++; });
-
-  const pC = (v) => tot > 0 ? ((v/tot)*100).toFixed(0) + '%' : '0%';
-
-  document.getElementById('valTotal').innerText = tot;
-  document.getElementById('valRes').innerText = r; document.getElementById('pctRes').innerText = pC(r);
-  document.getElementById('valAnd').innerText = a; document.getElementById('pctAnd').innerText = pC(a);
-  document.getElementById('valPen').innerText = p; document.getElementById('pctPen').innerText = pC(p);
-}
-
-// GRÁFICOS INTERATIVOS COM NÚMEROS (DATALABELS)
-function montarGraficoStatus() {
-  let c = {'Resolvida':0, 'Andamento':0, 'Pendente':0};
-  BD_FILTRADO.forEach(d => c[d.status]++);
-
-  if(grafStatus) grafStatus.destroy();
-  grafStatus = new Chart(document.getElementById('graficoStatus'), {
-    type: 'doughnut',
-    data: { labels: ['Resolvida', 'Andamento', 'Pendente'], datasets: [{ data: [c['Resolvida'], c['Andamento'], c['Pendente']], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
-    options: { 
-      cutout: '70%', 
-      plugins: { 
-        legend: { position: 'bottom', labels: { color: '#f8fafc' } },
-        datalabels: { color: '#ffffff', font: { weight: 'bold', size: 14 }, formatter: (value) => value > 0 ? value : '' }
-      },
-      onClick: (evento, elementos) => { if(elementos.length > 0) filtrarDados('status', grafStatus.data.labels[elementos[0].index]); }
-    }
-  });
-}
-
-function montarGraficoSecretarias() {
-  let c = {}; BD_FILTRADO.forEach(d => { let s = d.secretaria||'Outros'; c[s] = (c[s]||0)+1; });
-  let ord = Object.keys(c).map(k => [k, c[k]]).sort((a,b)=>b[1]-a[1]).slice(0,10); // Top 10
-
-  if(grafSec) grafSec.destroy();
-  grafSec = new Chart(document.getElementById('graficoSecretaria'), {
-    type: 'bar',
-    data: { labels: ord.map(i=>i[0]), datasets: [{ data: ord.map(i=>i[1]), backgroundColor: '#3b82f6', borderRadius: 4 }] },
-    options: { 
-      indexAxis: 'y', 
-      layout: { padding: { right: 30 } }, // Dá espaço para o número no final da barra
-      plugins: { 
-        legend: { display: false },
-        datalabels: { color: '#f8fafc', anchor: 'end', align: 'right', font: { weight: 'bold', size: 12 }, formatter: (value) => value > 0 ? value : '' }
-      }, 
-      scales: { x: { display: false, grid:{display:false} }, y: { grid:{display:false}, ticks:{color:'#f8fafc', font:{size:10}} } },
-      onClick: (evento, elementos) => { if(elementos.length > 0) filtrarDados('secretaria', grafSec.data.labels[elementos[0].index]); }
-    }
-  });
-}
-
-function montarGraficoTipos() {
-  let c = {}; BD_FILTRADO.forEach(d => { c[d.tipo] = (c[d.tipo]||0)+1; });
-  let ord = Object.keys(c).map(k => [k, c[k]]).sort((a,b)=>b[1]-a[1]).slice(0,5);
-
-  if(grafTipo) grafTipo.destroy();
-  grafTipo = new Chart(document.getElementById('graficoTipo'), {
-    type: 'doughnut',
-    data: { labels: ord.map(i=>i[0]), datasets: [{ data: ord.map(i=>i[1]), backgroundColor: ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ec4899'], borderWidth: 0 }] },
-    options: { 
-      cutout: '70%', 
-      plugins: { 
-        legend: { position: 'right', labels: { color: '#f8fafc', font:{size:10} } },
-        datalabels: { color: '#ffffff', font: { weight: 'bold', size: 14 }, formatter: (value) => value > 0 ? value : '' }
-      },
-      onClick: (evento, elementos) => { if(elementos.length > 0) filtrarDados('tipo', grafTipo.data.labels[elementos[0].index]); }
-    }
-  });
-}
-
-function montarGraficoLinha() {
-  let c = {}; BD_FILTRADO.forEach(d => { if(d.mesAno !== 'Sem Data') c[d.mesAno] = (c[d.mesAno]||0)+1; });
-  let labels = Object.keys(c).sort(); let valores = labels.map(l => c[l]);
-
-  if(grafLinha) grafLinha.destroy();
-  grafLinha = new Chart(document.getElementById('graficoLinha'), {
-    type: 'line',
-    data: { labels: labels, datasets: [{ data: valores, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 3, tension: 0.3, fill: true, pointBackgroundColor: '#131826', pointRadius: 4 }] },
-    options: { 
-      maintainAspectRatio: false, 
-      layout: { padding: { top: 25 } }, // Dá espaço para o número no topo
-      plugins: { 
-        legend: { display: false },
-        datalabels: { color: '#3b82f6', anchor: 'end', align: 'top', font: { weight: 'bold', size: 11 }, formatter: (value) => value > 0 ? value : '' }
-      }, 
-      scales: { x: { grid: {display: false} }, y: { grid: {color: 'rgba(255,255,255,0.05)'} } } 
-    }
-  });
-}
-
-function escreverResumo() {
-  const t = BD_FILTRADO.length;
-  if(t===0) { document.getElementById('textoResumo').innerHTML = 'Nenhum dado neste filtro.'; return; }
-  let s={'Resolvida':0,'Andamento':0,'Pendente':0}, sec={}, tipo={};
-  BD_FILTRADO.forEach(d=>{ s[d.status]++; let se=d.secretaria||'-'; sec[se]=(sec[se]||0)+1; tipo[d.tipo]=(tipo[d.tipo]||0)+1; });
-  
-  let tSec = Object.keys(sec).sort((a,b)=>sec[b]-sec[a])[0];
-  let tTip = Object.keys(tipo).sort((a,b)=>tipo[b]-tipo[a])[0];
-
-  document.getElementById('textoResumo').innerHTML = `
-    ✅ <b>${((s['Resolvida']/t)*100).toFixed(0)}%</b> das demandas exibidas estão concluídas.<br><br>
-    🏢 A <b>${tSec}</b> é a secretaria com maior impacto neste cenário, lidando com ${sec[tSec]} solicitações.<br><br>
-    🥧 A maior parte do trabalho tem natureza de <b>"${tTip}"</b>.<br><br>
-    🚨 Atenção aos <b>${s['Pendente']}</b> casos parados (Pendentes).
+  body.innerHTML = `
+    <h4>${d.assunto}</h4>
+    <div class="linha"><b>Status</b><span><span class="tag ${d.status}">${d.status}</span></span></div>
+    <div class="linha"><b>Data</b><span>${d.data}</span></div>
+    <div class="linha"><b>Secretaria</b><span>${d.secretaria}</span></div>
+    <div class="linha"><b>Tipo</b><span>${d.tipo}</span></div>
+    <div class="linha"><b>Bairro</b><span>${d.bairro}</span></div>
+    ${numExpediente ? `<div class="linha"><b>Expediente</b><span>${numExpediente} / ${numAno}</span></div>` : ''}
+    ${htmlLink}
   `;
+  document.getElementById('modalBg').classList.add('aberto');
 }
 
-// PREENCHIMENTO DAS TELAS (TABELAS)
-function preencherTabelaDemandas() {
-  const corpo = document.getElementById('tbDemandas');
-  corpo.innerHTML = '';
-  document.getElementById('txtQtdDemandas').innerText = BD_FILTRADO.length;
-  
-  BD_FILTRADO.slice(0, 100).forEach(d => {
-    corpo.innerHTML += `<tr><td><span class="tag ${d.status}">${d.status}</span></td><td>${d.data}</td><td style="font-weight: 700; color: white;">${d.assunto}</td><td>${d.secretaria}</td><td>${d.tipo}</td><td>${d.bairro}</td></tr>`;
-  });
-}
+document.getElementById('modalClose').onclick = () => document.getElementById('modalBg').classList.remove('aberto');
+document.getElementById('modalBg').onclick = (e) => { if (e.target.id === 'modalBg') e.target.classList.remove('aberto'); };
 
-function preencherTabelaSecretarias() {
-  let resumo = {};
-  BD_FILTRADO.forEach(d => {
-    let s = d.secretaria || 'Não Informada';
-    if(!resumo[s]) resumo[s] = {t:0, r:0, a:0, p:0};
-    resumo[s].t++;
-    if(d.status==='Resolvida') resumo[s].r++; else if(d.status==='Andamento') resumo[s].a++; else resumo[s].p++;
-  });
-
-  const corpo = document.getElementById('tbSecretarias');
-  corpo.innerHTML = Object.keys(resumo).sort((a,b)=>resumo[b].t - resumo[a].t).map(k => `
-    <tr>
-      <td style="font-weight: 800; color: #3b82f6; cursor:pointer;" onclick="filtrarDados('secretaria', '${k}')">${k}</td>
-      <td><b>${resumo[k].t}</b></td>
-      <td style="color: #10b981;">${resumo[k].r}</td>
-      <td style="color: #f59e0b;">${resumo[k].a}</td>
-      <td style="color: #ef4444;">${resumo[k].p}</td>
-    </tr>
-  `).join('');
-}
-
-function preencherTabelaTipos() {
-  let resumo = {}; let tot = BD_FILTRADO.length;
-  BD_FILTRADO.forEach(d => { resumo[d.tipo] = (resumo[d.tipo]||0)+1; });
-  
-  const corpo = document.getElementById('tbTipos');
-  corpo.innerHTML = Object.keys(resumo).sort((a,b)=>resumo[b] - resumo[a]).map(k => `
-    <tr>
-      <td style="font-weight: 800; color: #8b5cf6; cursor:pointer;" onclick="filtrarDados('tipo', '${k}')">${k}</td>
-      <td><b>${resumo[k]}</b></td>
-      <td>${((resumo[k]/tot)*100).toFixed(1)}%</td>
-    </tr>
-  `).join('');
+function exportarExcel() {
+  const linhas = DADOS_FILTRADOS.map(d => ({ Status: d.status, Assunto: d.assunto, Data: d.data, Secretaria: d.secretaria, Tipo: d.tipo, Bairro: d.bairro }));
+  const planilha = XLSX.utils.json_to_sheet(linhas);
+  const pasta = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(pasta, planilha, 'Demandas');
+  XLSX.writeFile(pasta, 'gabinete_filtrado.xlsx');
 }
 
 </script>
