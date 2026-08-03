@@ -441,7 +441,7 @@ function calcularNumerosKPI() {
   document.getElementById('valPen').innerText = p; document.getElementById('pctPen').innerText = pC(p);
 }
 
-// GRÁFICOS INTERATIVOS COM ONCLICK
+// GRÁFICOS INTERATIVOS COM ONCLICK - CORREÇÃO APLICADA AQUI (elementos no lugar de elements)
 function montarGraficoStatus() {
   let c = {'Resolvida':0, 'Andamento':0, 'Pendente':0};
   BD_FILTRADO.forEach(d => c[d.status]++);
@@ -452,7 +452,7 @@ function montarGraficoStatus() {
     data: { labels: ['Resolvida', 'Andamento', 'Pendente'], datasets: [{ data: [c['Resolvida'], c['Andamento'], c['Pendente']], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
     options: { 
       cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#f8fafc' } } },
-      onClick: (evento, elementos) => { if(elements.length > 0) filtrarDados('status', grafStatus.data.labels[elementos[0].index]); }
+      onClick: (evento, elementos) => { if(elementos.length > 0) filtrarDados('status', grafStatus.data.labels[elementos[0].index]); }
     }
   });
 }
