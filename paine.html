@@ -14,7 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
-/* TEMA NEUMORPHISM ESCURO (Variáveis dinâmicas) */
+/* TEMA NEUMORPHISM ESCURO (Variáveis dinâmicas para o Modo Demo) */
 :root {
   --bg-dark: #0a0e18; 
   --bg-panel: #161e31; 
@@ -23,10 +23,14 @@
   --text-main: #f1f5f9; 
   --text-muted: #94a3b8;
   
+  /* Cores Customizáveis via Painel */
   --color-primary: #3b82f6; 
   --color-chart-bar: #3b82f6;
 
-  --color-green: #10b981; --color-orange: #f59e0b; --color-red: #ef4444;
+  /* Cores Fixas de Status */
+  --color-green: #10b981; 
+  --color-purple: #8b5cf6; /* Nova cor para Encaminhado */
+  --color-red: #ef4444;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
@@ -73,8 +77,14 @@ input[type="file"] { display: none; }
 .kpi-icon { font-size: 20px; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 10px; }
 .kpi-value { font-size: 42px; font-weight: 800; margin-top: 10px; color: var(--text-main); }
 .kpi-desc { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
-.kpi-total { --accent: var(--color-primary); } .kpi-resolvida { --accent: var(--color-green); } .kpi-andamento { --accent: var(--color-orange); } .kpi-pendente { --accent: var(--color-red); }
 
+/* CORES DOS KPIs DE STATUS */
+.kpi-total { --accent: var(--color-primary); } 
+.kpi-resolvida { --accent: var(--color-green); } 
+.kpi-encaminhado { --accent: var(--color-purple); } /* NOVO STATUS */
+.kpi-pendente { --accent: var(--color-red); }
+
+/* GRID GRAFICOS */
 .charts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 25px; }
 .chart-panel { background: var(--bg-panel); border-radius: 20px; padding: 25px; box-shadow: var(--shadow-3d); border: 1px solid var(--border-light); display: flex; flex-direction: column; transition: 0.3s;}
 .chart-panel h3 { font-size: 16px; color: var(--text-main); margin-bottom: 20px; text-align: center; }
@@ -90,8 +100,11 @@ th { position: sticky; top: 0; background: #0f1524; color: var(--text-muted); pa
 td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; }
 tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(255,255,255,0.05); }
 
+/* TAGS DOS STATUS (Incluindo a Nova) */
 .tag { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-block; }
-.tag.Resolvida { background: rgba(16, 185, 129, 0.2); color: #34d399; } .tag.Andamento { background: rgba(245, 158, 11, 0.2); color: #fbbf24; } .tag.Pendente { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+.tag.Resolvida { background: rgba(16, 185, 129, 0.2); color: #34d399; } 
+.tag.Encaminhado { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; } /* NOVO STATUS */
+.tag.Pendente { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 .busca-box { width: 100%; padding: 14px 18px; border-radius: 14px; border: 1px solid var(--border-light); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 15px; margin-bottom: 18px; }
 
 /* ESTADO VAZIO BEM APRESENTÁVEL PARA DEMO */
@@ -107,7 +120,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
 .resumo-lista li { padding: 10px 0; font-size: 15.5px; color: #e2e8f0; line-height: 1.6; }
 .resumo-destaque { font-family: 'JetBrains Mono', monospace; font-size: 16.5px; font-weight: 700; color: var(--color-primary); }
 
-/* TAGS DA COMPARAÇÃO ANO A ANO */
+/* TAGS DA COMPARAÇÃO */
 .tag-cresceu { background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; }
 .tag-caiu { background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; }
 .tag-igual { background: rgba(255, 255, 255, 0.1); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; }
@@ -159,7 +172,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
     <button class="nav-item" data-page="secretarias" onclick="mudarPagina('secretarias')">🏢 Secretarias</button>
     <button class="nav-item" data-page="bairros" onclick="mudarPagina('bairros')">🗺️ Bairros</button>
     <button class="nav-item" data-page="tipos" onclick="mudarPagina('tipos')">📑 Tipos de Solicitação</button>
-    <button class="nav-item" data-page="comparacao" onclick="mudarPagina('comparacao')">⚖️ Máquina do Tempo</button>
+    <button class="nav-item" data-page="comparacao" onclick="mudarPagina('comparacao')">⚖️ Comparação</button>
     <button class="nav-item" data-page="exportar" onclick="mudarPagina('exportar')">⬇️ Exportar Dados</button>
 
     <!-- PAINEL DE PERSONALIZAÇÃO PARA DEMONSTRAÇÃO -->
@@ -196,7 +209,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
     <input type="file" id="uploadExcel" accept=".xlsx, .xls">
   </div>
 
-  <!-- ESTADO VAZIO VENDEDOR (TELA DE BOAS VINDAS) -->
+  <!-- ESTADO VAZIO VENDEDOR -->
   <div id="avisoVazio" class="empty-state">
     <h1>Bem-vindo ao Dashboard Dinâmico 📊</h1>
     <p>
@@ -237,7 +250,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
         <select id="selStatus" onchange="adicionarFiltroCombo('status')">
           <option value="">(Adicionar +)</option>
           <option value="Resolvida">Resolvida</option>
-          <option value="Andamento">Em Andamento</option>
+          <option value="Encaminhado">Encaminhado à Secretaria</option>
           <option value="Pendente">Pendente</option>
         </select>
       </div>
@@ -264,7 +277,10 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
       <div class="kpis">
         <div class="kpi-card kpi-total" onclick="toggleKpiStatus('Todos')"><div class="kpi-header">📄 Total Visível</div><div class="kpi-value" id="kpiTotal">0</div></div>
         <div class="kpi-card kpi-resolvida" onclick="toggleKpiStatus('Resolvida')"><div class="kpi-header">✅ Resolvidas</div><div class="kpi-value" id="kpiResolvidas">0</div><div class="kpi-desc" id="kpiResolvidasPct">0%</div></div>
-        <div class="kpi-card kpi-andamento" onclick="toggleKpiStatus('Andamento')"><div class="kpi-header">⏳ Em Andamento</div><div class="kpi-value" id="kpiAndamento">0</div><div class="kpi-desc" id="kpiAndamentoPct">0%</div></div>
+        
+        <!-- O NOVO STATUS: ENCAMINHADA -->
+        <div class="kpi-card kpi-encaminhado" onclick="toggleKpiStatus('Encaminhado')"><div class="kpi-header">📤 Encaminhadas</div><div class="kpi-value" id="kpiEncaminhado">0</div><div class="kpi-desc" id="kpiEncaminhadoPct">0%</div></div>
+        
         <div class="kpi-card kpi-pendente" onclick="toggleKpiStatus('Pendente')"><div class="kpi-header">🚨 Pendentes</div><div class="kpi-value" id="kpiPendentes">0</div><div class="kpi-desc" id="kpiPendentesPct">0%</div></div>
       </div>
       
@@ -309,30 +325,31 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
     <div class="page" id="page-bairros"><div class="chart-panel grande"><h3>Volume de Demandas por Bairro</h3><div class="canvas-container"><canvas id="graficoBairrosGrande"></canvas></div></div></div>
     <div class="page" id="page-tipos"><div class="chart-panel grande"><h3>Principais Tipos de Solicitação</h3><div class="canvas-container"><canvas id="graficoTipoGrande"></canvas></div></div></div>
 
-    <!-- PÁGINA: COMPARAÇÃO ANO A ANO (NOVA MÁQUINA DO TEMPO) -->
+    <!-- PÁGINA: COMPARAÇÃO DE SECRETARIAS (NOVA LÓGICA E CLICÁVEL) -->
     <div class="page" id="page-comparacao">
       
       <!-- Controles da Comparação -->
       <div class="filtros-bar" style="margin-bottom: 25px; justify-content: center; gap: 30px; background: rgba(0,0,0,0.2);">
         <div class="filtro-item" style="flex: none; min-width: 150px;">
-          <label style="color: var(--color-primary); font-size: 13px;">📅 ANO A (Base)</label>
-          <select id="selAnoA" onchange="atualizarComparacaoAnual()" style="font-size: 16px; padding: 12px;"></select>
+          <label style="color: var(--color-primary); font-size: 13px;">🏢 SECRETARIA A</label>
+          <select id="selSecA" onchange="atualizarComparacao()" style="font-size: 16px; padding: 12px;"></select>
         </div>
         <div class="filtro-item" style="flex: none; display: flex; align-items: center; justify-content: center; padding-top: 15px;">
           <span style="font-weight: 900; font-size: 20px; color: var(--text-muted);">VS</span>
         </div>
         <div class="filtro-item" style="flex: none; min-width: 150px;">
-          <label style="color: var(--color-primary); font-size: 13px;">📅 ANO B (Atual)</label>
-          <select id="selAnoB" onchange="atualizarComparacaoAnual()" style="font-size: 16px; padding: 12px;"></select>
+          <label style="color: var(--color-primary); font-size: 13px;">🏢 SECRETARIA B</label>
+          <select id="selSecB" onchange="atualizarComparacao()" style="font-size: 16px; padding: 12px;"></select>
         </div>
         
         <!-- O DROPDOWN MÁGICO DE MÉTRICAS -->
         <div class="filtro-item" style="flex: none; min-width: 260px; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 30px;">
           <label style="color: var(--color-primary); font-size: 13px;">📊 Métrica do Gráfico (Y)</label>
-          <select id="selMetricaComparacao" onchange="atualizarComparacaoAnual()" style="font-size: 16px; padding: 12px;">
+          <select id="selMetricaComparacao" onchange="atualizarComparacao()" style="font-size: 16px; padding: 12px;">
             <option value="volume">Volume Total de Entradas</option>
-            <option value="resolvidas">Apenas Demandas Resolvidas</option>
-            <option value="pendentes">Apenas Pendentes/Andamento</option>
+            <option value="resolvidas">Demandas Resolvidas</option>
+            <option value="encaminhadas">Encaminhadas à Secretaria</option>
+            <option value="pendentes">Demandas Pendentes</option>
             <option value="eficiencia">Taxa de Eficiência (%)</option>
           </select>
         </div>
@@ -342,44 +359,44 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
       <div class="kpis" style="grid-template-columns: 1fr 1fr;">
         <!-- Card Volume -->
         <div class="kpi-card" style="cursor: default; padding: 30px;">
-          <div class="kpi-header" style="justify-content: center; font-size: 16px;">📈 Volume Total de Entradas no Ano</div>
+          <div class="kpi-header" style="justify-content: center; font-size: 16px;">📈 Volume Total no Período</div>
           <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 25px;">
             <div style="text-align: center;">
-              <div id="lblAnoAVol" style="color: var(--text-muted); font-size: 15px; margin-bottom: 5px;">-</div>
-              <div id="valAnoAVol" style="font-size: 44px; font-weight: 900; color: white;">0</div>
+              <div id="lblSecAVol" style="color: var(--text-muted); font-size: 13px; margin-bottom: 5px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</div>
+              <div id="valSecAVol" style="font-size: 44px; font-weight: 900; color: white;">0</div>
             </div>
             <div id="tagDiffVol" class="tag-igual">0%</div>
             <div style="text-align: center;">
-              <div id="lblAnoBVol" style="color: var(--text-muted); font-size: 15px; margin-bottom: 5px;">-</div>
-              <div id="valAnoBVol" style="font-size: 44px; font-weight: 900; color: var(--color-primary);">0</div>
+              <div id="lblSecBVol" style="color: var(--text-muted); font-size: 13px; margin-bottom: 5px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</div>
+              <div id="valSecBVol" style="font-size: 44px; font-weight: 900; color: var(--color-primary);">0</div>
             </div>
           </div>
         </div>
 
         <!-- Card Resolução -->
         <div class="kpi-card" style="cursor: default; padding: 30px;">
-          <div class="kpi-header" style="justify-content: center; font-size: 16px;">✅ Eficiência Geral (Taxa de Resolução)</div>
+          <div class="kpi-header" style="justify-content: center; font-size: 16px;">✅ Eficiência Geral (Resoluções)</div>
           <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 25px;">
             <div style="text-align: center;">
-              <div id="lblAnoARes" style="color: var(--text-muted); font-size: 15px; margin-bottom: 5px;">-</div>
-              <div id="valAnoARes" style="font-size: 44px; font-weight: 900; color: white;">0%</div>
+              <div id="lblSecARes" style="color: var(--text-muted); font-size: 13px; margin-bottom: 5px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</div>
+              <div id="valSecARes" style="font-size: 44px; font-weight: 900; color: white;">0%</div>
             </div>
             <div id="tagDiffRes" class="tag-igual">0%</div>
             <div style="text-align: center;">
-              <div id="lblAnoBRes" style="color: var(--text-muted); font-size: 15px; margin-bottom: 5px;">-</div>
-              <div id="valAnoBRes" style="font-size: 44px; font-weight: 900; color: var(--color-green);">0%</div>
+              <div id="lblSecBRes" style="color: var(--text-muted); font-size: 13px; margin-bottom: 5px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</div>
+              <div id="valSecBRes" style="font-size: 44px; font-weight: 900; color: var(--color-green);">0%</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Gráfico de Comparação Mensal -->
+      <!-- Gráfico de Comparação -->
       <div class="chart-panel grande">
-        <h3 id="tituloGraficoCompare">Evolução Mensal (Ano A vs Ano B)</h3>
+        <h3 id="tituloGraficoCompare">Evolução Mensal (Secretaria A vs Secretaria B)</h3>
         <p style="text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">
-          Clique em qualquer barra do gráfico para aplicar um filtro de data global por aquele Mês e Ano.
+          Dica de Apresentação: Clique em qualquer barra no gráfico para filtrar o painel inteiro por aquele mês e secretaria.
         </p>
-        <div class="canvas-container"><canvas id="graficoComparacaoAnual"></canvas></div>
+        <div class="canvas-container"><canvas id="graficoComparacaoSecretarias"></canvas></div>
       </div>
     </div>
 
@@ -450,7 +467,7 @@ function salvarCor() {
   const alvo = document.getElementById('selAlvoCor').value;
   document.documentElement.style.setProperty(alvo, cor);
   
-  if (alvo === '--color-chart-bar') { atualizarDash(); } // Força redesenho se mudou a cor das barras
+  if (alvo === '--color-chart-bar') { atualizarDash(); } 
 }
 
 function esconderApresentacao() {
@@ -468,7 +485,7 @@ const REDESENHAR = {
   secretarias: () => { desenharBarra('graficoSecretariaGrande', 'secretaria', 25); },
   bairros: () => { desenharBarra('graficoBairrosGrande', 'bairro', 25); },
   tipos: () => { desenharBarra('graficoTipoGrande', 'tipo', 25); },
-  comparacao: () => { atualizarComparacaoAnual(); } 
+  comparacao: () => { atualizarComparacao(); } 
 };
 
 function mudarPagina(pagina) {
@@ -525,26 +542,27 @@ document.getElementById('uploadExcel').addEventListener('change', function(e) {
 });
 
 function processarDados(json) {
-  let secretariasSet = new Set(), bairrosSet = new Set(), anosSet = new Set();
+  let secretariasSet = new Set(), bairrosSet = new Set();
   let chavesModelo = json.length > 0 ? Object.keys(json[0]) : [];
   let colExpediente = chavesModelo.find(k => k.toLowerCase().includes('expediente'));
 
   DADOS_GLOBAIS = json.map(linha => {
-    let status = 'Andamento';
+    let status = 'Pendente';
     let sCru = linha['Status'] || '';
-    if (['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'].includes(sCru)) status = 'Resolvida';
-    else if (['Pendente', 'Aguardando Aprovação'].includes(sCru)) status = 'Pendente';
-    else if (['Aguardando Exec. Secretaria'].includes(sCru)) status = 'Andamento';
+    
+    // O NOVO STATUS DE VIBE BOAAA
+    if (['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'].includes(sCru)) {
+      status = 'Resolvida';
+    } else if (['Aguardando Exec. Secretaria', 'Encaminhado', 'Encaminhado a secretaria', 'Encaminhado à Secretaria'].includes(sCru)) {
+      status = 'Encaminhado';
+    } else {
+      status = 'Pendente'; // Agrupa Pendente, Aguardando Aprovação, etc.
+    }
 
     let expTexto = colExpediente ? String(linha[colExpediente] || '') : '';
     let numExpediente = expTexto.replace(/\D/g, ''); 
     let dObj = parseData(linha['Abertura / Fato']);
-    
-    let anoStr = '2026';
-    if(dObj) {
-      anoStr = String(dObj.getFullYear());
-      anosSet.add(anoStr);
-    }
+    let anoStr = dObj ? dObj.getFullYear() : '2026'; 
 
     let sec = obterNomeApresentacao('secretaria', linha['Secretaria']);
     let bairro = obterNomeApresentacao('bairro', linha['Bairro']);
@@ -567,16 +585,17 @@ function processarDados(json) {
     };
   });
 
+  // Popula os Comboboxes normais
   preencherSelect('selSecretaria', Array.from(secretariasSet).sort());
   preencherSelect('selBairro', Array.from(bairrosSet).sort());
 
-  // Prepara os seletores da Máquina do Tempo
-  let anosArray = Array.from(anosSet).sort();
-  preencherSelect('selAnoA', anosArray);
-  preencherSelect('selAnoB', anosArray.slice().reverse()); 
-  if(anosArray.length > 1) {
-    document.getElementById('selAnoA').value = anosArray[0]; 
-    document.getElementById('selAnoB').value = anosArray[anosArray.length - 1]; 
+  // Prepara os seletores da aba Comparação (Secretaria A vs B)
+  let secretariasArray = Array.from(secretariasSet).sort();
+  preencherSelect('selSecA', secretariasArray);
+  preencherSelect('selSecB', secretariasArray); 
+  if(secretariasArray.length > 1) {
+    document.getElementById('selSecA').value = secretariasArray[0]; 
+    document.getElementById('selSecB').value = secretariasArray[1]; 
   }
 
   limparTudo(); 
@@ -587,7 +606,7 @@ function processarDados(json) {
 
 function preencherSelect(id, arrayOpcoes) {
   const sel = document.getElementById(id);
-  if (id === 'selAnoA' || id === 'selAnoB') { sel.innerHTML = ''; } 
+  if (id === 'selSecA' || id === 'selSecB') { sel.innerHTML = ''; } 
   else { const primeira = sel.options[0].outerHTML; sel.innerHTML = primeira; }
   arrayOpcoes.forEach(op => { if(op && op.trim()!=='') sel.innerHTML += `<option value="${op}">${op}</option>`; });
 }
@@ -634,11 +653,16 @@ function renderizarTags() {
 }
 
 function atualizarDash() {
-  const t = DADOS_FILTRADOS.length; let r = 0, a = 0, p = 0;
-  DADOS_FILTRADOS.forEach(d => { if(d.status==='Resolvida') r++; else if(d.status==='Andamento') a++; else p++; });
+  const t = DADOS_FILTRADOS.length; let r = 0, e = 0, p = 0;
+  DADOS_FILTRADOS.forEach(d => { 
+    if(d.status==='Resolvida') r++; 
+    else if(d.status==='Encaminhado') e++; 
+    else p++; 
+  });
+  
   document.getElementById('kpiTotal').innerText = t;
   document.getElementById('kpiResolvidas').innerText = r; document.getElementById('kpiResolvidasPct').innerText = t>0 ? Math.round((r/t)*100)+'%' : '0%';
-  document.getElementById('kpiAndamento').innerText = a; document.getElementById('kpiAndamentoPct').innerText = t>0 ? Math.round((a/t)*100)+'%' : '0%';
+  document.getElementById('kpiEncaminhado').innerText = e; document.getElementById('kpiEncaminhadoPct').innerText = t>0 ? Math.round((e/t)*100)+'%' : '0%';
   document.getElementById('kpiPendentes').innerText = p; document.getElementById('kpiPendentesPct').innerText = t>0 ? Math.round((p/t)*100)+'%' : '0%';
 
   atualizarResumo(); 
@@ -649,10 +673,10 @@ function atualizarDash() {
 }
 
 function desenharDonut(idCanvas, categoria) {
-  let c = { 'Resolvida': 0, 'Andamento': 0, 'Pendente': 0 }; DADOS_FILTRADOS.forEach(d => c[d.status]++);
+  let c = { 'Resolvida': 0, 'Encaminhado': 0, 'Pendente': 0 }; DADOS_FILTRADOS.forEach(d => c[d.status]++);
   if(charts[idCanvas]) charts[idCanvas].destroy();
   charts[idCanvas] = new Chart(document.getElementById(idCanvas).getContext('2d'), {
-    type: 'doughnut', data: { labels: ['Resolvida', 'Andamento', 'Pendente'], datasets: [{ data: [c['Resolvida'], c['Andamento'], c['Pendente']], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
+    type: 'doughnut', data: { labels: ['Resolvida', 'Encaminhada', 'Pendente'], datasets: [{ data: [c['Resolvida'], c['Encaminhado'], c['Pendente']], backgroundColor: ['#10b981', '#8b5cf6', '#ef4444'], borderWidth: 0 }] },
     options: { cutout: '65%', plugins: { legend: { position: 'bottom', labels:{color:'#f1f5f9'} }, datalabels: { display: true, color: '#fff', font: {weight: 'bold', size: 16}, formatter: v => v > 0 ? v : '' } },
       onClick: (evt, els) => { if (els.length) adicionarFiltro('status', charts[idCanvas].data.labels[els[0].index]); }
     }
@@ -674,7 +698,7 @@ function desenharBarra(idCanvas, categoria, limite) {
     type: 'bar', data: { labels: o.map(i=>i[0]), datasets: [{ data: o.map(i=>i[1]), backgroundColor: corBarra, borderRadius: 4, maxBarThickness: 45 }] },
     options: { 
       indexAxis: 'y', 
-      layout: { padding: { right: 45 } }, // EVITA QUE OS NÚMEROS SEJAM CORTADOS
+      layout: { padding: { right: 45 } }, 
       plugins: { legend: { display: false }, datalabels: { display: true, color: '#fff', align: 'end', anchor: 'end', font: {weight: 'bold'} } }, 
       scales: { x: { display: false }, y: { ticks: {color: '#f1f5f9'}, grid: {display: false} } },
       onClick: (evt, els) => { if (els.length) adicionarFiltro(categoria, charts[idCanvas].data.labels[els[0].index]); }
@@ -682,25 +706,28 @@ function desenharBarra(idCanvas, categoria, limite) {
   });
 }
 
-// ================= COMPARAÇÃO MÁQUINA DO TEMPO (NOVA LÓGICA E CLICÁVEL) =================
-function atualizarComparacaoAnual() {
-  const anoA = document.getElementById('selAnoA').value;
-  const anoB = document.getElementById('selAnoB').value;
+// ================= COMPARAÇÃO DE SECRETARIAS (O DUELO FINAL) =================
+function atualizarComparacao() {
+  const secA = document.getElementById('selSecA').value;
+  const secB = document.getElementById('selSecB').value;
   const metrica = document.getElementById('selMetricaComparacao').value;
 
-  if (!anoA || !anoB) return;
+  if (!secA || !secB) return;
 
-  // Filtra dados desconsiderando a Data Início e Fim (para não zerar os anos antigos)
+  // Usa o filtro global, MAS ignora o filtro global de Secretaria, para não invalidar o duelo se tiver uma ativa lá em cima
   const baseComparacao = DADOS_GLOBAIS.filter(d => {
+    let dtIniStr = document.getElementById('dataInicio').value; let dtFimStr = document.getElementById('dataFim').value;
+    let dtIni = dtIniStr ? new Date(dtIniStr + 'T00:00:00') : null; let dtFim = dtFimStr ? new Date(dtFimStr + 'T23:59:59') : null;
+    
+    if (d.dataObj) { if (dtIni && d.dataObj < dtIni) return false; if (dtFim && d.dataObj > dtFim) return false; }
     if (filtros.status.size > 0 && !filtros.status.has(d.status)) return false;
-    if (filtros.secretaria.size > 0 && !filtros.secretaria.has(d.secretaria)) return false;
     if (filtros.bairro.size > 0 && !filtros.bairro.has(d.bairro)) return false;
     if (filtros.tipo.size > 0 && !filtros.tipo.has(d.tipo)) return false;
     return true;
   });
 
-  const dadosA = baseComparacao.filter(d => d.ano === anoA);
-  const dadosB = baseComparacao.filter(d => d.ano === anoB);
+  const dadosA = baseComparacao.filter(d => d.secretaria === secA);
+  const dadosB = baseComparacao.filter(d => d.secretaria === secB);
 
   const volA = dadosA.length;
   const volB = dadosB.length;
@@ -710,77 +737,83 @@ function atualizarComparacaoAnual() {
   const txResA = volA > 0 ? (resA / volA) * 100 : 0;
   const txResB = volB > 0 ? (resB / volB) * 100 : 0;
 
-  // Atualiza Textos
-  document.getElementById('lblAnoAVol').innerText = anoA; document.getElementById('lblAnoBVol').innerText = anoB;
-  document.getElementById('lblAnoARes').innerText = anoA; document.getElementById('lblAnoBRes').innerText = anoB;
-  document.getElementById('valAnoAVol').innerText = volA; document.getElementById('valAnoBVol').innerText = volB;
-  document.getElementById('valAnoARes').innerText = Math.round(txResA) + '%'; document.getElementById('valAnoBRes').innerText = Math.round(txResB) + '%';
+  document.getElementById('lblSecAVol').innerText = secA; document.getElementById('lblSecBVol').innerText = secB;
+  document.getElementById('lblSecARes').innerText = secA; document.getElementById('lblSecBRes').innerText = secB;
+  document.getElementById('valSecAVol').innerText = volA; document.getElementById('valSecBVol').innerText = volB;
+  document.getElementById('valSecARes').innerText = Math.round(txResA) + '%'; document.getElementById('valSecBRes').innerText = Math.round(txResB) + '%';
 
-  // Diferença de Volume
   const tagVol = document.getElementById('tagDiffVol');
   if (volA === 0 && volB === 0) { tagVol.className = 'tag-igual'; tagVol.innerText = '0%'; } 
   else if (volA === 0) { tagVol.className = 'tag-cresceu'; tagVol.innerText = '▲ Novo'; } 
   else {
     const diffVol = ((volB - volA) / volA) * 100;
-    if (diffVol > 0) { tagVol.className = 'tag-cresceu'; tagVol.innerText = '▲ +' + Math.round(diffVol) + '%'; }
-    else if (diffVol < 0) { tagVol.className = 'tag-caiu'; tagVol.innerText = '▼ ' + Math.round(diffVol) + '%'; }
+    if (diffVol > 0) { tagVol.className = 'tag-cresceu'; tagVol.innerText = 'B é +' + Math.round(diffVol) + '% maior'; }
+    else if (diffVol < 0) { tagVol.className = 'tag-caiu'; tagVol.innerText = 'B é ' + Math.round(diffVol) + '% menor'; }
     else { tagVol.className = 'tag-igual'; tagVol.innerText = '➖ Igual'; }
   }
 
-  // Diferença de Resolução
   const tagRes = document.getElementById('tagDiffRes');
   const diffRes = txResB - txResA;
-  if (diffRes > 0) { tagRes.className = 'tag-cresceu'; tagRes.innerText = '▲ +' + Math.round(diffRes) + ' p.p.'; }
-  else if (diffRes < 0) { tagRes.className = 'tag-caiu'; tagRes.innerText = '▼ ' + Math.round(diffRes) + ' p.p.'; }
+  if (diffRes > 0) { tagRes.className = 'tag-cresceu'; tagRes.innerText = 'B é +' + Math.round(diffRes) + ' p.p.'; }
+  else if (diffRes < 0) { tagRes.className = 'tag-caiu'; tagRes.innerText = 'B é ' + Math.round(diffRes) + ' p.p.'; }
   else { tagRes.className = 'tag-igual'; tagRes.innerText = '➖ Manteve'; }
 
-  // Calcula Dados Mensais Baseado na Métrica Escolhida
-  let mesesA = new Array(12).fill(0); let mesesB = new Array(12).fill(0);
-  let totMesesA = new Array(12).fill(0); let totMesesB = new Array(12).fill(0);
+  // Coleta dinamicamente os meses/anos que existem nos dados comparados para fazer o eixo X
+  let p = {};
+  dadosA.forEach(d => { if(d.mesAno) p[d.mesAno] = true; });
+  dadosB.forEach(d => { if(d.mesAno) p[d.mesAno] = true; });
+  let chavesMesAno = Object.keys(p).sort();
+
+  let valA = chavesMesAno.map(k => 0); let totA = chavesMesAno.map(k => 0);
+  let valB = chavesMesAno.map(k => 0); let totB = chavesMesAno.map(k => 0);
 
   dadosA.forEach(d => {
-    if(d.dataObj) {
-      let m = d.dataObj.getMonth();
-      totMesesA[m]++;
-      if(metrica === 'volume') mesesA[m]++;
-      else if(metrica === 'resolvidas' && d.status === 'Resolvida') mesesA[m]++;
-      else if(metrica === 'pendentes' && (d.status === 'Pendente' || d.status === 'Andamento')) mesesA[m]++;
-      else if(metrica === 'eficiencia' && d.status === 'Resolvida') mesesA[m]++;
+    if(d.mesAno) {
+      let idx = chavesMesAno.indexOf(d.mesAno);
+      totA[idx]++;
+      if(metrica === 'volume') valA[idx]++;
+      else if(metrica === 'resolvidas' && d.status === 'Resolvida') valA[idx]++;
+      else if(metrica === 'encaminhadas' && d.status === 'Encaminhado') valA[idx]++;
+      else if(metrica === 'pendentes' && d.status === 'Pendente') valA[idx]++;
+      else if(metrica === 'eficiencia' && d.status === 'Resolvida') valA[idx]++;
     }
   });
 
   dadosB.forEach(d => {
-    if(d.dataObj) {
-      let m = d.dataObj.getMonth();
-      totMesesB[m]++;
-      if(metrica === 'volume') mesesB[m]++;
-      else if(metrica === 'resolvidas' && d.status === 'Resolvida') mesesB[m]++;
-      else if(metrica === 'pendentes' && (d.status === 'Pendente' || d.status === 'Andamento')) mesesB[m]++;
-      else if(metrica === 'eficiencia' && d.status === 'Resolvida') mesesB[m]++;
+    if(d.mesAno) {
+      let idx = chavesMesAno.indexOf(d.mesAno);
+      totB[idx]++;
+      if(metrica === 'volume') valB[idx]++;
+      else if(metrica === 'resolvidas' && d.status === 'Resolvida') valB[idx]++;
+      else if(metrica === 'encaminhadas' && d.status === 'Encaminhado') valB[idx]++;
+      else if(metrica === 'pendentes' && d.status === 'Pendente') valB[idx]++;
+      else if(metrica === 'eficiencia' && d.status === 'Resolvida') valB[idx]++;
     }
   });
 
   if(metrica === 'eficiencia') {
-    for(let i=0; i<12; i++) {
-      mesesA[i] = totMesesA[i] > 0 ? Math.round((mesesA[i] / totMesesA[i]) * 100) : 0;
-      mesesB[i] = totMesesB[i] > 0 ? Math.round((mesesB[i] / totMesesB[i]) * 100) : 0;
+    for(let i=0; i<chavesMesAno.length; i++) {
+      valA[i] = totA[i] > 0 ? Math.round((valA[i] / totA[i]) * 100) : 0;
+      valB[i] = totB[i] > 0 ? Math.round((valB[i] / totB[i]) * 100) : 0;
     }
   }
 
-  // Título Dinâmico
-  const titulos = { 'volume': 'Volume de Entrada Mensal', 'resolvidas': 'Volume de Demandas Resolvidas', 'pendentes': 'Volume de Demandas Pendentes', 'eficiencia': 'Taxa de Eficiência Mensal (%)' };
-  document.getElementById('tituloGraficoCompare').innerText = titulos[metrica] + ` (${anoA} vs ${anoB})`;
+  // "2026-05" vira "Mai/26"
+  let labelsGrafico = chavesMesAno.map(k => { let m = parseInt(k.split('-')[1]); let y = k.split('-')[0].slice(2); return `${nomesDosMeses[m-1]}/${y}`; });
+
+  const titulos = { 'volume': 'Volume de Entrada', 'resolvidas': 'Demandas Resolvidas', 'encaminhadas': 'Encaminhadas à Secretaria', 'pendentes': 'Demandas Pendentes (Presas)', 'eficiencia': 'Taxa de Eficiência em %' };
+  document.getElementById('tituloGraficoCompare').innerText = titulos[metrica] + ` (Sec. A vs Sec. B)`;
 
   const corBarraB = getComputedStyle(document.documentElement).getPropertyValue('--color-chart-bar').trim() || '#3b82f6';
 
-  if(charts['graficoComparacaoAnual']) charts['graficoComparacaoAnual'].destroy();
-  charts['graficoComparacaoAnual'] = new Chart(document.getElementById('graficoComparacaoAnual').getContext('2d'), {
+  if(charts['graficoComparacaoSecretarias']) charts['graficoComparacaoSecretarias'].destroy();
+  charts['graficoComparacaoSecretarias'] = new Chart(document.getElementById('graficoComparacaoSecretarias').getContext('2d'), {
     type: 'bar',
     data: {
-      labels: nomesDosMeses,
+      labels: labelsGrafico,
       datasets: [
-        { label: anoA, data: mesesA, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 4 },
-        { label: anoB, data: mesesB, backgroundColor: corBarraB, borderRadius: 4 }
+        { label: secA, data: valA, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 4 },
+        { label: secB, data: valB, backgroundColor: corBarraB, borderRadius: 4 }
       ]
     },
     options: {
@@ -795,20 +828,26 @@ function atualizarComparacaoAnual() {
         } 
       },
       scales: { x: { ticks: { color: '#f1f5f9' }, grid: { display: false } }, y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } } },
-      // CLIQUE MÁGICO DO GRÁFICO
+      
+      // CLIQUE MÁGICO DO GRÁFICO (Sem popout, filtra tudo silenciosamente e avisa você visualmente)
       onClick: (evt, els) => {
         if(els.length) {
           const datasetIndex = els[0].datasetIndex;
-          const monthIndex = els[0].index;
-          const anoSelecionado = datasetIndex === 0 ? anoA : anoB;
-          const mesFormatado = String(monthIndex + 1).padStart(2, '0');
-          const ultimoDia = new Date(anoSelecionado, monthIndex + 1, 0).getDate();
+          const index = els[0].index;
+          const secSelecionada = datasetIndex === 0 ? secA : secB;
+          const chaveMesAno = chavesMesAno[index]; // "2026-05"
+          
+          const ano = chaveMesAno.split('-')[0];
+          const mes = chaveMesAno.split('-')[1];
+          const ultimoDia = new Date(ano, parseInt(mes), 0).getDate();
 
-          document.getElementById('dataInicio').value = `${anoSelecionado}-${mesFormatado}-01`;
-          document.getElementById('dataFim').value = `${anoSelecionado}-${mesFormatado}-${ultimoDia}`;
+          document.getElementById('dataInicio').value = `${ano}-${mes}-01`;
+          document.getElementById('dataFim').value = `${ano}-${mes}-${ultimoDia}`;
+          
+          // Adiciona a Secretaria aos filtros
+          filtros.secretaria.add(secSelecionada);
           
           aplicarFiltrosGerais();
-          alert(`Filtro global aplicado para: ${nomesDosMeses[monthIndex]} de ${anoSelecionado}. Veja o resultado nas outras abas!`);
         }
       }
     }
@@ -821,11 +860,12 @@ function atualizarResumo() {
   const total = DADOS_FILTRADOS.length;
   if (total === 0) { if(listaVisao) listaVisao.innerHTML = '<li>Nenhuma demanda encontrada no filtro atual.</li>'; return; }
 
-  let resolvidas = 0, volumeInstitucional = 0;
+  let resolvidas = 0, encaminhadas = 0, volumeInstitucional = 0;
   const porSec = {}, porBairro = {};
 
   DADOS_FILTRADOS.forEach(d => {
     if (d.status === 'Resolvida') resolvidas++;
+    if (d.status === 'Encaminhado') encaminhadas++;
     if (d.bairro === 'Institucional / Gabinete') volumeInstitucional++;
     
     porSec[d.secretaria] = (porSec[d.secretaria] || 0) + 1;
@@ -834,13 +874,14 @@ function atualizarResumo() {
 
   const topSec = Object.entries(porSec).sort((a,b) => b[1] - a[1])[0];
   const topBairro = Object.entries(porBairro).sort((a,b) => b[1] - a[1])[0];
-  const pct = Math.round((resolvidas / total) * 100);
+  const pctRes = Math.round((resolvidas / total) * 100);
+  const pctEnc = Math.round((encaminhadas / total) * 100);
 
   const htmlResumo = `
     <li>
       🎙️ <b>Resumo Automático:</b> 
       O painel apresenta um volume de <span class="resumo-destaque">${total} demandas</span> analisadas. 
-      Neste cenário, a taxa de resolução atinge a marca de <span class="resumo-destaque">${pct}%</span>.
+      Neste cenário, a taxa de resolução atinge a marca de <span class="resumo-destaque">${pctRes}%</span>, enquanto outras <span class="resumo-destaque">${pctEnc}%</span> já foram despachadas.
       Identificamos que <span class="resumo-destaque">${volumeInstitucional}</span> demandas são de origem interna/institucional. 
       Excluindo estes registros internos, o bairro com a maior incidência de solicitações é o <span class="resumo-destaque">${topBairro ? topBairro[0] : 'N/A'}</span>.
       Atualmente, o maior ponto de atenção recai sobre a Secretaria <span class="resumo-destaque">${topSec ? topSec[0] : 'N/A'}</span>.
@@ -858,7 +899,9 @@ function montarTabela() {
 
   b.slice(0, 150).forEach(d => {
     let tr = document.createElement('tr');
-    tr.innerHTML = `<td><span class="tag ${d.status}">${d.status}</span></td> <td style="font-weight: 700; color: white;">${d.assunto}</td> <td>${d.dataTexto}</td> <td>${d.secretaria}</td> <td>${d.bairro}</td>`;
+    // Para a cor bonita de Encaminhado ficar certa no card
+    let classStatus = d.status === 'Encaminhado' ? 'Encaminhado' : d.status;
+    tr.innerHTML = `<td><span class="tag ${classStatus}">${d.status}</span></td> <td style="font-weight: 700; color: white;">${d.assunto}</td> <td>${d.dataTexto}</td> <td>${d.secretaria}</td> <td>${d.bairro}</td>`;
     c.appendChild(tr); tr.onclick = () => abrirModal(d);
   });
 }
@@ -868,9 +911,10 @@ function abrirModal(d) {
     ? `<a href="https://legis.camarasaoleopoldo.rs.gov.br/?sec=nlistaproposicoes&expediente=${d.expediente}&ano=${d.ano}" target="_blank" class="btn-link-legis">🔗 Acessar no Legis (Exp. ${d.expediente}/${d.ano})</a>` 
     : `<div style="margin-top: 20px; color: #ef4444; text-align: center; font-weight: bold;">⚠️ Expediente não encontrado na planilha.</div>`;
 
+  let classStatus = d.status === 'Encaminhado' ? 'Encaminhado' : d.status;
   document.getElementById('modalBody').innerHTML = `
     <h4>${d.assunto}</h4>
-    <div class="linha"><b>Status</b><span><span class="tag ${d.status}">${d.status}</span></span></div>
+    <div class="linha"><b>Status</b><span><span class="tag ${classStatus}">${d.status}</span></span></div>
     <div class="linha"><b>Data</b><span>${d.dataTexto}</span></div>
     <div class="linha"><b>Secretaria</b><span>${d.secretaria}</span></div>
     <div class="linha"><b>Bairro</b><span>${d.bairro}</span></div>
