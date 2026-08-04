@@ -52,7 +52,7 @@ h1, h3 { font-family: 'Sora', sans-serif; }
 .upload-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
 input[type="file"] { display: none; }
 
-/* BARRA DE FILTROS SUPERIOR (CALENDÁRIO) */
+/* BARRA DE FILTROS SUPERIOR */
 .filtros-bar { display: flex; gap: 12px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; background: var(--bg-panel); padding: 16px 22px; border-radius: 16px; border: 1px solid var(--border-light); box-shadow: var(--shadow-3d); transition: 0.3s;}
 .filtro-item { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
 .filtro-item label { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
@@ -71,12 +71,13 @@ input[type="file"] { display: none; }
 .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
 .kpi-card { background: var(--bg-panel); border-radius: 20px; padding: 25px; box-shadow: var(--shadow-3d); border: 1px solid var(--border-light); border-bottom: 4px solid var(--accent); transition: 0.3s; cursor: pointer; }
 .kpi-card:hover { transform: translateY(-3px); filter: brightness(1.15); }
-.kpi-header { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 13px; font-weight: 700; text-transform: uppercase;}
+.kpi-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--text-muted); font-size: 13px; font-weight: 700; text-transform: uppercase;}
 .kpi-icon { font-size: 20px; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 10px; }
 .kpi-value { font-size: 42px; font-weight: 800; margin-top: 10px; color: var(--text-main); }
 .kpi-desc { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
 .kpi-total { --accent: var(--color-primary); } .kpi-resolvida { --accent: var(--color-green); } .kpi-andamento { --accent: var(--color-orange); } .kpi-pendente { --accent: var(--color-red); }
 
+/* GRID GRAFICOS */
 .charts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 25px; }
 .chart-panel { background: var(--bg-panel); border-radius: 20px; padding: 25px; box-shadow: var(--shadow-3d); border: 1px solid var(--border-light); display: flex; flex-direction: column; transition: 0.3s;}
 .chart-panel h3 { font-size: 16px; color: var(--text-main); margin-bottom: 20px; text-align: center; }
@@ -84,13 +85,25 @@ input[type="file"] { display: none; }
 .canvas-container canvas { position: relative; z-index: 1; cursor: pointer; }
 .chart-panel.grande { min-height: 520px; } .chart-panel.grande .canvas-container { min-height: 440px; }
 
-/* TABELAS */
+/* ================= CORREÇÃO DO CABEÇALHO CONGELADO (STICKY BUG) ================= */
 .tabela-panel { background: var(--bg-panel); border-radius: 20px; padding: 25px; border: 1px solid var(--border-light); transition: 0.3s; }
-.table-scroll { max-height: 400px; overflow-y: auto; margin-top: 15px; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-th { position: sticky; top: 0; background: rgba(0,0,0,0.5); color: var(--text-muted); padding: 15px; font-weight: 700; text-transform: uppercase; font-size: 11px; z-index: 10;}
+.table-scroll { max-height: 55vh; overflow-y: auto; margin-top: 15px; position: relative; border-radius: 12px;} /* max-height define a área de rolagem */
+table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; text-align: left; }
+th { 
+  position: sticky; 
+  top: 0; 
+  background: #0f1524; /* Fundo sólido para cobrir as letras */
+  color: var(--text-muted); 
+  padding: 18px 15px; 
+  font-weight: 800; 
+  text-transform: uppercase; 
+  font-size: 11px; 
+  z-index: 20; 
+  box-shadow: 0 4px 6px rgba(0,0,0,0.4); /* Sombra elegante pra destacar que está flutuando */
+}
 td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; }
 tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(255,255,255,0.05); }
+
 .tag { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-block; }
 .tag.Resolvida { background: rgba(16, 185, 129, 0.2); color: #34d399; } .tag.Andamento { background: rgba(245, 158, 11, 0.2); color: #fbbf24; } .tag.Pendente { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 .busca-box { width: 100%; padding: 14px 18px; border-radius: 14px; border: 1px solid var(--border-light); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 15px; margin-bottom: 18px; }
@@ -103,10 +116,15 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
 .empty-state .step-box { background: var(--bg-panel); padding: 20px; border-radius: 15px; width: 220px; border: 1px solid var(--border-light); box-shadow: var(--shadow-3d); }
 .empty-state .step-box h4 { font-size: 15px; margin-bottom: 8px; color: white; display: flex; align-items: center; gap: 8px;}
 
-/* RELATÓRIOS LISTA E RESUMOS */
+/* RELATÓRIOS E RESUMOS */
 .resumo-lista { list-style: none; margin: 0; padding: 0;}
-.resumo-lista li { padding: 10px 0; font-size: 15px; color: #e2e8f0; line-height: 1.6; }
-.resumo-destaque { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--color-primary); }
+.resumo-lista li { padding: 10px 0; font-size: 15.5px; color: #e2e8f0; line-height: 1.6; }
+.resumo-destaque { font-family: 'JetBrains Mono', monospace; font-size: 16.5px; font-weight: 700; color: var(--color-primary); }
+
+/* TAGS DA COMPARAÇÃO ANO A ANO */
+.tag-cresceu { background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; }
+.tag-caiu { background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; }
+.tag-igual { background: rgba(255, 255, 255, 0.1); color: #94a3b8; padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; }
 
 /* MENU LATERAL */
 .app { display: flex; gap: 22px; max-width: 1550px; margin: 0 auto; align-items: flex-start; }
@@ -122,7 +140,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
 .custom-panel { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; margin-top: 20px; display: none; }
 .custom-panel label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: bold;}
 .custom-panel input[type="color"] { width: 100%; height: 40px; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 12px; background: transparent; }
-.custom-panel select { width: 100%; padding: 8px; border-radius: 8px; background: rgba(0,0,0,0.4); color: white; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; }
+.custom-panel select { width: 100%; padding: 8px; border-radius: 8px; background: rgba(0,0,0,0.4); color: white; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; outline: none; }
 .btn-salvar-cor { background: var(--color-primary); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 10px; transition: 0.2s; }
 .btn-salvar-cor:hover { filter: brightness(1.15); }
 .btn-ocultar-custom { background: transparent; color: #ef4444; border: 1px dashed rgba(239, 68, 68, 0.4); width: 100%; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;}
@@ -212,7 +230,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
       </div>
       <div class="step-box">
         <h4>3️⃣ Analise</h4>
-        <span style="font-size: 12px; color: var(--text-muted)">Navegue pelos gráficos, use os filtros cumulativos e gere relatórios na hora.</span>
+        <span style="font-size: 12px; color: var(--text-muted)">Navegue pelos gráficos, compare dados e gere relatórios na hora.</span>
       </div>
     </div>
   </div>
@@ -282,9 +300,19 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
       <div class="tabela-panel">
         <h3 style="font-size: 16px; margin-bottom: 10px;">📋 Lista de Demandas (<span id="totalTabela">0</span>)</h3>
         <input type="text" class="busca-box" id="buscaDemandas" placeholder="🔎 Digite para buscar (assunto, secretaria, bairro...)" oninput="buscarDemandas(this.value)">
+        
+        <!-- AQUI ESTÁ A TABELA COM O HEADER CONGELADO RESOLVIDO -->
         <div class="table-scroll">
           <table>
-            <thead><tr><th>Status</th><th>Assunto Principal</th><th>Data</th><th>Secretaria</th><th>Bairro</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Assunto Principal</th>
+                <th>Data</th>
+                <th>Secretaria</th>
+                <th>Bairro</th>
+              </tr>
+            </thead>
             <tbody id="corpoTabela"></tbody>
           </table>
         </div>
@@ -298,28 +326,74 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
 
     <!-- PÁGINA: RELATÓRIOS -->
     <div class="page" id="page-relatorios">
-      <div class="chart-panel grande">
+      <div class="chart-panel grande" style="margin-bottom: 20px;">
         <h3>Evolução Mensal das Demandas</h3>
         <div class="canvas-container"><canvas id="graficoEvolucao"></canvas></div>
       </div>
     </div>
 
-    <!-- PÁGINA: COMPARAÇÃO -->
+    <!-- PÁGINA: COMPARAÇÃO ANO A ANO (NOVA MÁQUINA DO TEMPO) -->
     <div class="page" id="page-comparacao">
-      <div class="chart-panel grande">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h3 style="display: inline-block; margin-right: 15px;">Comparar Desempenho de: </h3>
-          <select id="selCompareMetric" onchange="desenharGraficoComparacao()" style="background: rgba(0,0,0,0.4); color: white; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); outline: none; font-weight: bold; cursor: pointer;">
-            <option value="secretaria">🏢 Top Secretarias</option>
-            <option value="bairro">🗺️ Top Bairros</option>
-            <option value="tipo">📑 Top Tipos de Solicitação</option>
-          </select>
+      
+      <!-- Controles da Comparação -->
+      <div class="filtros-bar" style="margin-bottom: 25px; justify-content: center; gap: 30px; background: rgba(0,0,0,0.2);">
+        <div class="filtro-item" style="flex: none; min-width: 150px;">
+          <label style="color: var(--color-primary); font-size: 13px;">📅 ANO A (Base)</label>
+          <select id="selAnoA" onchange="atualizarComparacaoAnual()" style="font-size: 16px; padding: 12px;"></select>
         </div>
-        <p style="text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">
-          Exibe o volume de <b>Resolvidas (Verde)</b> versus as que ainda estão <b>Pendentes/Em Andamento (Vermelho)</b>.
-        </p>
-        <div class="canvas-container"><canvas id="graficoComparacao"></canvas></div>
+        <div class="filtro-item" style="flex: none; display: flex; align-items: center; justify-content: center; padding-top: 15px;">
+          <span style="font-weight: 900; font-size: 20px; color: var(--text-muted);">VS</span>
+        </div>
+        <div class="filtro-item" style="flex: none; min-width: 150px;">
+          <label style="color: var(--color-primary); font-size: 13px;">📅 ANO B (Atual)</label>
+          <select id="selAnoB" onchange="atualizarComparacaoAnual()" style="font-size: 16px; padding: 12px;"></select>
+        </div>
       </div>
+
+      <!-- KPIs da Comparação -->
+      <div class="kpis" style="grid-template-columns: 1fr 1fr;">
+        <!-- Card Volume -->
+        <div class="kpi-card" style="cursor: default;">
+          <div class="kpi-header" style="justify-content: center; font-size: 16px;">📈 Volume Total de Entradas</div>
+          <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 20px;">
+            <div style="text-align: center;">
+              <div id="lblAnoAVol" style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">-</div>
+              <div id="valAnoAVol" style="font-size: 38px; font-weight: 900; color: white;">0</div>
+            </div>
+            <div id="tagDiffVol" class="tag-igual">0%</div>
+            <div style="text-align: center;">
+              <div id="lblAnoBVol" style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">-</div>
+              <div id="valAnoBVol" style="font-size: 38px; font-weight: 900; color: var(--color-primary);">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Resolução -->
+        <div class="kpi-card" style="cursor: default;">
+          <div class="kpi-header" style="justify-content: center; font-size: 16px;">✅ Eficiência (Taxa de Resolução)</div>
+          <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 20px;">
+            <div style="text-align: center;">
+              <div id="lblAnoARes" style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">-</div>
+              <div id="valAnoARes" style="font-size: 38px; font-weight: 900; color: white;">0%</div>
+            </div>
+            <div id="tagDiffRes" class="tag-igual">0%</div>
+            <div style="text-align: center;">
+              <div id="lblAnoBRes" style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">-</div>
+              <div id="valAnoBRes" style="font-size: 38px; font-weight: 900; color: var(--color-green);">0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfico de Comparação Mensal -->
+      <div class="chart-panel grande">
+        <h3>Evolução Mensal (Ano A vs Ano B)</h3>
+        <p style="text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">
+          Lado a lado: o volume de demandas mês a mês nos dois anos selecionados.
+        </p>
+        <div class="canvas-container"><canvas id="graficoComparacaoAnual"></canvas></div>
+      </div>
+
     </div>
 
     <!-- PÁGINA: EXPORTAR -->
@@ -348,7 +422,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
 let DADOS_GLOBAIS = [];
 let DADOS_FILTRADOS = [];
 let termoBusca = '';
-const mesesNomes = {'01':'Jan', '02':'Fev', '03':'Mar', '04':'Abr', '05':'Mai', '06':'Jun', '07':'Jul', '08':'Ago', '09':'Set', '10':'Out', '11':'Nov', '12':'Dez'};
+const nomesDosMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 let filtros = { status: new Set(), secretaria: new Set(), bairro: new Set(), tipo: new Set() };
 
@@ -360,9 +434,9 @@ Chart.register(ChartDataLabels); Chart.defaults.set('plugins.datalabels', { disp
 
 let charts = {};
 
-// ================= CUSTOMIZAÇÃO HEX (COLOR PICKER) =================
-// Função para converter RGB em HEX
+// ================= CUSTOMIZAÇÃO HEX (COLOR PICKER COM SINCRONIA) =================
 function rgbToHex(color) {
+  if (!color) return '#3b82f6';
   if (color.startsWith('#')) return color;
   const match = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
   if (!match) return '#3b82f6';
@@ -375,7 +449,6 @@ function toggleCustomPanel() {
   if(painel.style.display === 'block') { sincronizarColorPicker(); }
 }
 
-// Sincroniza o Input de Cor com a cor real do item selecionado
 function sincronizarColorPicker() {
   const alvo = document.getElementById('selAlvoCor').value;
   const rootStyle = getComputedStyle(document.documentElement);
@@ -383,7 +456,6 @@ function sincronizarColorPicker() {
   document.getElementById('corPicker').value = rgbToHex(corAtual);
 }
 
-// Atualiza quando o dropdown muda
 document.getElementById('selAlvoCor').addEventListener('change', sincronizarColorPicker);
 
 function salvarCor() {
@@ -391,8 +463,7 @@ function salvarCor() {
   const alvo = document.getElementById('selAlvoCor').value;
   document.documentElement.style.setProperty(alvo, cor);
   
-  // Redesenha gráficos se a cor das barras mudou
-  if (alvo === '--color-chart-bar') { atualizarDash(); }
+  if (alvo === '--color-chart-bar') { atualizarDash(); } // Força redesenho se mudou a cor das barras
 }
 
 function esconderApresentacao() {
@@ -411,7 +482,7 @@ const REDESENHAR = {
   bairros: () => { desenharBarra('graficoBairrosGrande', 'bairro', 25); },
   tipos: () => { desenharBarra('graficoTipoGrande', 'tipo', 25); },
   relatorios: () => { desenharGraficoEvolucao(); },
-  comparacao: () => { desenharGraficoComparacao(); }
+  comparacao: () => { atualizarComparacaoAnual(); } // Nova função para aba Comparação
 };
 
 function mudarPagina(pagina) {
@@ -471,7 +542,7 @@ document.getElementById('uploadExcel').addEventListener('change', function(e) {
 });
 
 function processarDados(json) {
-  let secretariasSet = new Set(), bairrosSet = new Set();
+  let secretariasSet = new Set(), bairrosSet = new Set(), anosSet = new Set();
   let chavesModelo = json.length > 0 ? Object.keys(json[0]) : [];
   let colExpediente = chavesModelo.find(k => k.toLowerCase().includes('expediente'));
 
@@ -486,7 +557,12 @@ function processarDados(json) {
     let expTexto = colExpediente ? String(linha[colExpediente] || '') : '';
     let numExpediente = expTexto.replace(/\D/g, ''); 
     let dObj = parseData(linha['Abertura / Fato']);
-    let anoStr = dObj ? dObj.getFullYear() : '2026'; 
+    
+    let anoStr = '2026';
+    if(dObj) {
+      anoStr = String(dObj.getFullYear());
+      anosSet.add(anoStr);
+    }
 
     // Limpa e Agrupa (Vicentina, vicentina, VICENTINA -> tudo igual)
     let sec = obterNomeApresentacao('secretaria', linha['Secretaria']);
@@ -499,7 +575,7 @@ function processarDados(json) {
     return {
       dataTexto: linha['Abertura / Fato'] || 'Sem Data',
       dataObj: dObj,
-      mesAno: dObj ? `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}` : null,
+      mesAno: dObj ? `${anoStr}-${String(dObj.getMonth()+1).padStart(2,'0')}` : null,
       assunto: linha['Assunto'] || 'Sem Assunto',
       status: status,
       secretaria: sec,
@@ -513,6 +589,15 @@ function processarDados(json) {
   preencherSelect('selSecretaria', Array.from(secretariasSet).sort());
   preencherSelect('selBairro', Array.from(bairrosSet).sort());
 
+  // Prepara os seletores da Máquina do Tempo (Aba Comparação)
+  let anosArray = Array.from(anosSet).sort();
+  preencherSelect('selAnoA', anosArray);
+  preencherSelect('selAnoB', anosArray.slice().reverse()); // B começa do mais recente
+  if(anosArray.length > 1) {
+    document.getElementById('selAnoA').value = anosArray[0]; // Pega o ano mais antigo pra base
+    document.getElementById('selAnoB').value = anosArray[anosArray.length - 1]; // Pega o mais novo
+  }
+
   limparTudo(); 
   document.getElementById('avisoVazio').style.display = 'none';
   document.getElementById('painelConteudo').style.display = 'block';
@@ -521,8 +606,13 @@ function processarDados(json) {
 
 function preencherSelect(id, arrayOpcoes) {
   const sel = document.getElementById(id);
-  const primeira = sel.options[0].outerHTML;
-  sel.innerHTML = primeira;
+  // Se for os seletores de Ano da Comparação, a primeira option é diferente ou não existe placeholder
+  if (id === 'selAnoA' || id === 'selAnoB') {
+    sel.innerHTML = '';
+  } else {
+    const primeira = sel.options[0].outerHTML;
+    sel.innerHTML = primeira;
+  }
   arrayOpcoes.forEach(op => { if(op && op.trim()!=='') sel.innerHTML += `<option value="${op}">${op}</option>`; });
 }
 
@@ -594,7 +684,13 @@ function desenharDonut(idCanvas, categoria) {
 }
 
 function desenharBarra(idCanvas, categoria, limite) {
-  let c = {}; DADOS_FILTRADOS.forEach(d => { c[d[categoria]] = (c[d[categoria]] || 0) + 1; });
+  // Ignora 'Institucional / Gabinete' para não poluir os rankings normais (opcional, mas fica mais limpo)
+  let c = {}; 
+  DADOS_FILTRADOS.forEach(d => { 
+    if (categoria === 'bairro' && d[categoria] === 'Institucional / Gabinete') return; 
+    c[d[categoria]] = (c[d[categoria]] || 0) + 1; 
+  });
+  
   let o = Object.keys(c).map(k => [k, c[k]]).sort((a,b) => b[1] - a[1]).slice(0, limite);
   const corBarra = getComputedStyle(document.documentElement).getPropertyValue('--color-chart-bar').trim() || '#3b82f6';
   
@@ -611,28 +707,10 @@ function desenharBarra(idCanvas, categoria, limite) {
   });
 }
 
-function desenharGraficoComparacao() {
-  const metrica = document.getElementById('selCompareMetric').value; 
-  let stats = {};
-  DADOS_FILTRADOS.forEach(d => {
-    let chave = d[metrica];
-    if(chave === 'Institucional / Gabinete') return; // Tira as internas da comparacao
-    if(!stats[chave]) stats[chave] = { resolvida: 0, naoresolvida: 0, total: 0 };
-    if(d.status === 'Resolvida') stats[chave].resolvida++; else stats[chave].naoresolvida++;
-    stats[chave].total++;
-  });
-  let topArr = Object.keys(stats).sort((a,b) => stats[b].total - stats[a].total).slice(0, 8);
-  if(charts['graficoComparacao']) charts['graficoComparacao'].destroy();
-  charts['graficoComparacao'] = new Chart(document.getElementById('graficoComparacao').getContext('2d'), {
-    type: 'bar', data: { labels: topArr, datasets: [{ label: 'Resolvidas', data: topArr.map(k => stats[k].resolvida), backgroundColor: '#10b981', borderRadius: 4 }, { label: 'Andamento / Pendente', data: topArr.map(k => stats[k].naoresolvida), backgroundColor: '#ef4444', borderRadius: 4 }] },
-    options: { plugins: { legend: { labels: { color: '#f1f5f9' } }, datalabels: { display: true, color: '#fff', font: {weight: 'bold'}, formatter: v => v > 0 ? v : ''} }, scales: { x: { ticks: { color: '#f1f5f9' }, grid: { display: false } }, y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } } } }
-  });
-}
-
 function desenharGraficoEvolucao() {
   let p = {}; DADOS_FILTRADOS.forEach(d => { if(d.mesAno) { p[d.mesAno] = (p[d.mesAno] || 0) + 1; } });
   let chaves = Object.keys(p).sort(); 
-  let labels = chaves.map(k => { let m = k.split('-')[1]; let y = k.split('-')[0].slice(2); return `${mesesNomes[m]}/${y}`; });
+  let labels = chaves.map(k => { let m = parseInt(k.split('-')[1]); let y = k.split('-')[0].slice(2); return `${nomesDosMeses[m-1]}/${y}`; });
   const corLinha = getComputedStyle(document.documentElement).getPropertyValue('--color-chart-bar').trim() || '#3b82f6';
 
   if(charts['graficoEvolucao']) charts['graficoEvolucao'].destroy();
@@ -642,6 +720,82 @@ function desenharGraficoEvolucao() {
     options: { plugins: { legend: { display: false }, datalabels: { display: true, color: '#fff', align: 'top', font: { weight: '700', size: 13 } } }, scales: { x: { ticks: { color: '#94a3b8' }, grid: { display: false } }, y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } } } }
   });
 }
+
+// ================= NOVA LÓGICA: COMPARAÇÃO MÁQUINA DO TEMPO =================
+function atualizarComparacaoAnual() {
+  const anoA = document.getElementById('selAnoA').value;
+  const anoB = document.getElementById('selAnoB').value;
+  if (!anoA || !anoB) return;
+
+  // Filtra bases dos dois anos (respeitando os filtros globais já ativos na tela)
+  const dadosA = DADOS_FILTRADOS.filter(d => d.ano === anoA);
+  const dadosB = DADOS_FILTRADOS.filter(d => d.ano === anoB);
+
+  const volA = dadosA.length;
+  const volB = dadosB.length;
+  const resA = dadosA.filter(d => d.status === 'Resolvida').length;
+  const resB = dadosB.filter(d => d.status === 'Resolvida').length;
+
+  const txResA = volA > 0 ? (resA / volA) * 100 : 0;
+  const txResB = volB > 0 ? (resB / volB) * 100 : 0;
+
+  // Atualiza Textos na Tela
+  document.getElementById('lblAnoAVol').innerText = anoA;
+  document.getElementById('lblAnoBVol').innerText = anoB;
+  document.getElementById('lblAnoARes').innerText = anoA;
+  document.getElementById('lblAnoBRes').innerText = anoB;
+
+  document.getElementById('valAnoAVol').innerText = volA;
+  document.getElementById('valAnoBVol').innerText = volB;
+  document.getElementById('valAnoARes').innerText = Math.round(txResA) + '%';
+  document.getElementById('valAnoBRes').innerText = Math.round(txResB) + '%';
+
+  // Calcula Diferença de Volume
+  const tagVol = document.getElementById('tagDiffVol');
+  if (volA === 0 && volB === 0) {
+    tagVol.className = 'tag-igual'; tagVol.innerText = '0%';
+  } else if (volA === 0) {
+    tagVol.className = 'tag-cresceu'; tagVol.innerText = '▲ Novo';
+  } else {
+    const diffVol = ((volB - volA) / volA) * 100;
+    if (diffVol > 0) { tagVol.className = 'tag-cresceu'; tagVol.innerText = '▲ +' + Math.round(diffVol) + '%'; }
+    else if (diffVol < 0) { tagVol.className = 'tag-caiu'; tagVol.innerText = '▼ ' + Math.round(diffVol) + '%'; }
+    else { tagVol.className = 'tag-igual'; tagVol.innerText = '➖ Igual'; }
+  }
+
+  // Calcula Diferença de Resolução (Eficiência)
+  const tagRes = document.getElementById('tagDiffRes');
+  const diffRes = txResB - txResA; // Pontos percentuais
+  if (diffRes > 0) { tagRes.className = 'tag-cresceu'; tagRes.innerText = '▲ +' + Math.round(diffRes) + ' p.p.'; }
+  else if (diffRes < 0) { tagRes.className = 'tag-caiu'; tagRes.innerText = '▼ ' + Math.round(diffRes) + ' p.p.'; }
+  else { tagRes.className = 'tag-igual'; tagRes.innerText = '➖ Manteve'; }
+
+  // Desenhar Gráfico de Barras Mensal Lado a Lado
+  let mesesA = new Array(12).fill(0);
+  let mesesB = new Array(12).fill(0);
+
+  dadosA.forEach(d => { if(d.dataObj) mesesA[d.dataObj.getMonth()]++; });
+  dadosB.forEach(d => { if(d.dataObj) mesesB[d.dataObj.getMonth()]++; });
+
+  const corBarraB = getComputedStyle(document.documentElement).getPropertyValue('--color-chart-bar').trim() || '#3b82f6';
+
+  if(charts['graficoComparacaoAnual']) charts['graficoComparacaoAnual'].destroy();
+  charts['graficoComparacaoAnual'] = new Chart(document.getElementById('graficoComparacaoAnual').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: nomesDosMeses,
+      datasets: [
+        { label: anoA, data: mesesA, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 4 },
+        { label: anoB, data: mesesB, backgroundColor: corBarraB, borderRadius: 4 }
+      ]
+    },
+    options: {
+      plugins: { legend: { labels: { color: '#f1f5f9' } }, datalabels: { display: true, color: '#fff', font: {weight: 'bold'}, formatter: v => v > 0 ? v : ''} },
+      scales: { x: { ticks: { color: '#f1f5f9' }, grid: { display: false } }, y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } } }
+    }
+  });
+}
+// ============================================================================
 
 // ================= RESUMO NARRADO (Polido e Inteligente) =================
 function atualizarResumo() {
@@ -661,7 +815,7 @@ function atualizarResumo() {
     if (d.bairro === 'Institucional / Gabinete') volumeInstitucional++;
     
     porSec[d.secretaria] = (porSec[d.secretaria] || 0) + 1;
-    // Tira os internos do ranking de bairros
+    // Tira os internos do ranking para o texto não ficar estranho
     if (d.bairro !== 'Institucional / Gabinete') {
       porBairro[d.bairro] = (porBairro[d.bairro] || 0) + 1;
     }
@@ -674,10 +828,10 @@ function atualizarResumo() {
   const htmlResumo = `
     <li>
       🎙️ <b>Resumo Automático:</b> 
-      O painel apresenta um volume total de <span class="resumo-destaque">${total} demandas</span> analisadas. 
-      Neste cenário, a taxa de resolução do gabinete atinge a marca de <span class="resumo-destaque">${pct}%</span>.
-      Identificamos que <span class="resumo-destaque">${volumeInstitucional}</span> demandas são de origem interna (Institucional/Gabinete). 
-      Excluindo os registros internos, o bairro com a maior incidência de solicitações é o <span class="resumo-destaque">${topBairro ? topBairro[0] : 'N/A'}</span>.
+      O painel apresenta um volume de <span class="resumo-destaque">${total} demandas</span> analisadas. 
+      Neste cenário, a taxa de resolução atinge a marca de <span class="resumo-destaque">${pct}%</span>.
+      Identificamos que <span class="resumo-destaque">${volumeInstitucional}</span> demandas são de origem interna/institucional. 
+      Excluindo estes registros internos, o bairro com a maior incidência de solicitações é o <span class="resumo-destaque">${topBairro ? topBairro[0] : 'N/A'}</span>.
       Atualmente, o maior ponto de atenção recai sobre a Secretaria <span class="resumo-destaque">${topSec ? topSec[0] : 'N/A'}</span>.
     </li>
   `;
