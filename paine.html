@@ -77,7 +77,7 @@ input[type="file"] { display: none; }
 .kpi-desc { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
 .kpi-total { --accent: var(--color-primary); } .kpi-resolvida { --accent: var(--color-green); } .kpi-andamento { --accent: var(--color-orange); } .kpi-pendente { --accent: var(--color-red); }
 
-.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 25px; }
 .chart-panel { background: var(--bg-panel); border-radius: 20px; padding: 25px; box-shadow: var(--shadow-3d); border: 1px solid var(--border-light); display: flex; flex-direction: column; transition: 0.3s;}
 .chart-panel h3 { font-size: 16px; color: var(--text-main); margin-bottom: 20px; text-align: center; }
 .canvas-container { position: relative; flex: 1; min-height: 250px; display: flex; justify-content: center; align-items: center;}
@@ -105,8 +105,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
 
 /* RELATÓRIOS LISTA E RESUMOS */
 .resumo-lista { list-style: none; margin: 0; padding: 0;}
-.resumo-lista li { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 15px; color: #e2e8f0; line-height: 1.6; }
-.resumo-lista li:last-child { border-bottom: none; }
+.resumo-lista li { padding: 10px 0; font-size: 15px; color: #e2e8f0; line-height: 1.6; }
 .resumo-destaque { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--color-primary); }
 
 /* MENU LATERAL */
@@ -260,14 +259,14 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
     <!-- PÁGINA 1: VISÃO GERAL -->
     <div class="page page-ativa" id="page-visao">
       <div class="kpis">
-        <div class="kpi-card kpi-total" onclick="toggleKpiStatus('Todos')"><div class="kpi-header">📄 Total Visível</div><div class="kpi-value" id="kpiTotal">0</div><div class="kpi-desc">Baseado nos filtros</div></div>
+        <div class="kpi-card kpi-total" onclick="toggleKpiStatus('Todos')"><div class="kpi-header">📄 Total Visível</div><div class="kpi-value" id="kpiTotal">0</div></div>
         <div class="kpi-card kpi-resolvida" onclick="toggleKpiStatus('Resolvida')"><div class="kpi-header">✅ Resolvidas</div><div class="kpi-value" id="kpiResolvidas">0</div><div class="kpi-desc" id="kpiResolvidasPct">0%</div></div>
         <div class="kpi-card kpi-andamento" onclick="toggleKpiStatus('Andamento')"><div class="kpi-header">⏳ Em Andamento</div><div class="kpi-value" id="kpiAndamento">0</div><div class="kpi-desc" id="kpiAndamentoPct">0%</div></div>
         <div class="kpi-card kpi-pendente" onclick="toggleKpiStatus('Pendente')"><div class="kpi-header">🚨 Pendentes</div><div class="kpi-value" id="kpiPendentes">0</div><div class="kpi-desc" id="kpiPendentesPct">0%</div></div>
       </div>
       
       <!-- Resumo Narrado na Visão Geral (Dinâmico) -->
-      <div class="tabela-panel" style="margin-bottom: 25px; padding: 15px 25px;">
+      <div class="tabela-panel" style="margin-bottom: 25px; padding: 15px 25px; border-left: 4px solid var(--color-primary);">
         <ul class="resumo-lista" id="resumoVisaoGeral"></ul>
       </div>
 
@@ -275,7 +274,6 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
         <div class="chart-panel"><h3>Situação Atual</h3><div class="canvas-container"><canvas id="graficoStatus"></canvas></div></div>
         <div class="chart-panel"><h3>Top Secretarias</h3><div class="canvas-container"><canvas id="graficoSecretaria"></canvas></div></div>
         <div class="chart-panel"><h3>Top Bairros</h3><div class="canvas-container"><canvas id="graficoBairrosVisao"></canvas></div></div>
-        <div class="chart-panel"><h3>Quem mais solicita? (Top Solicitantes)</h3><div class="canvas-container"><canvas id="graficoSolicitantes"></canvas></div></div>
       </div>
     </div>
 
@@ -286,7 +284,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
         <input type="text" class="busca-box" id="buscaDemandas" placeholder="🔎 Digite para buscar (assunto, secretaria, bairro...)" oninput="buscarDemandas(this.value)">
         <div class="table-scroll">
           <table>
-            <thead><tr><th>Status</th><th>Assunto Principal</th><th>Data</th><th>Secretaria</th><th>Solicitante</th><th>Bairro</th></tr></thead>
+            <thead><tr><th>Status</th><th>Assunto Principal</th><th>Data</th><th>Secretaria</th><th>Bairro</th></tr></thead>
             <tbody id="corpoTabela"></tbody>
           </table>
         </div>
@@ -300,7 +298,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
 
     <!-- PÁGINA: RELATÓRIOS -->
     <div class="page" id="page-relatorios">
-      <div class="chart-panel grande" style="margin-bottom: 20px;">
+      <div class="chart-panel grande">
         <h3>Evolução Mensal das Demandas</h3>
         <div class="canvas-container"><canvas id="graficoEvolucao"></canvas></div>
       </div>
@@ -352,46 +350,61 @@ let DADOS_FILTRADOS = [];
 let termoBusca = '';
 const mesesNomes = {'01':'Jan', '02':'Fev', '03':'Mar', '04':'Abr', '05':'Mai', '06':'Jun', '07':'Jul', '08':'Ago', '09':'Set', '10':'Out', '11':'Nov', '12':'Dez'};
 
-let filtros = { status: new Set(), secretaria: new Set(), bairro: new Set(), tipo: new Set(), solicitante: new Set() };
+let filtros = { status: new Set(), secretaria: new Set(), bairro: new Set(), tipo: new Set() };
 
-// Dicionários para manter o nome bonito de Bairros, Secretarias, etc.
-let dicionarioNomes = { bairro: {}, secretaria: {}, tipo: {}, solicitante: {} };
+// Dicionários para agrupar e manter o nome bonito de Bairros, Secretarias e Tipos.
+let dicionarioNomes = { bairro: {}, secretaria: {}, tipo: {} };
 
 Chart.defaults.color = '#94a3b8'; Chart.defaults.font.family = "'Inter', sans-serif";
 Chart.register(ChartDataLabels); Chart.defaults.set('plugins.datalabels', { display: false });
 
 let charts = {};
 
-// ================= CUSTOMIZAÇÃO HEX COM BOTÃO SALVAR =================
+// ================= CUSTOMIZAÇÃO HEX (COLOR PICKER) =================
+// Função para converter RGB em HEX
+function rgbToHex(color) {
+  if (color.startsWith('#')) return color;
+  const match = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (!match) return '#3b82f6';
+  return '#' + match.slice(1).map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+}
+
 function toggleCustomPanel() {
   const painel = document.getElementById('custom-panel');
   painel.style.display = painel.style.display === 'block' ? 'none' : 'block';
+  if(painel.style.display === 'block') { sincronizarColorPicker(); }
 }
+
+// Sincroniza o Input de Cor com a cor real do item selecionado
+function sincronizarColorPicker() {
+  const alvo = document.getElementById('selAlvoCor').value;
+  const rootStyle = getComputedStyle(document.documentElement);
+  let corAtual = rootStyle.getPropertyValue(alvo).trim();
+  document.getElementById('corPicker').value = rgbToHex(corAtual);
+}
+
+// Atualiza quando o dropdown muda
+document.getElementById('selAlvoCor').addEventListener('change', sincronizarColorPicker);
 
 function salvarCor() {
   const cor = document.getElementById('corPicker').value;
   const alvo = document.getElementById('selAlvoCor').value;
-  
-  // Aplica a cor na variável CSS escolhida
   document.documentElement.style.setProperty(alvo, cor);
   
-  // Se mudar a cor das barras do gráfico, tem que forçar o redesenho
-  if (alvo === '--color-chart-bar') {
-    atualizarDash(); 
-  }
+  // Redesenha gráficos se a cor das barras mudou
+  if (alvo === '--color-chart-bar') { atualizarDash(); }
 }
 
 function esconderApresentacao() {
   document.getElementById('container-personalizar').style.display = 'none';
 }
-// ====================================================
+// ===================================================================
 
 const REDESENHAR = {
   visao: () => { 
     desenharDonut('graficoStatus', 'status'); 
     desenharBarra('graficoSecretaria', 'secretaria', 5); 
     desenharBarra('graficoBairrosVisao', 'bairro', 5);
-    desenharBarra('graficoSolicitantes', 'solicitante', 5);
   },
   demandas: () => { montarTabela(); },
   secretarias: () => { desenharBarra('graficoSecretariaGrande', 'secretaria', 25); },
@@ -422,24 +435,28 @@ function parseData(val) {
   return null;
 }
 
-// Limpeza de texto: tira acento, tira espaço sobrando e deixa maiúsculo (Para agrupar certo)
+// ================= TRATAMENTO DE TEXTOS (Agrupar Bairros Iguais) =================
 function padronizarTexto(texto) {
-  if (!texto || String(texto).trim() === '') return 'NÃO INFORMADO';
+  if (!texto || String(texto).trim() === '') return 'VAZIO';
+  // Tira acentos, converte pra maiúsculo e remove espaços nas pontas
   return String(texto).normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
 }
 
-// Salva e retorna o primeiro nome "bonitinho" que encontrar para mostrar na tela
 function obterNomeApresentacao(categoria, textoOriginal) {
-  if (!textoOriginal || String(textoOriginal).trim() === '') return 'Não Informado';
   let padronizado = padronizarTexto(textoOriginal);
-  if (padronizado === 'NAO INFORMADO' || padronizado === 'NAO INFORMADA') return 'Não Informado';
   
+  // Se o bairro/secretaria vier vazio do Excel, vira Institucional
+  if (padronizado === 'VAZIO' || padronizado === 'NAO INFORMADO' || padronizado === 'NAO INFORMADA') {
+    return 'Institucional / Gabinete';
+  }
+  
+  // Salva a primeira versão bonita (com acento) que encontrar e usa sempre ela
   if (!dicionarioNomes[categoria][padronizado]) {
-    // Para ficar elegante no visual, podemos transformar em MAIÚSCULO, mas mantendo a acentuação correta original do primeiro registro
     dicionarioNomes[categoria][padronizado] = String(textoOriginal).trim().toUpperCase();
   }
   return dicionarioNomes[categoria][padronizado];
 }
+// =================================================================================
 
 document.getElementById('uploadExcel').addEventListener('change', function(e) {
   const file = e.target.files[0]; if(!file) return;
@@ -459,21 +476,22 @@ function processarDados(json) {
   let colExpediente = chavesModelo.find(k => k.toLowerCase().includes('expediente'));
 
   DADOS_GLOBAIS = json.map(linha => {
+    // RESOLVE O BUG DO STATUS: Aguardando Exec. Secretaria agora é Em Andamento oficial
     let status = 'Andamento';
     let sCru = linha['Status'] || '';
     if (['Concluída', 'Arquivada', 'Rejeitada', 'Resolvido', 'Atendido'].includes(sCru)) status = 'Resolvida';
     else if (['Pendente', 'Aguardando Aprovação'].includes(sCru)) status = 'Pendente';
+    else if (['Aguardando Exec. Secretaria'].includes(sCru)) status = 'Andamento';
 
     let expTexto = colExpediente ? String(linha[colExpediente] || '') : '';
     let numExpediente = expTexto.replace(/\D/g, ''); 
     let dObj = parseData(linha['Abertura / Fato']);
     let anoStr = dObj ? dObj.getFullYear() : '2026'; 
 
-    // Agrupamento Inteligente
+    // Limpa e Agrupa (Vicentina, vicentina, VICENTINA -> tudo igual)
     let sec = obterNomeApresentacao('secretaria', linha['Secretaria']);
     let bairro = obterNomeApresentacao('bairro', linha['Bairro']);
     let tipo = obterNomeApresentacao('tipo', linha['Tipo de Solicitação']);
-    let sol = obterNomeApresentacao('solicitante', linha['Solicitante']);
 
     secretariasSet.add(sec);
     bairrosSet.add(bairro);
@@ -487,7 +505,6 @@ function processarDados(json) {
       secretaria: sec,
       tipo: tipo,
       bairro: bairro,
-      solicitante: sol,
       expediente: numExpediente,
       ano: anoStr
     };
@@ -499,7 +516,7 @@ function processarDados(json) {
   limparTudo(); 
   document.getElementById('avisoVazio').style.display = 'none';
   document.getElementById('painelConteudo').style.display = 'block';
-  document.getElementById('info-texto').innerText = `Sucesso! Foram processadas ${DADOS_GLOBAIS.length} demandas.`;
+  document.getElementById('info-texto').innerText = `Sistema Online: ${DADOS_GLOBAIS.length} demandas validadas.`;
 }
 
 function preencherSelect(id, arrayOpcoes) {
@@ -524,7 +541,7 @@ function adicionarFiltroCombo(categoria) {
 function adicionarFiltro(categoria, valor) { filtros[categoria].add(valor); aplicarFiltrosGerais(); }
 function removerFiltro(categoria, valor) { filtros[categoria].delete(valor); aplicarFiltrosGerais(); }
 function limparTudo() {
-  filtros = { status: new Set(), secretaria: new Set(), bairro: new Set(), tipo: new Set(), solicitante: new Set() };
+  filtros = { status: new Set(), secretaria: new Set(), bairro: new Set(), tipo: new Set() };
   document.getElementById('dataInicio').value = ''; document.getElementById('dataFim').value = '';
   aplicarFiltrosGerais();
 }
@@ -539,7 +556,6 @@ function aplicarFiltrosGerais() {
     if (filtros.secretaria.size > 0 && !filtros.secretaria.has(d.secretaria)) return false;
     if (filtros.bairro.size > 0 && !filtros.bairro.has(d.bairro)) return false;
     if (filtros.tipo.size > 0 && !filtros.tipo.has(d.tipo)) return false;
-    if (filtros.solicitante.size > 0 && !filtros.solicitante.has(d.solicitante)) return false;
     return true;
   });
   renderizarTags(); atualizarDash();
@@ -547,7 +563,7 @@ function aplicarFiltrosGerais() {
 
 function renderizarTags() {
   const container = document.getElementById('areaTags'); container.innerHTML = '';
-  const nomesCores = { status: '🚥 Status', secretaria: '🏢 Sec', bairro: '🗺️ Bairro', tipo: '📑 Tipo', solicitante: '👤 Pessoal' };
+  const nomesCores = { status: '🚥 Status', secretaria: '🏢 Sec', bairro: '🗺️ Bairro', tipo: '📑 Tipo' };
   for (let cat in filtros) { filtros[cat].forEach(valor => { container.innerHTML += `<div class="tag-filtro">${nomesCores[cat]}: ${valor} <span onclick="removerFiltro('${cat}', '${valor}')">✕</span></div>`; }); }
 }
 
@@ -559,7 +575,7 @@ function atualizarDash() {
   document.getElementById('kpiAndamento').innerText = a; document.getElementById('kpiAndamentoPct').innerText = t>0 ? Math.round((a/t)*100)+'%' : '0%';
   document.getElementById('kpiPendentes').innerText = p; document.getElementById('kpiPendentesPct').innerText = t>0 ? Math.round((p/t)*100)+'%' : '0%';
 
-  atualizarResumo(); // Atualiza o resumo narrativo
+  atualizarResumo(); 
 
   const paginaAtiva = document.querySelector('.page-ativa').id.replace('page-', '');
   if(REDESENHAR[paginaAtiva]) REDESENHAR[paginaAtiva]();
@@ -578,14 +594,18 @@ function desenharDonut(idCanvas, categoria) {
 }
 
 function desenharBarra(idCanvas, categoria, limite) {
-  let c = {}; DADOS_FILTRADOS.forEach(d => { if(d[categoria] !== 'Não Informado') c[d[categoria]] = (c[d[categoria]] || 0) + 1; });
+  let c = {}; DADOS_FILTRADOS.forEach(d => { c[d[categoria]] = (c[d[categoria]] || 0) + 1; });
   let o = Object.keys(c).map(k => [k, c[k]]).sort((a,b) => b[1] - a[1]).slice(0, limite);
   const corBarra = getComputedStyle(document.documentElement).getPropertyValue('--color-chart-bar').trim() || '#3b82f6';
   
   if(charts[idCanvas]) charts[idCanvas].destroy();
   charts[idCanvas] = new Chart(document.getElementById(idCanvas).getContext('2d'), {
     type: 'bar', data: { labels: o.map(i=>i[0]), datasets: [{ data: o.map(i=>i[1]), backgroundColor: corBarra, borderRadius: 4, maxBarThickness: 45 }] },
-    options: { indexAxis: 'y', plugins: { legend: { display: false }, datalabels: { display: true, color: '#fff', align: 'end', anchor: 'end', font: {weight: 'bold'} } }, scales: { x: { display: false }, y: { ticks: {color: '#f1f5f9'}, grid: {display: false} } },
+    options: { 
+      indexAxis: 'y', 
+      layout: { padding: { right: 45 } }, // EVITA QUE OS NÚMEROS SEJAM CORTADOS
+      plugins: { legend: { display: false }, datalabels: { display: true, color: '#fff', align: 'end', anchor: 'end', font: {weight: 'bold'} } }, 
+      scales: { x: { display: false }, y: { ticks: {color: '#f1f5f9'}, grid: {display: false} } },
       onClick: (evt, els) => { if (els.length) adicionarFiltro(categoria, charts[idCanvas].data.labels[els[0].index]); }
     }
   });
@@ -596,7 +616,7 @@ function desenharGraficoComparacao() {
   let stats = {};
   DADOS_FILTRADOS.forEach(d => {
     let chave = d[metrica];
-    if(chave === 'Não Informado') return;
+    if(chave === 'Institucional / Gabinete') return; // Tira as internas da comparacao
     if(!stats[chave]) stats[chave] = { resolvida: 0, naoresolvida: 0, total: 0 };
     if(d.status === 'Resolvida') stats[chave].resolvida++; else stats[chave].naoresolvida++;
     stats[chave].total++;
@@ -623,6 +643,7 @@ function desenharGraficoEvolucao() {
   });
 }
 
+// ================= RESUMO NARRADO (Polido e Inteligente) =================
 function atualizarResumo() {
   const listaVisao = document.getElementById('resumoVisaoGeral');
   const total = DADOS_FILTRADOS.length;
@@ -632,27 +653,32 @@ function atualizarResumo() {
     return; 
   }
 
-  let resolvidas = 0; const porSec = {}, porBairro = {}, porSol = {};
+  let resolvidas = 0, volumeInstitucional = 0;
+  const porSec = {}, porBairro = {};
+
   DADOS_FILTRADOS.forEach(d => {
     if (d.status === 'Resolvida') resolvidas++;
-    if (d.secretaria !== 'Não Informada') porSec[d.secretaria] = (porSec[d.secretaria] || 0) + 1;
-    if (d.bairro !== 'Não Informado') porBairro[d.bairro] = (porBairro[d.bairro] || 0) + 1;
-    if (d.solicitante !== 'Não Informado') porSol[d.solicitante] = (porSol[d.solicitante] || 0) + 1;
+    if (d.bairro === 'Institucional / Gabinete') volumeInstitucional++;
+    
+    porSec[d.secretaria] = (porSec[d.secretaria] || 0) + 1;
+    // Tira os internos do ranking de bairros
+    if (d.bairro !== 'Institucional / Gabinete') {
+      porBairro[d.bairro] = (porBairro[d.bairro] || 0) + 1;
+    }
   });
 
   const topSec = Object.entries(porSec).sort((a,b) => b[1] - a[1])[0];
   const topBairro = Object.entries(porBairro).sort((a,b) => b[1] - a[1])[0];
-  const topSol = Object.entries(porSol).sort((a,b) => b[1] - a[1])[0];
   const pct = Math.round((resolvidas / total) * 100);
 
-  // Texto narrado, fácil de apresentar ao vivo
   const htmlResumo = `
     <li>
-      💡 <b>Resumo em tempo real:</b> O painel está exibindo <span class="resumo-destaque">${total}</span> demandas. 
-      Deste volume, <span class="resumo-destaque">${pct}%</span> já foram concluídas ou resolvidas. 
-      A maior sobrecarga atual de solicitações recai sobre a secretaria <span class="resumo-destaque">${topSec ? topSec[0] : 'N/A'}</span>.
-      O local com maior incidência de registros é o bairro <span class="resumo-destaque">${topBairro ? topBairro[0] : 'N/A'}</span>, 
-      e o solicitante com participação mais expressiva neste cenário é <span class="resumo-destaque">${topSol ? topSol[0] : 'N/A'}</span>.
+      🎙️ <b>Resumo Automático:</b> 
+      O painel apresenta um volume total de <span class="resumo-destaque">${total} demandas</span> analisadas. 
+      Neste cenário, a taxa de resolução do gabinete atinge a marca de <span class="resumo-destaque">${pct}%</span>.
+      Identificamos que <span class="resumo-destaque">${volumeInstitucional}</span> demandas são de origem interna (Institucional/Gabinete). 
+      Excluindo os registros internos, o bairro com a maior incidência de solicitações é o <span class="resumo-destaque">${topBairro ? topBairro[0] : 'N/A'}</span>.
+      Atualmente, o maior ponto de atenção recai sobre a Secretaria <span class="resumo-destaque">${topSec ? topSec[0] : 'N/A'}</span>.
     </li>
   `;
 
@@ -664,11 +690,11 @@ function buscarDemandas(v) { termoBusca = v.toLowerCase().trim(); montarTabela()
 function montarTabela() {
   const c = document.getElementById('corpoTabela'); if (!c) return; c.innerHTML = '';
   let b = DADOS_FILTRADOS;
-  if (termoBusca) b = b.filter(d => (d.assunto + ' ' + d.secretaria + ' ' + d.bairro + ' ' + d.solicitante).toLowerCase().includes(termoBusca));
+  if (termoBusca) b = b.filter(d => (d.assunto + ' ' + d.secretaria + ' ' + d.bairro).toLowerCase().includes(termoBusca));
 
   b.slice(0, 150).forEach(d => {
     let tr = document.createElement('tr');
-    tr.innerHTML = `<td><span class="tag ${d.status}">${d.status}</span></td> <td style="font-weight: 700; color: white;">${d.assunto}</td> <td>${d.dataTexto}</td> <td>${d.secretaria}</td> <td>${d.solicitante}</td> <td>${d.bairro}</td>`;
+    tr.innerHTML = `<td><span class="tag ${d.status}">${d.status}</span></td> <td style="font-weight: 700; color: white;">${d.assunto}</td> <td>${d.dataTexto}</td> <td>${d.secretaria}</td> <td>${d.bairro}</td>`;
     c.appendChild(tr); tr.onclick = () => abrirModal(d);
   });
 }
@@ -684,7 +710,6 @@ function abrirModal(d) {
     <div class="linha"><b>Data</b><span>${d.dataTexto}</span></div>
     <div class="linha"><b>Secretaria</b><span>${d.secretaria}</span></div>
     <div class="linha"><b>Bairro</b><span>${d.bairro}</span></div>
-    <div class="linha"><b>Solicitante</b><span>${d.solicitante}</span></div>
     ${linkHtml}
   `;
   document.getElementById('modalBg').classList.add('aberto');
@@ -694,7 +719,7 @@ document.getElementById('modalClose').onclick = () => document.getElementById('m
 document.getElementById('modalBg').onclick = (e) => { if (e.target.id === 'modalBg') e.target.classList.remove('aberto'); };
 
 function exportarExcel() {
-  const planilha = XLSX.utils.json_to_sheet(DADOS_FILTRADOS.map(d => ({ Status: d.status, Assunto: d.assunto, Data: d.dataTexto, Secretaria: d.secretaria, Bairro: d.bairro, Solicitante: d.solicitante })));
+  const planilha = XLSX.utils.json_to_sheet(DADOS_FILTRADOS.map(d => ({ Status: d.status, Assunto: d.assunto, Data: d.dataTexto, Secretaria: d.secretaria, Bairro: d.bairro })));
   const pasta = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(pasta, planilha, 'Demandas');
   XLSX.writeFile(pasta, 'exportacao_painel.xlsx');
 }
