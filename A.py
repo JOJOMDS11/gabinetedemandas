@@ -1,118 +1,202 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from mplot3d import Axes3D
+import requests
+from bs4 import BeautifulSoup
+import json
+import os
+import smtplib
+import sys
+import re # <-- IMPORTANTE: Biblioteca para extrair padrões de texto
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
-# --- 1. CARREGAMENTO E TRATAMENTO DOS DADOS REAIS DO PDF ---
-# Dados extraídos diretamente das colunas 'Secretaria' e 'Tip de Solicitação' do PDF
-dados_pdf = {
-    'Secretaria': [
-        'SAÚDE', 'SEMOB', 'SEMOB', 'SAÚDE', 'SEMOB', 'FAZENDA', 'CÂMARA DE VEREADORES SÃO LEOPOLDO',
-        'Secretaria Municipal de Desenvolvimento Econômico e Tecnológico - SEDETEC', 'SEMOB', 'SEMOB',
-        'SEMOB', 'CÂMARA DE VEREADORES SÃO LEOPOLDO', 'SAÚDE', 'SEMOB', 'SEMOB', 'SEMOB', 'SEMOB',
-        'SEMOB', 'SEMOB', 'SAÚDE', 'CÂMARA DE VEREADORES SÃO LEOPOLDO', 'SEMOB',
-        'CÂMARA DE VEREADORES SÃO LEOPOLDO', 'SEMOB', 'SEMOB', 'SEMOB', 'SEMOB', 'SEMOB', 'SEMOB',
-        'SEMOB', 'CÂMARA DE VEREADORES SÃO LEOPOLDO', 'CÂMARA DE VEREADORES SÃO LEOPOLDO', 'SEMOB',
-        'SEMOB', 'SEMOB', 'SEMOB', 'Demanda Externa', 'SEMOB', 'SEMOB', 'SEMOB', 'SEMOB',
-        'CÂMARA DE VEREADORES SÃO LEOPOLDO', 'SAÚDE', 'SEMOB', 'SAÚDE'
-    ],
-    'Tipo_Solicitacao': [
-        'DEMANDA (GERAL)', 'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS', 'DEMANDA (GERAL)',
-        'PEDIDO DE PROVIDÊNCIAS', 'GABINETE', 'DEMANDA (GERAL)', 'GABINETE', 'PEDIDO DE PROVIDÊNCIAS',
-        'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS', 'SESSÃO SOLENE', 'AGENDA VISITA AO GABINETE',
-        'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS',
-        'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS', 'INDICAÇÃO', 'REQUERIMENTO', 'PEDIDO DE PROVIDÊNCIAS',
-        'REQUERIMENTO', 'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS',
-        'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS',
-        'EMENDA ADITIVA', 'EMENDA ADITIVA', 'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS',
-        'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS',
-        'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS', 'PEDIDO DE PROVIDÊNCIAS', 'EMENDA ADITIVA',
-        'DEMANDA (GERAL)', 'PEDIDO DE PROVIDÊNCIAS', 'GABINETE'
-    ]
+FUSO_BRASILIA = ZoneInfo("America/Sao_Paulo")
+
+ARQUIVO_DADOS = '/home/ubuntu/robo/proposicoes_vistas.json'
+ARQUIVO_LOG_ERROS = '/home/ubuntu/robo/logs_de_erros.json'
+ARQUIVO_LOG_EXECUCAO = '/home/ubuntu/robo/log_executivo.txt'
+MAX_LINHAS_LOG = 100
+
+EMAIL_REMETENTE = 'joaopedro.holdefer@gmail.com'
+SENHA_APP = 'oyxp uxzi lqof egsp'
+EMAIL_DESTINO_BRUTO = 'gabinetedaudt22500@gmail.com, vereadordanieldaudt@camarasaoleopoldo.rs.gov.br'
+LISTA_EMAILS_DESTINO = [e.strip() for e in EMAIL_DESTINO_BRUTO.split(',') if e.strip()]
+
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
 }
 
-df = pd.DataFrame(dados_pdf)
+def carregar_vistos():
+    if os.path.exists(ARQUIVO_DADOS):
+        with open(ARQUIVO_DADOS, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return []
 
-# Contagem real para as secretarias e tipos de solicitação
-contagem_secretarias = df['Secretaria'].value_counts()
-contagem_tipos = df['Tipo_Solicitacao'].value_counts()
+def salvar_vistos(vistos):
+    with open(ARQUIVO_DADOS, 'w', encoding='utf-8') as f:
+        json.dump(vistos, f, ensure_ascii=False, indent=4)
 
-# --- 2. CONFIGURAÇÃO ESTÉTICA DO DASHBOARD (DARK MODE) ---
-plt.style.use('dark_background')
-cor_fundo = '#111827'  # Azul escuro acinzentado conforme imagem do painel
-cor_barras = '#3B82F6'  # Azul brilhante para destacar
+def enviar_email(assunto, corpo):
+    mensagem = MIMEMultipart()
+    mensagem['From'] = EMAIL_REMETENTE
+    mensagem['To'] = ', '.join(LISTA_EMAILS_DESTINO)
+    mensagem['Subject'] = assunto
+    mensagem.attach(MIMEText(corpo, 'plain', 'utf-8'))
 
-# --- 3. GRÁFICO 1: DE BARRAS DE SECRETARIAS EM 3D ---
-fig1 = plt.figure(figsize=(10, 6), facecolor=cor_fundo)
-ax1 = fig1.add_subplot(111, projection='3d')
-ax1.set_facecolor(cor_fundo)
+    servidor = smtplib.SMTP('smtp.gmail.com', 587)
+    servidor.starttls()
+    servidor.login(EMAIL_REMETENTE, SENHA_APP)
+    servidor.sendmail(EMAIL_REMETENTE, LISTA_EMAILS_DESTINO, mensagem.as_string())
+    servidor.quit()
 
-y_pos = np.arange(len(contagem_secretarias))
-valores = contagem_secretarias.values
+def log_execucao(status):
+    agora = datetime.now(FUSO_BRASILIA)
+    proxima = agora + timedelta(minutes=15)
+    linha = (
+        f"[{agora.strftime('%Y-%m-%d %H:%M:%S')}] "
+        f"Status: {status} | "
+        f"Proxima execucao prevista: {proxima.strftime('%Y-%m-%d %H:%M:%S')}"
+    )
+    print(linha)
 
-# Definição das dimensões 3D dos blocos de barras
-x_pos = np.zeros(len(contagem_secretarias))
-z_pos = np.zeros(len(contagem_secretarias))
-dx = 0.5  # Largura da barra no eixo X
-dy = 0.5  # Espessura da barra no eixo Y
-dz = valores  # Altura projetada no eixo Z
+    linhas_existentes = []
+    if os.path.exists(ARQUIVO_LOG_EXECUCAO):
+        with open(ARQUIVO_LOG_EXECUCAO, 'r', encoding='utf-8') as f:
+            linhas_existentes = f.readlines()
 
-ax1.bar3d(x_pos, y_pos, z_pos, dx, dy, dz, color=cor_barras, alpha=0.85, edgecolor='#1E40AF')
+    if len(linhas_existentes) >= MAX_LINHAS_LOG:
+        linhas_existentes = []
 
-# Ajustes de eixos e rótulos das Secretarias
-ax1.set_yticks(y_pos)
-# Encurta nomes muito longos de secretarias para melhor legibilidade
-labels_secretarias = [s[:15] + '...' if len(s) > 15 else s for s in contagem_secretarias.index]
-ax1.set_yticklabels(labels_secretarias, fontsize=9, color='#9CA3AF')
-ax1.set_xticklabels([])
-ax1.set_zlabel('Nº de Demandas', color='#9CA3AF')
-ax1.set_title('Demandas por Secretaria (Visão 3D)', fontsize=14, pad=20, color='#F3F4F6', weight='bold')
-ax1.view_init(elev=25, azim=-45)  # Angulação para valorizar o efeito 3D
+    linhas_existentes.append(linha + "\n")
 
-plt.tight_layout()
-plt.show()
+    with open(ARQUIVO_LOG_EXECUCAO, 'w', encoding='utf-8') as f:
+        f.writelines(linhas_existentes)
 
-# --- 4. GRÁFICO 2: TIPOS DE SOLICITAÇÃO EM "PIZZA 3D" (CILINDRO PROJETADO) ---
-fig2 = plt.figure(figsize=(8, 6), facecolor=cor_fundo)
-ax2 = fig2.add_subplot(111, projection='3d')
-ax2.set_facecolor(cor_fundo)
-
-labels_tipos = contagem_tipos.index
-valores_tipos = contagem_tipos.values
-proporcoes = valores_tipos / sum(valores_tipos)
-
-# Criação do efeito de pizza tridimensional mapeando setores circulares em fatias volumétricas
-angulo_atual = 0
-cores_pizza = ['#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444']
-
-for i, prop in enumerate(proporcoes):
-    angulo_setor = prop * 2 * np.pi
-    # Resolução geométrica da fatia
-    theta = np.linspace(angulo_atual, angulo_atual + angulo_setor, 50)
-    angulo_atual += angulo_setor
+def logar_falha(motivo):
+    print(f"FALHA: {motivo}")
+    agora = datetime.now(FUSO_BRASILIA)
+    hoje_str = agora.strftime('%Y-%m-%d')
     
-    # Coordenadas internas e da borda da fatia de pizza
-    r = np.linspace(0, 1, 10)
-    T, R = np.meshgrid(theta, r)
-    X = R * np.cos(T)
-    Y = R * np.sin(T)
+    erros = []
+    if os.path.exists(ARQUIVO_LOG_ERROS):
+        try:
+            with open(ARQUIVO_LOG_ERROS, 'r', encoding='utf-8') as f:
+                erros = json.load(f)
+        except Exception:
+            pass
+
+    erros = [e for e in erros if e.get('data_hora', '').startswith(hoje_str)]
     
-    # Altura Z (profundidade/espessura da pizza 3D)
-    Z_baixo = np.zeros_like(X)
-    Z_alto = np.ones_like(X) * 0.25  # Espessura do relevo
+    erros.append({
+        'data_hora': agora.strftime('%Y-%m-%d %H:%M:%S'),
+        'motivo': motivo
+    })
     
-    # Renderiza a superfície volumétrica tridimensional da fatia
-    ax2.plot_surface(X, Y, Z_alto, color=cores_pizza[i % len(cores_pizza)], alpha=0.9, edgecolor='none')
-    ax2.plot_surface(X, Y, Z_baixo, color=cores_pizza[i % len(cores_pizza)], alpha=0.7, edgecolor='none')
+    erros = erros[-1:]
 
-# Ajustes de visualização do gráfico de pizza
-ax2.set_title('Tipos de Solicitação (Visão 3D)', fontsize=14, color='#F3F4F6', weight='bold', pad=20)
-ax2.axis('off')  # Oculta linhas de grade para destacar o objeto 3D
-ax2.view_init(elev=40, azim=-60)  # Inclinação superior para melhor leitura do círculo
+    with open(ARQUIVO_LOG_ERROS, 'w', encoding='utf-8') as f:
+        json.dump(erros, f, ensure_ascii=False, indent=4)
 
-# Legenda customizada ao lado com valores reais extraídos
-legend_labels = [f"{label}: {val}" for label, val in zip(labels_tipos, valores_tipos)]
-ax2.legend(legend_labels, loc="center left", bbox_to_anchor=(0.85, 0.5), facecolor='#1F2937', edgecolor='none')
+def extrair_identificador(texto):
+    """
+    Busca estritamente o padrão 'Exp. NUM - PL NUM/ANO' no texto[span_1](start_span)[span_1](end_span).
+    Ignora modificações feitas pela Câmara no restante da frase.
+    """
+    match = re.search(r'(Exp\.\s*\d+\s*-\s*PL\s*\d+/\d+)', texto, re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+    
+    # Fallback caso o padrão falhe: quebra pelo hífen e pega os dois primeiros blocos
+    partes = texto.split('-', 2)
+    if len(partes) >= 2:
+        return f"{partes[0].strip()} - {partes[1].strip()}"
+    return texto
 
-plt.tight_layout()
-plt.show()
+def buscar_novas_proposicoes():
+    url_base = "https://legis.camarasaoleopoldo.rs.gov.br/"
+    ano_atual = datetime.now().year
+    url_alvo = f"{url_base}?sec=nlistaproposicoes&expediente=&especie=&numero=&ano={ano_atual}&keyword=&id_proponente=150"
+
+    resposta = requests.get(url_alvo, headers=HEADERS, timeout=60)
+    print(f"Status da resposta: {resposta.status_code}")
+
+    if resposta.status_code != 200:
+        logar_falha(f"Codigo de erro {resposta.status_code} (site fora do ar ou bloqueio de IP)")
+        sys.exit(1)
+
+    sopa = BeautifulSoup(resposta.text, 'html.parser')
+    titulos_html = sopa.find_all('span', class_='pe_tit')
+    print(f"Proposicoes encontradas na tela: {len(titulos_html)}")
+
+    vistos_brutos = carregar_vistos()
+    
+    # Cria uma lista apenas com os identificadores (Exp. e PL) já registrados
+    vistos_ids = set()
+    for item in vistos_brutos:
+        if isinstance(item, dict):
+            # Formato novo: extrai do dicionário
+            vistos_ids.add(item.get('id', extrair_identificador(item.get('texto', ''))))
+        else:
+            # Compatibilidade com seu JSON antigo: extrai da string completa
+            vistos_ids.add(extrair_identificador(item))
+
+    novas_expedicoes = []
+    novos_vistos = list(vistos_brutos) # Mantém o histórico existente intacto
+
+    for titulo in titulos_html:
+        texto_proposicao = titulo.text.strip()
+        tag_link = titulo.find_parent('a')
+
+        if tag_link and 'href' in tag_link.attrs:
+            link_completo = url_base + tag_link['href']
+        else:
+            link_completo = "Link nao disponivel."
+
+        # Extrai APENAS o número do Exp e PL para testar a duplicidade[span_2](start_span)[span_2](end_span)
+        identificador = extrair_identificador(texto_proposicao)
+
+        # A validação acontece somente pelo identificador[span_3](start_span)[span_3](end_span)
+        if identificador not in vistos_ids:
+            novas_expedicoes.append({
+                'texto': texto_proposicao, # Manda o texto completão para o e-mail
+                'link': link_completo
+            })
+            vistos_ids.add(identificador) 
+            
+            # Salva no JSON o ID e o Texto Completo
+            novos_vistos.append({
+                'id': identificador,
+                'texto': texto_proposicao
+            })
+
+    if novas_expedicoes:
+        salvar_vistos(novos_vistos)
+
+    return novas_expedicoes
+
+try:
+    novas = buscar_novas_proposicoes()
+except SystemExit:
+    log_execucao("ERRO - falha ao acessar a pagina, veja logs_de_erros.json")
+    raise
+except Exception as e:
+    logar_falha(f"Excecao inesperada: {e}")
+    log_execucao(f"ERRO - excecao inesperada: {e}")
+    sys.exit(1)
+
+if novas:
+    print(f"Encontramos {len(novas)} novas proposicoes do Executivo!")
+    assunto = "Novas Proposicoes do Executivo"
+    corpo = "As seguintes proposicoes foram enviadas pela Prefeitura recentemente:\n\n"
+    for p in novas:
+        corpo += f"- {p['texto']}\n  Link: {p['link']}\n\n"
+    try:
+        enviar_email(assunto, corpo)
+        print("E-mail com links enviado com sucesso!")
+        log_execucao("OK - novidade encontrada e e-mail enviado")
+    except Exception as e:
+        print(f"Erro ao enviar o e-mail: {e}")
+        log_execucao(f"ERRO - novidade encontrada mas falhou ao enviar e-mail: {e}")
+else:
+    print("Nenhuma novidade do Executivo.")
+    log_execucao("OK - sem novidades")
