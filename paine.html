@@ -14,7 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
-/* TEMA NEUMORPHISM ESCURO (Variáveis dinâmicas para o Modo Demo) */
+/* TEMA NEUMORPHISM ESCURO (Variáveis dinâmicas) */
 :root {
   --bg-dark: #0a0e18; 
   --bg-panel: #161e31; 
@@ -23,11 +23,10 @@
   --text-main: #f1f5f9; 
   --text-muted: #94a3b8;
   
-  /* Cores Customizáveis */
   --color-primary: #3b82f6; 
   --color-chart-bar: #3b82f6;
+  --color-tertiary: #8b5cf6; /* Cor do 3º Gráfico */
 
-  /* Cores Fixas de Status */
   --color-green: #10b981; 
   --color-purple: #8b5cf6; 
   --color-orange: #f59e0b; 
@@ -70,8 +69,8 @@ input[type="file"] { display: none; }
 .tag-filtro span { cursor: pointer; color: #fff; background: rgba(255,255,255,0.1); border-radius: 5px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
 .tag-filtro span:hover { background: #ef4444; }
 
-/* KPIs E GRÁFICOS (Agora 5 Cards Lado a Lado) */
-.kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 25px; }
+/* KPIs E GRÁFICOS */
+.kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 25px; transition: 0.3s; }
 .kpi-card { background: var(--bg-panel); border-radius: 20px; padding: 22px 18px; box-shadow: var(--shadow-3d); border: 1px solid var(--border-light); border-bottom: 4px solid var(--accent); transition: 0.3s; cursor: pointer; }
 .kpi-card:hover { transform: translateY(-3px); filter: brightness(1.15); }
 .kpi-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; color: var(--text-muted); font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;}
@@ -123,11 +122,6 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
 .resumo-lista li { padding: 10px 0; font-size: 15.5px; color: #e2e8f0; line-height: 1.6; }
 .resumo-destaque { font-family: 'JetBrains Mono', monospace; font-size: 16.5px; font-weight: 700; color: var(--color-primary); }
 
-/* TAGS DA COMPARAÇÃO */
-.tag-cresceu { background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; }
-.tag-caiu { background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; }
-.tag-igual { background: rgba(255, 255, 255, 0.1); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; }
-
 /* MENU LATERAL */
 .app { display: flex; gap: 22px; max-width: 1550px; margin: 0 auto; align-items: flex-start; }
 .sidebar { width: 240px; flex: none; background: var(--bg-panel); border-radius: 20px; padding: 22px 14px; border: 1px solid var(--border-light); position: sticky; top: 20px; transition: 0.3s;}
@@ -161,6 +155,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
 .btn-link-legis:hover { filter: brightness(1.1); transform: translateY(-2px); }
 
 ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: var(--bg-dark); } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+@media (max-width: 900px) { .app { flex-direction: column; } .sidebar { width: 100%; position: static; display: flex; overflow-x: auto; gap: 6px; padding: 12px; } .sidebar .brand-side { display: none; } .nav-item { flex: none; margin-bottom: 0; white-space: nowrap; } }
 </style>
 </head>
 <body>
@@ -190,10 +185,8 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
           <option value="--bg-panel">Fundo dos Cartões e Menu</option>
           <option value="--bg-dark">Fundo da Página Inteira</option>
         </select>
-        
         <label>2. Escolha a cor nova:</label>
         <input type="color" id="corPicker" value="#3b82f6">
-        
         <button class="btn-salvar-cor" onclick="salvarCor()">💾 Salvar Cor</button>
         <button class="btn-ocultar-custom" onclick="esconderApresentacao()" title="Oculta esta área para a apresentação">👁️ Ocultar Ferramenta</button>
       </div>
@@ -215,24 +208,11 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
   <!-- ESTADO VAZIO VENDEDOR -->
   <div id="avisoVazio" class="empty-state">
     <h1>Bem-vindo ao Dashboard Inteligente 📊</h1>
-    <p>
-      Transforme a gestão do gabinete em uma experiência visual e interativa.<br>
-      Acompanhe demandas, monitore secretarias, cruze bairros e compare resultados de forma automática.
-    </p>
-    
+    <p>Transforme a gestão do gabinete em uma experiência visual e interativa.<br>Acompanhe demandas, monitore secretarias, cruze bairros e compare resultados de forma automática.</p>
     <div class="steps">
-      <div class="step-box">
-        <h4>1️⃣ Exporte</h4>
-        <span style="font-size: 12px; color: var(--text-muted)">Gere a planilha de registros do sistema atual do gabinete.</span>
-      </div>
-      <div class="step-box">
-        <h4>2️⃣ Importe</h4>
-        <span style="font-size: 12px; color: var(--text-muted)">Clique no botão azul "Importar Excel" no topo da tela.</span>
-      </div>
-      <div class="step-box">
-        <h4>3️⃣ Analise</h4>
-        <span style="font-size: 12px; color: var(--text-muted)">Navegue pelos gráficos, compare desempenhos e gere relatórios com 1 clique.</span>
-      </div>
+      <div class="step-box"><h4>1️⃣ Exporte</h4><span style="font-size: 12px; color: var(--text-muted)">Gere a planilha de registros do sistema atual do gabinete.</span></div>
+      <div class="step-box"><h4>2️⃣ Importe</h4><span style="font-size: 12px; color: var(--text-muted)">Clique no botão azul "Importar Excel" no topo da tela.</span></div>
+      <div class="step-box"><h4>3️⃣ Analise</h4><span style="font-size: 12px; color: var(--text-muted)">Navegue pelos gráficos, compare desempenhos e gere relatórios com 1 clique.</span></div>
     </div>
   </div>
 
@@ -249,7 +229,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
         <input type="date" id="dataFim" onchange="aplicarFiltrosGerais()">
       </div>
       <div class="filtro-item">
-        <label>🚥 Status</label>
+        <label>🚥 Status (Opcional)</label>
         <select id="selStatus" onchange="adicionarFiltroCombo('status')">
           <option value="">(Adicionar +)</option>
           <option value="Resolvida">Resolvida</option>
@@ -278,7 +258,6 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
 
     <!-- PÁGINA 1: VISÃO GERAL -->
     <div class="page page-ativa" id="page-visao">
-      <!-- KPIs (5 Cards agora) -->
       <div class="kpis">
         <div class="kpi-card kpi-total" onclick="toggleKpiStatus('Todos')"><div class="kpi-header">📄 Total Visível</div><div class="kpi-value" id="kpiTotal">0</div></div>
         <div class="kpi-card kpi-resolvida" onclick="toggleKpiStatus('Resolvida')"><div class="kpi-header">✅ Resolvidas</div><div class="kpi-value" id="kpiResolvidas">0</div><div class="kpi-desc" id="kpiResolvidasPct">0%</div></div>
@@ -287,7 +266,6 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
         <div class="kpi-card kpi-pendente" onclick="toggleKpiStatus('Pendente')"><div class="kpi-header">🚨 Pendentes</div><div class="kpi-value" id="kpiPendentes">0</div><div class="kpi-desc" id="kpiPendentesPct">0%</div></div>
       </div>
       
-      <!-- Resumo Narrado na Visão Geral (Dinâmico) -->
       <div class="tabela-panel" style="margin-bottom: 25px; padding: 15px 25px; border-left: 4px solid var(--color-primary);">
         <ul class="resumo-lista" id="resumoVisaoGeral"></ul>
       </div>
@@ -327,41 +305,47 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
     <div class="page" id="page-bairros"><div class="chart-panel grande"><h3>Volume de Demandas por Bairro</h3><div class="canvas-container"><canvas id="graficoBairrosGrande"></canvas></div></div></div>
     <div class="page" id="page-tipos"><div class="chart-panel grande"><h3>Principais Tipos de Solicitação</h3><div class="canvas-container"><canvas id="graficoTipoGrande"></canvas></div></div></div>
 
-    <!-- PÁGINA: COMPARAÇÃO (NOVO MOTOR UNIVERSAL) -->
+    <!-- PÁGINA: COMPARAÇÃO (COMBO DE ATÉ 3 ITENS) -->
     <div class="page" id="page-comparacao">
       
-      <!-- Controles da Comparação -->
-      <div class="filtros-bar" style="margin-bottom: 25px; justify-content: center; gap: 18px; background: rgba(0,0,0,0.2);">
+      <div class="filtros-bar" style="margin-bottom: 25px; justify-content: center; gap: 15px; background: rgba(0,0,0,0.2);">
         
-        <div class="filtro-item" style="flex: none; min-width: 150px;">
-          <label style="color: var(--color-primary); font-size: 13px;">🔍 O que comparar?</label>
-          <select id="selCompareType" onchange="mudarTipoComparacao()" style="font-size: 15px; padding: 10px;">
-            <option value="ano">📅 Anos (Ano a Ano)</option>
+        <div class="filtro-item" style="flex: none; min-width: 140px;">
+          <label style="color: var(--color-primary); font-size: 12px;">🔍 O que comparar?</label>
+          <select id="selCompareType" onchange="mudarTipoComparacao()" style="font-size: 14px; padding: 10px;">
+            <option value="ano">📅 Anos</option>
             <option value="secretaria">🏢 Secretarias</option>
             <option value="bairro">🗺️ Bairros</option>
-            <option value="tipo">📑 Tipos de Solicitação</option>
+            <option value="tipo">📑 Tipos</option>
           </select>
         </div>
 
-        <div style="border-left: 1px solid rgba(255,255,255,0.1); margin: 0 10px; height: 40px;"></div>
+        <div style="border-left: 1px solid rgba(255,255,255,0.1); margin: 0 5px; height: 35px;"></div>
 
-        <div class="filtro-item" style="flex: none; min-width: 140px;">
-          <label id="lblItemA" style="color: var(--text-muted); font-size: 13px;">ITEM A</label>
-          <select id="selItemA" onchange="atualizarComparacao()" style="font-size: 15px; padding: 10px;"></select>
+        <div class="filtro-item" style="flex: none; min-width: 130px;">
+          <label id="lblItemA" style="color: var(--text-muted); font-size: 11px;">ITEM A</label>
+          <select id="selItemA" onchange="atualizarComparacao()" style="font-size: 14px; padding: 10px;"></select>
         </div>
         <div class="filtro-item" style="flex: none; display: flex; align-items: center; justify-content: center; padding-top: 15px;">
-          <span style="font-weight: 900; font-size: 16px; color: var(--text-muted);">VS</span>
+          <span style="font-weight: 900; font-size: 14px; color: var(--text-muted);">VS</span>
         </div>
-        <div class="filtro-item" style="flex: none; min-width: 140px;">
-          <label id="lblItemB" style="color: var(--text-muted); font-size: 13px;">ITEM B</label>
-          <select id="selItemB" onchange="atualizarComparacao()" style="font-size: 15px; padding: 10px;"></select>
+        <div class="filtro-item" style="flex: none; min-width: 130px;">
+          <label id="lblItemB" style="color: var(--text-muted); font-size: 11px;">ITEM B</label>
+          <select id="selItemB" onchange="atualizarComparacao()" style="font-size: 14px; padding: 10px;"></select>
+        </div>
+        <div class="filtro-item" style="flex: none; display: flex; align-items: center; justify-content: center; padding-top: 15px;">
+          <span style="font-weight: 900; font-size: 14px; color: var(--text-muted);">VS</span>
+        </div>
+        <div class="filtro-item" style="flex: none; min-width: 130px;">
+          <label id="lblItemC" style="color: var(--text-muted); font-size: 11px;">ITEM C (Opcional)</label>
+          <select id="selItemC" onchange="atualizarComparacao()" style="font-size: 14px; padding: 10px;"></select>
         </div>
         
-        <div style="border-left: 1px solid rgba(255,255,255,0.1); margin: 0 10px; height: 40px;"></div>
+        <div style="border-left: 1px solid rgba(255,255,255,0.1); margin: 0 5px; height: 35px;"></div>
 
-        <div class="filtro-item" style="flex: none; min-width: 220px;">
-          <label style="color: var(--color-primary); font-size: 13px;">📊 Métrica de Análise (Y)</label>
-          <select id="selMetricaComparacao" onchange="atualizarComparacao()" style="font-size: 15px; padding: 10px;">
+        <div class="filtro-item" style="flex: none; min-width: 180px;">
+          <label style="color: var(--color-primary); font-size: 12px;">📊 Métrica de Análise</label>
+          <select id="selMetricaComparacao" onchange="atualizarComparacao()" style="font-size: 14px; padding: 10px;">
             <option value="volume">Volume Total de Entradas</option>
             <option value="resolvidas">Apenas Resolvidas</option>
             <option value="encaminhadas">Apenas Encaminhadas</option>
@@ -372,35 +356,32 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
         </div>
       </div>
 
-      <!-- KPIs da Comparação -->
-      <div class="kpis" style="grid-template-columns: 1fr 1fr;">
-        <!-- Card Resumo Item A -->
-        <div class="kpi-card" style="cursor: default; padding: 25px;">
-          <div class="kpi-header" style="justify-content: center; font-size: 14px; color: var(--text-main);" id="tituloKpiA">Desempenho: ITEM A</div>
-          <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 20px;">
-            <div style="text-align: center;">
-              <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 5px;">Volume Recebido</div>
-              <div id="valTotA" style="font-size: 34px; font-weight: 900; color: white;">0</div>
-            </div>
-            <div style="text-align: center;">
-              <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 5px;">Eficiência (Resoluções)</div>
-              <div id="valResA" style="font-size: 34px; font-weight: 900; color: var(--color-green);">0%</div>
-            </div>
+      <!-- KPIs da Comparação Dinâmica (Muda de 2 pra 3 colunas) -->
+      <div class="kpis" id="kpisComparacao" style="grid-template-columns: 1fr 1fr; margin-bottom: 20px;">
+        <!-- Card A -->
+        <div class="kpi-card" style="cursor: default; padding: 20px;">
+          <div class="kpi-header" style="justify-content: center; font-size: 13px; color: var(--text-main);" id="tituloKpiA">A</div>
+          <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 15px;">
+            <div style="text-align: center;"><div style="color: var(--text-muted); font-size: 11px; margin-bottom: 5px;">Volume</div><div id="valTotA" style="font-size: 28px; font-weight: 900; color: white;">0</div></div>
+            <div style="text-align: center;"><div style="color: var(--text-muted); font-size: 11px; margin-bottom: 5px;">Eficiência</div><div id="valResA" style="font-size: 28px; font-weight: 900; color: var(--color-green);">0%</div></div>
           </div>
         </div>
 
-        <!-- Card Resumo Item B -->
-        <div class="kpi-card" style="cursor: default; padding: 25px;">
-          <div class="kpi-header" style="justify-content: center; font-size: 14px; color: var(--color-primary);" id="tituloKpiB">Desempenho: ITEM B</div>
-          <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 20px;">
-            <div style="text-align: center;">
-              <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 5px;">Volume Recebido</div>
-              <div id="valTotB" style="font-size: 34px; font-weight: 900; color: white;">0</div>
-            </div>
-            <div style="text-align: center;">
-              <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 5px;">Eficiência (Resoluções)</div>
-              <div id="valResB" style="font-size: 34px; font-weight: 900; color: var(--color-green);">0%</div>
-            </div>
+        <!-- Card B -->
+        <div class="kpi-card" style="cursor: default; padding: 20px;">
+          <div class="kpi-header" style="justify-content: center; font-size: 13px; color: var(--color-primary);" id="tituloKpiB">B</div>
+          <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 15px;">
+            <div style="text-align: center;"><div style="color: var(--text-muted); font-size: 11px; margin-bottom: 5px;">Volume</div><div id="valTotB" style="font-size: 28px; font-weight: 900; color: white;">0</div></div>
+            <div style="text-align: center;"><div style="color: var(--text-muted); font-size: 11px; margin-bottom: 5px;">Eficiência</div><div id="valResB" style="font-size: 28px; font-weight: 900; color: var(--color-green);">0%</div></div>
+          </div>
+        </div>
+
+        <!-- Card C (Oculto por Padrão) -->
+        <div class="kpi-card" id="cardItemC" style="cursor: default; padding: 20px; display: none;">
+          <div class="kpi-header" style="justify-content: center; font-size: 13px; color: var(--color-tertiary);" id="tituloKpiC">C</div>
+          <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 15px;">
+            <div style="text-align: center;"><div style="color: var(--text-muted); font-size: 11px; margin-bottom: 5px;">Volume</div><div id="valTotC" style="font-size: 28px; font-weight: 900; color: white;">0</div></div>
+            <div style="text-align: center;"><div style="color: var(--text-muted); font-size: 11px; margin-bottom: 5px;">Eficiência</div><div id="valResC" style="font-size: 28px; font-weight: 900; color: var(--color-green);">0%</div></div>
           </div>
         </div>
       </div>
@@ -409,7 +390,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
       <div class="chart-panel grande">
         <h3 id="tituloGraficoCompare">Evolução Mensal no Período</h3>
         <p style="text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">
-          Dica de Apresentação: Clique em qualquer barra no gráfico abaixo para filtrar os dados gerais da tela pelo mês exato selecionado.
+          Clique em qualquer barra do gráfico para filtrar todas as informações pelo mês exato selecionado.
         </p>
         <div class="canvas-container"><canvas id="graficoComparacao"></canvas></div>
       </div>
@@ -440,7 +421,7 @@ tbody tr { cursor: pointer; transition: 0.15s; } tr:hover td { background: rgba(
 <script>
 let DADOS_GLOBAIS = [];
 let DADOS_FILTRADOS = [];
-let chavesXGlobais = []; // Usado para o clique do gráfico
+let chavesXGlobais = []; 
 let termoBusca = '';
 const nomesDosMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
@@ -595,26 +576,42 @@ function processarDados(json) {
   document.getElementById('info-texto').innerText = `Sistema Online: ${DADOS_GLOBAIS.length} demandas validadas.`;
 }
 
+// Ocultamos a opção de limpar tudo nas opções da Máquina do tempo
+function preencherSelectComBranco(id, arrayOpcoes) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = '<option value="">- Nenhum -</option>';
+  arrayOpcoes.forEach(op => { if(op && op.trim()!=='') sel.innerHTML += `<option value="${op}">${op}</option>`; });
+}
+
 function preencherSelect(id, arrayOpcoes) {
   const sel = document.getElementById(id);
-  if (id === 'selItemA' || id === 'selItemB') { sel.innerHTML = ''; } 
+  if (id === 'selItemA' || id === 'selItemB' || id === 'selItemC') { 
+    if(id === 'selItemC') { preencherSelectComBranco(id, arrayOpcoes); return; }
+    sel.innerHTML = ''; 
+  } 
   else { const primeira = sel.options[0].outerHTML; sel.innerHTML = primeira; }
   arrayOpcoes.forEach(op => { if(op && op.trim()!=='') sel.innerHTML += `<option value="${op}">${op}</option>`; });
 }
 
+// HIGHLANDER: Só pode haver 1 Status por vez nos KPIs
 function toggleKpiStatus(statusSelecionado) {
-  if (statusSelecionado === 'Todos') { filtros.status.clear(); } 
-  else { if (filtros.status.has(statusSelecionado)) filtros.status.delete(statusSelecionado); else filtros.status.add(statusSelecionado); }
+  filtros.status.clear(); 
+  if (statusSelecionado !== 'Todos') { filtros.status.add(statusSelecionado); }
   aplicarFiltrosGerais();
 }
 
 function adicionarFiltroCombo(categoria) {
   let select = document.getElementById('sel' + categoria.charAt(0).toUpperCase() + categoria.slice(1));
   let valor = select.value;
-  if(valor) { filtros[categoria].add(valor); select.value = ''; aplicarFiltrosGerais(); }
+  if(valor) { 
+    if (categoria === 'status') filtros.status.clear(); // HIGHLANDER no combo também
+    filtros[categoria].add(valor); 
+    select.value = ''; 
+    aplicarFiltrosGerais(); 
+  }
 }
-function removerFiltro(categoria, valor) { filtros[categoria].delete(valor); aplicarFiltrosGerais(); }
 
+function removerFiltro(categoria, valor) { filtros[categoria].delete(valor); aplicarFiltrosGerais(); }
 function limparTudo() {
   filtros = { status: new Set(), secretaria: new Set(), bairro: new Set(), tipo: new Set() };
   document.getElementById('dataInicio').value = ''; document.getElementById('dataFim').value = '';
@@ -668,9 +665,15 @@ function desenharDonut(idCanvas, categoria) {
   let c = { 'Resolvida': 0, 'Encaminhado': 0, 'Andamento': 0, 'Pendente': 0 }; DADOS_FILTRADOS.forEach(d => c[d.status]++);
   if(charts[idCanvas]) charts[idCanvas].destroy();
   charts[idCanvas] = new Chart(document.getElementById(idCanvas).getContext('2d'), {
-    type: 'doughnut', data: { labels: ['Resolvida', 'Encaminhada', 'Em Andamento', 'Pendente'], datasets: [{ data: [c['Resolvida'], c['Encaminhado'], c['Andamento'], c['Pendente']], backgroundColor: ['#10b981', '#8b5cf6', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
+    type: 'doughnut', data: { labels: ['Resolvida', 'Encaminhado', 'Em Andamento', 'Pendente'], datasets: [{ data: [c['Resolvida'], c['Encaminhado'], c['Andamento'], c['Pendente']], backgroundColor: ['#10b981', '#8b5cf6', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
     options: { cutout: '65%', plugins: { legend: { position: 'bottom', labels:{color:'#f1f5f9'} }, datalabels: { display: true, color: '#fff', font: {weight: 'bold', size: 14}, formatter: v => v > 0 ? v : '' } },
-      onClick: (evt, els) => { if (els.length) { let label = charts[idCanvas].data.labels[els[0].index]; if(label === 'Encaminhada') label = 'Encaminhado'; if(label === 'Em Andamento') label = 'Andamento'; filtros['status'].add(label); aplicarFiltrosGerais(); } }
+      onClick: (evt, els) => { 
+        if (els.length) { 
+          let label = charts[idCanvas].data.labels[els[0].index]; 
+          if(label === 'Em Andamento') label = 'Andamento'; 
+          toggleKpiStatus(label);
+        } 
+      }
     }
   });
 }
@@ -696,42 +699,43 @@ function desenharBarra(idCanvas, categoria, limite) {
   });
 }
 
-// ================= MOTOR UNIVERSAL DE COMPARAÇÃO =================
+// ================= MOTOR UNIVERSAL DE COMPARAÇÃO (COM OPÇÃO ATÉ 3) =================
 function mudarTipoComparacao() {
   const tipo = document.getElementById('selCompareType').value;
   const selA = document.getElementById('selItemA');
   const selB = document.getElementById('selItemB');
+  const selC = document.getElementById('selItemC');
   const lblA = document.getElementById('lblItemA');
   const lblB = document.getElementById('lblItemB');
+  const lblC = document.getElementById('lblItemC');
 
   let opcoes = [];
   if (tipo === 'secretaria') {
-    lblA.innerText = '🏢 Secretaria A'; lblB.innerText = '🏢 Secretaria B';
+    lblA.innerText = '🏢 Sec A'; lblB.innerText = '🏢 Sec B'; lblC.innerText = '🏢 Sec C';
     opcoes = Array.from(new Set(DADOS_GLOBAIS.map(d => d.secretaria))).sort();
   } else if (tipo === 'ano') {
-    lblA.innerText = '📅 Ano A'; lblB.innerText = '📅 Ano B';
+    lblA.innerText = '📅 Ano A'; lblB.innerText = '📅 Ano B'; lblC.innerText = '📅 Ano C';
     opcoes = Array.from(new Set(DADOS_GLOBAIS.map(d => d.ano))).sort();
   } else if (tipo === 'bairro') {
-    lblA.innerText = '🗺️ Bairro A'; lblB.innerText = '🗺️ Bairro B';
+    lblA.innerText = '🗺️ Bairro A'; lblB.innerText = '🗺️ Bairro B'; lblC.innerText = '🗺️ Bairro C';
     opcoes = Array.from(new Set(DADOS_GLOBAIS.map(d => d.bairro))).sort();
   } else if (tipo === 'tipo') {
-    lblA.innerText = '📑 Tipo A'; lblB.innerText = '📑 Tipo B';
+    lblA.innerText = '📑 Tipo A'; lblB.innerText = '📑 Tipo B'; lblC.innerText = '📑 Tipo C';
     opcoes = Array.from(new Set(DADOS_GLOBAIS.map(d => d.tipo))).sort();
   }
 
-  selA.innerHTML = ''; selB.innerHTML = '';
-  opcoes.forEach(op => {
-    if(op !== 'Institucional / Gabinete' && op !== 'Não Informado') {
-      selA.innerHTML += `<option value="${op}">${op}</option>`;
-      selB.innerHTML += `<option value="${op}">${op}</option>`;
-    }
-  });
+  // Preenche removendo dados irrelevantes
+  let opcoesLimpas = opcoes.filter(op => op !== 'Institucional / Gabinete' && op !== 'Não Informado');
+  
+  preencherSelect('selItemA', opcoesLimpas);
+  preencherSelect('selItemB', opcoesLimpas);
+  preencherSelect('selItemC', opcoesLimpas); // C tem a option 'Nenhum' feita pelo `preencherSelectComBranco`
 
-  if (opcoes.length > 1) {
+  if (opcoesLimpas.length > 1) {
     if(tipo === 'ano') {
-      selA.value = opcoes[0]; selB.value = opcoes[opcoes.length - 1];
+      selA.value = opcoesLimpas[0]; selB.value = opcoesLimpas[opcoesLimpas.length - 1];
     } else {
-      selA.value = selA.options[0].value; selB.value = selB.options[1] ? selB.options[1].value : selA.options[0].value;
+      selA.value = opcoesLimpas[0]; selB.value = opcoesLimpas[1] ? opcoesLimpas[1] : opcoesLimpas[0];
     }
   }
 
@@ -742,6 +746,7 @@ function atualizarComparacao() {
   const tipo = document.getElementById('selCompareType').value;
   const valA = document.getElementById('selItemA').value;
   const valB = document.getElementById('selItemB').value;
+  const valC = document.getElementById('selItemC').value;
   const metrica = document.getElementById('selMetricaComparacao').value;
 
   if (!valA || !valB) return;
@@ -751,9 +756,7 @@ function atualizarComparacao() {
     let dtIniStr = document.getElementById('dataInicio').value; let dtFimStr = document.getElementById('dataFim').value;
     let dtIni = dtIniStr ? new Date(dtIniStr + 'T00:00:00') : null; let dtFim = dtFimStr ? new Date(dtFimStr + 'T23:59:59') : null;
     
-    // Se não for ano, obedece o filtro de data geral
     if (tipo !== 'ano' && d.dataObj) { if (dtIni && d.dataObj < dtIni) return false; if (dtFim && d.dataObj > dtFim) return false; }
-    
     if (filtros.status.size > 0 && !filtros.status.has(d.status)) return false;
     if (tipo !== 'secretaria' && filtros.secretaria.size > 0 && !filtros.secretaria.has(d.secretaria)) return false;
     if (tipo !== 'bairro' && filtros.bairro.size > 0 && !filtros.bairro.has(d.bairro)) return false;
@@ -763,20 +766,33 @@ function atualizarComparacao() {
 
   const dadosA = baseComparacao.filter(d => d[tipo] === valA);
   const dadosB = baseComparacao.filter(d => d[tipo] === valB);
+  const dadosC = valC ? baseComparacao.filter(d => d[tipo] === valC) : [];
 
-  const volA = dadosA.length; const volB = dadosB.length;
-  const resA = dadosA.filter(d => d.status === 'Resolvida').length; const resB = dadosB.filter(d => d.status === 'Resolvida').length;
-  const txResA = volA > 0 ? (resA / volA) * 100 : 0; const txResB = volB > 0 ? (resB / volB) * 100 : 0;
+  const volA = dadosA.length; const volB = dadosB.length; const volC = dadosC.length;
+  const resA = dadosA.filter(d => d.status === 'Resolvida').length; 
+  const resB = dadosB.filter(d => d.status === 'Resolvida').length;
+  const resC = dadosC.filter(d => d.status === 'Resolvida').length;
+  
+  const txResA = volA > 0 ? (resA / volA) * 100 : 0; 
+  const txResB = volB > 0 ? (resB / volB) * 100 : 0;
+  const txResC = volC > 0 ? (resC / volC) * 100 : 0;
+
+  // Ajusta a Grid de KPIs (mostra/esconde Card C)
+  document.getElementById('kpisComparacao').style.gridTemplateColumns = valC ? '1fr 1fr 1fr' : '1fr 1fr';
+  document.getElementById('cardItemC').style.display = valC ? 'block' : 'none';
 
   // Atualiza Textos
-  document.getElementById('tituloKpiA').innerText = `Desempenho: ${valA}`;
-  document.getElementById('tituloKpiB').innerText = `Desempenho: ${valB}`;
+  document.getElementById('tituloKpiA').innerText = valA.length > 20 ? valA.substring(0,20)+'...' : valA;
+  document.getElementById('tituloKpiB').innerText = valB.length > 20 ? valB.substring(0,20)+'...' : valB;
+  if(valC) document.getElementById('tituloKpiC').innerText = valC.length > 20 ? valC.substring(0,20)+'...' : valC;
+  
   document.getElementById('valTotA').innerText = volA; document.getElementById('valTotB').innerText = volB;
   document.getElementById('valResA').innerText = Math.round(txResA) + '%'; document.getElementById('valResB').innerText = Math.round(txResB) + '%';
+  if(valC){ document.getElementById('valTotC').innerText = volC; document.getElementById('valResC').innerText = Math.round(txResC) + '%'; }
 
   // Lógica do Eixo X (Gráfico)
-  let labelsGrafico = []; let arrA = [], arrB = [];
-  chavesXGlobais = []; // Limpa array global para uso no clique
+  let labelsGrafico = []; let arrA = [], arrB = [], arrC = [];
+  chavesXGlobais = []; 
 
   const extrairMetrica = (d, arr, idx) => {
     if(metrica === 'volume') arr[idx]++;
@@ -789,44 +805,60 @@ function atualizarComparacao() {
 
   if (tipo === 'ano') {
     labelsGrafico = nomesDosMeses;
-    arrA = new Array(12).fill(0); arrB = new Array(12).fill(0);
-    let totA = new Array(12).fill(0); let totB = new Array(12).fill(0);
+    arrA = new Array(12).fill(0); arrB = new Array(12).fill(0); arrC = new Array(12).fill(0);
+    let totA = new Array(12).fill(0); let totB = new Array(12).fill(0); let totC = new Array(12).fill(0);
 
     dadosA.forEach(d => { if(d.dataObj){ let m = d.dataObj.getMonth(); totA[m]++; extrairMetrica(d, arrA, m); }});
     dadosB.forEach(d => { if(d.dataObj){ let m = d.dataObj.getMonth(); totB[m]++; extrairMetrica(d, arrB, m); }});
+    dadosC.forEach(d => { if(d.dataObj){ let m = d.dataObj.getMonth(); totC[m]++; extrairMetrica(d, arrC, m); }});
 
-    if(metrica === 'eficiencia'){ for(let i=0; i<12; i++){ arrA[i] = totA[i]>0 ? Math.round((arrA[i]/totA[i])*100) : 0; arrB[i] = totB[i]>0 ? Math.round((arrB[i]/totB[i])*100) : 0; } }
+    if(metrica === 'eficiencia'){ 
+      for(let i=0; i<12; i++){ 
+        arrA[i] = totA[i]>0 ? Math.round((arrA[i]/totA[i])*100) : 0; 
+        arrB[i] = totB[i]>0 ? Math.round((arrB[i]/totB[i])*100) : 0; 
+        arrC[i] = totC[i]>0 ? Math.round((arrC[i]/totC[i])*100) : 0; 
+      } 
+    }
   } else {
     let p = {};
     dadosA.forEach(d => { if(d.mesAno) p[d.mesAno] = true; });
     dadosB.forEach(d => { if(d.mesAno) p[d.mesAno] = true; });
+    dadosC.forEach(d => { if(d.mesAno) p[d.mesAno] = true; });
     chavesXGlobais = Object.keys(p).sort(); // YYYY-MM
 
     labelsGrafico = chavesXGlobais.map(k => { let m = parseInt(k.split('-')[1]); let y = k.split('-')[0].slice(2); return `${nomesDosMeses[m-1]}/${y}`; });
-    arrA = chavesXGlobais.map(k => 0); arrB = chavesXGlobais.map(k => 0);
-    let totA = chavesXGlobais.map(k => 0); let totB = chavesXGlobais.map(k => 0);
+    arrA = chavesXGlobais.map(k => 0); arrB = chavesXGlobais.map(k => 0); arrC = chavesXGlobais.map(k => 0);
+    let totA = chavesXGlobais.map(k => 0); let totB = chavesXGlobais.map(k => 0); let totC = chavesXGlobais.map(k => 0);
 
     dadosA.forEach(d => { if(d.mesAno){ let idx = chavesXGlobais.indexOf(d.mesAno); totA[idx]++; extrairMetrica(d, arrA, idx); }});
     dadosB.forEach(d => { if(d.mesAno){ let idx = chavesXGlobais.indexOf(d.mesAno); totB[idx]++; extrairMetrica(d, arrB, idx); }});
+    dadosC.forEach(d => { if(d.mesAno){ let idx = chavesXGlobais.indexOf(d.mesAno); totC[idx]++; extrairMetrica(d, arrC, idx); }});
 
-    if(metrica === 'eficiencia'){ for(let i=0; i<chavesXGlobais.length; i++){ arrA[i] = totA[i]>0 ? Math.round((arrA[i]/totA[i])*100) : 0; arrB[i] = totB[i]>0 ? Math.round((arrB[i]/totB[i])*100) : 0; } }
+    if(metrica === 'eficiencia'){ 
+      for(let i=0; i<chavesXGlobais.length; i++){ 
+        arrA[i] = totA[i]>0 ? Math.round((arrA[i]/totA[i])*100) : 0; 
+        arrB[i] = totB[i]>0 ? Math.round((arrB[i]/totB[i])*100) : 0; 
+        arrC[i] = totC[i]>0 ? Math.round((arrC[i]/totC[i])*100) : 0; 
+      } 
+    }
   }
 
-  const titulos = { 'volume': 'Volume de Entrada', 'resolvidas': 'Demandas Resolvidas', 'encaminhadas': 'Encaminhadas à Secretaria', 'andamento': 'Tratativas em Andamento', 'pendentes': 'Demandas Pendentes (Presas)', 'eficiencia': 'Taxa de Eficiência em %' };
+  const titulos = { 'volume': 'Volume de Entradas', 'resolvidas': 'Demandas Resolvidas', 'encaminhadas': 'Encaminhadas à Secretaria', 'andamento': 'Tratativas em Andamento', 'pendentes': 'Demandas Pendentes (Presas)', 'eficiencia': 'Taxa de Eficiência em %' };
   document.getElementById('tituloGraficoCompare').innerText = titulos[metrica] + ` no Período`;
 
   const corBarraB = getComputedStyle(document.documentElement).getPropertyValue('--color-chart-bar').trim() || '#3b82f6';
+  const corBarraC = getComputedStyle(document.documentElement).getPropertyValue('--color-tertiary').trim() || '#8b5cf6';
+
+  let datasetsGrafico = [
+    { label: valA, data: arrA, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 4 },
+    { label: valB, data: arrB, backgroundColor: corBarraB, borderRadius: 4 }
+  ];
+  if(valC) datasetsGrafico.push({ label: valC, data: arrC, backgroundColor: corBarraC, borderRadius: 4 });
 
   if(charts['graficoComparacao']) charts['graficoComparacao'].destroy();
   charts['graficoComparacao'] = new Chart(document.getElementById('graficoComparacao').getContext('2d'), {
     type: 'bar',
-    data: {
-      labels: labelsGrafico,
-      datasets: [
-        { label: valA, data: arrA, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 4 },
-        { label: valB, data: arrB, backgroundColor: corBarraB, borderRadius: 4 }
-      ]
-    },
+    data: { labels: labelsGrafico, datasets: datasetsGrafico },
     options: {
       plugins: { 
         legend: { labels: { color: '#f1f5f9' } }, 
@@ -837,24 +869,28 @@ function atualizarComparacao() {
       // CLIQUE MÁGICO (Cruza filtro de data e categoria silenciosamente)
       onClick: (evt, els) => {
         if(els.length) {
-          const datasetIndex = els[0].datasetIndex;
-          const index = els[0].index;
-          const valSelecionado = datasetIndex === 0 ? valA : valB;
+          const dsIdx = els[0].datasetIndex;
+          const idx = els[0].index;
+          let valSelecionado = valA;
+          if (dsIdx === 1) valSelecionado = valB;
+          if (dsIdx === 2) valSelecionado = valC;
           
           if (tipo === 'ano') {
             const ano = valSelecionado;
-            const mes = String(index + 1).padStart(2, '0');
-            const ultimoDia = new Date(ano, index + 1, 0).getDate();
+            const mes = String(idx + 1).padStart(2, '0');
+            const ultimoDia = new Date(ano, idx + 1, 0).getDate();
             document.getElementById('dataInicio').value = `${ano}-${mes}-01`;
             document.getElementById('dataFim').value = `${ano}-${mes}-${ultimoDia}`;
           } else {
-            const chaveMesAno = chavesXGlobais[index];
-            const ano = chaveMesAno.split('-')[0];
-            const mes = chaveMesAno.split('-')[1];
-            const ultimoDia = new Date(ano, parseInt(mes), 0).getDate();
-            document.getElementById('dataInicio').value = `${ano}-${mes}-01`;
-            document.getElementById('dataFim').value = `${ano}-${mes}-${ultimoDia}`;
-            
+            const chaveMesAno = chavesXGlobais[idx];
+            if(chaveMesAno) {
+              const ano = chaveMesAno.split('-')[0];
+              const mes = chaveMesAno.split('-')[1];
+              const ultimoDia = new Date(ano, parseInt(mes), 0).getDate();
+              document.getElementById('dataInicio').value = `${ano}-${mes}-01`;
+              document.getElementById('dataFim').value = `${ano}-${mes}-${ultimoDia}`;
+            }
+            filtros[tipo].clear();
             filtros[tipo].add(valSelecionado);
           }
           aplicarFiltrosGerais();
@@ -891,10 +927,10 @@ function atualizarResumo() {
     <li>
       🎙️ <b>Resumo Automático:</b> 
       O painel apresenta um volume de <span class="resumo-destaque">${total} demandas</span> analisadas. 
-      A taxa de resolução atinge a marca de <span class="resumo-destaque">${pctRes}%</span>, e outras <span class="resumo-destaque">${pctEnc}%</span> estão em trâmite nas secretarias (Encaminhadas).
+      A taxa de resolução atinge a marca de <span class="resumo-destaque">${pctRes}%</span>, e outras <span class="resumo-destaque">${pctEnc}%</span> já foram despachadas para as secretarias.
       Identificamos que <span class="resumo-destaque">${volumeInstitucional}</span> demandas são de origem interna/institucional. 
       Excluindo estes registros, o bairro com a maior incidência é o <span class="resumo-destaque">${topBairro ? topBairro[0] : 'N/A'}</span>.
-      A maior sobrecarga operacional recai sobre a Secretaria <span class="resumo-destaque">${topSec ? topSec[0] : 'N/A'}</span>.
+      A maior sobrecarga de operação recai sobre a Secretaria <span class="resumo-destaque">${topSec ? topSec[0] : 'N/A'}</span>.
     </li>
   `;
   if(listaVisao) listaVisao.innerHTML = htmlResumo;
@@ -906,6 +942,9 @@ function montarTabela() {
   const c = document.getElementById('corpoTabela'); if (!c) return; c.innerHTML = '';
   let b = DADOS_FILTRADOS;
   if (termoBusca) b = b.filter(d => (d.assunto + ' ' + d.secretaria + ' ' + d.bairro).toLowerCase().includes(termoBusca));
+
+  // AQUI TÁ A CORREÇÃO DO ZERADO NA LISTA
+  document.getElementById('totalTabela').innerText = b.length;
 
   b.slice(0, 150).forEach(d => {
     let tr = document.createElement('tr');
