@@ -33,34 +33,19 @@
     --shadow-2: 0 1px 3px 0 rgba(60,64,67,.30), 0 4px 8px 3px rgba(60,64,67,.15);
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:'Roboto','Google Sans',Arial,sans-serif;
-    background:#fff;
-    color:var(--text-main);
-    scroll-behavior: smooth;
-  }
+  body{ margin:0; font-family:'Roboto','Google Sans',Arial,sans-serif; background:#fff; color:var(--text-main); scroll-behavior: smooth; }
 
-  .topbar{
-    display:flex; align-items:center; gap:20px; padding:8px 16px; border-bottom:1px solid var(--grey-border);
-    background:#fff; position: sticky; top: 0; z-index: 50;
-  }
+  .topbar{ display:flex; align-items:center; gap:20px; padding:8px 16px; border-bottom:1px solid var(--grey-border); background:#fff; position: sticky; top: 0; z-index: 50; }
   .brand{ display:flex; align-items:center; gap:10px; }
   .brand-icon{ width:34px;height:34px;flex-shrink:0; }
   .brand-text{ font-family:'Google Sans',Roboto,sans-serif; font-size:20px; color:var(--text-secondary); letter-spacing:.1px; }
   .brand-text b{ color:var(--text-main); font-weight:500; }
   .topbar-spacer{ flex:1; }
   
-  .btn-voltar-sistema {
-    font-size: 13px; font-weight: bold; color: var(--blue); background: var(--blue-tint);
-    padding: 6px 12px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: 0.2s; cursor: pointer; border: none;
-  }
+  .btn-voltar-sistema { font-size: 13px; font-weight: bold; color: var(--blue); background: var(--blue-tint); padding: 6px 12px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: 0.2s; cursor: pointer; border: none; }
   .btn-voltar-sistema:hover { background: #d2e3fc; }
   
-  .btn-nova-demanda {
-    font-size: 13px; font-weight: bold; color: #185199; background: #98ED34;
-    padding: 6px 12px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: 0.2s;
-  }
+  .btn-nova-demanda { font-size: 13px; font-weight: bold; color: #185199; background: #98ED34; padding: 6px 12px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
   .btn-nova-demanda:hover { background: #85d62d; }
   
   .today-pill{ font-size:13px; color:var(--text-secondary); padding:6px 12px; border:1px solid var(--grey-border); border-radius:20px; }
@@ -68,28 +53,14 @@
   .layout{ display:flex; max-width:1180px; margin:0 auto; padding:28px 20px 60px; gap:28px; align-items:flex-start; }
   
   .sidebar{ width:270px; flex-shrink:0; position: sticky; top: 80px; }
-  .create-btn{
-    display:flex; align-items:center; gap:12px; background:#fff; border:none; box-shadow:var(--shadow-1);
-    border-radius:24px; padding:10px 22px 10px 14px; font-family:'Google Sans',Roboto,sans-serif;
-    font-size:14px; font-weight:500; color:var(--text-main); cursor:pointer; margin-bottom:12px; transition:box-shadow .15s; width: 100%;
-  }
+  .create-btn{ display:flex; align-items:center; gap:12px; background:#fff; border:none; box-shadow:var(--shadow-1); border-radius:24px; padding:10px 22px 10px 14px; font-family:'Google Sans',Roboto,sans-serif; font-size:14px; font-weight:500; color:var(--text-main); cursor:pointer; margin-bottom:12px; transition:box-shadow .15s; width: 100%; }
   .create-btn:hover{ box-shadow:var(--shadow-2); }
-  .create-plus{
-    width:36px;height:36px;border-radius:50%; background:var(--blue); display:flex;align-items:center;justify-content:center;
-    color:#fff;font-size:22px;font-weight:400;flex-shrink:0;
-  }
-  .nav-side-btn {
-    display:flex; align-items:center; gap:12px; background:var(--grey-bg); border:1px solid var(--grey-border);
-    border-radius:24px; padding:10px 22px; font-family:'Google Sans',Roboto,sans-serif;
-    font-size:13px; font-weight:500; color:var(--text-secondary); cursor:pointer; margin-bottom:12px; transition:background .15s; width: 100%;
-  }
+  .create-plus{ width:36px;height:36px;border-radius:50%; background:var(--blue); display:flex;align-items:center;justify-content:center; color:#fff;font-size:22px;font-weight:400;flex-shrink:0; }
+  .nav-side-btn { display:flex; align-items:center; gap:12px; background:var(--grey-bg); border:1px solid var(--grey-border); border-radius:24px; padding:10px 22px; font-family:'Google Sans',Roboto,sans-serif; font-size:13px; font-weight:500; color:var(--text-secondary); cursor:pointer; margin-bottom:12px; transition:background .15s; width: 100%; }
   .nav-side-btn:hover { background: var(--blue-tint); color: var(--blue-dark); border-color: var(--blue-tint); }
 
   .side-card{ border:1px solid var(--grey-border); border-radius:var(--radius); padding:16px; margin-bottom:16px; margin-top: 24px;}
-  .side-card h3{
-    font-family:'Google Sans',Roboto,sans-serif; font-size:13px; font-weight:500; color:var(--text-main);
-    margin:0 0 12px; text-transform:uppercase; letter-spacing:.3px; display: flex; justify-content: space-between; align-items: center;
-  }
+  .side-card h3{ font-family:'Google Sans',Roboto,sans-serif; font-size:13px; font-weight:500; color:var(--text-main); margin:0 0 12px; text-transform:uppercase; letter-spacing:.3px; display: flex; justify-content: space-between; align-items: center; }
   
   .main-col{ flex:1; min-width:0; }
   .panel{ border:1px solid var(--grey-border); border-radius:12px; box-shadow:var(--shadow-1); margin-bottom:24px; scroll-margin-top: 80px;}
@@ -101,10 +72,7 @@
 
   label{ display:block; font-size:12px; font-weight:500; color:var(--text-secondary); margin-bottom:6px; text-transform:uppercase; letter-spacing:.3px; }
   .field{ margin-bottom:18px; }
-  input[type="text"], input[type="date"], input[type="time"], textarea, select{
-    width:100%; padding:10px 12px; border:1px solid var(--grey-border); border-radius:6px; font-size:14px;
-    font-family:'Roboto',Arial,sans-serif; color:var(--text-main); background:#fff; transition:border-color .15s, box-shadow .15s;
-  }
+  input[type="text"], input[type="date"], input[type="time"], textarea, select{ width:100%; padding:10px 12px; border:1px solid var(--grey-border); border-radius:6px; font-size:14px; font-family:'Roboto',Arial,sans-serif; color:var(--text-main); background:#fff; transition:border-color .15s, box-shadow .15s; }
   input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--blue); box-shadow:0 0 0 1px var(--blue); }
   textarea{ resize:vertical; line-height:1.5; }
   .row-2{ display:flex; gap:16px; }
@@ -159,7 +127,11 @@
 
   .nota-mini{ display:flex; align-items:flex-start; gap:8px; padding:8px 0; border-bottom:1px solid var(--grey-border); }
   .nota-mini:last-child{ border-bottom:none; }
-  .nota-mini input[type="checkbox"]{ margin-top:3px; flex-shrink:0; }
+  
+  /* Botão Verdinho Substituindo Checkbox */
+  .btn-check-emoji { background: none; border: none; font-size: 16px; cursor: pointer; padding: 0; margin-top: 2px; flex-shrink: 0; transition: transform 0.2s; }
+  .btn-check-emoji:hover { transform: scale(1.1); }
+  
   .nota-mini-texto{ flex:1; min-width:0; }
   .nota-mini-titulo{ font-size:13px; font-weight:500; color:var(--text-main); word-break:break-word; }
   .nota-mini.feita .nota-mini-titulo{ text-decoration:line-through; color:var(--text-secondary); }
@@ -179,6 +151,8 @@
 
   .btn-micro { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 11px; font-weight: bold; padding: 4px 8px; height: 26px;}
   .btn-micro:hover { background: #e2e8f0; color: #185199; border-color: #185199; }
+  .btn-ver-mais { width: 100%; border: none; background: transparent; color: var(--blue); font-weight: bold; cursor: pointer; padding: 8px; font-size: 12px; border-top: 1px solid var(--grey-border); margin-top: 8px; transition: 0.2s; }
+  .btn-ver-mais:hover { background: var(--blue-tint); border-radius: 4px; }
 
   @media (max-width:820px){
     .layout{ flex-direction:column; }
@@ -203,7 +177,6 @@
   </div>
  <div class="topbar-spacer"></div>
   <div style="display: flex; gap: 10px; align-items: center;">
-      <!-- Alterado para chamar a verificação de saída -->
       <button onclick="irParaDashboard()" class="btn-voltar-sistema" title="Abre na mesma aba">⬅️ Dashboard</button>
       <a href="nova-demanda.html" target="_blank" class="btn-nova-demanda" title="Abre em nova aba">+ Nova Demanda</a>
   </div>
@@ -223,7 +196,6 @@
     <button class="nav-side-btn" onclick="document.getElementById('secaoAnotacoes').scrollIntoView()">
       📝 Anotações Rápidas
     </button>
-    <!-- NOVO BOTAO: VER CALENDARIO -->
     <button class="nav-side-btn" onclick="abrirModalCalendario()" style="background:#e8f0fe; color:#1967d2; border-color:#d2e3fc; font-weight:bold;">
       🗓️ Ver Calendário Hoje
     </button>
@@ -244,12 +216,23 @@
         <h2>Novo evento</h2>
       </div>
       <div class="panel-body">
-
         <div id="mensagemStatus"></div>
 
-        <div class="field">
-          <label>Título</label>
-          <input type="text" id="novoTitulo" placeholder="Ex: Sessão Solene APAE">
+        <div class="row-2">
+          <!-- NOVO SELETOR DE TIPO -->
+          <div class="field" style="flex: 0 0 160px;">
+            <label>Tipo</label>
+            <select id="novoTipoEvento">
+              <option value="">🗓️ Evento</option>
+              <option value="Reunião">🤝 Reunião</option>
+              <option value="Aniversário">🎂 Aniversário</option>
+              <option value="Sessão">🏛️ Sessão</option>
+            </select>
+          </div>
+          <div class="field" style="flex: 1;">
+            <label>Título do Compromisso</label>
+            <input type="text" id="novoTitulo" placeholder="Ex: Solene APAE">
+          </div>
         </div>
 
         <div class="row-2">
@@ -320,7 +303,6 @@
         <h2>Gerar agenda para WhatsApp</h2>
       </div>
       <div class="panel-body">
-
         <div class="row-inline">
           <div class="field">
             <label>Data para copiar</label>
@@ -355,7 +337,6 @@
         <h2>Anotações rápidas</h2>
       </div>
       <div class="panel-body">
-
         <div class="row-2">
           <div class="field" style="flex: 2;">
             <label>Título</label>
@@ -371,7 +352,6 @@
             </select>
           </div>
         </div>
-
         <div class="field">
           <div class="label-row">
             <label style="margin:0;">Descrição</label>
@@ -379,7 +359,6 @@
           </div>
           <textarea id="novaNotaDescricao" rows="3" placeholder="Escreva os detalhes aqui..."></textarea>
         </div>
-
         <div class="actions-right">
           <button class="action btn-blue" onclick="salvarAnotacao()">Salvar anotação</button>
         </div>
@@ -391,7 +370,7 @@
 
 <!-- MODAL: VER CALENDÁRIO DIRETO -->
 <div id="modalCalendario" class="modal-overlay">
-  <div class="modal-box" style="max-width: 450px; text-align: left; padding: 25px;">
+  <div class="modal-box" style="max-width: 480px; text-align: left; padding: 25px;">
     <div class="modal-head">
       <h3>🗓️ Calendário Oficial</h3>
       <button type="button" onclick="fecharModalCalendario()">✕</button>
@@ -412,7 +391,7 @@
   </div>
 </div>
 
-<!-- MODAL: GERENCIAR E-MAILS FREQUENTES -->
+<!-- MODAL: GERENCIAR E-MAILS -->
 <div id="modalEmails" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-head">
@@ -428,16 +407,14 @@
   </div>
 </div>
 
-<!-- MODAL: DETALHE DA ANOTAÇÃO ÚNICA -->
+<!-- MODAL: DETALHE ANOTAÇÃO -->
 <div id="modalDetalheAnotacao" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-head">
       <h3>🔍 Detalhes da Anotação</h3>
       <button type="button" onclick="fecharModalDetalheAnotacao()">✕</button>
     </div>
-    <div id="conteudoDetalheAnotacao" style="font-size: 14px; color: var(--text-main); line-height: 1.6;">
-      <!-- Preenchido via JS -->
-    </div>
+    <div id="conteudoDetalheAnotacao" style="font-size: 14px; color: var(--text-main); line-height: 1.6;"></div>
   </div>
 </div>
 
@@ -445,13 +422,11 @@
   // ==========================================
   // LINK DO SCRIPT (Google Apps Script)
   // ==========================================
-  const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbzLv8_TxK2bmKVAiElCTS2_dVdxVaxfZFdzQVeUnN2I29GBIYxUd8mbjm7A6IrK8Kk/exec';
+  const URL_DO_SCRIPT = 'https://script.google.com/macros/library/d/12_Y6NI2T97K0joksQzdBQiCl0iSBkgH1X3byhUjsv3KSoEzljLAPVkkV/7';
 
-  // ==========================================
-  // SUPABASE (e-mails frequentes + anotações)
-  // ==========================================
   let db;
   let listaAnotacoesGlobal = []; 
+  let limitadorAnotacoes = 10; // Limite que você pediu
 
   async function inicializarSupabase() {
     try {
@@ -460,42 +435,33 @@
       db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
       await carregarEmailsFrequentes();
       await carregarAnotacoes();
-    } catch (erro) {
-      console.error('Erro ao conectar no Supabase:', erro);
-    }
+    } catch (erro) { console.error('Erro:', erro); }
   }
   inicializarSupabase();
 
-  // --- TRAVA DE SAÍDA (Dashboard) ---
   function irParaDashboard() {
-      // Verifica se há texto em algum dos campos de criação
       const p1 = document.getElementById('novoTitulo').value.trim();
       const p2 = document.getElementById('novoLocal').value.trim();
       const p3 = document.getElementById('novaDescricao').value.trim();
-      const p4 = document.getElementById('novaNotaTitulo').value.trim(); // Se preencheu anotação e n salvou
+      const p4 = document.getElementById('novaNotaTitulo').value.trim(); 
 
       if (p1 !== '' || p2 !== '' || p3 !== '' || p4 !== '') {
           if (confirm('⚠️ OPA! Você tem informações preenchidas que NÃO FORAM SALVAS.\n\nSe você sair agora, vai perder o que digitou. Tem certeza que deseja voltar pro Dashboard?')) {
               window.location.href = 'dashboard.html';
           }
-      } else {
-          window.location.href = 'dashboard.html';
-      }
+      } else { window.location.href = 'dashboard.html'; }
   }
 
-  // --- NOVO: LÓGICA DO MODAL DE CALENDÁRIO ---
+  // --- LÓGICA DO MODAL DE CALENDÁRIO COM LIXEIRA ---
   let dataCalendarioAtual = new Date();
 
   function abrirModalCalendario() {
       document.getElementById('modalCalendario').classList.add('aberto');
-      dataCalendarioAtual = new Date(); // Inicia sempre no dia de hoje
+      dataCalendarioAtual = new Date(); 
       renderCalendarioUI();
       fetchEventosCalendario();
   }
-
-  function fecharModalCalendario() {
-      document.getElementById('modalCalendario').classList.remove('aberto');
-  }
+  function fecharModalCalendario() { document.getElementById('modalCalendario').classList.remove('aberto'); }
 
   function mudarDiaCalendario(dias) {
       dataCalendarioAtual.setDate(dataCalendarioAtual.getDate() + dias);
@@ -536,18 +502,49 @@
               listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#777; background:#f1f3f4; border-radius:6px;">Nenhum evento agendado neste dia.</div>';
           } else {
               listContainer.innerHTML = eventos.map(ev => `
-                  <div style="border-left: 4px solid var(--blue); padding: 12px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-top: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
-                      <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 4px;">
-                        <span style="color:var(--blue); font-weight: bold; font-size: 14px;">${ev.horario}</span> 
-                        <span style="font-weight:bold; color:#333; font-size: 15px;">${ev.titulo}</span>
+                  <div style="border-left: 4px solid var(--blue); padding: 12px; background: #fff; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
+                      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                          <div>
+                              <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 4px;">
+                                <span style="color:var(--blue); font-weight: bold; font-size: 14px;">${ev.horario}</span> 
+                                <span style="font-weight:bold; color:#333; font-size: 15px;">${ev.titulo}</span>
+                              </div>
+                              ${ev.local ? `<div style="color:#555; font-size:12px; margin-bottom: 4px;">📍 ${ev.local}</div>` : ''}
+                              ${ev.descricao ? `<div style="color:#777; font-size:12px; font-style:italic; background: #f8fafc; padding: 6px; border-radius: 4px; line-height: 1.4;">${ev.descricao}</div>` : ''}
+                          </div>
+                          <!-- BOTAO LIXEIRA AQUI -->
+                          ${ev.id ? `<button type="button" class="btn-micro" style="color:#d93025; border-color:#fad2e1; background:#fdf2f8;" onclick="deletarEventoDoGoogle('${ev.id}', this)" title="Excluir evento">🗑️ Excluir</button>` : ''}
                       </div>
-                      ${ev.local ? `<div style="color:#555; font-size:12px; margin-bottom: 4px;">📍 ${ev.local}</div>` : ''}
-                      ${ev.descricao ? `<div style="color:#777; font-size:12px; font-style:italic; background: #f8fafc; padding: 6px; border-radius: 4px; line-height: 1.4;">${ev.descricao}</div>` : ''}
                   </div>
               `).join('');
           }
-      } catch (error) {
-          listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#c0392b; font-weight: bold;">Erro de conexão com o Script do Google.</div>';
+      } catch (error) { listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#c0392b; font-weight: bold;">Erro de conexão com o Script do Google.</div>'; }
+  }
+
+  // --- FUNÇÃO PARA DELETAR DO GOOGLE AGENDA ---
+  async function deletarEventoDoGoogle(idEvento, botao) {
+      if (!confirm("⚠️ Tem certeza que deseja excluir permanentemente este evento da agenda do Google?")) return;
+      
+      const textoOriginal = botao.innerHTML;
+      botao.innerHTML = '⏳...';
+      botao.disabled = true;
+
+      try {
+          const url = `${URL_DO_SCRIPT}?acao=deletar&id=${encodeURIComponent(idEvento)}`;
+          const resposta = await fetch(url);
+          const data = await resposta.json();
+
+          if (data.status === 'sucesso') {
+              fetchEventosCalendario(); // Recarrega a lista do dia
+          } else {
+              alert("Erro ao excluir: " + data.mensagem);
+              botao.innerHTML = textoOriginal;
+              botao.disabled = false;
+          }
+      } catch (err) {
+          alert("Erro de conexão com o Google.");
+          botao.innerHTML = textoOriginal;
+          botao.disabled = false;
       }
   }
 
@@ -557,105 +554,86 @@
       const { data, error } = await db.from('emails_frequentes').select('id, nome, email').order('nome');
       if (error) throw error;
       renderChipsEmails(data || []);
-    } catch (erro) { console.error('Erro ao carregar e-mails frequentes:', erro); }
+    } catch (erro) { console.error('Erro e-mails:', erro); }
   }
-
   function renderChipsEmails(lista) {
     const container = document.getElementById('chipsEmails');
-    if (!lista || lista.length === 0) { container.innerHTML = '<span class="empty-hint">Nenhum e-mail salvo ainda.</span>'; return; }
-    container.innerHTML = lista.map(item => `
-      <span class="chip">
-        <span class="chip-nome" onclick="usarEmailFrequente('${item.email.replace(/'/g, "\\'")}')" title="${item.email}">${item.nome || item.email}</span>
-        <button type="button" onclick="excluirEmailFrequente(${item.id})" title="Remover">✕</button>
-      </span>
-    `).join('');
+    if (!lista || lista.length === 0) { container.innerHTML = '<span class="empty-hint">Nenhum e-mail salvo.</span>'; return; }
+    container.innerHTML = lista.map(item => `<span class="chip"><span class="chip-nome" onclick="usarEmailFrequente('${item.email}')" title="${item.email}">${item.nome || item.email}</span><button type="button" onclick="excluirEmailFrequente(${item.id})">✕</button></span>`).join('');
   }
-
   function usarEmailFrequente(email) {
     const campo = document.getElementById('novosConvidados');
     const atuais = campo.value.split(',').map(e => e.trim()).filter(Boolean);
     if (!atuais.includes(email)) atuais.push(email);
     campo.value = atuais.join(', ');
   }
-
   async function excluirEmailFrequente(id) {
-    if (!confirm('Remover este e-mail da lista de frequentes?')) return;
-    try {
-      const { error } = await db.from('emails_frequentes').delete().eq('id', id);
-      if (error) throw error;
-      await carregarEmailsFrequentes();
-    } catch (erro) { alert('Erro ao remover e-mail: ' + erro.message); }
+    if (!confirm('Remover este e-mail?')) return;
+    const { error } = await db.from('emails_frequentes').delete().eq('id', id);
+    if (!error) await carregarEmailsFrequentes();
   }
-
   function abrirModalEmails() { document.getElementById('modalEmails').classList.add('aberto'); renderListaEmailsModal(); }
   function fecharModalEmails() { document.getElementById('modalEmails').classList.remove('aberto'); }
-
   async function renderListaEmailsModal() {
     const container = document.getElementById('listaEmailsModal');
-    try {
-      const { data, error } = await db.from('emails_frequentes').select('id, nome, email').order('nome');
-      if (error) throw error;
-      if (!data || data.length === 0) { container.innerHTML = '<span class="empty-hint">Nenhum e-mail salvo ainda.</span>'; return; }
-      container.innerHTML = data.map(item => `
-        <div class="lista-item-simples">
-          <span title="${item.email}"><b>${item.nome || item.email}</b> — ${item.email}</span>
-          <button type="button" class="nota-mini-del" onclick="excluirEmailFrequenteModal(${item.id})" title="Remover">🗑️</button>
-        </div>
-      `).join('');
-    } catch (erro) { container.innerHTML = '<span class="empty-hint">Erro ao carregar e-mails.</span>'; }
+    const { data } = await db.from('emails_frequentes').select('id, nome, email').order('nome');
+    if (!data || data.length === 0) { container.innerHTML = '<span class="empty-hint">Nenhum salvo.</span>'; return; }
+    container.innerHTML = data.map(item => `<div class="lista-item-simples"><span><b>${item.nome || item.email}</b> — ${item.email}</span><button type="button" class="nota-mini-del" onclick="excluirEmailFrequenteModal(${item.id})">🗑️</button></div>`).join('');
   }
-
   async function adicionarEmailModal() {
-    const nomeCampo = document.getElementById('modalEmailNome');
-    const emailCampo = document.getElementById('modalEmailEndereco');
-    const nome = nomeCampo.value.trim(); const email = emailCampo.value.trim();
+    const nome = document.getElementById('modalEmailNome').value.trim(); const email = document.getElementById('modalEmailEndereco').value.trim();
     if (!email) return alert('Digite o e-mail.');
-    try {
-      const { error } = await db.from('emails_frequentes').insert([{ nome: nome || email, email }]);
-      if (error) throw error;
-      nomeCampo.value = ''; emailCampo.value = '';
-      await renderListaEmailsModal(); await carregarEmailsFrequentes();
-    } catch (erro) { alert('Erro ao salvar e-mail: ' + erro.message); }
+    await db.from('emails_frequentes').insert([{ nome: nome || email, email }]);
+    document.getElementById('modalEmailNome').value = ''; document.getElementById('modalEmailEndereco').value = '';
+    await renderListaEmailsModal(); await carregarEmailsFrequentes();
   }
-
   async function excluirEmailFrequenteModal(id) {
-    if (!confirm('Remover este e-mail da lista de frequentes?')) return;
-    try {
-      const { error } = await db.from('emails_frequentes').delete().eq('id', id);
-      if (error) throw error;
-      await renderListaEmailsModal(); await carregarEmailsFrequentes();
-    } catch (erro) { alert('Erro ao remover e-mail: ' + erro.message); }
+    if (!confirm('Remover e-mail?')) return;
+    await db.from('emails_frequentes').delete().eq('id', id);
+    await renderListaEmailsModal(); await carregarEmailsFrequentes();
   }
 
-  // --- ANOTAÇÕES ---
+  // --- ANOTAÇÕES COM PRIORIDADE E LIMITE DE 10 ---
   async function carregarAnotacoes() {
     try {
-      // Agora o BD traz o "criador"
-      const { data, error } = await db.from('anotacoes').select('id, titulo, descricao, concluida, criado_em, prioridade, criador').order('concluida', { ascending: true }).order('criado_em', { ascending: false });
+      const { data, error } = await db.from('anotacoes').select('id, titulo, descricao, concluida, criado_em, prioridade, criador');
       if (error) throw error;
-      listaAnotacoesGlobal = data || [];
+      
+      // Organizando as notas por nível de prioridade (Crítica no topo)
+      const pesoPrioridade = { 'Crítica': 1, 'Alta': 2, 'Normal': 3, 'Baixa': 4 };
+      
+      listaAnotacoesGlobal = (data || []).sort((a, b) => {
+         // Se uma tá concluída e a outra não, a concluída vai pro final
+         if (a.concluida !== b.concluida) return a.concluida ? 1 : -1;
+         // Se as duas tão iguais, ordena pela prioridade
+         return (pesoPrioridade[a.prioridade] || 3) - (pesoPrioridade[b.prioridade] || 3);
+      });
+      
       renderAnotacoes(listaAnotacoesGlobal);
-    } catch (erro) { console.error('Erro ao carregar anotações:', erro); }
+    } catch (erro) { console.error('Erro notas:', erro); }
   }
 
-  function escaparHtml(texto) {
-    const div = document.createElement('div'); div.innerText = texto || ''; return div.innerHTML;
-  }
-
-  function renderAnotacoes(lista) {
+  function renderAnotacoes(listaCompleta) {
     const container = document.getElementById('listaAnotacoesSidebar');
-    if (!lista || lista.length === 0) {
+    if (!listaCompleta || listaCompleta.length === 0) {
       container.innerHTML = '<span class="empty-hint">Nenhuma anotação salva ainda.</span>';
       return;
     }
-    container.innerHTML = lista.map(nota => {
+    
+    // Pega só a quantidade do limite (10 por padrão)
+    const listaVisivel = listaCompleta.slice(0, limitadorAnotacoes);
+    
+    let html = listaVisivel.map(nota => {
       const prioClass = `prio-${nota.prioridade || 'Normal'}`;
       const nomeCriador = nota.criador || 'Equipe';
       const dataCriacao = new Date(nota.criado_em).toLocaleDateString('pt-BR');
 
       return `
       <div class="nota-mini${nota.concluida ? ' feita' : ''}">
-        <input type="checkbox" ${nota.concluida ? 'checked' : ''} onchange="alternarAnotacaoConcluida(${nota.id}, this.checked)" title="Marcar como feita">
+        <!-- NOVO BOTAO VERDINHO DE CONCLUIDO -->
+        <button type="button" class="btn-check-emoji" onclick="alternarAnotacaoConcluida(${nota.id}, ${!nota.concluida})" title="${nota.concluida ? 'Reabrir' : 'Concluir'}">
+            ${nota.concluida ? '✅' : '⬜'}
+        </button>
         <div class="nota-mini-texto">
           <span class="badge-prioridade ${prioClass}">${nota.prioridade || 'Normal'}</span>
           <div class="nota-mini-titulo">${escaparHtml(nota.titulo)}</div>
@@ -668,16 +646,25 @@
         </div>
       </div>
     `}).join('');
+
+    // Adiciona o botão de Ver Mais ou Recolher a listinha
+    if (listaCompleta.length > limitadorAnotacoes) {
+        html += `<button class="btn-ver-mais" onclick="limitadorAnotacoes = 999; renderAnotacoes(listaAnotacoesGlobal)">Ver mais (${listaCompleta.length - limitadorAnotacoes}) 🔽</button>`;
+    } else if (limitadorAnotacoes > 10 && listaCompleta.length > 10) {
+        html += `<button class="btn-ver-mais" onclick="limitadorAnotacoes = 10; renderAnotacoes(listaAnotacoesGlobal)" style="color:#64748b;">Recolher 🔼</button>`;
+    }
+
+    container.innerHTML = html;
   }
+  
+  function escaparHtml(texto) { const div = document.createElement('div'); div.innerText = texto || ''; return div.innerHTML; }
 
   function verDetalheAnotacao(id) {
     const nota = listaAnotacoesGlobal.find(n => n.id === id);
     if (!nota) return;
-    
     const prioClass = `prio-${nota.prioridade || 'Normal'}`;
     const dataCriacao = new Date(nota.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(nota.criado_em).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
     const nomeCriador = nota.criador || 'Equipe';
-
     document.getElementById('conteudoDetalheAnotacao').innerHTML = `
       <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-start;">
         <span class="badge-prioridade ${prioClass}" style="font-size: 12px; padding: 4px 8px;">Prioridade: ${nota.prioridade || 'Normal'}</span>
@@ -691,50 +678,26 @@
     `;
     document.getElementById('modalDetalheAnotacao').classList.add('aberto');
   }
-
   function fecharModalDetalheAnotacao() { document.getElementById('modalDetalheAnotacao').classList.remove('aberto'); }
 
   async function alternarAnotacaoConcluida(id, concluida) {
-    try {
-      const { error } = await db.from('anotacoes').update({ concluida }).eq('id', id);
-      if (error) throw error;
-      await carregarAnotacoes();
-    } catch (erro) { alert('Erro ao atualizar anotação: ' + erro.message); }
+    await db.from('anotacoes').update({ concluida }).eq('id', id);
+    await carregarAnotacoes();
   }
-
   async function salvarAnotacao() {
-    const tituloCampo = document.getElementById('novaNotaTitulo');
-    const descricaoCampo = document.getElementById('novaNotaDescricao');
-    const prioridadeCampo = document.getElementById('novaNotaPrioridade');
-    
-    const titulo = tituloCampo.value.trim();
-    const descricao = descricaoCampo.value.trim();
-    const prioridade = prioridadeCampo.value;
-
+    const titulo = document.getElementById('novaNotaTitulo').value.trim();
+    const descricao = document.getElementById('novaNotaDescricao').value.trim();
+    const prioridade = document.getElementById('novaNotaPrioridade').value;
     if (!titulo) return alert('Digite um título para a anotação.');
-
-    const autorLogado = localStorage.getItem('usuarioLogado') || 'Equipe'; // Puxa do localStorage
-
-    try {
-      const { error } = await db.from('anotacoes').insert([{ 
-          titulo, 
-          descricao, 
-          prioridade,
-          criador: autorLogado 
-      }]);
-      if (error) throw error;
-      tituloCampo.value = ''; descricaoCampo.value = ''; prioridadeCampo.value = 'Normal';
-      await carregarAnotacoes();
-    } catch (erro) { alert('Erro ao salvar anotação: ' + erro.message); }
+    const autorLogado = localStorage.getItem('usuarioLogado') || 'Equipe';
+    await db.from('anotacoes').insert([{ titulo, descricao, prioridade, criador: autorLogado }]);
+    document.getElementById('novaNotaTitulo').value = ''; document.getElementById('novaNotaDescricao').value = ''; document.getElementById('novaNotaPrioridade').value = 'Normal';
+    await carregarAnotacoes();
   }
-
   async function excluirAnotacao(id) {
     if (!confirm('Excluir esta anotação?')) return;
-    try {
-      const { error } = await db.from('anotacoes').delete().eq('id', id);
-      if (error) throw error;
-      await carregarAnotacoes();
-    } catch (erro) { alert('Erro ao excluir anotação: ' + erro.message); }
+    await db.from('anotacoes').delete().eq('id', id);
+    await carregarAnotacoes();
   }
 
   // --- DATAS E ATALHOS ---
@@ -744,30 +707,15 @@
     const texto = hoje.toLocaleDateString('pt-BR', opcoes);
     document.getElementById('dataHoje').innerText = texto.charAt(0).toUpperCase() + texto.slice(1);
   })();
-
-  function dataDeHojeISO() {
-    const hoje = new Date();
-    const ano = hoje.getFullYear();
-    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-    const dia = String(hoje.getDate()).padStart(2, '0');
-    return `${ano}-${mes}-${dia}`;
-  }
-
-  function dataDeAmanhaISO() {
-    const amanha = new Date();
-    amanha.setDate(amanha.getDate() + 1); 
-    const ano = amanha.getFullYear();
-    const mes = String(amanha.getMonth() + 1).padStart(2, '0');
-    const dia = String(amanha.getDate()).padStart(2, '0');
-    return `${ano}-${mes}-${dia}`;
-  }
-
+  function dataDeHojeISO() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+  function dataDeAmanhaISO() { const d = new Date(); d.setDate(d.getDate() + 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
   function irParaHoje(idCampo) { document.getElementById(idCampo).value = dataDeHojeISO(); }
   function irParaAmanha(idCampo) { document.getElementById(idCampo).value = dataDeAmanhaISO(); }
 
-  // --- FUNÇÃO PARA CRIAR EVENTO ---
+  // --- CRIAR EVENTO (TIPO + TITULO) ---
   async function criarEventoNoGoogle() {
-    const titulo = document.getElementById('novoTitulo').value;
+    const tipo = document.getElementById('novoTipoEvento').value;
+    const tituloRaw = document.getElementById('novoTitulo').value;
     const data = document.getElementById('novaData').value;
     const hora = document.getElementById('novaHora').value;
     const local = document.getElementById('novoLocal').value;
@@ -776,207 +724,116 @@
     const lembrete = document.getElementById('novoLembrete').value;
     const status = document.getElementById('mensagemStatus');
 
-    if (!titulo || !data || !hora) return alert("Por favor, preencha o título, a data e a hora!");
+    if (!tituloRaw || !data || !hora) return alert("Por favor, preencha o título, a data e a hora!");
 
-    status.style.display = 'block';
-    status.className = 'status-loading';
-    status.innerText = 'Salvando no Google Agenda... ⏳';
+    // Se selecionou Aniversário/Sessão etc, coloca antes do título. Se deixou vazio, salva só o título normal.
+    const tituloFinal = tipo ? `${tipo}: ${tituloRaw}` : tituloRaw; 
+
+    status.style.display = 'block'; status.className = 'status-loading'; status.innerText = 'Salvando no Google Agenda... ⏳';
 
     try {
-      const urlCompleta = `${URL_DO_SCRIPT}?acao=criar&titulo=${encodeURIComponent(titulo)}&data=${data}&hora=${hora}&local=${encodeURIComponent(local)}&descricao=${encodeURIComponent(descricao)}&convidados=${encodeURIComponent(convidados)}&lembrete=${encodeURIComponent(lembrete)}`;
+      const urlCompleta = `${URL_DO_SCRIPT}?acao=criar&titulo=${encodeURIComponent(tituloFinal)}&data=${data}&hora=${hora}&local=${encodeURIComponent(local)}&descricao=${encodeURIComponent(descricao)}&convidados=${encodeURIComponent(convidados)}&lembrete=${encodeURIComponent(lembrete)}`;
       const resposta = await fetch(urlCompleta);
       const resultado = await resposta.json();
 
       if (resultado.status === 'sucesso') {
-        status.className = 'status-ok';
-        status.innerText = '✅ Evento salvo com sucesso!';
-
+        status.className = 'status-ok'; status.innerText = '✅ Evento salvo com sucesso!';
         document.getElementById('novoTitulo').value = ''; document.getElementById('novaHora').value = '';
         document.getElementById('novoLocal').value = ''; document.getElementById('novaDescricao').value = '';
         document.getElementById('novosConvidados').value = ''; document.getElementById('novoLembrete').value = '30';
-
+        document.getElementById('novoTipoEvento').value = ''; 
         setTimeout(() => { status.style.display = 'none'; }, 4000);
-      } else {
-        alert("Erro ao salvar: " + resultado.mensagem);
-        status.style.display = 'none';
-      }
-    } catch (erro) {
-      alert("Erro de conexão. Verifique se colou o link correto do script.");
-      status.style.display = 'none';
-    }
+      } else { alert("Erro ao salvar: " + resultado.mensagem); status.style.display = 'none'; }
+    } catch (erro) { alert("Erro de conexão com o script."); status.style.display = 'none'; }
   }
 
   // --- AUTOCOMPLETE DE ENDEREÇO ---
-  const inputLocal = document.getElementById('novoLocal');
-  const boxSugestoes = document.getElementById('sugestoesLocal');
-  let debounceTimer;
-
+  const inputLocal = document.getElementById('novoLocal'); const boxSugestoes = document.getElementById('sugestoesLocal'); let debounceTimer;
   inputLocal.addEventListener('input', () => {
-    clearTimeout(debounceTimer);
-    const termo = inputLocal.value.trim();
+    clearTimeout(debounceTimer); const termo = inputLocal.value.trim();
     if (termo.length < 3) { boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = ''; return; }
     debounceTimer = setTimeout(() => buscarEnderecos(termo), 350);
   });
-
   let numeroDigitadoAtual = '';
-  function extrairNumeroDigitado(texto) {
-    const match = texto.match(/(?:,|\s)+(s[nN]|S[nN]|\d+[a-zA-Z]?)\s*$/);
-    return match ? match[1] : '';
-  }
-
+  function extrairNumeroDigitado(texto) { const match = texto.match(/(?:,|\s)+(s[nN]|S[nN]|\d+[a-zA-Z]?)\s*$/); return match ? match[1] : ''; }
   async function buscarEnderecos(termo) {
     numeroDigitadoAtual = extrairNumeroDigitado(termo);
     try {
       const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&accept-language=pt-BR&addressdetails=1&q=${encodeURIComponent(termo + ', São Leopoldo, RS')}`;
-      const resposta = await fetch(url);
-      if (!resposta.ok) throw new Error('Falha na busca de endereço');
-      const dados = await resposta.json();
-      mostrarSugestoes(dados);
-    } catch (erro) {
-      console.error('Erro ao buscar endereços:', erro);
-      boxSugestoes.style.display = 'none';
-    }
+      const res = await fetch(url); const dados = await res.json(); mostrarSugestoes(dados);
+    } catch (erro) { boxSugestoes.style.display = 'none'; }
   }
-
   function montarEnderecoLimpo(item) {
-    const a = item.address || {};
-    const partes = [];
-
-    const rua = a.road || a.pedestrian || a.footway || '';
-    const numero = a.house_number || numeroDigitadoAtual || '';
+    const a = item.address || {}; const partes = [];
+    const rua = a.road || a.pedestrian || a.footway || ''; const numero = a.house_number || numeroDigitadoAtual || '';
     if (rua) partes.push(numero ? `${rua}, ${numero}` : rua);
-
-    const bairro = a.suburb || a.neighbourhood || a.quarter || '';
-    if (bairro) partes.push(bairro);
-
-    const cidade = a.city || a.town || a.village || a.municipality || '';
-    if (cidade) partes.push(cidade);
-
-    const estado = a.state || '';
-    if (estado) partes.push(estado);
+    const bairro = a.suburb || a.neighbourhood || a.quarter || ''; if (bairro) partes.push(bairro);
+    const cidade = a.city || a.town || a.village || a.municipality || ''; if (cidade) partes.push(cidade);
     partes.push('Brasil');
-
     if (partes.length <= 1) return (item.display_name || '').replace(/,?\s*\d{5}-?\d{3}\s*,/i, ',');
     return partes.join(', ');
   }
-
   function mostrarSugestoes(lista) {
-    if (!lista || lista.length === 0) {
-      boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = ''; return;
-    }
+    if (!lista || lista.length === 0) { boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = ''; return; }
     boxSugestoes.innerHTML = lista.map(item => {
-      const enderecoFormatado = montarEnderecoLimpo(item);
-      return `<div class="suggestion-item" data-endereco="${enderecoFormatado}">${enderecoFormatado}</div>`;
+      const endFormat = montarEnderecoLimpo(item);
+      return `<div class="suggestion-item" data-endereco="${endFormat}">${endFormat}</div>`;
     }).join('');
-    
     boxSugestoes.style.display = 'block';
-
     boxSugestoes.querySelectorAll('.suggestion-item').forEach((el) => {
-      el.addEventListener('click', function() {
-        inputLocal.value = this.getAttribute('data-endereco');
-        boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = '';
-      });
+      el.addEventListener('click', function() { inputLocal.value = this.getAttribute('data-endereco'); boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = ''; });
     });
   }
+  document.addEventListener('click', (e) => { if (!e.target.closest('#novoLocal') && !e.target.closest('#sugestoesLocal')) boxSugestoes.style.display = 'none'; });
 
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('#novoLocal') && !e.target.closest('#sugestoesLocal')) {
-      boxSugestoes.style.display = 'none';
-    }
-  });
-
-  // --- FUNÇÃO PARA LER E FORMATAR A AGENDA ---
+  // --- LER E FORMATAR ---
   async function buscarAgenda() {
     const inputData = document.getElementById('dataBusca').value;
     if (!inputData) return alert('Por favor, selecione uma data!');
-
-    const textArea = document.getElementById('resultadoAgenda');
-    textArea.value = 'Buscando eventos... ⏳';
-
-    const partesData = inputData.split('-');
-    const dataObj = new Date(partesData[0], partesData[1] - 1, partesData[2]);
-    const diasSemana = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
-    const dia = String(dataObj.getDate()).padStart(2, '0');
-    const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
-
-    let textoFinal = `*AGENDA VEREADOR*\n*${dia}/${mes}  ${diasSemana[dataObj.getDay()]}*\n\n`;
+    const textArea = document.getElementById('resultadoAgenda'); textArea.value = 'Buscando eventos... ⏳';
+    const pD = inputData.split('-'); const dO = new Date(pD[0], pD[1] - 1, pD[2]);
+    const dS = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
+    const dia = String(dO.getDate()).padStart(2, '0'); const mes = String(dO.getMonth() + 1).padStart(2, '0');
+    let textoFinal = `*AGENDA VEREADOR*\n*${dia}/${mes}  ${dS[dO.getDay()]}*\n\n`;
 
     try {
       const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&data=${inputData}`;
-      const resposta = await fetch(urlCompleta);
-      const eventos = await resposta.json();
-
-      if (eventos.length === 0) {
-        textoFinal += "Nenhum evento agendado para este dia.";
-      } else {
-        eventos.forEach(evento => {
-          const local = evento.local ? ` — ${evento.local}` : '';
-          let descFormatada = '';
-          if (evento.descricao) {
-            let desc = evento.descricao;
-            if (desc.length > 150) desc = desc.substring(0, 150) + '...';
-            descFormatada = `\n   📝 _${desc}_`;
-          }
-          textoFinal += `📍 *${evento.horario}:* ${evento.titulo}${local}${descFormatada}\n\n`;
+      const resposta = await fetch(urlCompleta); const eventos = await resposta.json();
+      if (eventos.length === 0) { textoFinal += "Nenhum evento agendado para este dia."; } 
+      else {
+        eventos.forEach(ev => {
+          const local = ev.local ? ` — ${ev.local}` : ''; let descF = '';
+          if (ev.descricao) { let d = ev.descricao; if (d.length > 150) d = d.substring(0, 150) + '...'; descF = `\n   📝 _${d}_`; }
+          textoFinal += `📍 *${ev.horario}:* ${ev.titulo}${local}${descF}\n\n`;
         });
       }
       textArea.value = textoFinal.trim();
-    } catch (erro) { textArea.value = "Erro ao buscar a agenda. Verifique o link do script."; }
+    } catch (erro) { textArea.value = "Erro ao buscar a agenda."; }
   }
 
-  // --- FUNÇÃO PARA COPIAR ---
+  // --- COPIAR E ENVIAR ZAP ---
   async function copiarTexto() {
-    const textArea = document.getElementById('resultadoAgenda');
-    let texto = textArea.value;
-    
+    const textArea = document.getElementById('resultadoAgenda'); let texto = textArea.value;
     if (!texto || texto === 'Buscando eventos... ⏳' || texto.trim() === '') {
-      const dataBusca = document.getElementById('dataBusca').value;
-      if (!dataBusca) return alert('Escolha uma data (ou clique em Hoje/Amanhã) primeiro!');
-      
-      textArea.value = 'Buscando eventos... ⏳'; 
-      await buscarAgenda(); 
-      texto = textArea.value; 
-      if (!texto || texto.includes('Erro ao buscar')) return; 
+      const db = document.getElementById('dataBusca').value; if (!db) return alert('Escolha uma data primeiro!');
+      textArea.value = 'Buscando eventos... ⏳'; await buscarAgenda(); texto = textArea.value; if (!texto || texto.includes('Erro')) return; 
     }
-
     function copiaComTextareaTemporario() {
-      const temp = document.createElement('textarea');
-      temp.value = texto; temp.style.position = 'fixed'; temp.style.top = '0'; temp.style.left = '0'; temp.style.opacity = '0';
-      document.body.appendChild(temp);
-      temp.focus(); temp.select(); temp.setSelectionRange(0, texto.length);
-      let copiou = false;
-      try { copiou = document.execCommand('copy'); } catch (e) { copiou = false; }
+      const temp = document.createElement('textarea'); temp.value = texto; temp.style.position = 'fixed'; temp.style.opacity = '0';
+      document.body.appendChild(temp); temp.focus(); temp.select(); temp.setSelectionRange(0, texto.length);
+      let copiou = false; try { copiou = document.execCommand('copy'); } catch (e) { copiou = false; }
       document.body.removeChild(temp);
-
-      if (copiou) alert('✅ Agenda copiada! Só colar no Zap.');
-      else {
-        textArea.focus(); textArea.select();
-        alert('Não foi possível copiar automático. O texto está selecionado, use Ctrl+C.');
-      }
+      if (copiou) alert('✅ Agenda copiada!'); else { textArea.focus(); textArea.select(); alert('Use Ctrl+C.'); }
     }
-
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(texto).then(() => alert('✅ Agenda copiada! Só colar no Zap.')).catch(() => copiaComTextareaTemporario());
-    } else { copiaComTextareaTemporario(); }
+    if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(texto).then(() => alert('✅ Agenda copiada!')).catch(() => copiaComTextareaTemporario()); } else { copiaComTextareaTemporario(); }
   }
-
-  // --- FUNÇÃO PARA ENVIAR NO WHATSAPP ---
   async function enviarWhatsApp() {
-    const textArea = document.getElementById('resultadoAgenda');
-    let texto = textArea.value;
-    
+    const textArea = document.getElementById('resultadoAgenda'); let texto = textArea.value;
     if (!texto || texto === 'Buscando eventos... ⏳' || texto.trim() === '') {
-      const dataBusca = document.getElementById('dataBusca').value;
-      if (!dataBusca) return alert('Escolha uma data (ou clique em Hoje/Amanhã) primeiro!');
-      
-      textArea.value = 'Buscando eventos... ⏳';
-      await buscarAgenda(); 
-      texto = textArea.value; 
-      if (!texto || texto.includes('Erro ao buscar')) return;
+      if (!document.getElementById('dataBusca').value) return alert('Escolha uma data primeiro!');
+      textArea.value = 'Buscando eventos... ⏳'; await buscarAgenda(); texto = textArea.value; if (!texto || texto.includes('Erro')) return;
     }
-    
-    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
-    window.open(url, '_blank');
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
   }
 </script>
 
