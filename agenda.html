@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Gabinete</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #eef2f5; padding: 20px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card { background: white; padding: 20px 25px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #0056b3; }
+        .card-verde { border-top: 4px solid #25D366; }
+        h2 { margin-top: 0; font-size: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;}
+        label { font-weight: bold; font-size: 14px; display: block; margin-bottom: 6px; color: #555;}
+        input[type="text"], input[type="date"], input[type="time"], textarea { 
+            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 15px; font-size: 15px; box-sizing: border-box; 
+        }
+        .linha-dupla { display: flex; gap: 15px; }
+        .linha-dupla div { flex: 1; }
+        button { color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-azul { background-color: #0056b3; }
+        .btn-azul:hover { background-color: #004494; }
+        .btn-verde { background-color: #25D366; margin-top: 10px;}
+        .btn-verde:hover { background-color: #1ebd5a; }
+        #mensagemStatus { text-align: center; font-weight: bold; display: none; margin-bottom: 15px; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- SESSÃO 1: CRIAR EVENTO -->
+    <div class="card">
+        <h2>➕ Adicionar Novo Evento</h2>
+        
+        <div id="mensagemStatus"></div>
+
+        <label>Título do Evento:</label>
+        <input type="text" id="novoTitulo" placeholder="Ex: Sessão Solene APAE">
+        
+        <div class="linha-dupla">
+            <div>
+                <label>Data:</label>
+                <input type="date" id="novaData">
+            </div>
+            <div>
+                <label>Horário:</label>
+                <input type="time" id="novaHora">
+            </div>
+        </div>
+        
+        <button class="btn-azul" onclick="criarEventoNoGoogle()">Salvar na Agenda</button>
+    </div>
+
+    <!-- SESSÃO 2: GERAR WHATSAPP -->
+    <div class="card card-verde">
+        <h2>📱 Gerar Agenda para WhatsApp</h2>
+        
+        <label>Selecione a data para copiar:</label>
+        <div class="linha-dupla">
+            <input type="date" id="dataBusca">
+            <button class="btn-azul" style="margin-bottom: 15px;" onclick="buscarAgenda()">Puxar Eventos</button>
+        </div>
+
+        <textarea id="resultadoAgenda" rows="8" placeholder="O texto da agenda aparecerá aqui..."></textarea>
+        
+        <button class="btn-verde" onclick="copiarTexto()">Copiar para WhatsApp 📋</button>
+    </div>
+
+</div>
+
+<script>
+    // ==========================================
+    // COLOQUE AQUI O NOVO LINK DO SCRIPT
+    // ==========================================
+    const URL_DO_SCRIPT 'https://script.google.com/macros/s/AKfycbxUl7poTPclLSoVbildc0m5yiuREDOA3E02a-TiKMa09vaqfWPHJFEMgS2BfO_HXkxv/exec'; 
+
+    // --- FUNÇÃO PARA CRIAR EVENTO ---
+    async function criarEventoNoGoogle() {
+        const titulo = document.getElementById('novoTitulo').value;
+        const data = document.getElementById('novaData').value;
+        const hora = document.getElementById('novaHora').value;
+        const status = document.getElementById('mensagemStatus');
+
+        if (!titulo || !data || !hora) {
+            alert("Por favor, preencha o título, a data e a hora!");
+            return;
+        }
+
+        status.style.display = 'block';
+        status.style.backgroundColor = '#fff3cd';
+        status.style.color = '#856404';
+        status.innerText = 'Salvando no Google Agenda... ⏳';
+
+        try {
+            // Envia os dados para o Google com a ação "criar"
+            const urlCompleta = `${URL_DO_SCRIPT}?acao=criar&titulo=${encodeURIComponent(titulo)}&data=${data}&hora=${hora}`;
+            const resposta = await fetch(urlCompleta);
+            const resultado = await resposta.json();
+
+            if (resultado.status === 'sucesso') {
+                status.style.backgroundColor = '#d4edda';
+                status.style.color = '#155724';
+                status.innerText = '✅ Evento salvo com sucesso!';
+                
+                // Limpa os campos
+                document.getElementById('novoTitulo').value = '';
+                document.getElementById('novaHora').value = '';
+                
+                setTimeout(() => { status.style.display = 'none'; }, 4000);
+            } else {
+                alert("Erro ao salvar: " + resultado.mensagem);
+            }
+        } catch (erro) {
+            alert("Erro de conexão. Verifique se colou o link correto do script.");
+        }
+    }
+
+    // --- FUNÇÃO PARA LER E FORMATAR A AGENDA ---
+    async function buscarAgenda() {
+        const inputData = document.getElementById('dataBusca').value;
+        if (!inputData) {
+            alert('Por favor, selecione uma data!');
+            return;
+        }
+
+        const textArea = document.getElementById('resultadoAgenda');
+        textArea.value = 'Buscando eventos... ⏳';
+
+        const partesData = inputData.split('-');
+        const dataObj = new Date(partesData[0], partesData[1] - 1, partesData[2]);
+        const diasSemana = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
+        const dia = String(dataObj.getDate()).padStart(2, '0');
+        const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
+        
+        let textoFinal = `AGENDA VEREADOR\n${dia}/${mes}  ${diasSemana[dataObj.getDay()]}\n`;
+
+        try {
+            // Envia o pedido com a ação "ler"
+            const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&data=${inputData}`;
+            const resposta = await fetch(urlCompleta);
+            const eventos = await resposta.json();
+
+            if (eventos.length === 0) {
+                textoFinal += "\nNenhum evento agendado para este dia.";
+            } else {
+                eventos.forEach(evento => {
+                    textoFinal += `📍${evento.horario}: ${evento.titulo}\n`;
+                });
+            }
+
+            textArea.value = textoFinal;
+
+        } catch (erro) {
+            textArea.value = "Erro ao buscar a agenda. Verifique o link do script.";
+        }
+    }
+
+    // --- FUNÇÃO PARA COPIAR ---
+    function copiarTexto() {
+        const texto = document.getElementById('resultadoAgenda').value;
+        if (!texto) return;
+        navigator.clipboard.writeText(texto).then(() => {
+            alert('✅ Agenda copiada! Só colar no Zap.');
+        });
+    }
+</script>
+
+</body>
+</html>
