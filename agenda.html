@@ -1,168 +1,441 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Gabinete</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #eef2f5; padding: 20px; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .card { background: white; padding: 20px 25px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #0056b3; }
-        .card-verde { border-top: 4px solid #25D366; }
-        h2 { margin-top: 0; font-size: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;}
-        label { font-weight: bold; font-size: 14px; display: block; margin-bottom: 6px; color: #555;}
-        input[type="text"], input[type="date"], input[type="time"], textarea { 
-            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 15px; font-size: 15px; box-sizing: border-box; 
-        }
-        .linha-dupla { display: flex; gap: 15px; }
-        .linha-dupla div { flex: 1; }
-        button { color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-azul { background-color: #0056b3; }
-        .btn-azul:hover { background-color: #004494; }
-        .btn-verde { background-color: #25D366; margin-top: 10px;}
-        .btn-verde:hover { background-color: #1ebd5a; }
-        #mensagemStatus { text-align: center; font-weight: bold; display: none; margin-bottom: 15px; padding: 10px; border-radius: 4px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda do Gabinete</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#1a73e8;
+    --blue-dark:#1967d2;
+    --blue-tint:#e8f0fe;
+    --grey-bg:#f1f3f4;
+    --grey-border:#dadce0;
+    --text-main:#3c4043;
+    --text-secondary:#5f6368;
+    --green:#188038;
+    --green-dark:#137333;
+    --radius:8px;
+    --shadow-1: 0 1px 2px 0 rgba(60,64,67,.30), 0 1px 3px 1px rgba(60,64,67,.15);
+    --shadow-2: 0 1px 3px 0 rgba(60,64,67,.30), 0 4px 8px 3px rgba(60,64,67,.15);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Roboto','Google Sans',Arial,sans-serif;
+    background:#fff;
+    color:var(--text-main);
+  }
+
+  /* ---------- Topbar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    padding:8px 16px;
+    border-bottom:1px solid var(--grey-border);
+    background:#fff;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brand-icon{
+    width:34px;height:34px;flex-shrink:0;
+  }
+  .brand-text{
+    font-family:'Google Sans',Roboto,sans-serif;
+    font-size:20px;
+    color:var(--text-secondary);
+    letter-spacing:.1px;
+  }
+  .brand-text b{ color:var(--text-main); font-weight:500; }
+  .topbar-spacer{ flex:1; }
+  .today-pill{
+    font-size:13px;
+    color:var(--text-secondary);
+    padding:6px 12px;
+    border:1px solid var(--grey-border);
+    border-radius:20px;
+  }
+
+  /* ---------- Layout ---------- */
+  .layout{
+    display:flex;
+    max-width:1180px;
+    margin:0 auto;
+    padding:28px 20px 60px;
+    gap:28px;
+    align-items:flex-start;
+  }
+  .sidebar{
+    width:270px;
+    flex-shrink:0;
+  }
+  .create-btn{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:#fff;
+    border:none;
+    box-shadow:var(--shadow-1);
+    border-radius:24px;
+    padding:10px 22px 10px 14px;
+    font-family:'Google Sans',Roboto,sans-serif;
+    font-size:14px;
+    font-weight:500;
+    color:var(--text-main);
+    cursor:pointer;
+    margin-bottom:24px;
+    transition:box-shadow .15s;
+  }
+  .create-btn:hover{ box-shadow:var(--shadow-2); }
+  .create-plus{
+    width:36px;height:36px;border-radius:50%;
+    background:var(--blue);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:22px;font-weight:400;flex-shrink:0;
+  }
+  .side-card{
+    border:1px solid var(--grey-border);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .side-card h3{
+    font-family:'Google Sans',Roboto,sans-serif;
+    font-size:13px;
+    font-weight:500;
+    color:var(--text-main);
+    margin:0 0 12px;
+    text-transform:uppercase;
+    letter-spacing:.3px;
+  }
+  .side-card p{
+    font-size:13px;
+    color:var(--text-secondary);
+    line-height:1.5;
+    margin:0;
+  }
+
+  /* ---------- Main column ---------- */
+  .main-col{ flex:1; min-width:0; }
+
+  .panel{
+    border:1px solid var(--grey-border);
+    border-radius:12px;
+    box-shadow:var(--shadow-1);
+    margin-bottom:24px;
+    overflow:hidden;
+  }
+  .panel-header{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:18px 24px;
+    border-bottom:1px solid var(--grey-border);
+  }
+  .panel-header .dot{
+    width:12px;height:12px;border-radius:50%;flex-shrink:0;
+  }
+  .dot-blue{ background:var(--blue); }
+  .dot-green{ background:var(--green); }
+  .panel-header h2{
+    font-family:'Google Sans',Roboto,sans-serif;
+    font-size:16px;
+    font-weight:500;
+    margin:0;
+    color:var(--text-main);
+  }
+  .panel-body{ padding:24px; }
+
+  label{
+    display:block;
+    font-size:12px;
+    font-weight:500;
+    color:var(--text-secondary);
+    margin-bottom:6px;
+    text-transform:uppercase;
+    letter-spacing:.3px;
+  }
+  .field{ margin-bottom:18px; }
+  input[type="text"], input[type="date"], input[type="time"], textarea{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--grey-border);
+    border-radius:6px;
+    font-size:14px;
+    font-family:'Roboto',Arial,sans-serif;
+    color:var(--text-main);
+    background:#fff;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input:focus, textarea:focus{
+    outline:none;
+    border-color:var(--blue);
+    box-shadow:0 0 0 1px var(--blue);
+  }
+  textarea{ resize:vertical; line-height:1.5; }
+  .row-2{ display:flex; gap:16px; }
+  .row-2 .field{ flex:1; }
+
+  .row-inline{
+    display:flex;
+    gap:12px;
+    align-items:flex-end;
+    margin-bottom:18px;
+  }
+  .row-inline .field{ flex:1; margin-bottom:0; }
+
+  button.action{
+    border:none;
+    border-radius:20px;
+    padding:10px 24px;
+    font-family:'Google Sans',Roboto,sans-serif;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    color:#fff;
+    transition:background .15s, box-shadow .15s;
+    white-space:nowrap;
+  }
+  .btn-blue{ background:var(--blue); }
+  .btn-blue:hover{ background:var(--blue-dark); box-shadow:var(--shadow-1); }
+  .btn-green{ background:var(--green); }
+  .btn-green:hover{ background:var(--green-dark); box-shadow:var(--shadow-1); }
+  .btn-block{ width:100%; padding:11px 24px; }
+  .btn-ghost{
+    background:none;
+    color:var(--blue);
+    border:1px solid var(--grey-border);
+  }
+  .btn-ghost:hover{ background:var(--blue-tint); }
+
+  #mensagemStatus{
+    display:none;
+    font-size:13px;
+    font-weight:500;
+    padding:10px 14px;
+    border-radius:6px;
+    margin-bottom:16px;
+  }
+  .status-loading{ background:#fef7e0; color:#7a5900; }
+  .status-ok{ background:#e6f4ea; color:var(--green-dark); }
+
+  .actions-right{ display:flex; justify-content:flex-end; }
+
+  @media (max-width:820px){
+    .layout{ flex-direction:column; }
+    .sidebar{ width:100%; }
+    .row-2{ flex-direction:column; gap:0; }
+    .row-inline{ flex-direction:column; align-items:stretch; }
+  }
+</style>
 </head>
 <body>
 
-<div class="container">
+<div class="topbar">
+  <div class="brand">
+    <svg class="brand-icon" viewBox="0 0 24 24" fill="none">
+      <rect x="2" y="4" width="20" height="18" rx="3" fill="#fff" stroke="#5f6368" stroke-width="1.4"/>
+      <rect x="2" y="4" width="20" height="5" rx="2" fill="#1a73e8"/>
+      <rect x="6" y="2" width="1.6" height="5" rx="0.8" fill="#5f6368"/>
+      <rect x="16.4" y="2" width="1.6" height="5" rx="0.8" fill="#5f6368"/>
+      <text x="12" y="18" text-anchor="middle" font-family="Google Sans, Roboto, sans-serif" font-size="9" font-weight="700" fill="#1a73e8">05</text>
+    </svg>
+    <span class="brand-text">Agenda <b>do Gabinete</b></span>
+  </div>
+  <div class="topbar-spacer"></div>
+  <span class="today-pill" id="dataHoje">—</span>
+</div>
 
-    <!-- SESSÃO 1: CRIAR EVENTO -->
-    <div class="card">
-        <h2>➕ Adicionar Novo Evento</h2>
-        
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <button class="create-btn" onclick="document.getElementById('novoTitulo').focus()">
+      <span class="create-plus">+</span>
+      Criar evento
+    </button>
+
+    <div class="side-card">
+      <h3>Sobre esta agenda</h3>
+      <p>Cadastre compromissos do vereador diretamente no Google Agenda e gere, em segundos, o resumo do dia para enviar no WhatsApp da equipe.</p>
+    </div>
+
+    <div class="side-card">
+      <h3>Dica</h3>
+      <p>Preencha título, data e horário e clique em "Salvar na agenda". O evento é criado automaticamente no Google Calendar do gabinete.</p>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-col">
+
+    <!-- CRIAR EVENTO -->
+    <section class="panel">
+      <div class="panel-header">
+        <span class="dot dot-blue"></span>
+        <h2>Novo evento</h2>
+      </div>
+      <div class="panel-body">
+
         <div id="mensagemStatus"></div>
 
-        <label>Título do Evento:</label>
-        <input type="text" id="novoTitulo" placeholder="Ex: Sessão Solene APAE">
-        
-        <div class="linha-dupla">
-            <div>
-                <label>Data:</label>
-                <input type="date" id="novaData">
-            </div>
-            <div>
-                <label>Horário:</label>
-                <input type="time" id="novaHora">
-            </div>
+        <div class="field">
+          <label>Título</label>
+          <input type="text" id="novoTitulo" placeholder="Ex: Sessão Solene APAE">
         </div>
-        
-        <button class="btn-azul" onclick="criarEventoNoGoogle()">Salvar na Agenda</button>
-    </div>
 
-    <!-- SESSÃO 2: GERAR WHATSAPP -->
-    <div class="card card-verde">
-        <h2>📱 Gerar Agenda para WhatsApp</h2>
-        
-        <label>Selecione a data para copiar:</label>
-        <div class="linha-dupla">
+        <div class="row-2">
+          <div class="field">
+            <label>Data</label>
+            <input type="date" id="novaData">
+          </div>
+          <div class="field">
+            <label>Horário</label>
+            <input type="time" id="novaHora">
+          </div>
+        </div>
+
+        <div class="actions-right">
+          <button class="action btn-blue" onclick="criarEventoNoGoogle()">Salvar na agenda</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHATSAPP -->
+    <section class="panel">
+      <div class="panel-header">
+        <span class="dot dot-green"></span>
+        <h2>Gerar agenda para WhatsApp</h2>
+      </div>
+      <div class="panel-body">
+
+        <div class="row-inline">
+          <div class="field">
+            <label>Data para copiar</label>
             <input type="date" id="dataBusca">
-            <button class="btn-azul" style="margin-bottom: 15px;" onclick="buscarAgenda()">Puxar Eventos</button>
+          </div>
+          <button class="action btn-ghost" onclick="buscarAgenda()">Puxar eventos</button>
         </div>
 
-        <textarea id="resultadoAgenda" rows="8" placeholder="O texto da agenda aparecerá aqui..."></textarea>
-        
-        <button class="btn-verde" onclick="copiarTexto()">Copiar para WhatsApp 📋</button>
-    </div>
+        <div class="field">
+          <label>Prévia da mensagem</label>
+          <textarea id="resultadoAgenda" rows="8" placeholder="O texto da agenda aparecerá aqui..."></textarea>
+        </div>
 
+        <button class="action btn-green btn-block" onclick="copiarTexto()">Copiar para WhatsApp 📋</button>
+      </div>
+    </section>
+
+  </main>
 </div>
 
 <script>
-    // ==========================================
-    // COLOQUE AQUI O NOVO LINK DO SCRIPT
-    // ==========================================
-    const URL_DO_SCRIPT 'https://script.google.com/macros/s/AKfycbxUl7poTPclLSoVbildc0m5yiuREDOA3E02a-TiKMa09vaqfWPHJFEMgS2BfO_HXkxv/exec'; 
+  // ==========================================
+  // LINK DO SCRIPT (Google Apps Script)
+  // ==========================================
+  const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbxUl7poTPclLSoVbildc0m5yiuREDOA3E02a-TiKMa09vaqfWPHJFEMgS2BfO_HXkxv/exec';
 
-    // --- FUNÇÃO PARA CRIAR EVENTO ---
-    async function criarEventoNoGoogle() {
-        const titulo = document.getElementById('novoTitulo').value;
-        const data = document.getElementById('novaData').value;
-        const hora = document.getElementById('novaHora').value;
-        const status = document.getElementById('mensagemStatus');
+  // Mostra a data de hoje no topo, estilo Google Agenda
+  (function mostrarDataHoje() {
+    const hoje = new Date();
+    const opcoes = { weekday: 'long', day: 'numeric', month: 'long' };
+    const texto = hoje.toLocaleDateString('pt-BR', opcoes);
+    document.getElementById('dataHoje').innerText = texto.charAt(0).toUpperCase() + texto.slice(1);
+  })();
 
-        if (!titulo || !data || !hora) {
-            alert("Por favor, preencha o título, a data e a hora!");
-            return;
-        }
+  // --- FUNÇÃO PARA CRIAR EVENTO ---
+  async function criarEventoNoGoogle() {
+    const titulo = document.getElementById('novoTitulo').value;
+    const data = document.getElementById('novaData').value;
+    const hora = document.getElementById('novaHora').value;
+    const status = document.getElementById('mensagemStatus');
 
-        status.style.display = 'block';
-        status.style.backgroundColor = '#fff3cd';
-        status.style.color = '#856404';
-        status.innerText = 'Salvando no Google Agenda... ⏳';
-
-        try {
-            // Envia os dados para o Google com a ação "criar"
-            const urlCompleta = `${URL_DO_SCRIPT}?acao=criar&titulo=${encodeURIComponent(titulo)}&data=${data}&hora=${hora}`;
-            const resposta = await fetch(urlCompleta);
-            const resultado = await resposta.json();
-
-            if (resultado.status === 'sucesso') {
-                status.style.backgroundColor = '#d4edda';
-                status.style.color = '#155724';
-                status.innerText = '✅ Evento salvo com sucesso!';
-                
-                // Limpa os campos
-                document.getElementById('novoTitulo').value = '';
-                document.getElementById('novaHora').value = '';
-                
-                setTimeout(() => { status.style.display = 'none'; }, 4000);
-            } else {
-                alert("Erro ao salvar: " + resultado.mensagem);
-            }
-        } catch (erro) {
-            alert("Erro de conexão. Verifique se colou o link correto do script.");
-        }
+    if (!titulo || !data || !hora) {
+      alert("Por favor, preencha o título, a data e a hora!");
+      return;
     }
 
-    // --- FUNÇÃO PARA LER E FORMATAR A AGENDA ---
-    async function buscarAgenda() {
-        const inputData = document.getElementById('dataBusca').value;
-        if (!inputData) {
-            alert('Por favor, selecione uma data!');
-            return;
-        }
+    status.style.display = 'block';
+    status.className = 'status-loading';
+    status.innerText = 'Salvando no Google Agenda... ⏳';
 
-        const textArea = document.getElementById('resultadoAgenda');
-        textArea.value = 'Buscando eventos... ⏳';
+    try {
+      const urlCompleta = `${URL_DO_SCRIPT}?acao=criar&titulo=${encodeURIComponent(titulo)}&data=${data}&hora=${hora}`;
+      const resposta = await fetch(urlCompleta);
+      const resultado = await resposta.json();
 
-        const partesData = inputData.split('-');
-        const dataObj = new Date(partesData[0], partesData[1] - 1, partesData[2]);
-        const diasSemana = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
-        const dia = String(dataObj.getDate()).padStart(2, '0');
-        const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
-        
-        let textoFinal = `AGENDA VEREADOR\n${dia}/${mes}  ${diasSemana[dataObj.getDay()]}\n`;
+      if (resultado.status === 'sucesso') {
+        status.className = 'status-ok';
+        status.innerText = '✅ Evento salvo com sucesso!';
 
-        try {
-            // Envia o pedido com a ação "ler"
-            const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&data=${inputData}`;
-            const resposta = await fetch(urlCompleta);
-            const eventos = await resposta.json();
+        document.getElementById('novoTitulo').value = '';
+        document.getElementById('novaHora').value = '';
 
-            if (eventos.length === 0) {
-                textoFinal += "\nNenhum evento agendado para este dia.";
-            } else {
-                eventos.forEach(evento => {
-                    textoFinal += `📍${evento.horario}: ${evento.titulo}\n`;
-                });
-            }
+        setTimeout(() => { status.style.display = 'none'; }, 4000);
+      } else {
+        alert("Erro ao salvar: " + resultado.mensagem);
+        status.style.display = 'none';
+      }
+    } catch (erro) {
+      alert("Erro de conexão. Verifique se colou o link correto do script.");
+      status.style.display = 'none';
+    }
+  }
 
-            textArea.value = textoFinal;
-
-        } catch (erro) {
-            textArea.value = "Erro ao buscar a agenda. Verifique o link do script.";
-        }
+  // --- FUNÇÃO PARA LER E FORMATAR A AGENDA ---
+  async function buscarAgenda() {
+    const inputData = document.getElementById('dataBusca').value;
+    if (!inputData) {
+      alert('Por favor, selecione uma data!');
+      return;
     }
 
-    // --- FUNÇÃO PARA COPIAR ---
-    function copiarTexto() {
-        const texto = document.getElementById('resultadoAgenda').value;
-        if (!texto) return;
-        navigator.clipboard.writeText(texto).then(() => {
-            alert('✅ Agenda copiada! Só colar no Zap.');
+    const textArea = document.getElementById('resultadoAgenda');
+    textArea.value = 'Buscando eventos... ⏳';
+
+    const partesData = inputData.split('-');
+    const dataObj = new Date(partesData[0], partesData[1] - 1, partesData[2]);
+    const diasSemana = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
+    const dia = String(dataObj.getDate()).padStart(2, '0');
+    const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
+
+    let textoFinal = `AGENDA VEREADOR\n${dia}/${mes}  ${diasSemana[dataObj.getDay()]}\n`;
+
+    try {
+      const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&data=${inputData}`;
+      const resposta = await fetch(urlCompleta);
+      const eventos = await resposta.json();
+
+      if (eventos.length === 0) {
+        textoFinal += "\nNenhum evento agendado para este dia.";
+      } else {
+        eventos.forEach(evento => {
+          textoFinal += `📍${evento.horario}: ${evento.titulo}\n`;
         });
+      }
+
+      textArea.value = textoFinal;
+
+    } catch (erro) {
+      textArea.value = "Erro ao buscar a agenda. Verifique o link do script.";
     }
+  }
+
+  // --- FUNÇÃO PARA COPIAR ---
+  function copiarTexto() {
+    const texto = document.getElementById('resultadoAgenda').value;
+    if (!texto) return;
+    navigator.clipboard.writeText(texto).then(() => {
+      alert('✅ Agenda copiada! Só colar no Zap.');
+    });
+  }
 </script>
 
 </body>
