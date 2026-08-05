@@ -226,7 +226,52 @@
   .status-loading{ background:#fef7e0; color:#7a5900; }
   .status-ok{ background:#e6f4ea; color:var(--green-dark); }
 
-  .actions-right{ display:flex; justify-content:flex-end; }
+  .actions-right{ display:flex; justify-content:flex-end; gap:10px; }
+
+  select{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--grey-border);
+    border-radius:6px;
+    font-size:14px;
+    font-family:'Roboto',Arial,sans-serif;
+    color:var(--text-main);
+    background:#fff;
+  }
+  select:focus{
+    outline:none;
+    border-color:var(--blue);
+    box-shadow:0 0 0 1px var(--blue);
+  }
+
+  /* ---------- Autocomplete de local ---------- */
+  .field-relative{ position:relative; }
+  .suggestions-box{
+    display:none;
+    position:absolute;
+    top:calc(100% - 14px);
+    left:0;
+    right:0;
+    background:#fff;
+    border:1px solid var(--grey-border);
+    border-radius:8px;
+    box-shadow:var(--shadow-2);
+    z-index:20;
+    max-height:220px;
+    overflow-y:auto;
+  }
+  .suggestion-item{
+    padding:10px 14px;
+    font-size:13px;
+    color:var(--text-main);
+    cursor:pointer;
+    border-bottom:1px solid #f1f3f4;
+  }
+  .suggestion-item:last-child{ border-bottom:none; }
+  .suggestion-item:hover{ background:var(--blue-tint); }
+
+  .btn-whatsapp{ background:#25D366; }
+  .btn-whatsapp:hover{ background:#1ebd5a; }
 
   @media (max-width:820px){
     .layout{ flex-direction:column; }
@@ -302,6 +347,26 @@
           </div>
         </div>
 
+        <div class="field field-relative">
+          <label>Local / Endereço</label>
+          <input type="text" id="novoLocal" placeholder="Comece a digitar o endereço..." autocomplete="off">
+          <div id="sugestoesLocal" class="suggestions-box"></div>
+        </div>
+
+        <div class="row-2">
+          <div class="field">
+            <label>Lembrete</label>
+            <select id="novoLembrete">
+              <option value="">Sem lembrete</option>
+              <option value="10">10 minutos antes</option>
+              <option value="30">30 minutos antes</option>
+              <option value="60">1 hora antes</option>
+              <option value="1440">1 dia antes</option>
+            </select>
+          </div>
+          <div class="field"></div>
+        </div>
+
         <div class="actions-right">
           <button class="action btn-blue" onclick="criarEventoNoGoogle()">Salvar na agenda</button>
         </div>
@@ -329,7 +394,10 @@
           <textarea id="resultadoAgenda" rows="8" placeholder="O texto da agenda aparecerá aqui..."></textarea>
         </div>
 
-        <button class="action btn-green btn-block" onclick="copiarTexto()">Copiar para WhatsApp 📋</button>
+        <div class="row-2">
+          <button class="action btn-green" onclick="copiarTexto()">Copiar texto 📋</button>
+          <button class="action btn-whatsapp" onclick="enviarWhatsApp()">Enviar no WhatsApp 📱</button>
+        </div>
       </div>
     </section>
 
@@ -340,7 +408,7 @@
   // ==========================================
   // LINK DO SCRIPT (Google Apps Script)
   // ==========================================
-  const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbxUl7poTPclLSoVbildc0m5yiuREDOA3E02a-TiKMa09vaqfWPHJFEMgS2BfO_HXkxv/exec';
+  const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbwUKIb3VB-401G5U5kIWtU2UEBwtqWjRJ78Ttysuz8aN_2yEg5RIh6G7A-bEos7fhJD/exec'
 
   // Mostra a data de hoje no topo, estilo Google Agenda
   (function mostrarDataHoje() {
@@ -355,6 +423,8 @@
     const titulo = document.getElementById('novoTitulo').value;
     const data = document.getElementById('novaData').value;
     const hora = document.getElementById('novaHora').value;
+    const local = document.getElementById('novoLocal').value;
+    const lembrete = document.getElementById('novoLembrete').value;
     const status = document.getElementById('mensagemStatus');
 
     if (!titulo || !data || !hora) {
@@ -367,7 +437,7 @@
     status.innerText = 'Salvando no Google Agenda... ⏳';
 
     try {
-      const urlCompleta = `${URL_DO_SCRIPT}?acao=criar&titulo=${encodeURIComponent(titulo)}&data=${data}&hora=${hora}`;
+      const urlCompleta = `${URL_DO_SCRIPT}?acao=criar&titulo=${encodeURIComponent(titulo)}&data=${data}&hora=${hora}&local=${encodeURIComponent(local)}&lembrete=${encodeURIComponent(lembrete)}`;
       const resposta = await fetch(urlCompleta);
       const resultado = await resposta.json();
 
@@ -377,6 +447,8 @@
 
         document.getElementById('novoTitulo').value = '';
         document.getElementById('novaHora').value = '';
+        document.getElementById('novoLocal').value = '';
+        document.getElementById('novoLembrete').value = '';
 
         setTimeout(() => { status.style.display = 'none'; }, 4000);
       } else {
@@ -388,6 +460,59 @@
       status.style.display = 'none';
     }
   }
+
+  // --- AUTOCOMPLETE DE ENDEREÇO (OpenStreetMap / Nominatim, gratuito) ---
+  const inputLocal = document.getElementById('novoLocal');
+  const boxSugestoes = document.getElementById('sugestoesLocal');
+  let debounceTimer;
+
+  inputLocal.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const termo = inputLocal.value.trim();
+    if (termo.length < 3) {
+      boxSugestoes.style.display = 'none';
+      boxSugestoes.innerHTML = '';
+      return;
+    }
+    debounceTimer = setTimeout(() => buscarEnderecos(termo), 350);
+  });
+
+  async function buscarEnderecos(termo) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&q=${encodeURIComponent(termo + ', São Leopoldo, RS')}`;
+      const resposta = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+      const dados = await resposta.json();
+      mostrarSugestoes(dados);
+    } catch (erro) {
+      boxSugestoes.style.display = 'none';
+    }
+  }
+
+  function mostrarSugestoes(lista) {
+    if (!lista || lista.length === 0) {
+      boxSugestoes.style.display = 'none';
+      boxSugestoes.innerHTML = '';
+      return;
+    }
+    boxSugestoes.innerHTML = lista
+      .map(item => `<div class="suggestion-item">${item.display_name}</div>`)
+      .join('');
+    boxSugestoes.style.display = 'block';
+
+    boxSugestoes.querySelectorAll('.suggestion-item').forEach((el, i) => {
+      el.addEventListener('click', () => {
+        inputLocal.value = lista[i].display_name;
+        boxSugestoes.style.display = 'none';
+        boxSugestoes.innerHTML = '';
+      });
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#novoLocal') && !e.target.closest('#sugestoesLocal')) {
+      boxSugestoes.style.display = 'none';
+    }
+  });
 
   // --- FUNÇÃO PARA LER E FORMATAR A AGENDA ---
   async function buscarAgenda() {
@@ -417,7 +542,8 @@
         textoFinal += "\nNenhum evento agendado para este dia.";
       } else {
         eventos.forEach(evento => {
-          textoFinal += `📍${evento.horario}: ${evento.titulo}\n`;
+          const local = evento.local ? ` — ${evento.local}` : '';
+          textoFinal += `📍${evento.horario}: ${evento.titulo}${local}\n`;
         });
       }
 
@@ -428,13 +554,41 @@
     }
   }
 
-  // --- FUNÇÃO PARA COPIAR ---
+  // --- FUNÇÃO PARA COPIAR (com fallback, funciona em qualquer contexto) ---
   function copiarTexto() {
-    const texto = document.getElementById('resultadoAgenda').value;
+    const textArea = document.getElementById('resultadoAgenda');
+    const texto = textArea.value;
     if (!texto) return;
-    navigator.clipboard.writeText(texto).then(() => {
-      alert('✅ Agenda copiada! Só colar no Zap.');
-    });
+
+    function copiaAntiga() {
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        alert('✅ Agenda copiada! Só colar no Zap.');
+      } catch (e) {
+        alert('Não foi possível copiar automaticamente. Selecione o texto e use Ctrl+C.');
+      }
+    }
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(texto)
+        .then(() => alert('✅ Agenda copiada! Só colar no Zap.'))
+        .catch(copiaAntiga);
+    } else {
+      copiaAntiga();
+    }
+  }
+
+  // --- FUNÇÃO PARA ENVIAR DIRETO NO WHATSAPP (abre e deixa escolher o contato) ---
+  function enviarWhatsApp() {
+    const texto = document.getElementById('resultadoAgenda').value;
+    if (!texto) {
+      alert('Puxe os eventos do dia primeiro.');
+      return;
+    }
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+    window.open(url, '_blank');
   }
 </script>
 
