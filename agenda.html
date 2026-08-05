@@ -331,6 +331,92 @@
   .add-email-row input{ flex:1; }
   .empty-hint{ font-size:12.5px; color:var(--text-secondary); margin-top:8px; }
 
+  /* ---------- Engrenagem / modal ---------- */
+  .label-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:6px;
+  }
+  .label-row label{ margin-bottom:0; }
+  .gear-btn{
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-size:15px;
+    line-height:1;
+    padding:2px 4px;
+    border-radius:4px;
+    flex-shrink:0;
+  }
+  .gear-btn:hover{ background:var(--grey-bg); }
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    z-index:100;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .modal-overlay.aberto{ display:flex; }
+  .modal-box{
+    background:#fff;
+    border-radius:12px;
+    width:100%;
+    max-width:420px;
+    max-height:80vh;
+    overflow-y:auto;
+    padding:20px;
+    box-shadow:var(--shadow-2);
+  }
+  .modal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .modal-head h3{
+    font-family:'Google Sans',Roboto,sans-serif;
+    font-size:16px;
+    margin:0;
+    color:var(--text-main);
+  }
+  .modal-head button{
+    background:none; border:none; font-size:18px; cursor:pointer; color:var(--text-secondary);
+  }
+  .modal-add-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+  .lista-item-simples{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:8px 10px;
+    border:1px solid var(--grey-border);
+    border-radius:6px;
+    margin-bottom:6px;
+    font-size:13px;
+  }
+  .lista-item-simples span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* ---------- Anotações (sidebar) ---------- */
+  .nota-mini{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    padding:8px 0;
+    border-bottom:1px solid var(--grey-border);
+  }
+  .nota-mini:last-child{ border-bottom:none; }
+  .nota-mini input[type="checkbox"]{ margin-top:3px; flex-shrink:0; }
+  .nota-mini-texto{ flex:1; min-width:0; }
+  .nota-mini-titulo{ font-size:13px; font-weight:500; color:var(--text-main); word-break:break-word; }
+  .nota-mini.feita .nota-mini-titulo{ text-decoration:line-through; color:var(--text-secondary); }
+  .nota-mini-desc{ font-size:12px; color:var(--text-secondary); margin-top:2px; word-break:break-word; }
+  .nota-mini-del{ background:none; border:none; color:#a1a1a1; cursor:pointer; font-size:13px; flex-shrink:0; }
+  .nota-mini-del:hover{ color:#d93025; }
+
   /* ---------- Anotações ---------- */
   .nota-item{
     border:1px solid var(--grey-border);
@@ -404,6 +490,11 @@
     </button>
 
     <div class="side-card">
+      <h3>📝 Anotações</h3>
+      <div id="listaAnotacoesSidebar"><span class="empty-hint">Carregando...</span></div>
+    </div>
+
+    <div class="side-card">
       <h3>Sobre esta agenda</h3>
       <p>Cadastre compromissos do vereador diretamente no Google Agenda e gere, em segundos, o resumo do dia para enviar no WhatsApp da equipe.</p>
     </div>
@@ -448,18 +539,22 @@
 
         <div class="field field-relative">
           <label>Local / Endereço</label>
-          <input type="text" id="novoLocal" placeholder="Comece a digitar o endereço..." autocomplete="off">
+          <input type="text" id="novoLocal" placeholder="Digite rua e número, ex: Av. 25 de Julho, 450..." autocomplete="off">
           <div id="sugestoesLocal" class="suggestions-box"></div>
         </div>
 
         <div class="field">
-          <label>Convidados / Gestores</label>
+          <label>Descrição</label>
+          <textarea id="novaDescricao" rows="3" placeholder="Detalhes do evento (opcional)"></textarea>
+        </div>
+
+        <div class="field">
+          <div class="label-row">
+            <label style="margin:0;">Convidados / Gestores</label>
+            <button type="button" class="gear-btn" onclick="abrirModalEmails()" title="Gerenciar e-mails salvos">⚙️</button>
+          </div>
           <input type="text" id="novosConvidados" placeholder="e-mails separados por vírgula">
           <div class="chips-row" id="chipsEmails"></div>
-          <div class="add-email-row">
-            <input type="text" id="novoEmailApelido" placeholder="Nome/apelido (ex: Secretaria de Obras)">
-            <button type="button" class="action btn-ghost" onclick="salvarEmailFrequente()">💾 Salvar e-mail</button>
-          </div>
         </div>
 
         <div class="row-2">
@@ -535,11 +630,27 @@
           <button class="action btn-blue" onclick="salvarAnotacao()">Salvar anotação</button>
         </div>
 
-        <div id="listaAnotacoes" style="margin-top:20px;"></div>
+        <p class="empty-hint">As anotações salvas aparecem na barra lateral, ao lado de "Criar evento".</p>
       </div>
     </section>
 
   </main>
+</div>
+
+<!-- MODAL: GERENCIAR E-MAILS FREQUENTES -->
+<div id="modalEmails" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>⚙️ E-mails salvos</h3>
+      <button type="button" onclick="fecharModalEmails()">✕</button>
+    </div>
+    <div class="modal-add-row">
+      <input type="text" id="modalEmailNome" placeholder="Apelido (ex: Secretaria de Obras)">
+      <input type="text" id="modalEmailEndereco" placeholder="email@exemplo.com">
+      <button type="button" class="action btn-blue btn-block" onclick="adicionarEmailModal()">➕ Adicionar</button>
+    </div>
+    <div id="listaEmailsModal"></div>
+  </div>
 </div>
 
 <script>
@@ -598,28 +709,6 @@
     campo.value = atuais.join(', ');
   }
 
-  async function salvarEmailFrequente() {
-    const campo = document.getElementById('novosConvidados');
-    const apelidoCampo = document.getElementById('novoEmailApelido');
-    const emails = campo.value.split(',').map(e => e.trim()).filter(Boolean);
-    const email = emails[emails.length - 1];
-    const nome = apelidoCampo.value.trim();
-
-    if (!email) {
-      alert('Digite um e-mail no campo "Convidados / Gestores" antes de salvar.');
-      return;
-    }
-
-    try {
-      const { error } = await db.from('emails_frequentes').insert([{ nome: nome || email, email }]);
-      if (error) throw error;
-      apelidoCampo.value = '';
-      await carregarEmailsFrequentes();
-    } catch (erro) {
-      alert('Erro ao salvar e-mail: ' + erro.message);
-    }
-  }
-
   async function excluirEmailFrequente(id) {
     if (!confirm('Remover este e-mail da lista de frequentes?')) return;
     try {
@@ -631,10 +720,75 @@
     }
   }
 
+  // --- MODAL: GERENCIAR E-MAILS SALVOS (engrenagem) ---
+  function abrirModalEmails() {
+    document.getElementById('modalEmails').classList.add('aberto');
+    renderListaEmailsModal();
+  }
+
+  function fecharModalEmails() {
+    document.getElementById('modalEmails').classList.remove('aberto');
+  }
+
+  async function renderListaEmailsModal() {
+    const container = document.getElementById('listaEmailsModal');
+    try {
+      const { data, error } = await db.from('emails_frequentes').select('id, nome, email').order('nome');
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        container.innerHTML = '<span class="empty-hint">Nenhum e-mail salvo ainda.</span>';
+        return;
+      }
+      container.innerHTML = data.map(item => `
+        <div class="lista-item-simples">
+          <span title="${item.email}"><b>${item.nome || item.email}</b> — ${item.email}</span>
+          <button type="button" class="nota-mini-del" onclick="excluirEmailFrequenteModal(${item.id})" title="Remover">🗑️</button>
+        </div>
+      `).join('');
+    } catch (erro) {
+      container.innerHTML = '<span class="empty-hint">Erro ao carregar e-mails.</span>';
+    }
+  }
+
+  async function adicionarEmailModal() {
+    const nomeCampo = document.getElementById('modalEmailNome');
+    const emailCampo = document.getElementById('modalEmailEndereco');
+    const nome = nomeCampo.value.trim();
+    const email = emailCampo.value.trim();
+
+    if (!email) {
+      alert('Digite o e-mail.');
+      return;
+    }
+
+    try {
+      const { error } = await db.from('emails_frequentes').insert([{ nome: nome || email, email }]);
+      if (error) throw error;
+      nomeCampo.value = '';
+      emailCampo.value = '';
+      await renderListaEmailsModal();
+      await carregarEmailsFrequentes();
+    } catch (erro) {
+      alert('Erro ao salvar e-mail: ' + erro.message);
+    }
+  }
+
+  async function excluirEmailFrequenteModal(id) {
+    if (!confirm('Remover este e-mail da lista de frequentes?')) return;
+    try {
+      const { error } = await db.from('emails_frequentes').delete().eq('id', id);
+      if (error) throw error;
+      await renderListaEmailsModal();
+      await carregarEmailsFrequentes();
+    } catch (erro) {
+      alert('Erro ao remover e-mail: ' + erro.message);
+    }
+  }
+
   // --- ANOTAÇÕES ---
   async function carregarAnotacoes() {
     try {
-      const { data, error } = await db.from('anotacoes').select('id, titulo, descricao, criado_em').order('criado_em', { ascending: false });
+      const { data, error } = await db.from('anotacoes').select('id, titulo, descricao, concluida, criado_em').order('concluida', { ascending: true }).order('criado_em', { ascending: false });
       if (error) throw error;
       renderAnotacoes(data || []);
     } catch (erro) {
@@ -649,20 +803,31 @@
   }
 
   function renderAnotacoes(lista) {
-    const container = document.getElementById('listaAnotacoes');
+    const container = document.getElementById('listaAnotacoesSidebar');
     if (!lista || lista.length === 0) {
       container.innerHTML = '<span class="empty-hint">Nenhuma anotação salva ainda.</span>';
       return;
     }
     container.innerHTML = lista.map(nota => `
-      <div class="nota-item">
-        <div class="nota-item-top">
-          <p class="nota-titulo">${escaparHtml(nota.titulo)}</p>
-          <button type="button" class="nota-del" onclick="excluirAnotacao(${nota.id})" title="Excluir">🗑️</button>
+      <div class="nota-mini${nota.concluida ? ' feita' : ''}">
+        <input type="checkbox" ${nota.concluida ? 'checked' : ''} onchange="alternarAnotacaoConcluida(${nota.id}, this.checked)" title="Marcar como feita">
+        <div class="nota-mini-texto">
+          <div class="nota-mini-titulo">${escaparHtml(nota.titulo)}</div>
+          ${nota.descricao ? `<div class="nota-mini-desc">${escaparHtml(nota.descricao)}</div>` : ''}
         </div>
-        <p class="nota-descricao">${escaparHtml(nota.descricao)}</p>
+        <button type="button" class="nota-mini-del" onclick="excluirAnotacao(${nota.id})" title="Excluir">🗑️</button>
       </div>
     `).join('');
+  }
+
+  async function alternarAnotacaoConcluida(id, concluida) {
+    try {
+      const { error } = await db.from('anotacoes').update({ concluida }).eq('id', id);
+      if (error) throw error;
+      await carregarAnotacoes();
+    } catch (erro) {
+      alert('Erro ao atualizar anotação: ' + erro.message);
+    }
   }
 
   async function salvarAnotacao() {
@@ -725,6 +890,7 @@
     const data = document.getElementById('novaData').value;
     const hora = document.getElementById('novaHora').value;
     const local = document.getElementById('novoLocal').value;
+    const descricao = document.getElementById('novaDescricao').value;
     const convidados = document.getElementById('novosConvidados').value;
     const lembrete = document.getElementById('novoLembrete').value;
     const status = document.getElementById('mensagemStatus');
@@ -739,7 +905,7 @@
     status.innerText = 'Salvando no Google Agenda... ⏳';
 
     try {
-      const urlCompleta = `${URL_DO_SCRIPT}?acao=criar&titulo=${encodeURIComponent(titulo)}&data=${data}&hora=${hora}&local=${encodeURIComponent(local)}&convidados=${encodeURIComponent(convidados)}&lembrete=${encodeURIComponent(lembrete)}`;
+      const urlCompleta = `${URL_DO_SCRIPT}?acao=criar&titulo=${encodeURIComponent(titulo)}&data=${data}&hora=${hora}&local=${encodeURIComponent(local)}&descricao=${encodeURIComponent(descricao)}&convidados=${encodeURIComponent(convidados)}&lembrete=${encodeURIComponent(lembrete)}`;
       const resposta = await fetch(urlCompleta);
       const resultado = await resposta.json();
 
@@ -750,6 +916,7 @@
         document.getElementById('novoTitulo').value = '';
         document.getElementById('novaHora').value = '';
         document.getElementById('novoLocal').value = '';
+        document.getElementById('novaDescricao').value = '';
         document.getElementById('novosConvidados').value = '';
         document.getElementById('novoLembrete').value = '';
 
@@ -780,7 +947,16 @@
     debounceTimer = setTimeout(() => buscarEnderecos(termo), 350);
   });
 
+  let numeroDigitadoAtual = '';
+
+  function extrairNumeroDigitado(texto) {
+    const numeros = texto.match(/\d+/g);
+    if (!numeros || numeros.length === 0) return '';
+    return numeros[numeros.length - 1]; // pega o último número digitado (geralmente é o nº da casa)
+  }
+
   async function buscarEnderecos(termo) {
+    numeroDigitadoAtual = extrairNumeroDigitado(termo);
     try {
       const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&accept-language=pt-BR&addressdetails=1&q=${encodeURIComponent(termo + ', São Leopoldo, RS')}`;
       const resposta = await fetch(url);
@@ -798,12 +974,15 @@
   // formato NNNNN-NNN (igual ao CEP) como se fosse telefone e troca o botão de
   // "abrir no Maps/Uber" por "ligar". Tirando o CEP da string, o app volta a
   // reconhecer o texto inteiro como endereço.
+  // O Nominatim quase nunca acha o número da casa quando a busca é só pela
+  // rua — por isso usamos o número que a pessoa já digitou (numeroDigitadoAtual)
+  // como reserva, pra ele não se perder ao clicar na sugestão.
   function montarEnderecoLimpo(item) {
     const a = item.address || {};
     const partes = [];
 
     const rua = a.road || a.pedestrian || a.footway || '';
-    const numero = a.house_number || '';
+    const numero = a.house_number || numeroDigitadoAtual || '';
     if (rua) partes.push(numero ? `${rua}, ${numero}` : rua);
 
     const bairro = a.suburb || a.neighbourhood || a.quarter || '';
@@ -880,7 +1059,8 @@
       } else {
         eventos.forEach(evento => {
           const local = evento.local ? ` — ${evento.local}` : '';
-          textoFinal += `📍${evento.horario}: ${evento.titulo}${local}\n`;
+          const descricao = evento.descricao ? `\n   📝 ${evento.descricao}` : '';
+          textoFinal += `📍${evento.horario}: ${evento.titulo}${local}${descricao}\n`;
         });
       }
 
@@ -895,25 +1075,44 @@
   function copiarTexto() {
     const textArea = document.getElementById('resultadoAgenda');
     const texto = textArea.value;
-    if (!texto) return;
+    if (!texto || texto === 'Buscando eventos... ⏳') {
+      alert('Puxe os eventos do dia primeiro (botão "Puxar eventos").');
+      return;
+    }
 
-    function copiaAntiga() {
-      textArea.focus();
-      textArea.select();
-      try {
-        document.execCommand('copy');
+    function copiaComTextareaTemporario() {
+      const temp = document.createElement('textarea');
+      temp.value = texto;
+      temp.style.position = 'fixed';
+      temp.style.top = '0';
+      temp.style.left = '0';
+      temp.style.opacity = '0';
+      document.body.appendChild(temp);
+      temp.focus();
+      temp.select();
+      temp.setSelectionRange(0, texto.length);
+      let copiou = false;
+      try { copiou = document.execCommand('copy'); } catch (e) { copiou = false; }
+      document.body.removeChild(temp);
+
+      if (copiou) {
         alert('✅ Agenda copiada! Só colar no Zap.');
-      } catch (e) {
-        alert('Não foi possível copiar automaticamente. Selecione o texto e use Ctrl+C.');
+      } else {
+        textArea.focus();
+        textArea.select();
+        alert('Não foi possível copiar automaticamente. O texto já está selecionado, use Ctrl+C (ou pressione e segure e escolha "Copiar" no celular).');
       }
     }
 
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(texto)
         .then(() => alert('✅ Agenda copiada! Só colar no Zap.'))
-        .catch(copiaAntiga);
+        .catch((erro) => {
+          console.error('Clipboard API falhou, usando fallback:', erro);
+          copiaComTextareaTemporario();
+        });
     } else {
-      copiaAntiga();
+      copiaComTextareaTemporario();
     }
   }
 
