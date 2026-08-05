@@ -63,12 +63,18 @@
   .brand-text b{ color:var(--text-main); font-weight:500; }
   .topbar-spacer{ flex:1; }
   
-  /* Botão Voltar para o Sistema (Novo) */
+/* Botões do Topo (Dashboard e Nova Demanda) */
   .btn-voltar-sistema {
     font-size: 13px; font-weight: bold; color: var(--blue); background: var(--blue-tint);
     padding: 6px 12px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: 0.2s;
   }
   .btn-voltar-sistema:hover { background: #d2e3fc; }
+  
+  .btn-nova-demanda {
+    font-size: 13px; font-weight: bold; color: #185199; background: #98ED34;
+    padding: 6px 12px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: 0.2s;
+  }
+  .btn-nova-demanda:hover { background: #85d62d; }
   
   .today-pill{ font-size:13px; color:var(--text-secondary); padding:6px 12px; border:1px solid var(--grey-border); border-radius:20px; }
 
@@ -214,8 +220,11 @@
     </svg>
     <span class="brand-text">Agenda <b>do Gabinete</b></span>
   </div>
-  <div class="topbar-spacer"></div>
-  <a href="dashboard.html" class="btn-voltar-sistema">⬅️ Painel de Demandas</a>
+ <div class="topbar-spacer"></div>
+  <div style="display: flex; gap: 10px; align-items: center;">
+      <a href="dashboard.html" class="btn-voltar-sistema" title="Abre na mesma aba">⬅️ Dashboard</a>
+      <a href="nova-demanda.html" target="_blank" class="btn-nova-demanda" title="Abre em nova aba">+ Nova Demanda</a>
+  </div>
   <span class="today-pill" id="dataHoje">—</span>
 </div>
 
