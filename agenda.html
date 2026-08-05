@@ -9,11 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<!-- BLOQUEIO DE SEGURANÇA: Verifica se passou pelo seu login.html -->
+<!-- BLOQUEIO DE SEGURANÇA -->
 <script>
     if (!localStorage.getItem('usuarioLogado')) {
         document.documentElement.innerHTML = '<div style="display:flex; height:100vh; width:100vw; align-items:center; justify-content:center; font-family:sans-serif; background:#f0f2f5; color:#185199;"><h2>🔒 Acesso Restrito. Redirecionando para o login...</h2></div>';
-        window.location.replace('index.html'); // Substitua por 'login.html' se o seu arquivo de login tiver esse nome
+        window.location.replace('index.html'); 
     }
 </script>
 
@@ -41,32 +41,19 @@
     scroll-behavior: smooth;
   }
 
-  /* ---------- Topbar ---------- */
   .topbar{
-    display:flex;
-    align-items:center;
-    gap:20px;
-    padding:8px 16px;
-    border-bottom:1px solid var(--grey-border);
-    background:#fff;
-    position: sticky;
-    top: 0;
-    z-index: 50;
+    display:flex; align-items:center; gap:20px; padding:8px 16px; border-bottom:1px solid var(--grey-border);
+    background:#fff; position: sticky; top: 0; z-index: 50;
   }
-  .brand{
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
+  .brand{ display:flex; align-items:center; gap:10px; }
   .brand-icon{ width:34px;height:34px;flex-shrink:0; }
   .brand-text{ font-family:'Google Sans',Roboto,sans-serif; font-size:20px; color:var(--text-secondary); letter-spacing:.1px; }
   .brand-text b{ color:var(--text-main); font-weight:500; }
   .topbar-spacer{ flex:1; }
   
-/* Botões do Topo (Dashboard e Nova Demanda) */
   .btn-voltar-sistema {
     font-size: 13px; font-weight: bold; color: var(--blue); background: var(--blue-tint);
-    padding: 6px 12px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: 0.2s;
+    padding: 6px 12px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: 0.2s; cursor: pointer; border: none;
   }
   .btn-voltar-sistema:hover { background: #d2e3fc; }
   
@@ -78,10 +65,8 @@
   
   .today-pill{ font-size:13px; color:var(--text-secondary); padding:6px 12px; border:1px solid var(--grey-border); border-radius:20px; }
 
-  /* ---------- Layout ---------- */
   .layout{ display:flex; max-width:1180px; margin:0 auto; padding:28px 20px 60px; gap:28px; align-items:flex-start; }
   
-  /* ---------- Sidebar Nav ---------- */
   .sidebar{ width:270px; flex-shrink:0; position: sticky; top: 80px; }
   .create-btn{
     display:flex; align-items:center; gap:12px; background:#fff; border:none; box-shadow:var(--shadow-1);
@@ -105,9 +90,7 @@
     font-family:'Google Sans',Roboto,sans-serif; font-size:13px; font-weight:500; color:var(--text-main);
     margin:0 0 12px; text-transform:uppercase; letter-spacing:.3px; display: flex; justify-content: space-between; align-items: center;
   }
-  .side-card p{ font-size:13px; color:var(--text-secondary); line-height:1.5; margin:0; }
-
-  /* ---------- Main column ---------- */
+  
   .main-col{ flex:1; min-width:0; }
   .panel{ border:1px solid var(--grey-border); border-radius:12px; box-shadow:var(--shadow-1); margin-bottom:24px; scroll-margin-top: 80px;}
   .panel-header{ display:flex; align-items:center; gap:10px; padding:18px 24px; border-bottom:1px solid var(--grey-border); border-radius:12px 12px 0 0; }
@@ -140,7 +123,6 @@
   .status-loading{ background:#fef7e0; color:#7a5900; } .status-ok{ background:#e6f4ea; color:var(--green-dark); }
   .actions-right{ display:flex; justify-content:flex-end; gap:10px; }
 
-  /* ---------- Autocomplete de local ---------- */
   .field-relative{ position:relative; }
   .suggestions-box{ display:none; position:absolute; top:calc(100% - 14px); left:0; right:0; background:#fff; border:1px solid var(--grey-border); border-radius:8px; box-shadow:var(--shadow-2); z-index:20; max-height:220px; overflow-y:auto; }
   .suggestion-item{ padding:10px 14px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid #f1f3f4; }
@@ -149,12 +131,10 @@
 
   .btn-whatsapp{ background:#25D366; } .btn-whatsapp:hover{ background:#1ebd5a; }
 
-  /* ---------- Campo de data com atalhos ---------- */
   .date-com-hoje{ display:flex; gap:8px; align-items:stretch; } .date-com-hoje input{ flex:1; }
   .btn-hoje{ flex-shrink:0; background:var(--grey-bg); border:1px solid var(--grey-border); border-radius:6px; padding:0 14px; font-size:13px; font-family:'Google Sans',Roboto,sans-serif; font-weight:500; color:var(--blue); cursor:pointer; transition:background .15s; }
   .btn-hoje:hover{ background:var(--blue-tint); }
 
-  /* ---------- E-mails frequentes (chips) ---------- */
   .chips-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
   .chip{ display:flex; align-items:center; gap:6px; background:var(--blue-tint); color:var(--blue-dark); border-radius:16px; padding:5px 8px 5px 12px; font-size:12.5px; font-family:'Roboto',Arial,sans-serif; }
   .chip button{ background:none; border:none; color:var(--blue-dark); cursor:pointer; font-size:14px; line-height:1; padding:2px 4px; border-radius:50%; }
@@ -162,7 +142,6 @@
   .chip .chip-nome{ cursor:pointer; } .chip .chip-nome:hover{ text-decoration:underline; }
   .empty-hint{ font-size:12.5px; color:var(--text-secondary); margin-top:8px; display: block;}
 
-  /* ---------- Engrenagem / Botões Limpar ---------- */
   .label-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
   .label-row label{ margin-bottom:0; }
   .gear-btn{ background:none; border:none; cursor:pointer; font-size:12px; line-height:1; padding:4px 8px; border-radius:4px; flex-shrink:0; color: var(--text-secondary); font-weight: 500; display: flex; align-items: center; gap: 4px; transition: 0.2s;}
@@ -178,7 +157,6 @@
   .lista-item-simples{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 10px; border:1px solid var(--grey-border); border-radius:6px; margin-bottom:6px; font-size:13px; }
   .lista-item-simples span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-  /* ---------- Anotações (sidebar) ---------- */
   .nota-mini{ display:flex; align-items:flex-start; gap:8px; padding:8px 0; border-bottom:1px solid var(--grey-border); }
   .nota-mini:last-child{ border-bottom:none; }
   .nota-mini input[type="checkbox"]{ margin-top:3px; flex-shrink:0; }
@@ -198,6 +176,9 @@
   .nota-btn-icon:hover{ background: var(--grey-bg); }
   .btn-del-icon { color:#a1a1a1; } .btn-del-icon:hover { color:#d93025; background: #fce8e6; }
   .btn-lupa-icon { color: var(--blue); } .btn-lupa-icon:hover { background: var(--blue-tint); }
+
+  .btn-micro { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 11px; font-weight: bold; padding: 4px 8px; height: 26px;}
+  .btn-micro:hover { background: #e2e8f0; color: #185199; border-color: #185199; }
 
   @media (max-width:820px){
     .layout{ flex-direction:column; }
@@ -222,7 +203,8 @@
   </div>
  <div class="topbar-spacer"></div>
   <div style="display: flex; gap: 10px; align-items: center;">
-      <a href="dashboard.html" class="btn-voltar-sistema" title="Abre na mesma aba">⬅️ Dashboard</a>
+      <!-- Alterado para chamar a verificação de saída -->
+      <button onclick="irParaDashboard()" class="btn-voltar-sistema" title="Abre na mesma aba">⬅️ Dashboard</button>
       <a href="nova-demanda.html" target="_blank" class="btn-nova-demanda" title="Abre em nova aba">+ Nova Demanda</a>
   </div>
   <span class="today-pill" id="dataHoje">—</span>
@@ -240,6 +222,10 @@
     </button>
     <button class="nav-side-btn" onclick="document.getElementById('secaoAnotacoes').scrollIntoView()">
       📝 Anotações Rápidas
+    </button>
+    <!-- NOVO BOTAO: VER CALENDARIO -->
+    <button class="nav-side-btn" onclick="abrirModalCalendario()" style="background:#e8f0fe; color:#1967d2; border-color:#d2e3fc; font-weight:bold;">
+      🗓️ Ver Calendário Hoje
     </button>
 
     <div class="side-card">
@@ -403,6 +389,29 @@
   </main>
 </div>
 
+<!-- MODAL: VER CALENDÁRIO DIRETO -->
+<div id="modalCalendario" class="modal-overlay">
+  <div class="modal-box" style="max-width: 450px; text-align: left; padding: 25px;">
+    <div class="modal-head">
+      <h3>🗓️ Calendário Oficial</h3>
+      <button type="button" onclick="fecharModalCalendario()">✕</button>
+    </div>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+       <button onclick="mudarDiaCalendario(-1)" class="btn-micro" style="font-size:16px; padding: 6px 12px;">❮</button>
+       <div style="text-align:center;">
+           <strong id="calendarioDataView" style="color:#185199; display:block; font-size:15px;">Hoje</strong>
+           <span id="calendarioDiaSemana" style="font-size:11px; color:#64748b; text-transform:uppercase; font-weight: bold;"></span>
+       </div>
+       <button onclick="mudarDiaCalendario(1)" class="btn-micro" style="font-size:16px; padding: 6px 12px;">❯</button>
+    </div>
+    
+    <div id="calendarioEventosList" style="max-height: 400px; overflow-y: auto; display:flex; flex-direction:column; gap:10px; padding-right: 5px;">
+        <!-- Preenchido via JS -->
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: GERENCIAR E-MAILS FREQUENTES -->
 <div id="modalEmails" class="modal-overlay">
   <div class="modal-box">
@@ -442,7 +451,7 @@
   // SUPABASE (e-mails frequentes + anotações)
   // ==========================================
   let db;
-  let listaAnotacoesGlobal = []; // Guarda as anotações na memória para a Lupa
+  let listaAnotacoesGlobal = []; 
 
   async function inicializarSupabase() {
     try {
@@ -457,23 +466,103 @@
   }
   inicializarSupabase();
 
+  // --- TRAVA DE SAÍDA (Dashboard) ---
+  function irParaDashboard() {
+      // Verifica se há texto em algum dos campos de criação
+      const p1 = document.getElementById('novoTitulo').value.trim();
+      const p2 = document.getElementById('novoLocal').value.trim();
+      const p3 = document.getElementById('novaDescricao').value.trim();
+      const p4 = document.getElementById('novaNotaTitulo').value.trim(); // Se preencheu anotação e n salvou
+
+      if (p1 !== '' || p2 !== '' || p3 !== '' || p4 !== '') {
+          if (confirm('⚠️ OPA! Você tem informações preenchidas que NÃO FORAM SALVAS.\n\nSe você sair agora, vai perder o que digitou. Tem certeza que deseja voltar pro Dashboard?')) {
+              window.location.href = 'dashboard.html';
+          }
+      } else {
+          window.location.href = 'dashboard.html';
+      }
+  }
+
+  // --- NOVO: LÓGICA DO MODAL DE CALENDÁRIO ---
+  let dataCalendarioAtual = new Date();
+
+  function abrirModalCalendario() {
+      document.getElementById('modalCalendario').classList.add('aberto');
+      dataCalendarioAtual = new Date(); // Inicia sempre no dia de hoje
+      renderCalendarioUI();
+      fetchEventosCalendario();
+  }
+
+  function fecharModalCalendario() {
+      document.getElementById('modalCalendario').classList.remove('aberto');
+  }
+
+  function mudarDiaCalendario(dias) {
+      dataCalendarioAtual.setDate(dataCalendarioAtual.getDate() + dias);
+      renderCalendarioUI();
+      fetchEventosCalendario();
+  }
+
+  function renderCalendarioUI() {
+      const opcoes = { day: '2-digit', month: 'long', year: 'numeric' };
+      const dataStr = dataCalendarioAtual.toLocaleDateString('pt-BR', opcoes);
+      const diasSemana = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
+      
+      let titulo = dataStr;
+      const hojeStr = new Date().toLocaleDateString('pt-BR');
+      const calStr = dataCalendarioAtual.toLocaleDateString('pt-BR');
+      
+      if(hojeStr === calStr) titulo = "Hoje, " + dataStr;
+      
+      document.getElementById('calendarioDataView').innerText = titulo;
+      document.getElementById('calendarioDiaSemana').innerText = diasSemana[dataCalendarioAtual.getDay()];
+  }
+
+  async function fetchEventosCalendario() {
+      const listContainer = document.getElementById('calendarioEventosList');
+      listContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#555;">⏳ Buscando no Google Agenda...</div>';
+
+      const ano = dataCalendarioAtual.getFullYear();
+      const mes = String(dataCalendarioAtual.getMonth() + 1).padStart(2, '0');
+      const dia = String(dataCalendarioAtual.getDate()).padStart(2, '0');
+      const dataFormatada = `${ano}-${mes}-${dia}`;
+
+      try {
+          const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&data=${dataFormatada}`;
+          const resposta = await fetch(urlCompleta);
+          const eventos = await resposta.json();
+
+          if (eventos.length === 0) {
+              listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#777; background:#f1f3f4; border-radius:6px;">Nenhum evento agendado neste dia.</div>';
+          } else {
+              listContainer.innerHTML = eventos.map(ev => `
+                  <div style="border-left: 4px solid var(--blue); padding: 12px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-top: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                      <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 4px;">
+                        <span style="color:var(--blue); font-weight: bold; font-size: 14px;">${ev.horario}</span> 
+                        <span style="font-weight:bold; color:#333; font-size: 15px;">${ev.titulo}</span>
+                      </div>
+                      ${ev.local ? `<div style="color:#555; font-size:12px; margin-bottom: 4px;">📍 ${ev.local}</div>` : ''}
+                      ${ev.descricao ? `<div style="color:#777; font-size:12px; font-style:italic; background: #f8fafc; padding: 6px; border-radius: 4px; line-height: 1.4;">${ev.descricao}</div>` : ''}
+                  </div>
+              `).join('');
+          }
+      } catch (error) {
+          listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#c0392b; font-weight: bold;">Erro de conexão com o Script do Google.</div>';
+      }
+  }
+
   // --- E-MAILS FREQUENTES ---
   async function carregarEmailsFrequentes() {
     try {
       const { data, error } = await db.from('emails_frequentes').select('id, nome, email').order('nome');
       if (error) throw error;
       renderChipsEmails(data || []);
-    } catch (erro) {
-      console.error('Erro ao carregar e-mails frequentes:', erro);
-    }
+    } catch (erro) { console.error('Erro ao carregar e-mails frequentes:', erro); }
   }
 
   function renderChipsEmails(lista) {
     const container = document.getElementById('chipsEmails');
-    if (!lista || lista.length === 0) {
-      container.innerHTML = '<span class="empty-hint">Nenhum e-mail salvo ainda.</span>';
-      return;
-    }
+    if (!lista || lista.length === 0) { container.innerHTML = '<span class="empty-hint">Nenhum e-mail salvo ainda.</span>'; return; }
     container.innerHTML = lista.map(item => `
       <span class="chip">
         <span class="chip-nome" onclick="usarEmailFrequente('${item.email.replace(/'/g, "\\'")}')" title="${item.email}">${item.nome || item.email}</span>
@@ -495,16 +584,10 @@
       const { error } = await db.from('emails_frequentes').delete().eq('id', id);
       if (error) throw error;
       await carregarEmailsFrequentes();
-    } catch (erro) {
-      alert('Erro ao remover e-mail: ' + erro.message);
-    }
+    } catch (erro) { alert('Erro ao remover e-mail: ' + erro.message); }
   }
 
-  function abrirModalEmails() {
-    document.getElementById('modalEmails').classList.add('aberto');
-    renderListaEmailsModal();
-  }
-
+  function abrirModalEmails() { document.getElementById('modalEmails').classList.add('aberto'); renderListaEmailsModal(); }
   function fecharModalEmails() { document.getElementById('modalEmails').classList.remove('aberto'); }
 
   async function renderListaEmailsModal() {
@@ -512,38 +595,27 @@
     try {
       const { data, error } = await db.from('emails_frequentes').select('id, nome, email').order('nome');
       if (error) throw error;
-      if (!data || data.length === 0) {
-        container.innerHTML = '<span class="empty-hint">Nenhum e-mail salvo ainda.</span>';
-        return;
-      }
+      if (!data || data.length === 0) { container.innerHTML = '<span class="empty-hint">Nenhum e-mail salvo ainda.</span>'; return; }
       container.innerHTML = data.map(item => `
         <div class="lista-item-simples">
           <span title="${item.email}"><b>${item.nome || item.email}</b> — ${item.email}</span>
           <button type="button" class="nota-mini-del" onclick="excluirEmailFrequenteModal(${item.id})" title="Remover">🗑️</button>
         </div>
       `).join('');
-    } catch (erro) {
-      container.innerHTML = '<span class="empty-hint">Erro ao carregar e-mails.</span>';
-    }
+    } catch (erro) { container.innerHTML = '<span class="empty-hint">Erro ao carregar e-mails.</span>'; }
   }
 
   async function adicionarEmailModal() {
     const nomeCampo = document.getElementById('modalEmailNome');
     const emailCampo = document.getElementById('modalEmailEndereco');
-    const nome = nomeCampo.value.trim();
-    const email = emailCampo.value.trim();
-
+    const nome = nomeCampo.value.trim(); const email = emailCampo.value.trim();
     if (!email) return alert('Digite o e-mail.');
-
     try {
       const { error } = await db.from('emails_frequentes').insert([{ nome: nome || email, email }]);
       if (error) throw error;
       nomeCampo.value = ''; emailCampo.value = '';
-      await renderListaEmailsModal();
-      await carregarEmailsFrequentes();
-    } catch (erro) {
-      alert('Erro ao salvar e-mail: ' + erro.message);
-    }
+      await renderListaEmailsModal(); await carregarEmailsFrequentes();
+    } catch (erro) { alert('Erro ao salvar e-mail: ' + erro.message); }
   }
 
   async function excluirEmailFrequenteModal(id) {
@@ -551,21 +623,19 @@
     try {
       const { error } = await db.from('emails_frequentes').delete().eq('id', id);
       if (error) throw error;
-      await renderListaEmailsModal();
-      await carregarEmailsFrequentes();
+      await renderListaEmailsModal(); await carregarEmailsFrequentes();
     } catch (erro) { alert('Erro ao remover e-mail: ' + erro.message); }
   }
 
   // --- ANOTAÇÕES ---
   async function carregarAnotacoes() {
     try {
-      const { data, error } = await db.from('anotacoes').select('id, titulo, descricao, concluida, criado_em, prioridade').order('concluida', { ascending: true }).order('criado_em', { ascending: false });
+      // Agora o BD traz o "criador"
+      const { data, error } = await db.from('anotacoes').select('id, titulo, descricao, concluida, criado_em, prioridade, criador').order('concluida', { ascending: true }).order('criado_em', { ascending: false });
       if (error) throw error;
       listaAnotacoesGlobal = data || [];
       renderAnotacoes(listaAnotacoesGlobal);
-    } catch (erro) {
-      console.error('Erro ao carregar anotações:', erro);
-    }
+    } catch (erro) { console.error('Erro ao carregar anotações:', erro); }
   }
 
   function escaparHtml(texto) {
@@ -580,6 +650,9 @@
     }
     container.innerHTML = lista.map(nota => {
       const prioClass = `prio-${nota.prioridade || 'Normal'}`;
+      const nomeCriador = nota.criador || 'Equipe';
+      const dataCriacao = new Date(nota.criado_em).toLocaleDateString('pt-BR');
+
       return `
       <div class="nota-mini${nota.concluida ? ' feita' : ''}">
         <input type="checkbox" ${nota.concluida ? 'checked' : ''} onchange="alternarAnotacaoConcluida(${nota.id}, this.checked)" title="Marcar como feita">
@@ -587,6 +660,7 @@
           <span class="badge-prioridade ${prioClass}">${nota.prioridade || 'Normal'}</span>
           <div class="nota-mini-titulo">${escaparHtml(nota.titulo)}</div>
           ${nota.descricao ? `<div class="nota-mini-desc">${escaparHtml(nota.descricao)}</div>` : ''}
+          <div style="font-size:10px; color:#888; margin-top:4px; font-weight: 500;">👤 ${nomeCriador} • 🕒 ${dataCriacao}</div>
         </div>
         <div class="acoes-nota-rapida">
           <button type="button" class="nota-btn-icon btn-lupa-icon" onclick="verDetalheAnotacao(${nota.id})" title="Ver Anotação">🔍</button>
@@ -601,23 +675,24 @@
     if (!nota) return;
     
     const prioClass = `prio-${nota.prioridade || 'Normal'}`;
-    const dataCriacao = new Date(nota.criado_em).toLocaleDateString('pt-BR');
-    
+    const dataCriacao = new Date(nota.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(nota.criado_em).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    const nomeCriador = nota.criador || 'Equipe';
+
     document.getElementById('conteudoDetalheAnotacao').innerHTML = `
-      <div style="margin-bottom: 15px;">
-        <span class="badge-prioridade ${prioClass}" style="font-size: 12px;">Prioridade: ${nota.prioridade || 'Normal'}</span>
-        <span style="float: right; font-size: 11px; color: var(--text-secondary);">Criado em: ${dataCriacao}</span>
+      <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-start;">
+        <span class="badge-prioridade ${prioClass}" style="font-size: 12px; padding: 4px 8px;">Prioridade: ${nota.prioridade || 'Normal'}</span>
+        <div style="text-align: right; font-size: 11px; color: var(--text-secondary);">
+            <div style="font-weight: bold; color: #333;">👤 ${nomeCriador}</div>
+            <div>🗓️ ${dataCriacao}</div>
+        </div>
       </div>
       <h4 style="margin-top: 0; font-size: 18px; color: var(--blue); margin-bottom: 10px;">${escaparHtml(nota.titulo)}</h4>
       <div style="background: var(--grey-bg); padding: 15px; border-radius: 8px; white-space: pre-wrap; font-size: 15px;">${escaparHtml(nota.descricao) || '<i>Sem descrição detalhada.</i>'}</div>
     `;
-    
     document.getElementById('modalDetalheAnotacao').classList.add('aberto');
   }
 
-  function fecharModalDetalheAnotacao() {
-    document.getElementById('modalDetalheAnotacao').classList.remove('aberto');
-  }
+  function fecharModalDetalheAnotacao() { document.getElementById('modalDetalheAnotacao').classList.remove('aberto'); }
 
   async function alternarAnotacaoConcluida(id, concluida) {
     try {
@@ -638,8 +713,15 @@
 
     if (!titulo) return alert('Digite um título para a anotação.');
 
+    const autorLogado = localStorage.getItem('usuarioLogado') || 'Equipe'; // Puxa do localStorage
+
     try {
-      const { error } = await db.from('anotacoes').insert([{ titulo, descricao, prioridade }]);
+      const { error } = await db.from('anotacoes').insert([{ 
+          titulo, 
+          descricao, 
+          prioridade,
+          criador: autorLogado 
+      }]);
       if (error) throw error;
       tituloCampo.value = ''; descricaoCampo.value = ''; prioridadeCampo.value = 'Normal';
       await carregarAnotacoes();
@@ -655,7 +737,7 @@
     } catch (erro) { alert('Erro ao excluir anotação: ' + erro.message); }
   }
 
-  // Mostra a data de hoje no topo
+  // --- DATAS E ATALHOS ---
   (function mostrarDataHoje() {
     const hoje = new Date();
     const opcoes = { weekday: 'long', day: 'numeric', month: 'long' };
@@ -671,24 +753,17 @@
     return `${ano}-${mes}-${dia}`;
   }
 
-  // Função para retornar a data de amanhã
   function dataDeAmanhaISO() {
     const amanha = new Date();
-    amanha.setDate(amanha.getDate() + 1); // Pula 1 dia
+    amanha.setDate(amanha.getDate() + 1); 
     const ano = amanha.getFullYear();
     const mes = String(amanha.getMonth() + 1).padStart(2, '0');
     const dia = String(amanha.getDate()).padStart(2, '0');
     return `${ano}-${mes}-${dia}`;
   }
 
-  function irParaHoje(idCampo) {
-    document.getElementById(idCampo).value = dataDeHojeISO();
-  }
-
-  // Nova função para jogar para amanhã
-  function irParaAmanha(idCampo) {
-    document.getElementById(idCampo).value = dataDeAmanhaISO();
-  }
+  function irParaHoje(idCampo) { document.getElementById(idCampo).value = dataDeHojeISO(); }
+  function irParaAmanha(idCampo) { document.getElementById(idCampo).value = dataDeAmanhaISO(); }
 
   // --- FUNÇÃO PARA CRIAR EVENTO ---
   async function criarEventoNoGoogle() {
@@ -744,7 +819,6 @@
   });
 
   let numeroDigitadoAtual = '';
-
   function extrairNumeroDigitado(texto) {
     const match = texto.match(/(?:,|\s)+(s[nN]|S[nN]|\d+[a-zA-Z]?)\s*$/);
     return match ? match[1] : '';
@@ -811,7 +885,7 @@
     }
   });
 
-  // --- FUNÇÃO PARA LER E FORMATAR A AGENDA (COM FORMATAÇÃO DO WHATSAPP) ---
+  // --- FUNÇÃO PARA LER E FORMATAR A AGENDA ---
   async function buscarAgenda() {
     const inputData = document.getElementById('dataBusca').value;
     if (!inputData) return alert('Por favor, selecione uma data!');
@@ -825,7 +899,6 @@
     const dia = String(dataObj.getDate()).padStart(2, '0');
     const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
 
-    // Cabeçalho formatado com * para Negrito no WhatsApp
     let textoFinal = `*AGENDA VEREADOR*\n*${dia}/${mes}  ${diasSemana[dataObj.getDay()]}*\n\n`;
 
     try {
@@ -838,26 +911,17 @@
       } else {
         eventos.forEach(evento => {
           const local = evento.local ? ` — ${evento.local}` : '';
-          
           let descFormatada = '';
           if (evento.descricao) {
             let desc = evento.descricao;
-            const limiteCaract = 150; 
-            if (desc.length > limiteCaract) {
-              desc = desc.substring(0, limiteCaract) + '...';
-            }
+            if (desc.length > 150) desc = desc.substring(0, 150) + '...';
             descFormatada = `\n   📝 _${desc}_`;
           }
-          
           textoFinal += `📍 *${evento.horario}:* ${evento.titulo}${local}${descFormatada}\n\n`;
         });
       }
-
       textArea.value = textoFinal.trim();
-
-    } catch (erro) {
-      textArea.value = "Erro ao buscar a agenda. Verifique o link do script.";
-    }
+    } catch (erro) { textArea.value = "Erro ao buscar a agenda. Verifique o link do script."; }
   }
 
   // --- FUNÇÃO PARA COPIAR ---
@@ -892,9 +956,7 @@
     }
 
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(texto)
-        .then(() => alert('✅ Agenda copiada! Só colar no Zap.'))
-        .catch(() => copiaComTextareaTemporario());
+      navigator.clipboard.writeText(texto).then(() => alert('✅ Agenda copiada! Só colar no Zap.')).catch(() => copiaComTextareaTemporario());
     } else { copiaComTextareaTemporario(); }
   }
 
