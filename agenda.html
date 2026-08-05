@@ -115,6 +115,9 @@
     margin:0 0 12px;
     text-transform:uppercase;
     letter-spacing:.3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   .side-card p{
     font-size:13px;
@@ -417,43 +420,19 @@
   .nota-mini-del{ background:none; border:none; color:#a1a1a1; cursor:pointer; font-size:13px; flex-shrink:0; }
   .nota-mini-del:hover{ color:#d93025; }
 
-  /* ---------- Anotações ---------- */
-  .nota-item{
-    border:1px solid var(--grey-border);
-    border-radius:8px;
-    padding:12px 14px;
-    margin-bottom:10px;
-  }
-  .nota-item-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:10px;
-  }
-  .nota-titulo{
-    font-family:'Google Sans',Roboto,sans-serif;
-    font-weight:500;
-    font-size:14px;
-    color:var(--text-main);
-    margin:0 0 4px;
-  }
-  .nota-descricao{
-    font-size:13px;
-    color:var(--text-secondary);
-    line-height:1.5;
-    margin:0;
-    white-space:pre-wrap;
-    word-break:break-word;
-  }
-  .nota-del{
+  /* ---------- Anotações (lupa) ---------- */
+  .nota-btn-lupa{
     background:none;
     border:none;
-    color:#a1a1a1;
     cursor:pointer;
     font-size:15px;
+    line-height:1;
+    padding:2px 4px;
+    border-radius:4px;
     flex-shrink:0;
+    margin-left: 5px;
   }
-  .nota-del:hover{ color:#d93025; }
+  .nota-btn-lupa:hover{ background:var(--grey-bg); }
 
   @media (max-width:820px){
     .layout{ flex-direction:column; }
@@ -490,7 +469,7 @@
     </button>
 
     <div class="side-card">
-      <h3>📝 Anotações</h3>
+      <h3>📝 ANOTAÇÕES <button type="button" class="nota-btn-lupa" onclick="abrirModalAnotacoes()" title="Ver todas as anotações">🔍</button></h3>
       <div id="listaAnotacoesSidebar"><span class="empty-hint">Carregando...</span></div>
     </div>
 
@@ -561,11 +540,11 @@
           <div class="field">
             <label>Lembrete</label>
             <select id="novoLembrete">
-              <option value="">Sem lembrete</option>
+              <option value="30" selected>30 minutos antes (Padrão)</option>
               <option value="10">10 minutos antes</option>
-              <option value="30">30 minutos antes</option>
               <option value="60">1 hora antes</option>
               <option value="1440">1 dia antes</option>
+              <option value="">Sem lembrete</option>
             </select>
           </div>
           <div class="field"></div>
@@ -653,10 +632,22 @@
   </div>
 </div>
 
+<!-- MODAL: VER TODAS AS ANOTAÇÕES -->
+<div id="modalAnotacoes" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>📝 Todas as Anotações</h3>
+      <button type="button" onclick="fecharModalAnotacoes()">✕</button>
+    </div>
+    <div id="listaAnotacoesModal"></div>
+  </div>
+</div>
+
 <script>
   // ==========================================
   // LINK DO SCRIPT (Google Apps Script)
   // ==========================================
+  // ATENÇÃO: NÃO execute isso manualmente no Apps Script! Use este arquivo HTML.
   const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbzLv8_TxK2bmKVAiElCTS2_dVdxVaxfZFdzQVeUnN2I29GBIYxUd8mbjm7A6IrK8Kk/exec';
 
   // ==========================================
@@ -785,12 +776,52 @@
     }
   }
 
+  // --- MODAL: VER TODAS AS ANOTAÇÕES (lupa) ---
+  function abrirModalAnotacoes() {
+    document.getElementById('modalAnotacoes').classList.add('aberto');
+    renderListaAnotacoesModal();
+  }
+
+  function fecharModalAnotacoes() {
+    document.getElementById('modalAnotacoes').classList.remove('aberto');
+  }
+
+  async function renderListaAnotacoesModal() {
+    const container = document.getElementById('listaAnotacoesModal');
+    try {
+      const { data, error } = await db.from('anotacoes').select('id, titulo, descricao, concluida, criado_em').order('concluida', { ascending: true }).order('criado_em', { ascending: false });
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        container.innerHTML = '<span class="empty-hint">Nenhuma anotação salva ainda.</span>';
+        return;
+      }
+      
+      container.innerHTML = data.map(nota => `
+        <div class="nota-mini${nota.concluida ? ' feita' : ''}">
+          <input type="checkbox" ${nota.concluida ? 'checked' : ''} onchange="alternarAnotacaoConcluida(${nota.id}, this.checked)" title="Marcar como feita">
+          <div class="nota-mini-texto">
+            <div class="nota-mini-titulo">${escaparHtml(nota.titulo)}</div>
+            ${nota.descricao ? `<div class="nota-mini-desc">${escaparHtml(nota.descricao)}</div>` : ''}
+          </div>
+          <button type="button" class="nota-mini-del" onclick="excluirAnotacaoModal(${nota.id})" title="Excluir">🗑️</button>
+        </div>
+      `).join('');
+    } catch (erro) {
+      container.innerHTML = '<span class="empty-hint">Erro ao carregar anotações.</span>';
+    }
+  }
+
   // --- ANOTAÇÕES ---
   async function carregarAnotacoes() {
     try {
       const { data, error } = await db.from('anotacoes').select('id, titulo, descricao, concluida, criado_em').order('concluida', { ascending: true }).order('criado_em', { ascending: false });
       if (error) throw error;
       renderAnotacoes(data || []);
+      // Atualiza o modal de anotações se ele estiver aberto
+      if (document.getElementById('modalAnotacoes').classList.contains('aberto')) {
+          renderListaAnotacoesModal();
+      }
     } catch (erro) {
       console.error('Erro ao carregar anotações:', erro);
     }
@@ -862,6 +893,10 @@
       alert('Erro ao excluir anotação: ' + erro.message);
     }
   }
+  
+  async function excluirAnotacaoModal(id) {
+      await excluirAnotacao(id);
+  }
 
   // Mostra a data de hoje no topo, estilo Google Agenda
   (function mostrarDataHoje() {
@@ -918,7 +953,8 @@
         document.getElementById('novoLocal').value = '';
         document.getElementById('novaDescricao').value = '';
         document.getElementById('novosConvidados').value = '';
-        document.getElementById('novoLembrete').value = '';
+        // Reseta o lembrete para 30 minutos (Padrão)
+        document.getElementById('novoLembrete').value = '30';
 
         setTimeout(() => { status.style.display = 'none'; }, 4000);
       } else {
@@ -1075,7 +1111,9 @@
   function copiarTexto() {
     const textArea = document.getElementById('resultadoAgenda');
     const texto = textArea.value;
-    if (!texto || texto === 'Buscando eventos... ⏳') {
+    
+    // Verificação de erro - Exibe o alerta que você pediu se tentar copiar antes de puxar
+    if (!texto || texto === 'Buscando eventos... ⏳' || texto.trim() === '') {
       alert('Puxe os eventos do dia primeiro (botão "Puxar eventos").');
       return;
     }
@@ -1119,7 +1157,7 @@
   // --- FUNÇÃO PARA ENVIAR DIRETO NO WHATSAPP (abre e deixa escolher o contato) ---
   function enviarWhatsApp() {
     const texto = document.getElementById('resultadoAgenda').value;
-    if (!texto) {
+    if (!texto || texto === 'Buscando eventos... ⏳' || texto.trim() === '') {
       alert('Puxe os eventos do dia primeiro.');
       return;
     }
