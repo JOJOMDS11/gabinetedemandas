@@ -786,29 +786,50 @@
   }
   document.addEventListener('click', (e) => { if (!e.target.closest('#novoLocal') && !e.target.closest('#sugestoesLocal')) boxSugestoes.style.display = 'none'; });
 
-  // --- LER E FORMATAR ---
+// --- FUNÇÃO PARA LER E FORMATAR A AGENDA ---
   async function buscarAgenda() {
     const inputData = document.getElementById('dataBusca').value;
     if (!inputData) return alert('Por favor, selecione uma data!');
-    const textArea = document.getElementById('resultadoAgenda'); textArea.value = 'Buscando eventos... ⏳';
-    const pD = inputData.split('-'); const dO = new Date(pD[0], pD[1] - 1, pD[2]);
-    const dS = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
-    const dia = String(dO.getDate()).padStart(2, '0'); const mes = String(dO.getMonth() + 1).padStart(2, '0');
-    let textoFinal = `*AGENDA VEREADOR*\n*${dia}/${mes}  ${dS[dO.getDay()]}*\n\n`;
+
+    const textArea = document.getElementById('resultadoAgenda');
+    textArea.value = 'Buscando eventos... ⏳';
+
+    const partesData = inputData.split('-');
+    const dataObj = new Date(partesData[0], partesData[1] - 1, partesData[2]);
+    const diasSemana = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
+    const dia = String(dataObj.getDate()).padStart(2, '0');
+    const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
+
+    let textoFinal = `*AGENDA VEREADOR*\n*${dia}/${mes}  ${diasSemana[dataObj.getDay()]}*\n\n`;
 
     try {
       const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&data=${inputData}`;
-      const resposta = await fetch(urlCompleta); const eventos = await resposta.json();
-      if (eventos.length === 0) { textoFinal += "Nenhum evento agendado para este dia."; } 
-      else {
+      const resposta = await fetch(urlCompleta);
+      const eventos = await resposta.json();
+
+      if (eventos.length === 0) {
+        textoFinal += "Nenhum evento agendado para este dia.";
+      } else {
         eventos.forEach(ev => {
-          const local = ev.local ? ` — ${ev.local}` : ''; let descF = '';
-          if (ev.descricao) { let d = ev.descricao; if (d.length > 150) d = d.substring(0, 150) + '...'; descF = `\n   📝 _${d}_`; }
-          textoFinal += `📍 *${ev.horario}:* ${ev.titulo}${local}${descF}\n\n`;
+          const local = ev.local ? ` — ${ev.local}` : '';
+          
+          let descFormatada = '';
+          if (ev.descricao) {
+            // Tira as quebras de linha para forçar o texto a continuar na mesma linha
+            let desc = ev.descricao.replace(/\n/g, ' ').trim();
+            
+            // 100 caracteres é o tamanho perfeito para uma leitura rápida sem poluir
+            if (desc.length > 100) desc = desc.substring(0, 100) + '...';
+            
+            // Adiciona na sequência, formatado em itálico
+            descFormatada = ` — _${desc}_`;
+          }
+          
+          textoFinal += `📍 *${ev.horario}:* ${ev.titulo}${local}${descFormatada}\n\n`;
         });
       }
       textArea.value = textoFinal.trim();
-    } catch (erro) { textArea.value = "Erro ao buscar a agenda."; }
+    } catch (erro) { textArea.value = "Erro ao buscar a agenda. Verifique o link do script."; }
   }
 
   // --- COPIAR E ENVIAR ZAP ---
