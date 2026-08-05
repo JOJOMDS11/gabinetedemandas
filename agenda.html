@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --blue:#1a73e8;
@@ -291,6 +292,83 @@
   }
   .btn-hoje:hover{ background:var(--blue-tint); }
 
+  /* ---------- E-mails frequentes (chips) ---------- */
+  .chips-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:10px;
+  }
+  .chip{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:var(--blue-tint);
+    color:var(--blue-dark);
+    border-radius:16px;
+    padding:5px 8px 5px 12px;
+    font-size:12.5px;
+    font-family:'Roboto',Arial,sans-serif;
+  }
+  .chip button{
+    background:none;
+    border:none;
+    color:var(--blue-dark);
+    cursor:pointer;
+    font-size:14px;
+    line-height:1;
+    padding:2px 4px;
+    border-radius:50%;
+  }
+  .chip button:hover{ background:rgba(26,115,232,.18); }
+  .chip .chip-nome{ cursor:pointer; }
+  .chip .chip-nome:hover{ text-decoration:underline; }
+  .add-email-row{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+  .add-email-row input{ flex:1; }
+  .empty-hint{ font-size:12.5px; color:var(--text-secondary); margin-top:8px; }
+
+  /* ---------- Anotações ---------- */
+  .nota-item{
+    border:1px solid var(--grey-border);
+    border-radius:8px;
+    padding:12px 14px;
+    margin-bottom:10px;
+  }
+  .nota-item-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .nota-titulo{
+    font-family:'Google Sans',Roboto,sans-serif;
+    font-weight:500;
+    font-size:14px;
+    color:var(--text-main);
+    margin:0 0 4px;
+  }
+  .nota-descricao{
+    font-size:13px;
+    color:var(--text-secondary);
+    line-height:1.5;
+    margin:0;
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .nota-del{
+    background:none;
+    border:none;
+    color:#a1a1a1;
+    cursor:pointer;
+    font-size:15px;
+    flex-shrink:0;
+  }
+  .nota-del:hover{ color:#d93025; }
+
   @media (max-width:820px){
     .layout{ flex-direction:column; }
     .sidebar{ width:100%; }
@@ -377,6 +455,11 @@
         <div class="field">
           <label>Convidados / Gestores</label>
           <input type="text" id="novosConvidados" placeholder="e-mails separados por vírgula">
+          <div class="chips-row" id="chipsEmails"></div>
+          <div class="add-email-row">
+            <input type="text" id="novoEmailApelido" placeholder="Nome/apelido (ex: Secretaria de Obras)">
+            <button type="button" class="action btn-ghost" onclick="salvarEmailFrequente()">💾 Salvar e-mail</button>
+          </div>
         </div>
 
         <div class="row-2">
@@ -430,6 +513,32 @@
       </div>
     </section>
 
+    <!-- ANOTAÇÕES -->
+    <section class="panel">
+      <div class="panel-header">
+        <span class="dot dot-blue"></span>
+        <h2>Anotações rápidas</h2>
+      </div>
+      <div class="panel-body">
+
+        <div class="field">
+          <label>Título</label>
+          <input type="text" id="novaNotaTitulo" placeholder="Ex: Ligar para a secretaria">
+        </div>
+
+        <div class="field">
+          <label>Descrição</label>
+          <textarea id="novaNotaDescricao" rows="5" placeholder="Escreva os detalhes aqui..."></textarea>
+        </div>
+
+        <div class="actions-right">
+          <button class="action btn-blue" onclick="salvarAnotacao()">Salvar anotação</button>
+        </div>
+
+        <div id="listaAnotacoes" style="margin-top:20px;"></div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -438,6 +547,156 @@
   // LINK DO SCRIPT (Google Apps Script)
   // ==========================================
   const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbwUKIb3VB-401G5U5kIWtU2UEBwtqWjRJ78Ttysuz8aN_2yEg5RIh6G7A-bEos7fhJD/exec';
+
+  // ==========================================
+  // SUPABASE (e-mails frequentes + anotações)
+  // ==========================================
+  let db;
+
+  async function inicializarSupabase() {
+    try {
+      const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
+      const config = await res.json();
+      db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
+      await carregarEmailsFrequentes();
+      await carregarAnotacoes();
+    } catch (erro) {
+      console.error('Erro ao conectar no Supabase:', erro);
+    }
+  }
+  inicializarSupabase();
+
+  // --- E-MAILS FREQUENTES ---
+  async function carregarEmailsFrequentes() {
+    try {
+      const { data, error } = await db.from('emails_frequentes').select('id, nome, email').order('nome');
+      if (error) throw error;
+      renderChipsEmails(data || []);
+    } catch (erro) {
+      console.error('Erro ao carregar e-mails frequentes:', erro);
+    }
+  }
+
+  function renderChipsEmails(lista) {
+    const container = document.getElementById('chipsEmails');
+    if (!lista || lista.length === 0) {
+      container.innerHTML = '<span class="empty-hint">Nenhum e-mail salvo ainda.</span>';
+      return;
+    }
+    container.innerHTML = lista.map(item => `
+      <span class="chip">
+        <span class="chip-nome" onclick="usarEmailFrequente('${item.email.replace(/'/g, "\\'")}')" title="${item.email}">${item.nome || item.email}</span>
+        <button type="button" onclick="excluirEmailFrequente(${item.id})" title="Remover">✕</button>
+      </span>
+    `).join('');
+  }
+
+  function usarEmailFrequente(email) {
+    const campo = document.getElementById('novosConvidados');
+    const atuais = campo.value.split(',').map(e => e.trim()).filter(Boolean);
+    if (!atuais.includes(email)) atuais.push(email);
+    campo.value = atuais.join(', ');
+  }
+
+  async function salvarEmailFrequente() {
+    const campo = document.getElementById('novosConvidados');
+    const apelidoCampo = document.getElementById('novoEmailApelido');
+    const emails = campo.value.split(',').map(e => e.trim()).filter(Boolean);
+    const email = emails[emails.length - 1];
+    const nome = apelidoCampo.value.trim();
+
+    if (!email) {
+      alert('Digite um e-mail no campo "Convidados / Gestores" antes de salvar.');
+      return;
+    }
+
+    try {
+      const { error } = await db.from('emails_frequentes').insert([{ nome: nome || email, email }]);
+      if (error) throw error;
+      apelidoCampo.value = '';
+      await carregarEmailsFrequentes();
+    } catch (erro) {
+      alert('Erro ao salvar e-mail: ' + erro.message);
+    }
+  }
+
+  async function excluirEmailFrequente(id) {
+    if (!confirm('Remover este e-mail da lista de frequentes?')) return;
+    try {
+      const { error } = await db.from('emails_frequentes').delete().eq('id', id);
+      if (error) throw error;
+      await carregarEmailsFrequentes();
+    } catch (erro) {
+      alert('Erro ao remover e-mail: ' + erro.message);
+    }
+  }
+
+  // --- ANOTAÇÕES ---
+  async function carregarAnotacoes() {
+    try {
+      const { data, error } = await db.from('anotacoes').select('id, titulo, descricao, criado_em').order('criado_em', { ascending: false });
+      if (error) throw error;
+      renderAnotacoes(data || []);
+    } catch (erro) {
+      console.error('Erro ao carregar anotações:', erro);
+    }
+  }
+
+  function escaparHtml(texto) {
+    const div = document.createElement('div');
+    div.innerText = texto || '';
+    return div.innerHTML;
+  }
+
+  function renderAnotacoes(lista) {
+    const container = document.getElementById('listaAnotacoes');
+    if (!lista || lista.length === 0) {
+      container.innerHTML = '<span class="empty-hint">Nenhuma anotação salva ainda.</span>';
+      return;
+    }
+    container.innerHTML = lista.map(nota => `
+      <div class="nota-item">
+        <div class="nota-item-top">
+          <p class="nota-titulo">${escaparHtml(nota.titulo)}</p>
+          <button type="button" class="nota-del" onclick="excluirAnotacao(${nota.id})" title="Excluir">🗑️</button>
+        </div>
+        <p class="nota-descricao">${escaparHtml(nota.descricao)}</p>
+      </div>
+    `).join('');
+  }
+
+  async function salvarAnotacao() {
+    const tituloCampo = document.getElementById('novaNotaTitulo');
+    const descricaoCampo = document.getElementById('novaNotaDescricao');
+    const titulo = tituloCampo.value.trim();
+    const descricao = descricaoCampo.value.trim();
+
+    if (!titulo) {
+      alert('Digite um título para a anotação.');
+      return;
+    }
+
+    try {
+      const { error } = await db.from('anotacoes').insert([{ titulo, descricao }]);
+      if (error) throw error;
+      tituloCampo.value = '';
+      descricaoCampo.value = '';
+      await carregarAnotacoes();
+    } catch (erro) {
+      alert('Erro ao salvar anotação: ' + erro.message);
+    }
+  }
+
+  async function excluirAnotacao(id) {
+    if (!confirm('Excluir esta anotação?')) return;
+    try {
+      const { error } = await db.from('anotacoes').delete().eq('id', id);
+      if (error) throw error;
+      await carregarAnotacoes();
+    } catch (erro) {
+      alert('Erro ao excluir anotação: ' + erro.message);
+    }
+  }
 
   // Mostra a data de hoje no topo, estilo Google Agenda
   (function mostrarDataHoje() {
@@ -523,7 +782,7 @@
 
   async function buscarEnderecos(termo) {
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&accept-language=pt-BR&q=${encodeURIComponent(termo + ', São Leopoldo, RS')}`;
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&accept-language=pt-BR&addressdetails=1&q=${encodeURIComponent(termo + ', São Leopoldo, RS')}`;
       const resposta = await fetch(url);
       if (!resposta.ok) throw new Error('Falha na busca de endereço');
       const dados = await resposta.json();
@@ -532,6 +791,38 @@
       console.error('Erro ao buscar endereços:', erro);
       boxSugestoes.style.display = 'none';
     }
+  }
+
+  // Monta um endereço "limpo" a partir dos componentes estruturados do Nominatim,
+  // SEM o CEP solto no final. O Google Agenda/Android interpreta um número no
+  // formato NNNNN-NNN (igual ao CEP) como se fosse telefone e troca o botão de
+  // "abrir no Maps/Uber" por "ligar". Tirando o CEP da string, o app volta a
+  // reconhecer o texto inteiro como endereço.
+  function montarEnderecoLimpo(item) {
+    const a = item.address || {};
+    const partes = [];
+
+    const rua = a.road || a.pedestrian || a.footway || '';
+    const numero = a.house_number || '';
+    if (rua) partes.push(numero ? `${rua}, ${numero}` : rua);
+
+    const bairro = a.suburb || a.neighbourhood || a.quarter || '';
+    if (bairro) partes.push(bairro);
+
+    const cidade = a.city || a.town || a.village || a.municipality || '';
+    if (cidade) partes.push(cidade);
+
+    const estado = a.state || '';
+    if (estado) partes.push(estado);
+
+    partes.push('Brasil');
+
+    // Se não veio nenhum componente estruturado (endereço não é um logradouro
+    // reconhecido), cai de volta pro nome completo, só removendo o CEP dele.
+    if (partes.length <= 1) {
+      return (item.display_name || '').replace(/,?\s*\d{5}-?\d{3}\s*,/i, ',');
+    }
+    return partes.join(', ');
   }
 
   function mostrarSugestoes(lista) {
@@ -547,7 +838,7 @@
 
     boxSugestoes.querySelectorAll('.suggestion-item').forEach((el, i) => {
       el.addEventListener('click', () => {
-        inputLocal.value = lista[i].display_name;
+        inputLocal.value = montarEnderecoLimpo(lista[i]);
         boxSugestoes.style.display = 'none';
         boxSugestoes.innerHTML = '';
       });
