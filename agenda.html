@@ -624,7 +624,7 @@
       <button type="button" onclick="fecharModalEmails()">✕</button>
     </div>
     <div class="modal-add-row">
-      <input type="text" id="modalEmailNome" placeholder="Apelido (ex: Alemão)">
+      <input type="text" id="modalEmailNome" placeholder="Apelido (ex: Secretaria de Obras)">
       <input type="text" id="modalEmailEndereco" placeholder="email@exemplo.com">
       <button type="button" class="action btn-blue btn-block" onclick="adicionarEmailModal()">➕ Adicionar</button>
     </div>
@@ -648,7 +648,7 @@
   // LINK DO SCRIPT (Google Apps Script)
   // ==========================================
   // ATENÇÃO: NÃO execute isso manualmente no Apps Script! Use este arquivo HTML.
-  const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbzRMZCBP90vwgg9ULnq6mgow3k-lj_YTVgugEFy-OXX6IaPZXMq9j6as3TcwmiuXJwN/exec';
+  const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbzLv8_TxK2bmKVAiElCTS2_dVdxVaxfZFdzQVeUnN2I29GBIYxUd8mbjm7A6IrK8Kk/exec';
 
   // ==========================================
   // SUPABASE (e-mails frequentes + anotações)
@@ -1107,25 +1107,17 @@
     }
   }
 
-// --- FUNÇÃO PARA COPIAR ---
-  async function copiarTexto() {
+  // --- FUNÇÃO PARA COPIAR (com fallback, funciona em qualquer contexto) ---
+  function copiarTexto() {
     const textArea = document.getElementById('resultadoAgenda');
-    let texto = textArea.value;
+    const texto = textArea.value;
     
-    // Se a caixa estiver vazia, puxa a agenda automaticamente!
+    // Verificação de erro - Exibe o alerta que você pediu se tentar copiar antes de puxar
     if (!texto || texto === 'Buscando eventos... ⏳' || texto.trim() === '') {
-      const dataBusca = document.getElementById('dataBusca').value;
-      if (!dataBusca) {
-        alert('Escolha uma data (ou clique em Hoje) primeiro!');
-        return;
-      }
-      textArea.value = 'Buscando eventos... ⏳'; // Avisa que tá buscando
-      await buscarAgenda(); // Faz a busca sozinho
-      texto = textArea.value; // Atualiza a variável com o texto que chegou
-      if (!texto || texto.includes('Erro ao buscar')) return; // Se falhou, para aqui
+      alert('Puxe os eventos do dia primeiro (botão "Puxar eventos").');
+      return;
     }
 
-    // Código de cópia seguro
     function copiaComTextareaTemporario() {
       const temp = document.createElement('textarea');
       temp.value = texto;
@@ -1146,37 +1138,29 @@
       } else {
         textArea.focus();
         textArea.select();
-        alert('Não foi possível copiar automático. O texto está selecionado, use Ctrl+C (ou segure e Copie).');
+        alert('Não foi possível copiar automaticamente. O texto já está selecionado, use Ctrl+C (ou pressione e segure e escolha "Copiar" no celular).');
       }
     }
 
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(texto)
         .then(() => alert('✅ Agenda copiada! Só colar no Zap.'))
-        .catch(() => copiaComTextareaTemporario());
+        .catch((erro) => {
+          console.error('Clipboard API falhou, usando fallback:', erro);
+          copiaComTextareaTemporario();
+        });
     } else {
       copiaComTextareaTemporario();
     }
   }
 
-  // --- FUNÇÃO PARA ENVIAR NO WHATSAPP ---
-  async function enviarWhatsApp() {
-    const textArea = document.getElementById('resultadoAgenda');
-    let texto = textArea.value;
-    
-    // Se a caixa estiver vazia, puxa a agenda automaticamente!
+  // --- FUNÇÃO PARA ENVIAR DIRETO NO WHATSAPP (abre e deixa escolher o contato) ---
+  function enviarWhatsApp() {
+    const texto = document.getElementById('resultadoAgenda').value;
     if (!texto || texto === 'Buscando eventos... ⏳' || texto.trim() === '') {
-      const dataBusca = document.getElementById('dataBusca').value;
-      if (!dataBusca) {
-        alert('Escolha uma data (ou clique em Hoje) primeiro!');
-        return;
-      }
-      textArea.value = 'Buscando eventos... ⏳';
-      await buscarAgenda(); // Faz a busca sozinho
-      texto = textArea.value; 
-      if (!texto || texto.includes('Erro ao buscar')) return;
+      alert('Puxe os eventos do dia primeiro.');
+      return;
     }
-    
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
     window.open(url, '_blank');
   }
