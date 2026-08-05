@@ -8,6 +8,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- BLOQUEIO DE SEGURANÇA: Verifica se passou pelo seu login.html -->
+<script>
+    if (!localStorage.getItem('usuarioLogado')) {
+        document.documentElement.innerHTML = '<div style="display:flex; height:100vh; width:100vw; align-items:center; justify-content:center; font-family:sans-serif; background:#f0f2f5; color:#185199;"><h2>🔒 Acesso Restrito. Redirecionando para o login...</h2></div>';
+        window.location.replace('index.html'); // Substitua por 'login.html' se o seu arquivo de login tiver esse nome
+    }
+</script>
+
 <style>
   :root{
     --blue:#1a73e8;
@@ -53,6 +62,14 @@
   .brand-text{ font-family:'Google Sans',Roboto,sans-serif; font-size:20px; color:var(--text-secondary); letter-spacing:.1px; }
   .brand-text b{ color:var(--text-main); font-weight:500; }
   .topbar-spacer{ flex:1; }
+  
+  /* Botão Voltar para o Sistema (Novo) */
+  .btn-voltar-sistema {
+    font-size: 13px; font-weight: bold; color: var(--blue); background: var(--blue-tint);
+    padding: 6px 12px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: 0.2s;
+  }
+  .btn-voltar-sistema:hover { background: #d2e3fc; }
+  
   .today-pill{ font-size:13px; color:var(--text-secondary); padding:6px 12px; border:1px solid var(--grey-border); border-radius:20px; }
 
   /* ---------- Layout ---------- */
@@ -126,7 +143,7 @@
 
   .btn-whatsapp{ background:#25D366; } .btn-whatsapp:hover{ background:#1ebd5a; }
 
-  /* ---------- Campo de data com atalho "Hoje" ---------- */
+  /* ---------- Campo de data com atalhos ---------- */
   .date-com-hoje{ display:flex; gap:8px; align-items:stretch; } .date-com-hoje input{ flex:1; }
   .btn-hoje{ flex-shrink:0; background:var(--grey-bg); border:1px solid var(--grey-border); border-radius:6px; padding:0 14px; font-size:13px; font-family:'Google Sans',Roboto,sans-serif; font-weight:500; color:var(--blue); cursor:pointer; transition:background .15s; }
   .btn-hoje:hover{ background:var(--blue-tint); }
@@ -198,6 +215,7 @@
     <span class="brand-text">Agenda <b>do Gabinete</b></span>
   </div>
   <div class="topbar-spacer"></div>
+  <a href="dashboard.html" class="btn-voltar-sistema">⬅️ Painel de Demandas</a>
   <span class="today-pill" id="dataHoje">—</span>
 </div>
 
@@ -245,6 +263,7 @@
             <div class="date-com-hoje">
               <input type="date" id="novaData">
               <button type="button" class="btn-hoje" onclick="irParaHoje('novaData')">Hoje</button>
+              <button type="button" class="btn-hoje" onclick="irParaAmanha('novaData')">Amanhã</button>
             </div>
           </div>
           <div class="field">
@@ -313,6 +332,7 @@
             <div class="date-com-hoje">
               <input type="date" id="dataBusca">
               <button type="button" class="btn-hoje" onclick="irParaHoje('dataBusca')">Hoje</button>
+              <button type="button" class="btn-hoje" onclick="irParaAmanha('dataBusca')">Amanhã</button>
             </div>
           </div>
           <button class="action btn-ghost" onclick="buscarAgenda()">Puxar eventos</button>
@@ -567,7 +587,6 @@
     `}).join('');
   }
 
-  // Função para abrir Lupa Específica
   function verDetalheAnotacao(id) {
     const nota = listaAnotacoesGlobal.find(n => n.id === id);
     if (!nota) return;
@@ -643,8 +662,23 @@
     return `${ano}-${mes}-${dia}`;
   }
 
+  // Função para retornar a data de amanhã
+  function dataDeAmanhaISO() {
+    const amanha = new Date();
+    amanha.setDate(amanha.getDate() + 1); // Pula 1 dia
+    const ano = amanha.getFullYear();
+    const mes = String(amanha.getMonth() + 1).padStart(2, '0');
+    const dia = String(amanha.getDate()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}`;
+  }
+
   function irParaHoje(idCampo) {
     document.getElementById(idCampo).value = dataDeHojeISO();
+  }
+
+  // Nova função para jogar para amanhã
+  function irParaAmanha(idCampo) {
+    document.getElementById(idCampo).value = dataDeAmanhaISO();
   }
 
   // --- FUNÇÃO PARA CRIAR EVENTO ---
@@ -796,18 +830,16 @@
         eventos.forEach(evento => {
           const local = evento.local ? ` — ${evento.local}` : '';
           
-          // Trata a descrição: Limite de caracteres e formatação em itálico (_)
           let descFormatada = '';
           if (evento.descricao) {
             let desc = evento.descricao;
-            const limiteCaract = 150; // Limite de caracteres para não poluir
+            const limiteCaract = 150; 
             if (desc.length > limiteCaract) {
               desc = desc.substring(0, limiteCaract) + '...';
             }
             descFormatada = `\n   📝 _${desc}_`;
           }
           
-          // Formatação com horário em negrito (*)
           textoFinal += `📍 *${evento.horario}:* ${evento.titulo}${local}${descFormatada}\n\n`;
         });
       }
@@ -826,7 +858,7 @@
     
     if (!texto || texto === 'Buscando eventos... ⏳' || texto.trim() === '') {
       const dataBusca = document.getElementById('dataBusca').value;
-      if (!dataBusca) return alert('Escolha uma data (ou clique em Hoje) primeiro!');
+      if (!dataBusca) return alert('Escolha uma data (ou clique em Hoje/Amanhã) primeiro!');
       
       textArea.value = 'Buscando eventos... ⏳'; 
       await buscarAgenda(); 
@@ -864,7 +896,7 @@
     
     if (!texto || texto === 'Buscando eventos... ⏳' || texto.trim() === '') {
       const dataBusca = document.getElementById('dataBusca').value;
-      if (!dataBusca) return alert('Escolha uma data (ou clique em Hoje) primeiro!');
+      if (!dataBusca) return alert('Escolha uma data (ou clique em Hoje/Amanhã) primeiro!');
       
       textArea.value = 'Buscando eventos... ⏳';
       await buscarAgenda(); 
