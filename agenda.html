@@ -456,9 +456,8 @@
 </div>
 
 <script>
-  // ATENÇÃO: TOKEN ADICIONADO PARA BLINDAR A SEGURANÇA
+  // O NOVO LINK DO SCRIPT SEM TOKEN (BASEADO NO SEU ENVIO)
   const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbwIVv0CF4jzmov65IfY-DqSJJwSlsA9Tw9ZgaxQcFfrdi0cZc5NMl9XgrnwBgYlN_B7KQ/exec';
-  const TOKEN = 'gabinetesecreto2026'; // <--- SENHA DO GABINETE
 
   let db;
   let listaAnotacoesGlobal = []; 
@@ -554,7 +553,7 @@
       listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#555;">⏳ Buscando no Google Agenda...</div>';
       const ano = dataCalendarioAtual.getFullYear(); const mes = String(dataCalendarioAtual.getMonth() + 1).padStart(2, '0'); const dia = String(dataCalendarioAtual.getDate()).padStart(2, '0');
       try {
-          const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&token=${TOKEN}&data=${ano}-${mes}-${dia}`;
+          const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&data=${ano}-${mes}-${dia}`;
           const resposta = await fetch(urlCompleta); const eventos = await resposta.json();
           if (eventos.length === 0) { listContainer.innerHTML = '<div style="text-align:center; padding:15px; color:#777; background:#f1f3f4; border-radius:6px; font-size:12px;">Nenhum evento agendado neste dia.</div>'; } 
           else {
@@ -614,7 +613,7 @@
       if (!confirm("⚠️ Tem certeza que deseja excluir permanentemente este evento da agenda do Google?")) return;
       const textoOriginal = botao.innerHTML; botao.innerHTML = '⏳...'; botao.disabled = true;
       try {
-          const url = `${URL_DO_SCRIPT}?acao=deletar&token=${TOKEN}&id=${encodeURIComponent(idEvento)}`;
+          const url = `${URL_DO_SCRIPT}?acao=deletar&id=${encodeURIComponent(idEvento)}`;
           const resposta = await fetch(url); const data = await resposta.json();
           if (data.status === 'sucesso') fetchEventosCalendario(); 
           else { alert("Erro ao excluir: " + data.mensagem); botao.innerHTML = textoOriginal; botao.disabled = false; }
@@ -861,7 +860,7 @@
 
     try {
       const acaoScript = idEventoEmEdicao ? 'editar' : 'criar'; const idAppend = idEventoEmEdicao ? `&id=${encodeURIComponent(idEventoEmEdicao)}` : '';
-      const urlCompleta = `${URL_DO_SCRIPT}?acao=${acaoScript}&token=${TOKEN}&titulo=${encodeURIComponent(tituloFinal)}&data=${data}&hora=${hora}&local=${encodeURIComponent(localFinal)}&descricao=${encodeURIComponent(descricao)}&convidados=${encodeURIComponent(convidados)}&lembrete=${encodeURIComponent(lembrete)}${idAppend}`;
+      const urlCompleta = `${URL_DO_SCRIPT}?acao=${acaoScript}&titulo=${encodeURIComponent(tituloFinal)}&data=${data}&hora=${hora}&local=${encodeURIComponent(localFinal)}&descricao=${encodeURIComponent(descricao)}&convidados=${encodeURIComponent(convidados)}&lembrete=${encodeURIComponent(lembrete)}${idAppend}`;
       const resposta = await fetch(urlCompleta); const resultado = await resposta.json();
       if (resultado.status === 'sucesso') {
         status.className = 'status-ok'; status.innerText = idEventoEmEdicao ? '✅ Evento atualizado!' : '✅ Evento criado!';
@@ -972,7 +971,7 @@
     let textoFinal = `*AGENDA VEREADOR*\n*${dia}/${mes}  ${dS[dO.getDay()]}*\n\n`;
 
     try {
-      const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&token=${TOKEN}&data=${inputData}`;
+      const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&data=${inputData}`;
       const resposta = await fetch(urlCompleta); const eventos = await resposta.json();
       if (eventos.length === 0) { textoFinal += "Nenhum evento agendado neste dia."; } 
       else {
