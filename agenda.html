@@ -28,132 +28,132 @@
   *{box-sizing:border-box;}
   body{ margin:0; font-family:'Roboto','Google Sans',Arial,sans-serif; background:#fff; color:var(--text-main); scroll-behavior: smooth; }
 
-  .topbar{ display:flex; align-items:center; gap:20px; padding:8px 16px; border-bottom:1px solid var(--grey-border); background:#fff; position: sticky; top: 0; z-index: 50; }
+  .topbar{ display:flex; align-items:center; gap:15px; padding:8px 16px; border-bottom:1px solid var(--grey-border); background:#fff; position: sticky; top: 0; z-index: 50; flex-wrap: wrap; }
   .brand{ display:flex; align-items:center; gap:10px; }
-  .brand-icon{ width:34px;height:34px;flex-shrink:0; }
-  .brand-text{ font-family:'Google Sans',Roboto,sans-serif; font-size:20px; color:var(--text-secondary); letter-spacing:.1px; }
+  .brand-icon{ width:30px; height:30px; flex-shrink:0; }
+  .brand-text{ font-family:'Google Sans',Roboto,sans-serif; font-size:18px; color:var(--text-secondary); letter-spacing:.1px; }
   .brand-text b{ color:var(--text-main); font-weight:500; }
   .topbar-spacer{ flex:1; }
   
-  .btn-voltar-sistema { font-size: 13px; font-weight: bold; color: var(--blue); background: var(--blue-tint); padding: 6px 12px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: 0.2s; cursor: pointer; border: none; }
+  .btn-voltar-sistema { font-size: 12px; font-weight: bold; color: var(--blue); background: var(--blue-tint); padding: 6px 10px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 4px; transition: 0.2s; cursor: pointer; border: none; }
   .btn-voltar-sistema:hover { background: #d2e3fc; }
   
-  .btn-nova-demanda { font-size: 13px; font-weight: bold; color: #185199; background: #98ED34; padding: 6px 12px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
+  .btn-nova-demanda { font-size: 12px; font-weight: bold; color: #185199; background: #98ED34; padding: 6px 10px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
   .btn-nova-demanda:hover { background: #85d62d; }
   
-  .today-pill{ font-size:13px; color:var(--text-secondary); padding:6px 12px; border:1px solid var(--grey-border); border-radius:20px; }
+  .today-pill{ font-size:12px; color:var(--text-secondary); padding:5px 10px; border:1px solid var(--grey-border); border-radius:20px; white-space: nowrap; }
 
-  .layout{ display:flex; max-width:1180px; margin:0 auto; padding:28px 20px 60px; gap:28px; align-items:flex-start; }
+  .layout{ display:flex; max-width:1180px; margin:0 auto; padding:20px 15px 60px; gap:20px; align-items:flex-start; }
   
-  .sidebar{ width:270px; flex-shrink:0; position: sticky; top: 80px; }
-  .create-btn{ display:flex; align-items:center; gap:12px; background:#fff; border:none; box-shadow:var(--shadow-1); border-radius:24px; padding:10px 22px 10px 14px; font-family:'Google Sans',Roboto,sans-serif; font-size:14px; font-weight:500; color:var(--text-main); cursor:pointer; margin-bottom:12px; transition:box-shadow .15s; width: 100%; }
+  .sidebar{ width:260px; flex-shrink:0; position: sticky; top: 75px; }
+  .create-btn{ display:flex; align-items:center; gap:12px; background:#fff; border:none; box-shadow:var(--shadow-1); border-radius:24px; padding:10px 20px 10px 14px; font-family:'Google Sans',Roboto,sans-serif; font-size:14px; font-weight:500; color:var(--text-main); cursor:pointer; margin-bottom:10px; transition:box-shadow .15s; width: 100%; }
   .create-btn:hover{ box-shadow:var(--shadow-2); }
-  .create-plus{ width:36px;height:36px;border-radius:50%; background:var(--blue); display:flex;align-items:center;justify-content:center; color:#fff;font-size:22px;font-weight:400;flex-shrink:0; }
-  .nav-side-btn { display:flex; align-items:center; gap:12px; background:var(--grey-bg); border:1px solid var(--grey-border); border-radius:24px; padding:10px 22px; font-family:'Google Sans',Roboto,sans-serif; font-size:13px; font-weight:500; color:var(--text-secondary); cursor:pointer; margin-bottom:12px; transition:background .15s; width: 100%; }
+  .create-plus{ width:32px; height:32px; border-radius:50%; background:var(--blue); display:flex; align-items:center; justify-content:center; color:#fff; font-size:20px; font-weight:400; flex-shrink:0; }
+  .nav-side-btn { display:flex; align-items:center; gap:10px; background:var(--grey-bg); border:1px solid var(--grey-border); border-radius:24px; padding:10px 18px; font-family:'Google Sans',Roboto,sans-serif; font-size:13px; font-weight:500; color:var(--text-secondary); cursor:pointer; margin-bottom:10px; transition:background .15s; width: 100%; }
   .nav-side-btn:hover { background: var(--blue-tint); color: var(--blue-dark); border-color: var(--blue-tint); }
 
-  .side-card{ border:1px solid var(--grey-border); border-radius:var(--radius); padding:16px; margin-bottom:16px; margin-top: 24px;}
-  .side-card h3{ font-family:'Google Sans',Roboto,sans-serif; font-size:13px; font-weight:500; color:var(--text-main); margin:0 0 12px; text-transform:uppercase; letter-spacing:.3px; display: flex; justify-content: space-between; align-items: center; }
+  .side-card{ border:1px solid var(--grey-border); border-radius:var(--radius); padding:14px; margin-bottom:15px; margin-top: 20px;}
+  .side-card h3{ font-family:'Google Sans',Roboto,sans-serif; font-size:12px; font-weight:500; color:var(--text-main); margin:0 0 10px; text-transform:uppercase; letter-spacing:.3px; display: flex; justify-content: space-between; align-items: center; }
   
   .main-col{ flex:1; min-width:0; }
-  .panel{ border:1px solid var(--grey-border); border-radius:12px; box-shadow:var(--shadow-1); margin-bottom:24px; scroll-margin-top: 80px; position: relative;}
+  .panel{ border:1px solid var(--grey-border); border-radius:12px; box-shadow:var(--shadow-1); margin-bottom:20px; scroll-margin-top: 75px; position: relative;}
   
   .modo-edicao-banner { display:none; background:#ffeb3b; color:#b71c1c; text-align:center; padding:6px; font-size:12px; font-weight:bold; border-radius:12px 12px 0 0; }
   
-  .panel-header{ display:flex; align-items:center; gap:10px; padding:18px 24px; border-bottom:1px solid var(--grey-border); border-radius:12px 12px 0 0; }
-  .panel-header .dot{ width:12px;height:12px;border-radius:50%;flex-shrink:0; }
+  .panel-header{ display:flex; align-items:center; gap:10px; padding:15px 20px; border-bottom:1px solid var(--grey-border); border-radius:12px 12px 0 0; }
+  .panel-header .dot{ width:10px; height:10px; border-radius:50%; flex-shrink:0; }
   .dot-blue{ background:var(--blue); } .dot-green{ background:var(--green); }
-  .panel-header h2{ font-family:'Google Sans',Roboto,sans-serif; font-size:16px; font-weight:500; margin:0; color:var(--text-main); }
-  .panel-body{ padding:24px; border-radius:0 0 12px 12px; }
+  .panel-header h2{ font-family:'Google Sans',Roboto,sans-serif; font-size:15px; font-weight:500; margin:0; color:var(--text-main); }
+  .panel-body{ padding:20px; border-radius:0 0 12px 12px; }
 
-  label{ display:block; font-size:12px; font-weight:500; color:var(--text-secondary); margin-bottom:6px; text-transform:uppercase; letter-spacing:.3px; }
-  .field{ margin-bottom:18px; }
-  input[type="text"], input[type="date"], input[type="time"], textarea, select{ width:100%; padding:10px 12px; border:1px solid var(--grey-border); border-radius:6px; font-size:14px; font-family:'Roboto',Arial,sans-serif; color:var(--text-main); background:#fff; transition:border-color .15s, box-shadow .15s; }
+  label{ display:block; font-size:11px; font-weight:500; color:var(--text-secondary); margin-bottom:5px; text-transform:uppercase; letter-spacing:.3px; }
+  .field{ margin-bottom:15px; }
+  input[type="text"], input[type="date"], input[type="time"], textarea, select{ width:100%; padding:10px; border:1px solid var(--grey-border); border-radius:6px; font-size:14px; font-family:'Roboto',Arial,sans-serif; color:var(--text-main); background:#fff; transition:border-color .15s, box-shadow .15s; }
   input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--blue); box-shadow:0 0 0 1px var(--blue); }
   textarea{ resize:vertical; line-height:1.5; }
-  .row-2{ display:flex; gap:16px; }
-  .row-2 .field{ flex:1; }
-  .row-inline{ display:flex; gap:12px; align-items:flex-end; margin-bottom:18px; }
-  .row-inline .field{ flex:1; margin-bottom:0; }
+  .row-2{ display:flex; gap:12px; flex-wrap: wrap; }
+  .row-2 .field{ flex:1; min-width: 140px; }
+  .row-inline{ display:flex; gap:10px; align-items:flex-end; margin-bottom:15px; flex-wrap: wrap; }
+  .row-inline .field{ flex:1; margin-bottom:0; min-width: 180px; }
 
-  button.action{ border:none; border-radius:20px; padding:10px 24px; font-family:'Google Sans',Roboto,sans-serif; font-size:14px; font-weight:500; cursor:pointer; color:#fff; transition:background .15s, box-shadow .15s; white-space:nowrap; }
+  button.action{ border:none; border-radius:20px; padding:10px 20px; font-family:'Google Sans',Roboto,sans-serif; font-size:14px; font-weight:500; cursor:pointer; color:#fff; transition:background .15s, box-shadow .15s; white-space:nowrap; }
   .btn-blue{ background:var(--blue); } .btn-blue:hover{ background:var(--blue-dark); box-shadow:var(--shadow-1); }
   .btn-green{ background:var(--green); } .btn-green:hover{ background:var(--green-dark); box-shadow:var(--shadow-1); }
-  .btn-block{ width:100%; padding:11px 24px; }
+  .btn-block{ width:100%; padding:10px 20px; }
   .btn-ghost{ background:none; color:var(--blue); border:1px solid var(--grey-border); }
   .btn-ghost:hover{ background:var(--blue-tint); }
 
-  #mensagemStatus{ display:none; font-size:13px; font-weight:500; padding:10px 14px; border-radius:6px; margin-bottom:16px; }
+  #mensagemStatus{ display:none; font-size:13px; font-weight:500; padding:10px; border-radius:6px; margin-bottom:15px; }
   .status-loading{ background:#fef7e0; color:#7a5900; } .status-ok{ background:#e6f4ea; color:var(--green-dark); }
-  .actions-right{ display:flex; justify-content:flex-end; gap:10px; }
+  .actions-right{ display:flex; justify-content:flex-end; gap:8px; flex-wrap: wrap; }
 
   .field-relative{ position:relative; }
-  .suggestions-box{ display:none; position:absolute; top:calc(100% - 14px); left:0; right:0; background:#fff; border:1px solid var(--grey-border); border-radius:8px; box-shadow:var(--shadow-2); z-index:20; max-height:220px; overflow-y:auto; }
-  .suggestion-item{ padding:10px 14px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid #f1f3f4; line-height: 1.4; }
+  .suggestions-box{ display:none; position:absolute; top:calc(100% - 10px); left:0; right:0; background:#fff; border:1px solid var(--grey-border); border-radius:8px; box-shadow:var(--shadow-2); z-index:20; max-height:200px; overflow-y:auto; }
+  .suggestion-item{ padding:10px 12px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid #f1f3f4; line-height: 1.4; }
   .suggestion-item:last-child{ border-bottom:none; }
   .suggestion-item:hover{ background:var(--blue-tint); }
 
   .btn-whatsapp{ background:#25D366; } .btn-whatsapp:hover{ background:#1ebd5a; }
 
-  .date-com-hoje{ display:flex; gap:8px; align-items:stretch; } .date-com-hoje input{ flex:1; }
-  .btn-hoje{ flex-shrink:0; background:var(--grey-bg); border:1px solid var(--grey-border); border-radius:6px; padding:0 14px; font-size:13px; font-family:'Google Sans',Roboto,sans-serif; font-weight:500; color:var(--blue); cursor:pointer; transition:background .15s; }
+  .date-com-hoje{ display:flex; gap:6px; align-items:stretch; } .date-com-hoje input{ flex:1; min-width: 0; }
+  .btn-hoje{ flex-shrink:0; background:var(--grey-bg); border:1px solid var(--grey-border); border-radius:6px; padding:0 10px; font-size:12px; font-family:'Google Sans',Roboto,sans-serif; font-weight:500; color:var(--blue); cursor:pointer; transition:background .15s; }
   .btn-hoje:hover{ background:var(--blue-tint); }
 
-  .chips-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-  .chip{ display:flex; align-items:center; gap:6px; background:var(--blue-tint); color:var(--blue-dark); border-radius:16px; padding:5px 8px 5px 12px; font-size:12.5px; font-family:'Roboto',Arial,sans-serif; }
-  .chip button{ background:none; border:none; color:var(--blue-dark); cursor:pointer; font-size:14px; line-height:1; padding:2px 4px; border-radius:50%; }
-  .chip button:hover{ background:rgba(26,115,232,.18); }
+  .chips-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .chip{ display:flex; align-items:center; gap:5px; background:var(--blue-tint); color:var(--blue-dark); border-radius:16px; padding:4px 8px 4px 10px; font-size:12px; font-family:'Roboto',Arial,sans-serif; }
+  .chip button{ background:none; border:none; color:var(--blue-dark); cursor:pointer; font-size:13px; line-height:1; padding:2px; border-radius:50%; }
   .chip .chip-nome{ cursor:pointer; } .chip .chip-nome:hover{ text-decoration:underline; }
-  .empty-hint{ font-size:12.5px; color:var(--text-secondary); margin-top:8px; display: block;}
+  .empty-hint{ font-size:12px; color:var(--text-secondary); margin-top:6px; display: block;}
 
-  .label-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .label-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; }
   .label-row label{ margin-bottom:0; }
-  .gear-btn{ background:none; border:none; cursor:pointer; font-size:12px; line-height:1; padding:4px 8px; border-radius:4px; flex-shrink:0; color: var(--text-secondary); font-weight: 500; display: flex; align-items: center; gap: 4px; transition: 0.2s;}
+  .gear-btn{ background:none; border:none; cursor:pointer; font-size:11px; line-height:1; padding:3px 6px; border-radius:4px; flex-shrink:0; color: var(--text-secondary); font-weight: 500; display: flex; align-items: center; gap: 3px; transition: 0.2s;}
   .gear-btn:hover{ background:var(--grey-bg); color: var(--blue); }
   
-  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:100; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:100; align-items:center; justify-content:center; padding:15px; }
   .modal-overlay.aberto{ display:flex; }
-  .modal-box{ background:#fff; border-radius:12px; width:100%; max-width:480px; max-height:80vh; overflow-y:auto; padding:20px; box-shadow:var(--shadow-2); }
-  .modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-  .modal-head h3{ font-family:'Google Sans',Roboto,sans-serif; font-size:16px; margin:0; color:var(--text-main); }
+  .modal-box{ background:#fff; border-radius:12px; width:100%; max-width:450px; max-height:85vh; overflow-y:auto; padding:18px; box-shadow:var(--shadow-2); }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .modal-head h3{ font-family:'Google Sans',Roboto,sans-serif; font-size:15px; margin:0; color:var(--text-main); }
   .modal-head button{ background:none; border:none; font-size:18px; cursor:pointer; color:var(--text-secondary); }
-  .modal-add-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
-  .lista-item-simples{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 10px; border:1px solid var(--grey-border); border-radius:6px; margin-bottom:6px; font-size:13px; }
+  .modal-add-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .lista-item-simples{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; border:1px solid var(--grey-border); border-radius:6px; margin-bottom:6px; font-size:12px; }
   .lista-item-simples span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
   .nota-mini{ display:flex; align-items:flex-start; gap:8px; padding:8px 0; border-bottom:1px solid var(--grey-border); }
   .nota-mini:last-child{ border-bottom:none; }
   
-  .btn-check-emoji { background: none; border: none; font-size: 16px; cursor: pointer; padding: 0; margin-top: 2px; flex-shrink: 0; transition: transform 0.2s; }
+  .btn-check-emoji { background: none; border: none; font-size: 15px; cursor: pointer; padding: 0; margin-top: 2px; flex-shrink: 0; transition: transform 0.2s; }
   .btn-check-emoji:hover { transform: scale(1.1); }
   
   .nota-mini-texto{ flex:1; min-width:0; }
-  .nota-mini-titulo{ font-size:13px; font-weight:500; color:var(--text-main); word-break:break-word; }
+  .nota-mini-titulo{ font-size:12px; font-weight:500; color:var(--text-main); word-break:break-word; }
   .nota-mini.feita .nota-mini-titulo{ text-decoration:line-through; color:var(--text-secondary); }
-  .nota-mini-desc{ font-size:12px; color:var(--text-secondary); margin-top:2px; word-break:break-word; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+  .nota-mini-desc{ font-size:11px; color:var(--text-secondary); margin-top:2px; word-break:break-word; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
   
-  .badge-prioridade { font-size: 10px; padding: 2px 6px; border-radius: 10px; border: 1px solid #ccc; font-weight: bold; margin-bottom: 3px; display: inline-block;}
+  .badge-prioridade { font-size: 9px; padding: 2px 5px; border-radius: 8px; border: 1px solid #ccc; font-weight: bold; margin-bottom: 2px; display: inline-block;}
   .prio-Normal { background: #fef7e0; color: #b08d00; border-color: #fef7e0; }
   .prio-Alta { background: #fce8e6; color: #d93025; border-color: #fce8e6; }
   .prio-Crítica { background: #d93025; color: white; border-color: #d93025; }
   .prio-Baixa { background: #f1f3f4; color: #5f6368; border-color: #f1f3f4; }
 
   .acoes-nota-rapida { display: flex; gap: 4px; flex-shrink: 0; }
-  .nota-btn-icon{ background:none; border:none; cursor:pointer; font-size:13px; padding: 4px; border-radius: 4px; transition: 0.2s;}
+  .nota-btn-icon{ background:none; border:none; cursor:pointer; font-size:12px; padding: 4px; border-radius: 4px; transition: 0.2s;}
   .nota-btn-icon:hover{ background: var(--grey-bg); }
   .btn-del-icon { color:#a1a1a1; } .btn-del-icon:hover { color:#d93025; background: #fce8e6; }
   .btn-lupa-icon { color: var(--blue); } .btn-lupa-icon:hover { background: var(--blue-tint); }
 
   .btn-micro { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 11px; font-weight: bold; padding: 4px 8px; height: 26px;}
   .btn-micro:hover { background: #e2e8f0; color: #185199; border-color: #185199; }
-  .btn-ver-mais { width: 100%; border: none; background: transparent; color: var(--blue); font-weight: bold; cursor: pointer; padding: 8px; font-size: 12px; border-top: 1px solid var(--grey-border); margin-top: 8px; transition: 0.2s; }
+  .btn-ver-mais { width: 100%; border: none; background: transparent; color: var(--blue); font-weight: bold; cursor: pointer; padding: 6px; font-size: 11px; border-top: 1px solid var(--grey-border); margin-top: 6px; transition: 0.2s; }
   .btn-ver-mais:hover { background: var(--blue-tint); border-radius: 4px; }
 
   @media (max-width:820px){
-    .layout{ flex-direction:column; }
-    .sidebar{ width:100%; position: static;}
-    .row-2{ flex-direction:column; gap:0; }
-    .row-inline{ flex-direction:column; align-items:stretch; }
+    .layout{ flex-direction:column; padding: 10px 8px 40px; gap: 15px; }
+    .sidebar{ width:100%; position: static; }
+    .topbar { padding: 8px 10px; gap: 8px; }
+    .brand-text { font-size: 16px; }
+    .panel-body { padding: 15px; }
   }
 </style>
 </head>
@@ -171,9 +171,9 @@
     <span class="brand-text">Agenda <b>do Gabinete</b></span>
   </div>
  <div class="topbar-spacer"></div>
-  <div style="display: flex; gap: 10px; align-items: center;">
+  <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
       <button onclick="irParaDashboard()" class="btn-voltar-sistema" title="Abre na mesma aba">⬅️ Dashboard</button>
-      <a href="nova-demanda.html" target="_blank" class="btn-nova-demanda" title="Abre em nova aba">+ Nova Demanda</a>
+      <a href="nova-demanda.html" target="_blank" class="btn-nova-demanda" title="Abre em nova aba">+ Demanda</a>
   </div>
   <span class="today-pill" id="dataHoje">—</span>
 </div>
@@ -215,7 +215,7 @@
         <div id="mensagemStatus"></div>
 
         <div class="row-2">
-          <div class="field" style="flex: 0 0 160px;">
+          <div class="field" style="flex: 0 0 140px;">
             <label>Tipo</label>
             <select id="novoTipoEvento">
               <option value="">🗓️ Evento</option>
@@ -251,13 +251,12 @@
               <label style="margin:0;">Local / Endereço</label>
               <button type="button" class="gear-btn" onclick="document.getElementById('novoLocal').value = '';" title="Apagar local">🧹 Limpar</button>
             </div>
-            <input type="text" id="novoLocal" placeholder="Digite rua e número, Prefeitura, ou Cecrei..." autocomplete="off">
+            <input type="text" id="novoLocal" placeholder="Rua, Prefeitura, Cecrei..." autocomplete="off">
             <div id="sugestoesLocal" class="suggestions-box"></div>
           </div>
-          <!-- NOVO CAMPO COMPLEMENTO -->
-          <div class="field" style="flex: 1;">
-            <label style="margin-bottom: 27px;">Complemento</label>
-            <input type="text" id="novoComplemento" placeholder="Sala, Andar, etc.">
+          <div class="field" style="flex: 1; min-width: 110px;">
+            <label style="margin-bottom: 23px;">Complemento</label>
+            <input type="text" id="novoComplemento" placeholder="Sala, Andar">
           </div>
         </div>
 
@@ -293,7 +292,7 @@
         </div>
 
         <div class="actions-right">
-          <button type="button" id="btnCancelarEdicao" class="action" style="background:#e0e0e0; color:#333; display:none;" onclick="cancelarEdicao()">Cancelar Edição</button>
+          <button type="button" id="btnCancelarEdicao" class="action" style="background:#e0e0e0; color:#333; display:none;" onclick="cancelarEdicao()">Cancelar</button>
           <button type="button" id="btnSalvarEvento" class="action btn-blue" onclick="criarOuEditarEventoNoGoogle()">Salvar na agenda</button>
         </div>
       </div>
@@ -373,22 +372,26 @@
 
 <!-- MODAL: VER CALENDÁRIO DIRETO -->
 <div id="modalCalendario" class="modal-overlay">
-  <div class="modal-box" style="max-width: 520px; text-align: left; padding: 25px;">
+  <div class="modal-box" style="max-width: 480px; text-align: left; padding: 20px;">
     <div class="modal-head">
       <h3>🗓️ Calendário Oficial</h3>
       <button type="button" onclick="fecharModalCalendario()">✕</button>
     </div>
     
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
-       <button onclick="mudarDiaCalendario(-1)" class="btn-micro" style="font-size:16px; padding: 6px 12px;">❮</button>
-       <div style="text-align:center;">
-           <strong id="calendarioDataView" style="color:#185199; display:block; font-size:15px;">Hoje</strong>
-           <span id="calendarioDiaSemana" style="font-size:11px; color:#64748b; text-transform:uppercase; font-weight: bold;"></span>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
+       <div style="display:flex; align-items:center; gap: 5px;">
+           <button onclick="mudarDiaCalendario(-1)" class="btn-micro" style="padding: 5px 10px;">❮</button>
+           <button onclick="mudarDiaCalendario(1)" class="btn-micro" style="padding: 5px 10px;">❯</button>
        </div>
-       <button onclick="mudarDiaCalendario(1)" class="btn-micro" style="font-size:16px; padding: 6px 12px;">❯</button>
+       <div style="text-align:center; flex:1; min-width: 130px;">
+           <strong id="calendarioDataView" style="color:#185199; display:block; font-size:14px;">Hoje</strong>
+           <span id="calendarioDiaSemana" style="font-size:10px; color:#64748b; text-transform:uppercase; font-weight: bold;"></span>
+       </div>
+       <!-- NOVO BOTÃO DE ADICIONAR AO ZAP DIRETO -->
+       <button onclick="pularParaGerarAgendaZap()" class="btn-micro" style="background:#188038; color:white; border-color:#137333; font-size:11px;" title="Jogar data para o gerador do WhatsApp">📄 Gerar Zap</button>
     </div>
     
-    <div id="calendarioEventosList" style="max-height: 400px; overflow-y: auto; display:flex; flex-direction:column; gap:10px; padding-right: 5px;"></div>
+    <div id="calendarioEventosList" style="max-height: 380px; overflow-y: auto; display:flex; flex-direction:column; gap:8px; padding-right: 4px;"></div>
   </div>
 </div>
 
@@ -415,7 +418,7 @@
       <h3>🔍 Detalhes da Anotação</h3>
       <button type="button" onclick="fecharModalDetalheAnotacao()">✕</button>
     </div>
-    <div id="conteudoDetalheAnotacao" style="font-size: 14px; color: var(--text-main); line-height: 1.6;"></div>
+    <div id="conteudoDetalheAnotacao" style="font-size: 13px; color: var(--text-main); line-height: 1.5;"></div>
   </div>
 </div>
 
@@ -438,17 +441,21 @@
   }
   inicializarSupabase();
 
+  // --- TRAVA DE SAÍDA INTELIGENTE (Só avisa se estiver digitando algo útil) ---
   function irParaDashboard() {
       const p1 = document.getElementById('novoTitulo').value.trim();
       const p2 = document.getElementById('novoLocal').value.trim();
       const p3 = document.getElementById('novaDescricao').value.trim();
       const p4 = document.getElementById('novaNotaTitulo').value.trim(); 
 
+      // Só dispara o aviso se realmente houver conteúdo relevante digitado
       if (p1 !== '' || p2 !== '' || p3 !== '' || p4 !== '') {
           if (confirm('⚠️ OPA! Você tem informações preenchidas que NÃO FORAM SALVAS.\n\nSe você sair agora, vai perder o que digitou. Tem certeza que deseja voltar pro Dashboard?')) {
               window.location.href = 'dashboard.html';
           }
-      } else { window.location.href = 'dashboard.html'; }
+      } else { 
+          window.location.href = 'dashboard.html'; 
+      }
   }
 
   let dataCalendarioAtual = new Date();
@@ -482,9 +489,24 @@
       document.getElementById('calendarioDiaSemana').innerText = diasSemana[dataCalendarioAtual.getDay()];
   }
 
+  // NOVO: Joga a data do calendário direto para o Gerador de WhatsApp e fecha o modal
+  function pularParaGerarAgendaZap() {
+      const ano = dataCalendarioAtual.getFullYear();
+      const mes = String(dataCalendarioAtual.getMonth() + 1).padStart(2, '0');
+      const dia = String(dataCalendarioAtual.getDate()).padStart(2, '0');
+      const dataFormatada = `${ano}-${mes}-${dia}`;
+      
+      document.getElementById('dataBusca').value = dataFormatada;
+      fecharModalCalendario();
+      
+      // Rola a tela suavemente até a seção do WhatsApp e já puxa
+      document.getElementById('secaoZap').scrollIntoView({ behavior: 'smooth' });
+      buscarAgenda();
+  }
+
   async function fetchEventosCalendario() {
       const listContainer = document.getElementById('calendarioEventosList');
-      listContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#555;">⏳ Buscando no Google Agenda...</div>';
+      listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#555;">⏳ Buscando no Google Agenda...</div>';
 
       const ano = dataCalendarioAtual.getFullYear();
       const mes = String(dataCalendarioAtual.getMonth() + 1).padStart(2, '0');
@@ -497,7 +519,7 @@
           const eventos = await resposta.json();
 
           if (eventos.length === 0) {
-              listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#777; background:#f1f3f4; border-radius:6px;">Nenhum evento agendado neste dia.</div>';
+              listContainer.innerHTML = '<div style="text-align:center; padding:15px; color:#777; background:#f1f3f4; border-radius:6px; font-size:12px;">Nenhum evento agendado neste dia.</div>';
           } else {
               listContainer.innerHTML = eventos.map(ev => {
                   const evTituloSafe = (ev.titulo || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
@@ -505,15 +527,15 @@
                   const evDescSafe = (ev.descricao || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, "\\n");
                   
                   return `
-                  <div style="border-left: 4px solid var(--blue); padding: 12px; background: #fff; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
-                      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                          <div style="flex:1; padding-right:10px;">
-                              <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 4px;">
-                                <span style="color:var(--blue); font-weight: bold; font-size: 14px;">${ev.horario}</span> 
-                                <span style="font-weight:bold; color:#333; font-size: 15px;">${ev.titulo}</span>
+                  <div style="border-left: 4px solid var(--blue); padding: 10px; background: #fff; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
+                      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap: 8px;">
+                          <div style="flex:1; min-width:0;">
+                              <div style="display:flex; align-items:center; gap: 6px; margin-bottom: 3px; flex-wrap: wrap;">
+                                <span style="color:var(--blue); font-weight: bold; font-size: 13px;">${ev.horario}</span> 
+                                <span style="font-weight:bold; color:#333; font-size: 14px; word-break: break-word;">${ev.titulo}</span>
                               </div>
-                              ${ev.local ? `<div style="color:#555; font-size:12px; margin-bottom: 4px;">📍 ${ev.local}</div>` : ''}
-                              ${ev.descricao ? `<div style="color:#777; font-size:12px; font-style:italic; background: #f8fafc; padding: 6px; border-radius: 4px; line-height: 1.4; white-space: pre-wrap;">${ev.descricao}</div>` : ''}
+                              ${ev.local ? `<div style="color:#555; font-size:11px; margin-bottom: 3px; word-break: break-word;">📍 ${ev.local}</div>` : ''}
+                              ${ev.descricao ? `<div style="color:#777; font-size:11px; font-style:italic; background: #f8fafc; padding: 5px; border-radius: 4px; line-height: 1.3; white-space: pre-wrap; word-break: break-word;">${ev.descricao}</div>` : ''}
                           </div>
                           ${ev.id ? `
                           <div style="display:flex; gap: 4px; flex-direction:column; flex-shrink:0;">
@@ -524,7 +546,7 @@
                   </div>
               `}).join('');
           }
-      } catch (error) { listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#c0392b; font-weight: bold;">Erro de conexão com o Script do Google.</div>'; }
+      } catch (error) { listContainer.innerHTML = '<div style="text-align:center; padding:15px; color:#c0392b; font-weight: bold; font-size:12px;">Erro de conexão com o Script.</div>'; }
   }
 
   function prepararEdicao(id, titulo, horario, local, descricao) {
@@ -556,10 +578,8 @@
       const dia = String(dataCalendarioAtual.getDate()).padStart(2, '0');
       document.getElementById('novaData').value = `${ano}-${mes}-${dia}`;
       
-      // Quando for editar, a gente não quebra o complemento para não bugar o que já tava salvo
       document.getElementById('novoLocal').value = local;
       document.getElementById('novoComplemento').value = ''; 
-      
       document.getElementById('novaDescricao').value = descricao;
       
       document.getElementById('tituloCardEvento').innerText = '✏️ Editando Evento';
@@ -673,7 +693,7 @@
           <span class="badge-prioridade ${prioClass}">${nota.prioridade || 'Normal'}</span>
           <div class="nota-mini-titulo">${escaparHtml(nota.titulo)}</div>
           ${nota.descricao ? `<div class="nota-mini-desc">${escaparHtml(nota.descricao)}</div>` : ''}
-          <div style="font-size:10px; color:#888; margin-top:4px; font-weight: 500;">👤 ${nomeCriador} • 🕒 ${dataCriacao}</div>
+          <div style="font-size:9px; color:#888; margin-top:3px; font-weight: 500;">👤 ${nomeCriador} • 🕒 ${dataCriacao}</div>
         </div>
         <div class="acoes-nota-rapida">
           <button type="button" class="nota-btn-icon btn-lupa-icon" onclick="verDetalheAnotacao(${nota.id})" title="Ver Anotação">🔍</button>
@@ -698,14 +718,14 @@
     const dataCriacao = new Date(nota.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(nota.criado_em).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
     const nomeCriador = nota.criador || 'Equipe';
     document.getElementById('conteudoDetalheAnotacao').innerHTML = `
-      <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-start;">
-        <span class="badge-prioridade ${prioClass}" style="font-size: 12px; padding: 4px 8px;">Prioridade: ${nota.prioridade || 'Normal'}</span>
+      <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
+        <span class="badge-prioridade ${prioClass}" style="font-size: 11px; padding: 3px 6px;">Prioridade: ${nota.prioridade || 'Normal'}</span>
         <div style="text-align: right; font-size: 11px; color: var(--text-secondary);">
             <div style="font-weight: bold; color: #333;">👤 ${nomeCriador}</div><div>🗓️ ${dataCriacao}</div>
         </div>
       </div>
-      <h4 style="margin-top: 0; font-size: 18px; color: var(--blue); margin-bottom: 10px;">${escaparHtml(nota.titulo)}</h4>
-      <div style="background: var(--grey-bg); padding: 15px; border-radius: 8px; white-space: pre-wrap; font-size: 15px;">${escaparHtml(nota.descricao) || '<i>Sem descrição detalhada.</i>'}</div>
+      <h4 style="margin-top: 0; font-size: 16px; color: var(--blue); margin-bottom: 8px;">${escaparHtml(nota.titulo)}</h4>
+      <div style="background: var(--grey-bg); padding: 12px; border-radius: 8px; white-space: pre-wrap; font-size: 13px;">${escaparHtml(nota.descricao) || '<i>Sem descrição detalhada.</i>'}</div>
     `;
     document.getElementById('modalDetalheAnotacao').classList.add('aberto');
   }
@@ -733,14 +753,13 @@
   function irParaHoje(idCampo) { document.getElementById(idCampo).value = dataDeHojeISO(); }
   function irParaAmanha(idCampo) { document.getElementById(idCampo).value = dataDeAmanhaISO(); }
 
-  // --- CRIAR / EDITAR EVENTO NO GOOGLE COM COMPLEMENTO ---
+  // --- CRIAR / EDITAR EVENTO NO GOOGLE COM POP-UP / FEEDBACK ---
   async function criarOuEditarEventoNoGoogle() {
     const tipo = document.getElementById('novoTipoEvento').value;
     const tituloRaw = document.getElementById('novoTitulo').value;
     const data = document.getElementById('novaData').value;
     const hora = document.getElementById('novaHora').value;
     
-    // Cola o local com o complemento na hora de enviar pro Google
     const localBruto = document.getElementById('novoLocal').value.trim();
     const complemento = document.getElementById('novoComplemento').value.trim();
     const localFinal = complemento ? `${localBruto} - ${complemento}` : localBruto;
@@ -766,8 +785,12 @@
       const resultado = await resposta.json();
 
       if (resultado.status === 'sucesso') {
-        status.className = 'status-ok'; status.innerText = '✅ Evento salvo com sucesso!';
+        status.className = 'status-ok'; 
+        status.innerText = idEventoEmEdicao ? '✅ Evento atualizado com sucesso!' : '✅ Evento criado na agenda com sucesso!';
         
+        // POPUP VISÍVEL PARA CELULAR E DESKTOP GARANTINDO O RETORNO
+        alert(idEventoEmEdicao ? '🔄 Evento atualizado com sucesso na agenda!' : '🎉 Evento criado com sucesso na agenda do Google!');
+
         if(convidados && resultado.debug) { console.log("Google API Feedback:", resultado.debug); }
         
         cancelarEdicao(); 
