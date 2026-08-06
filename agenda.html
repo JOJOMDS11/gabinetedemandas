@@ -58,7 +58,6 @@
   .main-col{ flex:1; min-width:0; }
   .panel{ border:1px solid var(--grey-border); border-radius:12px; box-shadow:var(--shadow-1); margin-bottom:24px; scroll-margin-top: 80px; position: relative;}
   
-  /* Indicador de Edição Ativo */
   .modo-edicao-banner { display:none; background:#ffeb3b; color:#b71c1c; text-align:center; padding:6px; font-size:12px; font-weight:bold; border-radius:12px 12px 0 0; }
   
   .panel-header{ display:flex; align-items:center; gap:10px; padding:18px 24px; border-bottom:1px solid var(--grey-border); border-radius:12px 12px 0 0; }
@@ -246,13 +245,20 @@
           </div>
         </div>
 
-        <div class="field field-relative">
-          <div class="label-row">
-            <label style="margin:0;">Local / Endereço</label>
-            <button type="button" class="gear-btn" onclick="document.getElementById('novoLocal').value = '';" title="Apagar local">🧹 Limpar</button>
+        <div class="row-2">
+          <div class="field field-relative" style="flex: 2;">
+            <div class="label-row">
+              <label style="margin:0;">Local / Endereço</label>
+              <button type="button" class="gear-btn" onclick="document.getElementById('novoLocal').value = '';" title="Apagar local">🧹 Limpar</button>
+            </div>
+            <input type="text" id="novoLocal" placeholder="Digite rua e número, Prefeitura, ou Cecrei..." autocomplete="off">
+            <div id="sugestoesLocal" class="suggestions-box"></div>
           </div>
-          <input type="text" id="novoLocal" placeholder="Digite rua e número, Prefeitura, ou Cecrei..." autocomplete="off">
-          <div id="sugestoesLocal" class="suggestions-box"></div>
+          <!-- NOVO CAMPO COMPLEMENTO -->
+          <div class="field" style="flex: 1;">
+            <label style="margin-bottom: 27px;">Complemento</label>
+            <input type="text" id="novoComplemento" placeholder="Sala, Andar, etc.">
+          </div>
         </div>
 
         <div class="field">
@@ -382,9 +388,7 @@
        <button onclick="mudarDiaCalendario(1)" class="btn-micro" style="font-size:16px; padding: 6px 12px;">❯</button>
     </div>
     
-    <div id="calendarioEventosList" style="max-height: 400px; overflow-y: auto; display:flex; flex-direction:column; gap:10px; padding-right: 5px;">
-        <!-- Preenchido via JS -->
-    </div>
+    <div id="calendarioEventosList" style="max-height: 400px; overflow-y: auto; display:flex; flex-direction:column; gap:10px; padding-right: 5px;"></div>
   </div>
 </div>
 
@@ -416,15 +420,12 @@
 </div>
 
 <script>
-  // ==========================================
-  // LINK DO SCRIPT (Google Apps Script)
-  // ==========================================
-  const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbxwHnEICjyX7N6cTgnC9coviTceCWInYcTDZaEfSGUWXIWeRDZfGgP7nhN8BJ38S8MD/exec';
+  const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbxQrWO1ZlRDs7xogoVI3dIHJsNUKTP3Eh9na0kVKmgR9Q2v3PpSUrKWdO_LOMmwkDCZ/exec';
 
   let db;
   let listaAnotacoesGlobal = []; 
   let limitadorAnotacoes = 10; 
-  let idEventoEmEdicao = null; // Variável para controlar a Edição
+  let idEventoEmEdicao = null; 
 
   async function inicializarSupabase() {
     try {
@@ -450,7 +451,6 @@
       } else { window.location.href = 'dashboard.html'; }
   }
 
-  // --- LÓGICA DO MODAL DE CALENDÁRIO COM LIXEIRA E EDIÇÃO ---
   let dataCalendarioAtual = new Date();
 
   function abrirModalCalendario() {
@@ -515,7 +515,6 @@
                               ${ev.local ? `<div style="color:#555; font-size:12px; margin-bottom: 4px;">📍 ${ev.local}</div>` : ''}
                               ${ev.descricao ? `<div style="color:#777; font-size:12px; font-style:italic; background: #f8fafc; padding: 6px; border-radius: 4px; line-height: 1.4; white-space: pre-wrap;">${ev.descricao}</div>` : ''}
                           </div>
-                          <!-- BOTÕES EDITAR E LIXEIRA -->
                           ${ev.id ? `
                           <div style="display:flex; gap: 4px; flex-direction:column; flex-shrink:0;">
                             <button type="button" class="btn-micro" style="color:#1967d2; border-color:#d2e3fc; background:#e8f0fe;" onclick="prepararEdicao('${ev.id}', '${evTituloSafe}', '${ev.horario}', '${evLocalSafe}', '${evDescSafe}')" title="Editar evento">✏️ Editar</button>
@@ -528,13 +527,11 @@
       } catch (error) { listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#c0392b; font-weight: bold;">Erro de conexão com o Script do Google.</div>'; }
   }
 
-  // --- FUNÇÃO PARA EDITAR (PREENCHER FORMULÁRIO) ---
   function prepararEdicao(id, titulo, horario, local, descricao) {
       fecharModalCalendario();
       idEventoEmEdicao = id;
       
-      let tipo = "";
-      let tituloLimpo = titulo;
+      let tipo = ""; let tituloLimpo = titulo;
       const possiveisTipos = ["Reunião: ", "Aniversário: ", "Sessão: "];
       for (let t of possiveisTipos) {
           if (titulo.startsWith(t)) {
@@ -547,7 +544,6 @@
       document.getElementById('novoTipoEvento').value = tipo;
       document.getElementById('novoTitulo').value = tituloLimpo;
       
-      // Converter "15h30" para "15:30" (Formato do input type=time)
       let horaLimpa = "";
       if (horario && horario.includes('h')) {
           horaLimpa = horario.replace('horas', ':00').replace('h', ':');
@@ -555,17 +551,17 @@
       }
       document.getElementById('novaHora').value = horaLimpa;
       
-      // A data do input continua a mesma que está na tela (geralmente é "hoje", mas a gente precisa da data certa). 
-      // Como estamos no calendário, a data do evento é a "dataCalendarioAtual".
       const ano = dataCalendarioAtual.getFullYear();
       const mes = String(dataCalendarioAtual.getMonth() + 1).padStart(2, '0');
       const dia = String(dataCalendarioAtual.getDate()).padStart(2, '0');
       document.getElementById('novaData').value = `${ano}-${mes}-${dia}`;
       
+      // Quando for editar, a gente não quebra o complemento para não bugar o que já tava salvo
       document.getElementById('novoLocal').value = local;
+      document.getElementById('novoComplemento').value = ''; 
+      
       document.getElementById('novaDescricao').value = descricao;
       
-      // Ajuste Visual UI
       document.getElementById('tituloCardEvento').innerText = '✏️ Editando Evento';
       document.getElementById('btnSalvarEvento').innerText = '🔄 Atualizar na agenda';
       document.getElementById('btnCancelarEdicao').style.display = 'inline-block';
@@ -585,11 +581,11 @@
       document.getElementById('novoTitulo').value = '';
       document.getElementById('novaHora').value = '';
       document.getElementById('novoLocal').value = '';
+      document.getElementById('novoComplemento').value = '';
       document.getElementById('novaDescricao').value = '';
       irParaHoje('novaData');
   }
 
-  // --- DELETAR DO GOOGLE AGENDA ---
   async function deletarEventoDoGoogle(idEvento, botao) {
       if (!confirm("⚠️ Tem certeza que deseja excluir permanentemente este evento da agenda do Google?")) return;
       const textoOriginal = botao.innerHTML; botao.innerHTML = '⏳...'; botao.disabled = true;
@@ -601,7 +597,6 @@
       } catch (err) { alert("Erro de conexão com o Google."); botao.innerHTML = textoOriginal; botao.disabled = false; }
   }
 
-  // --- E-MAILS FREQUENTES ---
   async function carregarEmailsFrequentes() {
     try {
       const { data, error } = await db.from('emails_frequentes').select('id, nome, email').order('nome');
@@ -646,7 +641,6 @@
     await renderListaEmailsModal(); await carregarEmailsFrequentes();
   }
 
-  // --- ANOTAÇÕES ---
   async function carregarAnotacoes() {
     try {
       const { data, error } = await db.from('anotacoes').select('id, titulo, descricao, concluida, criado_em, prioridade, criador');
@@ -730,7 +724,6 @@
     await db.from('anotacoes').delete().eq('id', id); await carregarAnotacoes();
   }
 
-  // --- DATAS E ATALHOS ---
   (function mostrarDataHoje() {
     const hoje = new Date(); const opcoes = { weekday: 'long', day: 'numeric', month: 'long' }; const texto = hoje.toLocaleDateString('pt-BR', opcoes);
     document.getElementById('dataHoje').innerText = texto.charAt(0).toUpperCase() + texto.slice(1);
@@ -740,13 +733,18 @@
   function irParaHoje(idCampo) { document.getElementById(idCampo).value = dataDeHojeISO(); }
   function irParaAmanha(idCampo) { document.getElementById(idCampo).value = dataDeAmanhaISO(); }
 
-  // --- CRIAR / EDITAR EVENTO NO GOOGLE ---
+  // --- CRIAR / EDITAR EVENTO NO GOOGLE COM COMPLEMENTO ---
   async function criarOuEditarEventoNoGoogle() {
     const tipo = document.getElementById('novoTipoEvento').value;
     const tituloRaw = document.getElementById('novoTitulo').value;
     const data = document.getElementById('novaData').value;
     const hora = document.getElementById('novaHora').value;
-    const local = document.getElementById('novoLocal').value;
+    
+    // Cola o local com o complemento na hora de enviar pro Google
+    const localBruto = document.getElementById('novoLocal').value.trim();
+    const complemento = document.getElementById('novoComplemento').value.trim();
+    const localFinal = complemento ? `${localBruto} - ${complemento}` : localBruto;
+    
     const descricao = document.getElementById('novaDescricao').value;
     const convidados = document.getElementById('novosConvidados').value;
     const lembrete = document.getElementById('novoLembrete').value;
@@ -762,7 +760,7 @@
     try {
       const acaoScript = idEventoEmEdicao ? 'editar' : 'criar';
       const idAppend = idEventoEmEdicao ? `&id=${encodeURIComponent(idEventoEmEdicao)}` : '';
-      const urlCompleta = `${URL_DO_SCRIPT}?acao=${acaoScript}&titulo=${encodeURIComponent(tituloFinal)}&data=${data}&hora=${hora}&local=${encodeURIComponent(local)}&descricao=${encodeURIComponent(descricao)}&convidados=${encodeURIComponent(convidados)}&lembrete=${encodeURIComponent(lembrete)}${idAppend}`;
+      const urlCompleta = `${URL_DO_SCRIPT}?acao=${acaoScript}&titulo=${encodeURIComponent(tituloFinal)}&data=${data}&hora=${hora}&local=${encodeURIComponent(localFinal)}&descricao=${encodeURIComponent(descricao)}&convidados=${encodeURIComponent(convidados)}&lembrete=${encodeURIComponent(lembrete)}${idAppend}`;
       
       const resposta = await fetch(urlCompleta);
       const resultado = await resposta.json();
@@ -770,27 +768,22 @@
       if (resultado.status === 'sucesso') {
         status.className = 'status-ok'; status.innerText = '✅ Evento salvo com sucesso!';
         
-        // Debug para emails via Console (Pressione F12 para ver)
         if(convidados && resultado.debug) { console.log("Google API Feedback:", resultado.debug); }
         
-        cancelarEdicao(); // Limpa e reseta tudo
+        cancelarEdicao(); 
         setTimeout(() => { status.style.display = 'none'; }, 4000);
       } else { alert("Erro ao salvar: " + resultado.mensagem); status.style.display = 'none'; }
     } catch (erro) { alert("Erro de conexão com o script."); status.style.display = 'none'; }
   }
 
-  // --- AUTOCOMPLETE INTELIGENTE COM LOCAIS CUSTOMIZADOS ---
+  // --- AUTOCOMPLETE INTELIGENTE ---
   const inputLocal = document.getElementById('novoLocal'); const boxSugestoes = document.getElementById('sugestoesLocal'); let debounceTimer;
-  
-  // Dicionário de atalhos rápidos e precisos para o Gabinete
   const locaisVIP = [
       { nome: "Prefeitura", endereco: "Prefeitura de São Leopoldo - Avenida Dom João Becker, 754, Centro, São Leopoldo, RS, Brasil" },
       { nome: "Cecrei", endereco: "Cecrei - São Leopoldo, R. Regina Mundi, 333 - Cristo Rei, São Leopoldo, RS, 93020-280, Brasil" },
       { nome: "Câmara", endereco: "Câmara Municipal - Rua Independência, 66, Centro, São Leopoldo, RS, Brasil" },
       { nome: "Camara", endereco: "Câmara Municipal - Rua Independência, 66, Centro, São Leopoldo, RS, Brasil" }
   ];
-  
-  // Função para remover acentos para pesquisa
   function removerAcentos(str) { return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 
   inputLocal.addEventListener('input', () => {
@@ -806,16 +799,14 @@
     numeroDigitadoAtual = extrairNumeroDigitado(termo);
     const termoLimpo = removerAcentos(termo).toLowerCase();
 
-    // 1. Checa primeiro os Locais VIPs
     const locaisCustomMatch = locaisVIP.filter(l => removerAcentos(l.nome).toLowerCase().includes(termoLimpo) || termoLimpo.includes(removerAcentos(l.nome).toLowerCase()));
 
-    // 2. Busca na API gratuita usando o termo sem acentos para não bugar
     try {
       const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&accept-language=pt-BR&addressdetails=1&q=${encodeURIComponent(termoLimpo + ', São Leopoldo, RS')}`;
       const res = await fetch(url); const dadosNominatim = await res.json(); 
       mostrarSugestoes(dadosNominatim, locaisCustomMatch);
     } catch (erro) { 
-        mostrarSugestoes([], locaisCustomMatch); // Mostra pelo menos os VIPs se a internet/API falhar
+        mostrarSugestoes([], locaisCustomMatch); 
     }
   }
   
@@ -832,10 +823,7 @@
   
   function mostrarSugestoes(listaNominatim, listaCustom) {
     let html = '';
-    
-    // Injeta os locais VIPs primeiro com destaque (⭐)
     if (listaCustom && listaCustom.length > 0) {
-        // Usa um Set para não repetir caso "Câmara" e "Camara" batam juntos
         const vistos = new Set();
         listaCustom.forEach(item => {
             if(!vistos.has(item.endereco)){
@@ -844,15 +832,12 @@
             }
         });
     }
-    
-    // Injeta os do mapa depois
     if (listaNominatim && listaNominatim.length > 0) {
         html += listaNominatim.map(item => {
           const endFormat = montarEnderecoLimpo(item);
           return `<div class="suggestion-item" data-endereco="${endFormat}">${endFormat}</div>`;
         }).join('');
     }
-    
     if (html === '') { boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = ''; return; }
     
     boxSugestoes.innerHTML = html;
@@ -864,7 +849,6 @@
   }
   document.addEventListener('click', (e) => { if (!e.target.closest('#novoLocal') && !e.target.closest('#sugestoesLocal')) boxSugestoes.style.display = 'none'; });
 
-  // --- LER E FORMATAR ZAP---
   async function buscarAgenda() {
     const inputData = document.getElementById('dataBusca').value;
     if (!inputData) return alert('Por favor, selecione uma data!');
@@ -893,7 +877,6 @@
     } catch (erro) { textArea.value = "Erro ao buscar a agenda."; }
   }
 
-  // --- COPIAR E ENVIAR ZAP ---
   async function copiarTexto() {
     const textArea = document.getElementById('resultadoAgenda'); let texto = textArea.value;
     if (!texto || texto === 'Buscando eventos... ⏳' || texto.trim() === '') {
