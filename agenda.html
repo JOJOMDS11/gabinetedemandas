@@ -186,7 +186,7 @@
       <span class="create-plus">+</span> Criar evento
     </button>
     <button class="nav-side-btn" onclick="document.getElementById('secaoZap').scrollIntoView()">
-      📱 Gerar Agenda Zap
+      📱 Gerar Agenda
     </button>
     <button class="nav-side-btn" onclick="document.getElementById('secaoAnotacoes').scrollIntoView()">
       📝 Anotações Rápidas
@@ -322,7 +322,7 @@
             <label style="margin:0;">Prévia da mensagem</label>
             <button type="button" class="gear-btn" onclick="document.getElementById('resultadoAgenda').value = '';" title="Limpar caixa">🧹 Limpar</button>
           </div>
-          <textarea id="resultadoAgenda" rows="8" placeholder="O texto da agenda formatada para o Zap aparecerá aqui..."></textarea>
+          <textarea id="resultadoAgenda" rows="8" placeholder="O texto da agenda formatada para o WhatsApp aparecerá aqui..."></textarea>
         </div>
 
         <div class="row-2">
@@ -388,7 +388,7 @@
            <span id="calendarioDiaSemana" style="font-size:10px; color:#64748b; text-transform:uppercase; font-weight: bold;"></span>
        </div>
        <!-- NOVO BOTÃO DE ADICIONAR AO ZAP DIRETO -->
-       <button onclick="pularParaGerarAgendaZap()" class="btn-micro" style="background:#188038; color:white; border-color:#137333; font-size:11px;" title="Jogar data para o gerador do WhatsApp">📄 Gerar Zap</button>
+       <button onclick="pularParaGerarAgendaZap()" class="btn-micro" style="background:#188038; color:white; border-color:#137333; font-size:11px;" title="Jogar data para o gerador do WhatsApp">📄 Gerar texto Whats</button>
     </div>
     
     <div id="calendarioEventosList" style="max-height: 380px; overflow-y: auto; display:flex; flex-direction:column; gap:8px; padding-right: 4px;"></div>
