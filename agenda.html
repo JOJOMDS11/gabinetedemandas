@@ -19,16 +19,9 @@
 
 <style>
   :root{
-    --blue:#1a73e8;
-    --blue-dark:#1967d2;
-    --blue-tint:#e8f0fe;
-    --grey-bg:#f1f3f4;
-    --grey-border:#dadce0;
-    --text-main:#3c4043;
-    --text-secondary:#5f6368;
-    --green:#188038;
-    --green-dark:#137333;
-    --radius:8px;
+    --blue:#1a73e8; --blue-dark:#1967d2; --blue-tint:#e8f0fe;
+    --grey-bg:#f1f3f4; --grey-border:#dadce0; --text-main:#3c4043; --text-secondary:#5f6368;
+    --green:#188038; --green-dark:#137333; --radius:8px;
     --shadow-1: 0 1px 2px 0 rgba(60,64,67,.30), 0 1px 3px 1px rgba(60,64,67,.15);
     --shadow-2: 0 1px 3px 0 rgba(60,64,67,.30), 0 4px 8px 3px rgba(60,64,67,.15);
   }
@@ -63,7 +56,11 @@
   .side-card h3{ font-family:'Google Sans',Roboto,sans-serif; font-size:13px; font-weight:500; color:var(--text-main); margin:0 0 12px; text-transform:uppercase; letter-spacing:.3px; display: flex; justify-content: space-between; align-items: center; }
   
   .main-col{ flex:1; min-width:0; }
-  .panel{ border:1px solid var(--grey-border); border-radius:12px; box-shadow:var(--shadow-1); margin-bottom:24px; scroll-margin-top: 80px;}
+  .panel{ border:1px solid var(--grey-border); border-radius:12px; box-shadow:var(--shadow-1); margin-bottom:24px; scroll-margin-top: 80px; position: relative;}
+  
+  /* Indicador de Edição Ativo */
+  .modo-edicao-banner { display:none; background:#ffeb3b; color:#b71c1c; text-align:center; padding:6px; font-size:12px; font-weight:bold; border-radius:12px 12px 0 0; }
+  
   .panel-header{ display:flex; align-items:center; gap:10px; padding:18px 24px; border-bottom:1px solid var(--grey-border); border-radius:12px 12px 0 0; }
   .panel-header .dot{ width:12px;height:12px;border-radius:50%;flex-shrink:0; }
   .dot-blue{ background:var(--blue); } .dot-green{ background:var(--green); }
@@ -93,7 +90,7 @@
 
   .field-relative{ position:relative; }
   .suggestions-box{ display:none; position:absolute; top:calc(100% - 14px); left:0; right:0; background:#fff; border:1px solid var(--grey-border); border-radius:8px; box-shadow:var(--shadow-2); z-index:20; max-height:220px; overflow-y:auto; }
-  .suggestion-item{ padding:10px 14px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid #f1f3f4; }
+  .suggestion-item{ padding:10px 14px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid #f1f3f4; line-height: 1.4; }
   .suggestion-item:last-child{ border-bottom:none; }
   .suggestion-item:hover{ background:var(--blue-tint); }
 
@@ -128,7 +125,6 @@
   .nota-mini{ display:flex; align-items:flex-start; gap:8px; padding:8px 0; border-bottom:1px solid var(--grey-border); }
   .nota-mini:last-child{ border-bottom:none; }
   
-  /* Botão Verdinho Substituindo Checkbox */
   .btn-check-emoji { background: none; border: none; font-size: 16px; cursor: pointer; padding: 0; margin-top: 2px; flex-shrink: 0; transition: transform 0.2s; }
   .btn-check-emoji:hover { transform: scale(1.1); }
   
@@ -209,17 +205,17 @@
   <!-- MAIN -->
   <main class="main-col">
 
-    <!-- CRIAR EVENTO -->
+    <!-- CRIAR / EDITAR EVENTO -->
     <section class="panel" id="secaoCriar">
+      <div class="modo-edicao-banner" id="bannerEdicao">⚠️ MODO DE EDIÇÃO ATIVADO ⚠️</div>
       <div class="panel-header">
         <span class="dot dot-blue"></span>
-        <h2>Novo evento</h2>
+        <h2 id="tituloCardEvento">Novo evento</h2>
       </div>
       <div class="panel-body">
         <div id="mensagemStatus"></div>
 
         <div class="row-2">
-          <!-- NOVO SELETOR DE TIPO -->
           <div class="field" style="flex: 0 0 160px;">
             <label>Tipo</label>
             <select id="novoTipoEvento">
@@ -255,7 +251,7 @@
             <label style="margin:0;">Local / Endereço</label>
             <button type="button" class="gear-btn" onclick="document.getElementById('novoLocal').value = '';" title="Apagar local">🧹 Limpar</button>
           </div>
-          <input type="text" id="novoLocal" placeholder="Digite rua e número, ex: R. Independência, 66 ..." autocomplete="off">
+          <input type="text" id="novoLocal" placeholder="Digite rua e número, Prefeitura, ou Cecrei..." autocomplete="off">
           <div id="sugestoesLocal" class="suggestions-box"></div>
         </div>
 
@@ -291,7 +287,8 @@
         </div>
 
         <div class="actions-right">
-          <button class="action btn-blue" onclick="criarEventoNoGoogle()">Salvar na agenda</button>
+          <button type="button" id="btnCancelarEdicao" class="action" style="background:#e0e0e0; color:#333; display:none;" onclick="cancelarEdicao()">Cancelar Edição</button>
+          <button type="button" id="btnSalvarEvento" class="action btn-blue" onclick="criarOuEditarEventoNoGoogle()">Salvar na agenda</button>
         </div>
       </div>
     </section>
@@ -370,7 +367,7 @@
 
 <!-- MODAL: VER CALENDÁRIO DIRETO -->
 <div id="modalCalendario" class="modal-overlay">
-  <div class="modal-box" style="max-width: 480px; text-align: left; padding: 25px;">
+  <div class="modal-box" style="max-width: 520px; text-align: left; padding: 25px;">
     <div class="modal-head">
       <h3>🗓️ Calendário Oficial</h3>
       <button type="button" onclick="fecharModalCalendario()">✕</button>
@@ -422,11 +419,12 @@
   // ==========================================
   // LINK DO SCRIPT (Google Apps Script)
   // ==========================================
-  const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbyrOXGeS8T6GIOUAQiKdSM_yh3FDiPYwD_cKslWvIIJ0GsGZMoxv_oiwWvwyfhiPWAZ/exec';
+  const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbxwHnEICjyX7N6cTgnC9coviTceCWInYcTDZaEfSGUWXIWeRDZfGgP7nhN8BJ38S8MD/exec';
 
   let db;
   let listaAnotacoesGlobal = []; 
-  let limitadorAnotacoes = 10; // Limite que você pediu
+  let limitadorAnotacoes = 10; 
+  let idEventoEmEdicao = null; // Variável para controlar a Edição
 
   async function inicializarSupabase() {
     try {
@@ -452,7 +450,7 @@
       } else { window.location.href = 'dashboard.html'; }
   }
 
-  // --- LÓGICA DO MODAL DE CALENDÁRIO COM LIXEIRA ---
+  // --- LÓGICA DO MODAL DE CALENDÁRIO COM LIXEIRA E EDIÇÃO ---
   let dataCalendarioAtual = new Date();
 
   function abrirModalCalendario() {
@@ -501,51 +499,106 @@
           if (eventos.length === 0) {
               listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#777; background:#f1f3f4; border-radius:6px;">Nenhum evento agendado neste dia.</div>';
           } else {
-              listContainer.innerHTML = eventos.map(ev => `
+              listContainer.innerHTML = eventos.map(ev => {
+                  const evTituloSafe = (ev.titulo || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                  const evLocalSafe = (ev.local || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                  const evDescSafe = (ev.descricao || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, "\\n");
+                  
+                  return `
                   <div style="border-left: 4px solid var(--blue); padding: 12px; background: #fff; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
                       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                          <div>
+                          <div style="flex:1; padding-right:10px;">
                               <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 4px;">
                                 <span style="color:var(--blue); font-weight: bold; font-size: 14px;">${ev.horario}</span> 
                                 <span style="font-weight:bold; color:#333; font-size: 15px;">${ev.titulo}</span>
                               </div>
                               ${ev.local ? `<div style="color:#555; font-size:12px; margin-bottom: 4px;">📍 ${ev.local}</div>` : ''}
-                              ${ev.descricao ? `<div style="color:#777; font-size:12px; font-style:italic; background: #f8fafc; padding: 6px; border-radius: 4px; line-height: 1.4;">${ev.descricao}</div>` : ''}
+                              ${ev.descricao ? `<div style="color:#777; font-size:12px; font-style:italic; background: #f8fafc; padding: 6px; border-radius: 4px; line-height: 1.4; white-space: pre-wrap;">${ev.descricao}</div>` : ''}
                           </div>
-                          <!-- BOTAO LIXEIRA AQUI -->
-                          ${ev.id ? `<button type="button" class="btn-micro" style="color:#d93025; border-color:#fad2e1; background:#fdf2f8;" onclick="deletarEventoDoGoogle('${ev.id}', this)" title="Excluir evento">🗑️ Excluir</button>` : ''}
+                          <!-- BOTÕES EDITAR E LIXEIRA -->
+                          ${ev.id ? `
+                          <div style="display:flex; gap: 4px; flex-direction:column; flex-shrink:0;">
+                            <button type="button" class="btn-micro" style="color:#1967d2; border-color:#d2e3fc; background:#e8f0fe;" onclick="prepararEdicao('${ev.id}', '${evTituloSafe}', '${ev.horario}', '${evLocalSafe}', '${evDescSafe}')" title="Editar evento">✏️ Editar</button>
+                            <button type="button" class="btn-micro" style="color:#d93025; border-color:#fad2e1; background:#fdf2f8;" onclick="deletarEventoDoGoogle('${ev.id}', this)" title="Excluir evento">🗑️ Excluir</button>
+                          </div>` : ''}
                       </div>
                   </div>
-              `).join('');
+              `}).join('');
           }
       } catch (error) { listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#c0392b; font-weight: bold;">Erro de conexão com o Script do Google.</div>'; }
   }
 
-  // --- FUNÇÃO PARA DELETAR DO GOOGLE AGENDA ---
+  // --- FUNÇÃO PARA EDITAR (PREENCHER FORMULÁRIO) ---
+  function prepararEdicao(id, titulo, horario, local, descricao) {
+      fecharModalCalendario();
+      idEventoEmEdicao = id;
+      
+      let tipo = "";
+      let tituloLimpo = titulo;
+      const possiveisTipos = ["Reunião: ", "Aniversário: ", "Sessão: "];
+      for (let t of possiveisTipos) {
+          if (titulo.startsWith(t)) {
+              tipo = t.replace(": ", "");
+              tituloLimpo = titulo.substring(t.length);
+              break;
+          }
+      }
+      
+      document.getElementById('novoTipoEvento').value = tipo;
+      document.getElementById('novoTitulo').value = tituloLimpo;
+      
+      // Converter "15h30" para "15:30" (Formato do input type=time)
+      let horaLimpa = "";
+      if (horario && horario.includes('h')) {
+          horaLimpa = horario.replace('horas', ':00').replace('h', ':');
+          if (horaLimpa.length === 4) horaLimpa = "0" + horaLimpa; 
+      }
+      document.getElementById('novaHora').value = horaLimpa;
+      
+      // A data do input continua a mesma que está na tela (geralmente é "hoje", mas a gente precisa da data certa). 
+      // Como estamos no calendário, a data do evento é a "dataCalendarioAtual".
+      const ano = dataCalendarioAtual.getFullYear();
+      const mes = String(dataCalendarioAtual.getMonth() + 1).padStart(2, '0');
+      const dia = String(dataCalendarioAtual.getDate()).padStart(2, '0');
+      document.getElementById('novaData').value = `${ano}-${mes}-${dia}`;
+      
+      document.getElementById('novoLocal').value = local;
+      document.getElementById('novaDescricao').value = descricao;
+      
+      // Ajuste Visual UI
+      document.getElementById('tituloCardEvento').innerText = '✏️ Editando Evento';
+      document.getElementById('btnSalvarEvento').innerText = '🔄 Atualizar na agenda';
+      document.getElementById('btnCancelarEdicao').style.display = 'inline-block';
+      document.getElementById('bannerEdicao').style.display = 'block';
+      
+      window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  function cancelarEdicao() {
+      idEventoEmEdicao = null;
+      document.getElementById('tituloCardEvento').innerText = 'Novo evento';
+      document.getElementById('btnSalvarEvento').innerText = 'Salvar na agenda';
+      document.getElementById('btnCancelarEdicao').style.display = 'none';
+      document.getElementById('bannerEdicao').style.display = 'none';
+      
+      document.getElementById('novoTipoEvento').value = '';
+      document.getElementById('novoTitulo').value = '';
+      document.getElementById('novaHora').value = '';
+      document.getElementById('novoLocal').value = '';
+      document.getElementById('novaDescricao').value = '';
+      irParaHoje('novaData');
+  }
+
+  // --- DELETAR DO GOOGLE AGENDA ---
   async function deletarEventoDoGoogle(idEvento, botao) {
       if (!confirm("⚠️ Tem certeza que deseja excluir permanentemente este evento da agenda do Google?")) return;
-      
-      const textoOriginal = botao.innerHTML;
-      botao.innerHTML = '⏳...';
-      botao.disabled = true;
-
+      const textoOriginal = botao.innerHTML; botao.innerHTML = '⏳...'; botao.disabled = true;
       try {
           const url = `${URL_DO_SCRIPT}?acao=deletar&id=${encodeURIComponent(idEvento)}`;
-          const resposta = await fetch(url);
-          const data = await resposta.json();
-
-          if (data.status === 'sucesso') {
-              fetchEventosCalendario(); // Recarrega a lista do dia
-          } else {
-              alert("Erro ao excluir: " + data.mensagem);
-              botao.innerHTML = textoOriginal;
-              botao.disabled = false;
-          }
-      } catch (err) {
-          alert("Erro de conexão com o Google.");
-          botao.innerHTML = textoOriginal;
-          botao.disabled = false;
-      }
+          const resposta = await fetch(url); const data = await resposta.json();
+          if (data.status === 'sucesso') fetchEventosCalendario(); 
+          else { alert("Erro ao excluir: " + data.mensagem); botao.innerHTML = textoOriginal; botao.disabled = false; }
+      } catch (err) { alert("Erro de conexão com o Google."); botao.innerHTML = textoOriginal; botao.disabled = false; }
   }
 
   // --- E-MAILS FREQUENTES ---
@@ -593,22 +646,16 @@
     await renderListaEmailsModal(); await carregarEmailsFrequentes();
   }
 
-  // --- ANOTAÇÕES COM PRIORIDADE E LIMITE DE 10 ---
+  // --- ANOTAÇÕES ---
   async function carregarAnotacoes() {
     try {
       const { data, error } = await db.from('anotacoes').select('id, titulo, descricao, concluida, criado_em, prioridade, criador');
       if (error) throw error;
-      
-      // Organizando as notas por nível de prioridade (Crítica no topo)
       const pesoPrioridade = { 'Crítica': 1, 'Alta': 2, 'Normal': 3, 'Baixa': 4 };
-      
       listaAnotacoesGlobal = (data || []).sort((a, b) => {
-         // Se uma tá concluída e a outra não, a concluída vai pro final
          if (a.concluida !== b.concluida) return a.concluida ? 1 : -1;
-         // Se as duas tão iguais, ordena pela prioridade
          return (pesoPrioridade[a.prioridade] || 3) - (pesoPrioridade[b.prioridade] || 3);
       });
-      
       renderAnotacoes(listaAnotacoesGlobal);
     } catch (erro) { console.error('Erro notas:', erro); }
   }
@@ -616,21 +663,15 @@
   function renderAnotacoes(listaCompleta) {
     const container = document.getElementById('listaAnotacoesSidebar');
     if (!listaCompleta || listaCompleta.length === 0) {
-      container.innerHTML = '<span class="empty-hint">Nenhuma anotação salva ainda.</span>';
-      return;
+      container.innerHTML = '<span class="empty-hint">Nenhuma anotação salva ainda.</span>'; return;
     }
-    
-    // Pega só a quantidade do limite (10 por padrão)
     const listaVisivel = listaCompleta.slice(0, limitadorAnotacoes);
-    
     let html = listaVisivel.map(nota => {
       const prioClass = `prio-${nota.prioridade || 'Normal'}`;
       const nomeCriador = nota.criador || 'Equipe';
       const dataCriacao = new Date(nota.criado_em).toLocaleDateString('pt-BR');
-
       return `
       <div class="nota-mini${nota.concluida ? ' feita' : ''}">
-        <!-- NOVO BOTAO VERDINHO DE CONCLUIDO -->
         <button type="button" class="btn-check-emoji" onclick="alternarAnotacaoConcluida(${nota.id}, ${!nota.concluida})" title="${nota.concluida ? 'Reabrir' : 'Concluir'}">
             ${nota.concluida ? '✅' : '⬜'}
         </button>
@@ -647,21 +688,18 @@
       </div>
     `}).join('');
 
-    // Adiciona o botão de Ver Mais ou Recolher a listinha
     if (listaCompleta.length > limitadorAnotacoes) {
         html += `<button class="btn-ver-mais" onclick="limitadorAnotacoes = 999; renderAnotacoes(listaAnotacoesGlobal)">Ver mais (${listaCompleta.length - limitadorAnotacoes}) 🔽</button>`;
     } else if (limitadorAnotacoes > 10 && listaCompleta.length > 10) {
         html += `<button class="btn-ver-mais" onclick="limitadorAnotacoes = 10; renderAnotacoes(listaAnotacoesGlobal)" style="color:#64748b;">Recolher 🔼</button>`;
     }
-
     container.innerHTML = html;
   }
   
   function escaparHtml(texto) { const div = document.createElement('div'); div.innerText = texto || ''; return div.innerHTML; }
 
   function verDetalheAnotacao(id) {
-    const nota = listaAnotacoesGlobal.find(n => n.id === id);
-    if (!nota) return;
+    const nota = listaAnotacoesGlobal.find(n => n.id === id); if (!nota) return;
     const prioClass = `prio-${nota.prioridade || 'Normal'}`;
     const dataCriacao = new Date(nota.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(nota.criado_em).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
     const nomeCriador = nota.criador || 'Equipe';
@@ -669,8 +707,7 @@
       <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-start;">
         <span class="badge-prioridade ${prioClass}" style="font-size: 12px; padding: 4px 8px;">Prioridade: ${nota.prioridade || 'Normal'}</span>
         <div style="text-align: right; font-size: 11px; color: var(--text-secondary);">
-            <div style="font-weight: bold; color: #333;">👤 ${nomeCriador}</div>
-            <div>🗓️ ${dataCriacao}</div>
+            <div style="font-weight: bold; color: #333;">👤 ${nomeCriador}</div><div>🗓️ ${dataCriacao}</div>
         </div>
       </div>
       <h4 style="margin-top: 0; font-size: 18px; color: var(--blue); margin-bottom: 10px;">${escaparHtml(nota.titulo)}</h4>
@@ -679,15 +716,9 @@
     document.getElementById('modalDetalheAnotacao').classList.add('aberto');
   }
   function fecharModalDetalheAnotacao() { document.getElementById('modalDetalheAnotacao').classList.remove('aberto'); }
-
-  async function alternarAnotacaoConcluida(id, concluida) {
-    await db.from('anotacoes').update({ concluida }).eq('id', id);
-    await carregarAnotacoes();
-  }
+  async function alternarAnotacaoConcluida(id, concluida) { await db.from('anotacoes').update({ concluida }).eq('id', id); await carregarAnotacoes(); }
   async function salvarAnotacao() {
-    const titulo = document.getElementById('novaNotaTitulo').value.trim();
-    const descricao = document.getElementById('novaNotaDescricao').value.trim();
-    const prioridade = document.getElementById('novaNotaPrioridade').value;
+    const titulo = document.getElementById('novaNotaTitulo').value.trim(); const descricao = document.getElementById('novaNotaDescricao').value.trim(); const prioridade = document.getElementById('novaNotaPrioridade').value;
     if (!titulo) return alert('Digite um título para a anotação.');
     const autorLogado = localStorage.getItem('usuarioLogado') || 'Equipe';
     await db.from('anotacoes').insert([{ titulo, descricao, prioridade, criador: autorLogado }]);
@@ -696,15 +727,12 @@
   }
   async function excluirAnotacao(id) {
     if (!confirm('Excluir esta anotação?')) return;
-    await db.from('anotacoes').delete().eq('id', id);
-    await carregarAnotacoes();
+    await db.from('anotacoes').delete().eq('id', id); await carregarAnotacoes();
   }
 
   // --- DATAS E ATALHOS ---
   (function mostrarDataHoje() {
-    const hoje = new Date();
-    const opcoes = { weekday: 'long', day: 'numeric', month: 'long' };
-    const texto = hoje.toLocaleDateString('pt-BR', opcoes);
+    const hoje = new Date(); const opcoes = { weekday: 'long', day: 'numeric', month: 'long' }; const texto = hoje.toLocaleDateString('pt-BR', opcoes);
     document.getElementById('dataHoje').innerText = texto.charAt(0).toUpperCase() + texto.slice(1);
   })();
   function dataDeHojeISO() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
@@ -712,8 +740,8 @@
   function irParaHoje(idCampo) { document.getElementById(idCampo).value = dataDeHojeISO(); }
   function irParaAmanha(idCampo) { document.getElementById(idCampo).value = dataDeAmanhaISO(); }
 
-  // --- CRIAR EVENTO (TIPO + TITULO) ---
-  async function criarEventoNoGoogle() {
+  // --- CRIAR / EDITAR EVENTO NO GOOGLE ---
+  async function criarOuEditarEventoNoGoogle() {
     const tipo = document.getElementById('novoTipoEvento').value;
     const tituloRaw = document.getElementById('novoTitulo').value;
     const data = document.getElementById('novaData').value;
@@ -726,43 +754,71 @@
 
     if (!tituloRaw || !data || !hora) return alert("Por favor, preencha o título, a data e a hora!");
 
-    // Se selecionou Aniversário/Sessão etc, coloca antes do título. Se deixou vazio, salva só o título normal.
     const tituloFinal = tipo ? `${tipo}: ${tituloRaw}` : tituloRaw; 
 
-    status.style.display = 'block'; status.className = 'status-loading'; status.innerText = 'Salvando no Google Agenda... ⏳';
+    status.style.display = 'block'; status.className = 'status-loading'; 
+    status.innerText = idEventoEmEdicao ? 'Atualizando na Agenda... ⏳' : 'Salvando no Google Agenda... ⏳';
 
     try {
-      const urlCompleta = `${URL_DO_SCRIPT}?acao=criar&titulo=${encodeURIComponent(tituloFinal)}&data=${data}&hora=${hora}&local=${encodeURIComponent(local)}&descricao=${encodeURIComponent(descricao)}&convidados=${encodeURIComponent(convidados)}&lembrete=${encodeURIComponent(lembrete)}`;
+      const acaoScript = idEventoEmEdicao ? 'editar' : 'criar';
+      const idAppend = idEventoEmEdicao ? `&id=${encodeURIComponent(idEventoEmEdicao)}` : '';
+      const urlCompleta = `${URL_DO_SCRIPT}?acao=${acaoScript}&titulo=${encodeURIComponent(tituloFinal)}&data=${data}&hora=${hora}&local=${encodeURIComponent(local)}&descricao=${encodeURIComponent(descricao)}&convidados=${encodeURIComponent(convidados)}&lembrete=${encodeURIComponent(lembrete)}${idAppend}`;
+      
       const resposta = await fetch(urlCompleta);
       const resultado = await resposta.json();
 
       if (resultado.status === 'sucesso') {
         status.className = 'status-ok'; status.innerText = '✅ Evento salvo com sucesso!';
-        document.getElementById('novoTitulo').value = ''; document.getElementById('novaHora').value = '';
-        document.getElementById('novoLocal').value = ''; document.getElementById('novaDescricao').value = '';
-        document.getElementById('novosConvidados').value = ''; document.getElementById('novoLembrete').value = '30';
-        document.getElementById('novoTipoEvento').value = ''; 
+        
+        // Debug para emails via Console (Pressione F12 para ver)
+        if(convidados && resultado.debug) { console.log("Google API Feedback:", resultado.debug); }
+        
+        cancelarEdicao(); // Limpa e reseta tudo
         setTimeout(() => { status.style.display = 'none'; }, 4000);
       } else { alert("Erro ao salvar: " + resultado.mensagem); status.style.display = 'none'; }
     } catch (erro) { alert("Erro de conexão com o script."); status.style.display = 'none'; }
   }
 
-  // --- AUTOCOMPLETE DE ENDEREÇO ---
+  // --- AUTOCOMPLETE INTELIGENTE COM LOCAIS CUSTOMIZADOS ---
   const inputLocal = document.getElementById('novoLocal'); const boxSugestoes = document.getElementById('sugestoesLocal'); let debounceTimer;
+  
+  // Dicionário de atalhos rápidos e precisos para o Gabinete
+  const locaisVIP = [
+      { nome: "Prefeitura", endereco: "Prefeitura de São Leopoldo - Avenida Dom João Becker, 754, Centro, São Leopoldo, RS, Brasil" },
+      { nome: "Cecrei", endereco: "Cecrei - São Leopoldo, R. Regina Mundi, 333 - Cristo Rei, São Leopoldo, RS, 93020-280, Brasil" },
+      { nome: "Câmara", endereco: "Câmara Municipal - Rua Independência, 66, Centro, São Leopoldo, RS, Brasil" },
+      { nome: "Camara", endereco: "Câmara Municipal - Rua Independência, 66, Centro, São Leopoldo, RS, Brasil" }
+  ];
+  
+  // Função para remover acentos para pesquisa
+  function removerAcentos(str) { return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+
   inputLocal.addEventListener('input', () => {
     clearTimeout(debounceTimer); const termo = inputLocal.value.trim();
     if (termo.length < 3) { boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = ''; return; }
     debounceTimer = setTimeout(() => buscarEnderecos(termo), 350);
   });
+  
   let numeroDigitadoAtual = '';
   function extrairNumeroDigitado(texto) { const match = texto.match(/(?:,|\s)+(s[nN]|S[nN]|\d+[a-zA-Z]?)\s*$/); return match ? match[1] : ''; }
+  
   async function buscarEnderecos(termo) {
     numeroDigitadoAtual = extrairNumeroDigitado(termo);
+    const termoLimpo = removerAcentos(termo).toLowerCase();
+
+    // 1. Checa primeiro os Locais VIPs
+    const locaisCustomMatch = locaisVIP.filter(l => removerAcentos(l.nome).toLowerCase().includes(termoLimpo) || termoLimpo.includes(removerAcentos(l.nome).toLowerCase()));
+
+    // 2. Busca na API gratuita usando o termo sem acentos para não bugar
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&accept-language=pt-BR&addressdetails=1&q=${encodeURIComponent(termo + ', São Leopoldo, RS')}`;
-      const res = await fetch(url); const dados = await res.json(); mostrarSugestoes(dados);
-    } catch (erro) { boxSugestoes.style.display = 'none'; }
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&accept-language=pt-BR&addressdetails=1&q=${encodeURIComponent(termoLimpo + ', São Leopoldo, RS')}`;
+      const res = await fetch(url); const dadosNominatim = await res.json(); 
+      mostrarSugestoes(dadosNominatim, locaisCustomMatch);
+    } catch (erro) { 
+        mostrarSugestoes([], locaisCustomMatch); // Mostra pelo menos os VIPs se a internet/API falhar
+    }
   }
+  
   function montarEnderecoLimpo(item) {
     const a = item.address || {}; const partes = [];
     const rua = a.road || a.pedestrian || a.footway || ''; const numero = a.house_number || numeroDigitadoAtual || '';
@@ -773,63 +829,68 @@
     if (partes.length <= 1) return (item.display_name || '').replace(/,?\s*\d{5}-?\d{3}\s*,/i, ',');
     return partes.join(', ');
   }
-  function mostrarSugestoes(lista) {
-    if (!lista || lista.length === 0) { boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = ''; return; }
-    boxSugestoes.innerHTML = lista.map(item => {
-      const endFormat = montarEnderecoLimpo(item);
-      return `<div class="suggestion-item" data-endereco="${endFormat}">${endFormat}</div>`;
-    }).join('');
+  
+  function mostrarSugestoes(listaNominatim, listaCustom) {
+    let html = '';
+    
+    // Injeta os locais VIPs primeiro com destaque (⭐)
+    if (listaCustom && listaCustom.length > 0) {
+        // Usa um Set para não repetir caso "Câmara" e "Camara" batam juntos
+        const vistos = new Set();
+        listaCustom.forEach(item => {
+            if(!vistos.has(item.endereco)){
+                vistos.add(item.endereco);
+                html += `<div class="suggestion-item" data-endereco="${item.endereco}">⭐ <b>${item.nome}</b><br><span style="font-size:11px; color:#666;">${item.endereco}</span></div>`;
+            }
+        });
+    }
+    
+    // Injeta os do mapa depois
+    if (listaNominatim && listaNominatim.length > 0) {
+        html += listaNominatim.map(item => {
+          const endFormat = montarEnderecoLimpo(item);
+          return `<div class="suggestion-item" data-endereco="${endFormat}">${endFormat}</div>`;
+        }).join('');
+    }
+    
+    if (html === '') { boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = ''; return; }
+    
+    boxSugestoes.innerHTML = html;
     boxSugestoes.style.display = 'block';
+    
     boxSugestoes.querySelectorAll('.suggestion-item').forEach((el) => {
       el.addEventListener('click', function() { inputLocal.value = this.getAttribute('data-endereco'); boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = ''; });
     });
   }
   document.addEventListener('click', (e) => { if (!e.target.closest('#novoLocal') && !e.target.closest('#sugestoesLocal')) boxSugestoes.style.display = 'none'; });
 
-// --- FUNÇÃO PARA LER E FORMATAR A AGENDA ---
+  // --- LER E FORMATAR ZAP---
   async function buscarAgenda() {
     const inputData = document.getElementById('dataBusca').value;
     if (!inputData) return alert('Por favor, selecione uma data!');
-
-    const textArea = document.getElementById('resultadoAgenda');
-    textArea.value = 'Buscando eventos... ⏳';
-
-    const partesData = inputData.split('-');
-    const dataObj = new Date(partesData[0], partesData[1] - 1, partesData[2]);
-    const diasSemana = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
-    const dia = String(dataObj.getDate()).padStart(2, '0');
-    const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
-
-    let textoFinal = `*AGENDA VEREADOR*\n*${dia}/${mes}  ${diasSemana[dataObj.getDay()]}*\n\n`;
+    const textArea = document.getElementById('resultadoAgenda'); textArea.value = 'Buscando eventos... ⏳';
+    const pD = inputData.split('-'); const dO = new Date(pD[0], pD[1] - 1, pD[2]);
+    const dS = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
+    const dia = String(dO.getDate()).padStart(2, '0'); const mes = String(dO.getMonth() + 1).padStart(2, '0');
+    let textoFinal = `*AGENDA VEREADOR*\n*${dia}/${mes}  ${dS[dO.getDay()]}*\n\n`;
 
     try {
       const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&data=${inputData}`;
-      const resposta = await fetch(urlCompleta);
-      const eventos = await resposta.json();
-
-      if (eventos.length === 0) {
-        textoFinal += "Nenhum evento agendado para este dia.";
-      } else {
+      const resposta = await fetch(urlCompleta); const eventos = await resposta.json();
+      if (eventos.length === 0) { textoFinal += "Nenhum evento agendado para este dia."; } 
+      else {
         eventos.forEach(ev => {
-          const local = ev.local ? ` — ${ev.local}` : '';
-          
-          let descFormatada = '';
-          if (ev.descricao) {
-            // Tira as quebras de linha para forçar o texto a continuar na mesma linha
-            let desc = ev.descricao.replace(/\n/g, ' ').trim();
-            
-            // 100 caracteres é o tamanho perfeito para uma leitura rápida sem poluir
-            if (desc.length > 100) desc = desc.substring(0, 100) + '...';
-            
-            // Adiciona na sequência, formatado em itálico
-            descFormatada = ` — _${desc}_`;
+          const local = ev.local ? ` — ${ev.local}` : ''; let descF = '';
+          if (ev.descricao) { 
+              let desc = ev.descricao.replace(/\n/g, ' ').trim(); 
+              if (desc.length > 100) desc = desc.substring(0, 100) + '...'; 
+              descF = ` — _${desc}_`; 
           }
-          
-          textoFinal += `📍 *${ev.horario}:* ${ev.titulo}${local}${descFormatada}\n\n`;
+          textoFinal += `📍 *${ev.horario}:* ${ev.titulo}${local}${descF}\n\n`;
         });
       }
       textArea.value = textoFinal.trim();
-    } catch (erro) { textArea.value = "Erro ao buscar a agenda. Verifique o link do script."; }
+    } catch (erro) { textArea.value = "Erro ao buscar a agenda."; }
   }
 
   // --- COPIAR E ENVIAR ZAP ---
