@@ -116,7 +116,7 @@
   .modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
   .modal-head h3{ font-family:'Google Sans',Roboto,sans-serif; font-size:15px; margin:0; color:var(--text-main); }
   .modal-head button{ background:none; border:none; font-size:18px; cursor:pointer; color:var(--text-secondary); }
-  .modal-add-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .modal-add-row{ display:flex; flex-direction:column; gap:12px; margin-bottom:12px; }
   .lista-item-simples{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; border:1px solid var(--grey-border); border-radius:6px; margin-bottom:6px; font-size:12px; }
   .lista-item-simples span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
@@ -423,7 +423,13 @@
     </div>
     <div class="modal-add-row">
       <input type="text" id="modalEnderecoNome" placeholder="Nome Curto (ex: Prefeitura)">
-      <input type="text" id="modalEnderecoTexto" placeholder="Endereço Completo (Rua, Número, Bairro...)">
+      
+      <!-- CAMPO COM AUTOCOMPLETE ADICIONADO AQUI -->
+      <div class="field-relative" style="margin-bottom: 0;">
+          <input type="text" id="modalEnderecoTexto" placeholder="Endereço Completo (Rua, Número, Bairro...)" autocomplete="off">
+          <div id="sugestoesEnderecoModal" class="suggestions-box"></div>
+      </div>
+
       <button type="button" id="btnSalvarEnderecoModal" class="action btn-blue btn-block" onclick="salvarEnderecoModal()">➕ Adicionar</button>
     </div>
     <div id="listaEnderecosModal"></div>
@@ -825,7 +831,7 @@
     } catch (erro) { alert("Erro de conexão."); status.style.display = 'none'; }
   }
 
-  // --- AUTOCOMPLETE INTELIGENTE ---
+  // --- AUTOCOMPLETE INTELIGENTE (TELA PRINCIPAL) ---
   const inputLocal = document.getElementById('novoLocal'); const boxSugestoes = document.getElementById('sugestoesLocal'); let debounceTimer;
   function removerAcentos(str) { return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 
@@ -846,10 +852,33 @@
     try {
       const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&accept-language=pt-BR&addressdetails=1&q=${encodeURIComponent(termoLimpo + ', São Leopoldo, RS')}`;
       const res = await fetch(url); const dadosNominatim = await res.json(); 
-      mostrarSugestoes(dadosNominatim, locaisCustomMatch);
-    } catch (erro) { mostrarSugestoes([], locaisCustomMatch); }
+      mostrarSugestoes(dadosNominatim, locaisCustomMatch, boxSugestoes, inputLocal);
+    } catch (erro) { mostrarSugestoes([], locaisCustomMatch, boxSugestoes, inputLocal); }
   }
   
+  // --- AUTOCOMPLETE INTELIGENTE (MODAL ENDEREÇOS) ---
+  const inputEnderecoModal = document.getElementById('modalEnderecoTexto'); 
+  const boxSugestoesModal = document.getElementById('sugestoesEnderecoModal'); 
+  let debounceTimerModal;
+
+  inputEnderecoModal.addEventListener('input', () => {
+    clearTimeout(debounceTimerModal); const termo = inputEnderecoModal.value.trim();
+    if (termo.length < 3) { boxSugestoesModal.style.display = 'none'; boxSugestoesModal.innerHTML = ''; return; }
+    debounceTimerModal = setTimeout(() => buscarEnderecosParaModal(termo), 350);
+  });
+
+  async function buscarEnderecosParaModal(termo) {
+    numeroDigitadoAtual = extrairNumeroDigitado(termo);
+    const termoLimpo = removerAcentos(termo).toLowerCase();
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&accept-language=pt-BR&addressdetails=1&q=${encodeURIComponent(termoLimpo + ', São Leopoldo, RS')}`;
+      const res = await fetch(url); const dadosNominatim = await res.json(); 
+      // Para o modal de endereços, só mostra resultados do Maps/Nominatim
+      mostrarSugestoes(dadosNominatim, [], boxSugestoesModal, inputEnderecoModal);
+    } catch (erro) { mostrarSugestoes([], [], boxSugestoesModal, inputEnderecoModal); }
+  }
+
+  // --- FUNÇÕES COMPARTILHADAS DE AUTOCOMPLETE ---
   function montarEnderecoLimpo(item) {
     const a = item.address || {}; const partes = []; const rua = a.road || a.pedestrian || a.footway || ''; const numero = a.house_number || numeroDigitadoAtual || '';
     if (rua) partes.push(numero ? `${rua}, ${numero}` : rua);
@@ -858,7 +887,7 @@
     partes.push('Brasil'); if (partes.length <= 1) return (item.display_name || '').replace(/,?\s*\d{5}-?\d{3}\s*,/i, ','); return partes.join(', ');
   }
   
-  function mostrarSugestoes(listaNominatim, listaCustom) {
+  function mostrarSugestoes(listaNominatim, listaCustom, boxAlvo, inputAlvo) {
     let html = '';
     if (listaCustom && listaCustom.length > 0) {
         const vistos = new Set();
@@ -872,13 +901,26 @@
     if (listaNominatim && listaNominatim.length > 0) {
         html += listaNominatim.map(item => { const endFormat = montarEnderecoLimpo(item); return `<div class="suggestion-item" data-endereco="${endFormat}">${endFormat}</div>`; }).join('');
     }
-    if (html === '') { boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = ''; return; }
-    boxSugestoes.innerHTML = html; boxSugestoes.style.display = 'block';
-    boxSugestoes.querySelectorAll('.suggestion-item').forEach((el) => {
-      el.addEventListener('click', function() { inputLocal.value = this.getAttribute('data-endereco'); boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = ''; });
+    if (html === '') { boxAlvo.style.display = 'none'; boxAlvo.innerHTML = ''; return; }
+    boxAlvo.innerHTML = html; boxAlvo.style.display = 'block';
+    
+    boxAlvo.querySelectorAll('.suggestion-item').forEach((el) => {
+      el.addEventListener('click', function() { 
+          inputAlvo.value = this.getAttribute('data-endereco'); 
+          boxAlvo.style.display = 'none'; boxAlvo.innerHTML = ''; 
+      });
     });
   }
-  document.addEventListener('click', (e) => { if (!e.target.closest('#novoLocal') && !e.target.closest('#sugestoesLocal')) boxSugestoes.style.display = 'none'; });
+
+  // Fechar caixas de sugestão ao clicar fora delas
+  document.addEventListener('click', (e) => { 
+      if (!e.target.closest('#novoLocal') && !e.target.closest('#sugestoesLocal')) {
+          boxSugestoes.style.display = 'none'; 
+      }
+      if (!e.target.closest('#modalEnderecoTexto') && !e.target.closest('#sugestoesEnderecoModal')) {
+          boxSugestoesModal.style.display = 'none'; 
+      }
+  });
 
 // --- LER E FORMATAR A AGENDA (COM LIMPEZA DE TAGS) ---
   async function buscarAgenda() {
