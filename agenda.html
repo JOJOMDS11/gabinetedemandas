@@ -872,6 +872,7 @@
   }
   document.addEventListener('click', (e) => { if (!e.target.closest('#novoLocal') && !e.target.closest('#sugestoesLocal')) boxSugestoes.style.display = 'none'; });
 
+// --- FUNÇÃO PARA LER E FORMATAR A AGENDA (COM LIMPEZA DE TAGS HTML) ---
   async function buscarAgenda() {
     const inputData = document.getElementById('dataBusca').value;
     if (!inputData) return alert('Por favor, selecione uma data!');
@@ -879,21 +880,23 @@
     const pD = inputData.split('-'); const dO = new Date(pD[0], pD[1] - 1, pD[2]);
     const dS = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
     const dia = String(dO.getDate()).padStart(2, '0'); const mes = String(dO.getMonth() + 1).padStart(2, '0');
-    let textoFinal = `*AGENDA VEREADOR*\n*${dia}/${mes}  ${dS[dO.getDay()]}*\n\n`;
+    let textoFinal = *AGENDA VEREADOR*\n*${dia}/${mes}  ${dS[dO.getDay()]}*\n\n;
 
     try {
-      const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&data=${inputData}`;
+      const urlCompleta = ${URL_DO_SCRIPT}?acao=ler&data=${inputData};
       const resposta = await fetch(urlCompleta); const eventos = await resposta.json();
-      if (eventos.length === 0) { textoFinal += "Nenhum evento agendado para este dia."; } 
+      if (eventos.length === 0) { textoFinal += "Nenhum evento agendado neste dia."; } 
       else {
         eventos.forEach(ev => {
           const local = ev.local ? ` — ${ev.local}` : ''; let descF = '';
           if (ev.descricao) { 
-              let desc = ev.descricao.replace(/\n/g, ' ').trim(); 
+              // 🧹 LIMPEZA DE HTML: Remove qualquer tag como <ul>, <li>, <br>, etc., deixando só o texto puro
+              let textoLimpo = ev.descricao.replace(/<[^>]*>?/gm, ''); 
+              let desc = textoLimpo.replace(/\n/g, ' ').trim(); 
               if (desc.length > 100) desc = desc.substring(0, 100) + '...'; 
-              descF = ` — _${desc}_`; 
+              descF = ` — ${desc}`; 
           }
-          textoFinal += `📍 *${ev.horario}:* ${ev.titulo}${local}${descF}\n\n`;
+          textoFinal += 📍 *${ev.horario}:* ${ev.titulo}${local}${descF}\n\n;
         });
       }
       textArea.value = textoFinal.trim();
