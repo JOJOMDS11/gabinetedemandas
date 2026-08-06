@@ -56,16 +56,14 @@
   .side-card h3{ font-family:'Google Sans',Roboto,sans-serif; font-size:12px; font-weight:500; color:var(--text-main); margin:0 0 10px; text-transform:uppercase; letter-spacing:.3px; display: flex; justify-content: space-between; align-items: center; }
   
   .main-col{ flex:1; min-width:0; }
-  .panel{ border:1px solid var(--grey-border); border-radius:12px; box-shadow:var(--shadow-1); margin-bottom:20px; scroll-margin-top: 75px; position: relative; background: #fff;}
+  .panel{ border:1px solid var(--grey-border); border-radius:12px; box-shadow:var(--shadow-1); margin-bottom:20px; scroll-margin-top: 75px; position: relative;}
   
   .modo-edicao-banner { display:none; background:#ffeb3b; color:#b71c1c; text-align:center; padding:6px; font-size:12px; font-weight:bold; border-radius:12px 12px 0 0; }
   
-  .panel-header{ display:flex; align-items:center; gap:10px; padding:15px 20px; border-bottom:1px solid var(--grey-border); border-radius:12px 12px 0 0; user-select: none; }
-  .panel-header.colapsavel { cursor: pointer; transition: background 0.2s; }
-  .panel-header.colapsavel:hover { background: var(--grey-bg); }
+  .panel-header{ display:flex; align-items:center; gap:10px; padding:15px 20px; border-bottom:1px solid var(--grey-border); border-radius:12px 12px 0 0; }
   .panel-header .dot{ width:10px; height:10px; border-radius:50%; flex-shrink:0; }
   .dot-blue{ background:var(--blue); } .dot-green{ background:var(--green); }
-  .panel-header h2{ font-family:'Google Sans',Roboto,sans-serif; font-size:15px; font-weight:500; margin:0; color:var(--text-main); flex: 1; }
+  .panel-header h2{ font-family:'Google Sans',Roboto,sans-serif; font-size:15px; font-weight:500; margin:0; color:var(--text-main); }
   .panel-body{ padding:20px; border-radius:0 0 12px 12px; }
 
   label{ display:block; font-size:11px; font-weight:500; color:var(--text-secondary); margin-bottom:5px; text-transform:uppercase; letter-spacing:.3px; }
@@ -185,13 +183,13 @@
 
   <!-- SIDEBAR COM ATALHOS -->
   <aside class="sidebar">
-    <button class="create-btn" onclick="document.getElementById('secaoZap').scrollIntoView({behavior:'smooth'})">
-      📱 Gerador de Agenda
+    <button class="create-btn" onclick="window.scrollTo({top:0, behavior:'smooth'}); document.getElementById('novoTitulo').focus()">
+      <span class="create-plus">+</span> Criar evento
     </button>
-    <button class="nav-side-btn" onclick="abrirErolarParaCriarEvento()">
-      <span style="font-weight:bold; font-size: 16px;">+</span> Criar Evento
+    <button class="nav-side-btn" onclick="document.getElementById('secaoZap').scrollIntoView()">
+      📱 Gerar Agenda
     </button>
-    <button class="nav-side-btn" onclick="abrirErolarParaAnotacoes()">
+    <button class="nav-side-btn" onclick="document.getElementById('secaoAnotacoes').scrollIntoView()">
       📝 Anotações Rápidas
     </button>
     <button class="nav-side-btn" onclick="abrirModalCalendario()" style="background:#e8f0fe; color:#1967d2; border-color:#d2e3fc; font-weight:bold;">
@@ -204,56 +202,17 @@
     </div>
   </aside>
 
-  <!-- MAIN (ORDEM INVERTIDA) -->
+  <!-- MAIN -->
   <main class="main-col">
 
-    <!-- 1. WHATSAPP (AGORA NO TOPO E INTELIGENTE) -->
-    <section class="panel" id="secaoZap" style="border: 2px solid var(--green); box-shadow: 0 4px 12px rgba(24,128,56,0.15);">
-      <div class="panel-header">
-        <span class="dot dot-green"></span>
-        <h2>Gerar agenda para WhatsApp</h2>
-      </div>
-      <div class="panel-body">
-        <div class="row-inline">
-          <div class="field">
-            <label>Data para copiar (Busca automática)</label>
-            <div class="date-com-hoje">
-              <!-- Inteligente: Puxa os dados assim que o usuário muda a data -->
-              <input type="date" id="dataBusca" onchange="buscarAgenda()">
-              <button type="button" class="btn-hoje" onclick="irParaHoje('dataBusca'); buscarAgenda()">Hoje</button>
-              <button type="button" class="btn-hoje" onclick="irParaAmanha('dataBusca'); buscarAgenda()">Amanhã</button>
-            </div>
-          </div>
-          <!-- Botão escondido para não poluir -->
-          <button class="action btn-ghost" style="display:none;" onclick="buscarAgenda()">Puxar eventos</button>
-        </div>
-
-        <div class="field">
-          <div class="label-row">
-            <label style="margin:0;">Prévia da mensagem</label>
-            <button type="button" class="gear-btn" onclick="document.getElementById('resultadoAgenda').value = '';" title="Limpar caixa">🧹 Limpar</button>
-          </div>
-          <textarea id="resultadoAgenda" rows="8" placeholder="Selecione a data acima para puxar a agenda automaticamente..."></textarea>
-        </div>
-
-        <div class="row-2">
-          <!-- Inteligente: Copia e já passa pro próximo dia -->
-          <button class="action btn-green" onclick="copiarTexto()">Copiar e Avançar Dia 📋⏭️</button>
-          <button class="action btn-whatsapp" onclick="enviarWhatsApp()">Enviar no WhatsApp 📱</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. CRIAR / EDITAR EVENTO (MINIMIZADO) -->
+    <!-- CRIAR / EDITAR EVENTO -->
     <section class="panel" id="secaoCriar">
       <div class="modo-edicao-banner" id="bannerEdicao">⚠️ MODO DE EDIÇÃO ATIVADO ⚠️</div>
-      <div class="panel-header colapsavel" onclick="togglePainel('corpoCriar', 'setaCriar')">
+      <div class="panel-header">
         <span class="dot dot-blue"></span>
         <h2 id="tituloCardEvento">Novo evento</h2>
-        <span id="setaCriar" style="color: var(--text-secondary); font-size: 14px;">◀️</span>
       </div>
-      <!-- Nasce escondido (display:none) -->
-      <div class="panel-body" id="corpoCriar" style="display:none;">
+      <div class="panel-body">
         <div id="mensagemStatus"></div>
 
         <div class="row-2">
@@ -292,6 +251,7 @@
             <div class="label-row">
               <label style="margin:0;">Local / Endereço</label>
               <div style="display:flex; gap:5px;">
+                <!-- NOVA ENGRENAGEM DE ENDEREÇOS -->
                 <button type="button" class="gear-btn" onclick="abrirModalEnderecos()" title="Gerenciar endereços salvos">⚙️ Configurar</button>
                 <button type="button" class="gear-btn" onclick="document.getElementById('novoLocal').value = '';" title="Apagar local">🧹 Limpar</button>
               </div>
@@ -343,15 +303,47 @@
       </div>
     </section>
 
-    <!-- 3. ANOTAÇÕES (MINIMIZADO) -->
+    <!-- WHATSAPP -->
+    <section class="panel" id="secaoZap">
+      <div class="panel-header">
+        <span class="dot dot-green"></span>
+        <h2>Gerar agenda para WhatsApp</h2>
+      </div>
+      <div class="panel-body">
+        <div class="row-inline">
+          <div class="field">
+            <label>Data para copiar</label>
+            <div class="date-com-hoje">
+              <input type="date" id="dataBusca">
+              <button type="button" class="btn-hoje" onclick="irParaHoje('dataBusca')">Hoje</button>
+              <button type="button" class="btn-hoje" onclick="irParaAmanha('dataBusca')">Amanhã</button>
+            </div>
+          </div>
+          <button class="action btn-ghost" onclick="buscarAgenda()">Puxar eventos</button>
+        </div>
+
+        <div class="field">
+          <div class="label-row">
+            <label style="margin:0;">Prévia da mensagem</label>
+            <button type="button" class="gear-btn" onclick="document.getElementById('resultadoAgenda').value = '';" title="Limpar caixa">🧹 Limpar</button>
+          </div>
+          <textarea id="resultadoAgenda" rows="8" placeholder="O texto da agenda formatada para o WhatsApp aparecerá aqui..."></textarea>
+        </div>
+
+        <div class="row-2">
+          <button class="action btn-green" onclick="copiarTexto()">Copiar texto 📋</button>
+          <button class="action btn-whatsapp" onclick="enviarWhatsApp()">Enviar no WhatsApp 📱</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ANOTAÇÕES -->
     <section class="panel" id="secaoAnotacoes">
-      <div class="panel-header colapsavel" onclick="togglePainel('corpoAnotacoes', 'setaAnotacoes')">
+      <div class="panel-header">
         <span class="dot dot-blue"></span>
         <h2 id="tituloCardNota">Anotações rápidas</h2>
-        <span id="setaAnotacoes" style="color: var(--text-secondary); font-size: 14px;">◀️</span>
       </div>
-      <!-- Nasce escondido (display:none) -->
-      <div class="panel-body" id="corpoAnotacoes" style="display:none;">
+      <div class="panel-body">
         <div class="row-2">
           <div class="field" style="flex: 2;">
             <label>Título</label>
@@ -456,7 +448,6 @@
 </div>
 
 <script>
-  // O NOVO LINK DO SCRIPT SEM TOKEN (BASEADO NO SEU ENVIO)
   const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbwIVv0CF4jzmov65IfY-DqSJJwSlsA9Tw9ZgaxQcFfrdi0cZc5NMl9XgrnwBgYlN_B7KQ/exec';
 
   let db;
@@ -492,35 +483,6 @@
               window.location.href = 'dashboard.html';
           }
       } else { window.location.href = 'dashboard.html'; }
-  }
-
-  // --- CONTROLE DE PAINEIS (MINIMIZAR/MAXIMIZAR) ---
-  function togglePainel(idCorpo, idSeta) {
-      const corpo = document.getElementById(idCorpo);
-      const seta = document.getElementById(idSeta);
-      if (corpo.style.display === 'none') {
-          corpo.style.display = 'block';
-          if(seta) seta.innerText = '🔽';
-      } else {
-          corpo.style.display = 'none';
-          if(seta) seta.innerText = '◀️';
-      }
-  }
-
-  function abrirErolarParaCriarEvento() {
-      const corpo = document.getElementById('corpoCriar');
-      const seta = document.getElementById('setaCriar');
-      corpo.style.display = 'block'; seta.innerText = '🔽';
-      document.getElementById('secaoCriar').scrollIntoView({behavior: 'smooth'});
-      setTimeout(() => document.getElementById('novoTitulo').focus(), 300);
-  }
-
-  function abrirErolarParaAnotacoes() {
-      const corpo = document.getElementById('corpoAnotacoes');
-      const seta = document.getElementById('setaAnotacoes');
-      corpo.style.display = 'block'; seta.innerText = '🔽';
-      document.getElementById('secaoAnotacoes').scrollIntoView({behavior: 'smooth'});
-      setTimeout(() => document.getElementById('novaNotaTitulo').focus(), 300);
   }
 
   // --- CALENDÁRIO ---
@@ -598,8 +560,7 @@
       document.getElementById('novoLocal').value = local; document.getElementById('novoComplemento').value = ''; document.getElementById('novaDescricao').value = descricao;
       document.getElementById('tituloCardEvento').innerText = '✏️ Editando Evento'; document.getElementById('btnSalvarEvento').innerText = '🔄 Atualizar na agenda';
       document.getElementById('btnCancelarEdicao').style.display = 'inline-block'; document.getElementById('bannerEdicao').style.display = 'block';
-      
-      abrirErolarParaCriarEvento(); // Abre o painel se estiver minimizado
+      window.scrollTo({top:0, behavior:'smooth'});
   }
 
   function cancelarEdicao() {
@@ -809,7 +770,7 @@
       document.getElementById('btnSalvarNota').innerText = '🔄 Atualizar anotação';
       document.getElementById('btnCancelarNota').style.display = 'inline-block';
       
-      abrirErolarParaAnotacoes(); // Abre o painel se estiver minimizado
+      document.getElementById('secaoAnotacoes').scrollIntoView({ behavior: 'smooth' });
   }
 
   function cancelarEdicaoNota() {
@@ -963,7 +924,7 @@
 
 // --- LER E FORMATAR A AGENDA (COM LIMPEZA DE TAGS) ---
   async function buscarAgenda() {
-    const inputData = document.getElementById('dataBusca').value; if (!inputData) return;
+    const inputData = document.getElementById('dataBusca').value; if (!inputData) return alert('Por favor, selecione uma data!');
     const textArea = document.getElementById('resultadoAgenda'); textArea.value = 'Buscando eventos... ⏳';
     const pD = inputData.split('-'); const dO = new Date(pD[0], pD[1] - 1, pD[2]);
     const dS = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
@@ -993,45 +954,18 @@
   async function copiarTexto() {
     const textArea = document.getElementById('resultadoAgenda'); let texto = textArea.value;
     if (!texto || texto === 'Buscando eventos... ⏳' || texto.trim() === '') {
-      if (!document.getElementById('dataBusca').value) return alert('Escolha uma data primeiro!');
+      const db = document.getElementById('dataBusca').value; if (!db) return alert('Escolha uma data primeiro!');
       textArea.value = 'Buscando eventos... ⏳'; await buscarAgenda(); texto = textArea.value; if (!texto || texto.includes('Erro')) return; 
     }
-    
-    // Função inteligente: Copia, limpa e joga pra amanhã
-    const avancarDiaInteligente = async () => {
-      textArea.value = 'Avançando para o próximo dia... ⏳';
-      const dataAtual = document.getElementById('dataBusca').value;
-      if (dataAtual) {
-          const pD = dataAtual.split('-');
-          const dObj = new Date(pD[0], pD[1] - 1, pD[2]);
-          dObj.setDate(dObj.getDate() + 1); // Pula 1 dia
-          document.getElementById('dataBusca').value = `${dObj.getFullYear()}-${String(dObj.getMonth() + 1).padStart(2, '0')}-${String(dObj.getDate()).padStart(2, '0')}`;
-          await buscarAgenda(); // Puxa automático
-      }
-    };
-
-    if (navigator.clipboard && window.isSecureContext) { 
-        navigator.clipboard.writeText(texto)
-            .then(() => avancarDiaInteligente())
-            .catch(() => copiaComTextareaTemporario()); 
-    } else { 
-        copiaComTextareaTemporario(); 
-    }
-
     function copiaComTextareaTemporario() {
       const temp = document.createElement('textarea'); temp.value = texto; temp.style.position = 'fixed'; temp.style.opacity = '0';
       document.body.appendChild(temp); temp.focus(); temp.select(); temp.setSelectionRange(0, texto.length);
       let copiou = false; try { copiou = document.execCommand('copy'); } catch (e) { copiou = false; }
       document.body.removeChild(temp);
-      
-      if (copiou) {
-          avancarDiaInteligente();
-      } else { 
-          textArea.focus(); textArea.select(); alert('Use Ctrl+C.'); 
-      }
+      if (copiou) alert('✅ Agenda copiada!'); else { textArea.focus(); textArea.select(); alert('Use Ctrl+C.'); }
     }
+    if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(texto).then(() => alert('✅ Agenda copiada!')).catch(() => copiaComTextareaTemporario()); } else { copiaComTextareaTemporario(); }
   }
-
   async function enviarWhatsApp() {
     const textArea = document.getElementById('resultadoAgenda'); let texto = textArea.value;
     if (!texto || texto === 'Buscando eventos... ⏳' || texto.trim() === '') {
