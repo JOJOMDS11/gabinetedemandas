@@ -140,6 +140,7 @@
   .acoes-nota-rapida { display: flex; gap: 4px; flex-shrink: 0; }
   .nota-btn-icon{ background:none; border:none; cursor:pointer; font-size:12px; padding: 4px; border-radius: 4px; transition: 0.2s;}
   .nota-btn-icon:hover{ background: var(--grey-bg); }
+  .btn-edit-icon { color:#f59e0b; } .btn-edit-icon:hover { background: #fef3c7; }
   .btn-del-icon { color:#a1a1a1; } .btn-del-icon:hover { color:#d93025; background: #fce8e6; }
   .btn-lupa-icon { color: var(--blue); } .btn-lupa-icon:hover { background: var(--blue-tint); }
 
@@ -249,7 +250,11 @@
           <div class="field field-relative" style="flex: 2;">
             <div class="label-row">
               <label style="margin:0;">Local / Endereço</label>
-              <button type="button" class="gear-btn" onclick="document.getElementById('novoLocal').value = '';" title="Apagar local">🧹 Limpar</button>
+              <div style="display:flex; gap:5px;">
+                <!-- NOVA ENGRENAGEM DE ENDEREÇOS -->
+                <button type="button" class="gear-btn" onclick="abrirModalEnderecos()" title="Gerenciar endereços salvos">⚙️ Configurar</button>
+                <button type="button" class="gear-btn" onclick="document.getElementById('novoLocal').value = '';" title="Apagar local">🧹 Limpar</button>
+              </div>
             </div>
             <input type="text" id="novoLocal" placeholder="Rua, Prefeitura, Cecrei..." autocomplete="off">
             <div id="sugestoesLocal" class="suggestions-box"></div>
@@ -336,7 +341,7 @@
     <section class="panel" id="secaoAnotacoes">
       <div class="panel-header">
         <span class="dot dot-blue"></span>
-        <h2>Anotações rápidas</h2>
+        <h2 id="tituloCardNota">Anotações rápidas</h2>
       </div>
       <div class="panel-body">
         <div class="row-2">
@@ -362,7 +367,8 @@
           <textarea id="novaNotaDescricao" rows="3" placeholder="Escreva os detalhes aqui..."></textarea>
         </div>
         <div class="actions-right">
-          <button class="action btn-blue" onclick="salvarAnotacao()">Salvar anotação</button>
+          <button type="button" id="btnCancelarNota" class="action" style="background:#e0e0e0; color:#333; display:none;" onclick="cancelarEdicaoNota()">Cancelar</button>
+          <button type="button" id="btnSalvarNota" class="action btn-blue" onclick="salvarAnotacao()">Salvar anotação</button>
         </div>
       </div>
     </section>
@@ -377,7 +383,6 @@
       <h3>🗓️ Calendário Oficial</h3>
       <button type="button" onclick="fecharModalCalendario()">✕</button>
     </div>
-    
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
        <div style="display:flex; align-items:center; gap: 5px;">
            <button onclick="mudarDiaCalendario(-1)" class="btn-micro" style="padding: 5px 10px;">❮</button>
@@ -387,10 +392,8 @@
            <strong id="calendarioDataView" style="color:#185199; display:block; font-size:14px;">Hoje</strong>
            <span id="calendarioDiaSemana" style="font-size:10px; color:#64748b; text-transform:uppercase; font-weight: bold;"></span>
        </div>
-       <!-- NOVO BOTÃO DE ADICIONAR AO ZAP DIRETO -->
        <button onclick="pularParaGerarAgendaZap()" class="btn-micro" style="background:#188038; color:white; border-color:#137333; font-size:11px;" title="Jogar data para o gerador do WhatsApp">📄 Gerar texto Whats</button>
     </div>
-    
     <div id="calendarioEventosList" style="max-height: 380px; overflow-y: auto; display:flex; flex-direction:column; gap:8px; padding-right: 4px;"></div>
   </div>
 </div>
@@ -405,9 +408,25 @@
     <div class="modal-add-row">
       <input type="text" id="modalEmailNome" placeholder="Apelido (ex: Alemão)">
       <input type="text" id="modalEmailEndereco" placeholder="email@exemplo.com">
-      <button type="button" class="action btn-blue btn-block" onclick="adicionarEmailModal()">➕ Adicionar</button>
+      <button type="button" id="btnSalvarEmailModal" class="action btn-blue btn-block" onclick="salvarEmailModal()">➕ Adicionar</button>
     </div>
     <div id="listaEmailsModal"></div>
+  </div>
+</div>
+
+<!-- MODAL: GERENCIAR ENDEREÇOS -->
+<div id="modalEnderecos" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>📍 Endereços salvos</h3>
+      <button type="button" onclick="fecharModalEnderecos()">✕</button>
+    </div>
+    <div class="modal-add-row">
+      <input type="text" id="modalEnderecoNome" placeholder="Nome Curto (ex: Prefeitura)">
+      <input type="text" id="modalEnderecoTexto" placeholder="Endereço Completo (Rua, Número, Bairro...)">
+      <button type="button" id="btnSalvarEnderecoModal" class="action btn-blue btn-block" onclick="salvarEnderecoModal()">➕ Adicionar</button>
+    </div>
+    <div id="listaEnderecosModal"></div>
   </div>
 </div>
 
@@ -427,8 +446,14 @@
 
   let db;
   let listaAnotacoesGlobal = []; 
+  let listaEnderecosSalvos = []; 
+  let listaEmailsSalvos = [];
+  
   let limitadorAnotacoes = 10; 
   let idEventoEmEdicao = null; 
+  let idNotaEmEdicao = null;
+  let idEmailEmEdicao = null;
+  let idEnderecoEmEdicao = null;
 
   async function inicializarSupabase() {
     try {
@@ -436,70 +461,45 @@
       const config = await res.json();
       db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
       await carregarEmailsFrequentes();
+      await carregarEnderecosSalvos();
       await carregarAnotacoes();
     } catch (erro) { console.error('Erro:', erro); }
   }
   inicializarSupabase();
 
-  // --- TRAVA DE SAÍDA INTELIGENTE (Só avisa se estiver digitando algo útil) ---
   function irParaDashboard() {
       const p1 = document.getElementById('novoTitulo').value.trim();
       const p2 = document.getElementById('novoLocal').value.trim();
       const p3 = document.getElementById('novaDescricao').value.trim();
       const p4 = document.getElementById('novaNotaTitulo').value.trim(); 
-
-      // Só dispara o aviso se realmente houver conteúdo relevante digitado
       if (p1 !== '' || p2 !== '' || p3 !== '' || p4 !== '') {
           if (confirm('⚠️ OPA! Você tem informações preenchidas que NÃO FORAM SALVAS.\n\nSe você sair agora, vai perder o que digitou. Tem certeza que deseja voltar pro Dashboard?')) {
               window.location.href = 'dashboard.html';
           }
-      } else { 
-          window.location.href = 'dashboard.html'; 
-      }
+      } else { window.location.href = 'dashboard.html'; }
   }
 
+  // --- CALENDÁRIO ---
   let dataCalendarioAtual = new Date();
-
   function abrirModalCalendario() {
       document.getElementById('modalCalendario').classList.add('aberto');
-      dataCalendarioAtual = new Date(); 
-      renderCalendarioUI();
-      fetchEventosCalendario();
+      dataCalendarioAtual = new Date(); renderCalendarioUI(); fetchEventosCalendario();
   }
   function fecharModalCalendario() { document.getElementById('modalCalendario').classList.remove('aberto'); }
-
-  function mudarDiaCalendario(dias) {
-      dataCalendarioAtual.setDate(dataCalendarioAtual.getDate() + dias);
-      renderCalendarioUI();
-      fetchEventosCalendario();
-  }
-
+  function mudarDiaCalendario(dias) { dataCalendarioAtual.setDate(dataCalendarioAtual.getDate() + dias); renderCalendarioUI(); fetchEventosCalendario(); }
   function renderCalendarioUI() {
       const opcoes = { day: '2-digit', month: 'long', year: 'numeric' };
       const dataStr = dataCalendarioAtual.toLocaleDateString('pt-BR', opcoes);
       const diasSemana = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
-      
       let titulo = dataStr;
-      const hojeStr = new Date().toLocaleDateString('pt-BR');
-      const calStr = dataCalendarioAtual.toLocaleDateString('pt-BR');
-      
-      if(hojeStr === calStr) titulo = "Hoje, " + dataStr;
-      
+      if(new Date().toLocaleDateString('pt-BR') === dataCalendarioAtual.toLocaleDateString('pt-BR')) titulo = "Hoje, " + dataStr;
       document.getElementById('calendarioDataView').innerText = titulo;
       document.getElementById('calendarioDiaSemana').innerText = diasSemana[dataCalendarioAtual.getDay()];
   }
-
-  // NOVO: Joga a data do calendário direto para o Gerador de WhatsApp e fecha o modal
   function pularParaGerarAgendaZap() {
-      const ano = dataCalendarioAtual.getFullYear();
-      const mes = String(dataCalendarioAtual.getMonth() + 1).padStart(2, '0');
-      const dia = String(dataCalendarioAtual.getDate()).padStart(2, '0');
-      const dataFormatada = `${ano}-${mes}-${dia}`;
-      
-      document.getElementById('dataBusca').value = dataFormatada;
+      const ano = dataCalendarioAtual.getFullYear(); const mes = String(dataCalendarioAtual.getMonth() + 1).padStart(2, '0'); const dia = String(dataCalendarioAtual.getDate()).padStart(2, '0');
+      document.getElementById('dataBusca').value = `${ano}-${mes}-${dia}`;
       fecharModalCalendario();
-      
-      // Rola a tela suavemente até a seção do WhatsApp e já puxa
       document.getElementById('secaoZap').scrollIntoView({ behavior: 'smooth' });
       buscarAgenda();
   }
@@ -507,26 +507,17 @@
   async function fetchEventosCalendario() {
       const listContainer = document.getElementById('calendarioEventosList');
       listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#555;">⏳ Buscando no Google Agenda...</div>';
-
-      const ano = dataCalendarioAtual.getFullYear();
-      const mes = String(dataCalendarioAtual.getMonth() + 1).padStart(2, '0');
-      const dia = String(dataCalendarioAtual.getDate()).padStart(2, '0');
-      const dataFormatada = `${ano}-${mes}-${dia}`;
-
+      const ano = dataCalendarioAtual.getFullYear(); const mes = String(dataCalendarioAtual.getMonth() + 1).padStart(2, '0'); const dia = String(dataCalendarioAtual.getDate()).padStart(2, '0');
       try {
-          const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&data=${dataFormatada}`;
-          const resposta = await fetch(urlCompleta);
-          const eventos = await resposta.json();
-
-          if (eventos.length === 0) {
-              listContainer.innerHTML = '<div style="text-align:center; padding:15px; color:#777; background:#f1f3f4; border-radius:6px; font-size:12px;">Nenhum evento agendado neste dia.</div>';
-          } else {
+          const urlCompleta = `${URL_DO_SCRIPT}?acao=ler&data=${ano}-${mes}-${dia}`;
+          const resposta = await fetch(urlCompleta); const eventos = await resposta.json();
+          if (eventos.length === 0) { listContainer.innerHTML = '<div style="text-align:center; padding:15px; color:#777; background:#f1f3f4; border-radius:6px; font-size:12px;">Nenhum evento agendado neste dia.</div>'; } 
+          else {
               listContainer.innerHTML = eventos.map(ev => {
                   const evTituloSafe = (ev.titulo || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
                   const evLocalSafe = (ev.local || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
                   const evDescSafe = (ev.descricao || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, "\\n");
                   const mapsUrl = ev.local ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.local)}` : '';
-                  
                   return `
                   <div style="border-left: 4px solid var(--blue); padding: 10px; background: #fff; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
                       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap: 8px;">
@@ -544,67 +535,33 @@
                             <button type="button" class="btn-micro" style="color:#d93025; border-color:#fad2e1; background:#fdf2f8;" onclick="deletarEventoDoGoogle('${ev.id}', this)" title="Excluir evento">🗑️ Excluir</button>
                           </div>` : ''}
                       </div>
-                  </div>
-              `}).join('');
+                  </div>`}).join('');
           }
       } catch (error) { listContainer.innerHTML = '<div style="text-align:center; padding:15px; color:#c0392b; font-weight: bold; font-size:12px;">Erro de conexão com o Script.</div>'; }
   }
 
   function prepararEdicao(id, titulo, horario, local, descricao) {
-      fecharModalCalendario();
-      idEventoEmEdicao = id;
-      
+      fecharModalCalendario(); idEventoEmEdicao = id;
       let tipo = ""; let tituloLimpo = titulo;
       const possiveisTipos = ["Reunião: ", "Aniversário: ", "Sessão: "];
-      for (let t of possiveisTipos) {
-          if (titulo.startsWith(t)) {
-              tipo = t.replace(": ", "");
-              tituloLimpo = titulo.substring(t.length);
-              break;
-          }
-      }
-      
-      document.getElementById('novoTipoEvento').value = tipo;
-      document.getElementById('novoTitulo').value = tituloLimpo;
-      
+      for (let t of possiveisTipos) { if (titulo.startsWith(t)) { tipo = t.replace(": ", ""); tituloLimpo = titulo.substring(t.length); break; } }
+      document.getElementById('novoTipoEvento').value = tipo; document.getElementById('novoTitulo').value = tituloLimpo;
       let horaLimpa = "";
-      if (horario && horario.includes('h')) {
-          horaLimpa = horario.replace('horas', ':00').replace('h', ':');
-          if (horaLimpa.length === 4) horaLimpa = "0" + horaLimpa; 
-      }
+      if (horario && horario.includes('h')) { horaLimpa = horario.replace('horas', ':00').replace('h', ':'); if (horaLimpa.length === 4) horaLimpa = "0" + horaLimpa; }
       document.getElementById('novaHora').value = horaLimpa;
-      
-      const ano = dataCalendarioAtual.getFullYear();
-      const mes = String(dataCalendarioAtual.getMonth() + 1).padStart(2, '0');
-      const dia = String(dataCalendarioAtual.getDate()).padStart(2, '0');
+      const ano = dataCalendarioAtual.getFullYear(); const mes = String(dataCalendarioAtual.getMonth() + 1).padStart(2, '0'); const dia = String(dataCalendarioAtual.getDate()).padStart(2, '0');
       document.getElementById('novaData').value = `${ano}-${mes}-${dia}`;
-      
-      document.getElementById('novoLocal').value = local;
-      document.getElementById('novoComplemento').value = ''; 
-      document.getElementById('novaDescricao').value = descricao;
-      
-      document.getElementById('tituloCardEvento').innerText = '✏️ Editando Evento';
-      document.getElementById('btnSalvarEvento').innerText = '🔄 Atualizar na agenda';
-      document.getElementById('btnCancelarEdicao').style.display = 'inline-block';
-      document.getElementById('bannerEdicao').style.display = 'block';
-      
+      document.getElementById('novoLocal').value = local; document.getElementById('novoComplemento').value = ''; document.getElementById('novaDescricao').value = descricao;
+      document.getElementById('tituloCardEvento').innerText = '✏️ Editando Evento'; document.getElementById('btnSalvarEvento').innerText = '🔄 Atualizar na agenda';
+      document.getElementById('btnCancelarEdicao').style.display = 'inline-block'; document.getElementById('bannerEdicao').style.display = 'block';
       window.scrollTo({top:0, behavior:'smooth'});
   }
 
   function cancelarEdicao() {
-      idEventoEmEdicao = null;
-      document.getElementById('tituloCardEvento').innerText = 'Novo evento';
-      document.getElementById('btnSalvarEvento').innerText = 'Salvar na agenda';
-      document.getElementById('btnCancelarEdicao').style.display = 'none';
-      document.getElementById('bannerEdicao').style.display = 'none';
-      
-      document.getElementById('novoTipoEvento').value = '';
-      document.getElementById('novoTitulo').value = '';
-      document.getElementById('novaHora').value = '';
-      document.getElementById('novoLocal').value = '';
-      document.getElementById('novoComplemento').value = '';
-      document.getElementById('novaDescricao').value = '';
-      irParaHoje('novaData');
+      idEventoEmEdicao = null; document.getElementById('tituloCardEvento').innerText = 'Novo evento'; document.getElementById('btnSalvarEvento').innerText = 'Salvar na agenda';
+      document.getElementById('btnCancelarEdicao').style.display = 'none'; document.getElementById('bannerEdicao').style.display = 'none';
+      document.getElementById('novoTipoEvento').value = ''; document.getElementById('novoTitulo').value = ''; document.getElementById('novaHora').value = '';
+      document.getElementById('novoLocal').value = ''; document.getElementById('novoComplemento').value = ''; document.getElementById('novaDescricao').value = ''; irParaHoje('novaData');
   }
 
   async function deletarEventoDoGoogle(idEvento, botao) {
@@ -615,14 +572,16 @@
           const resposta = await fetch(url); const data = await resposta.json();
           if (data.status === 'sucesso') fetchEventosCalendario(); 
           else { alert("Erro ao excluir: " + data.mensagem); botao.innerHTML = textoOriginal; botao.disabled = false; }
-      } catch (err) { alert("Erro de conexão com o Google."); botao.innerHTML = textoOriginal; botao.disabled = false; }
+      } catch (err) { alert("Erro de conexão."); botao.innerHTML = textoOriginal; botao.disabled = false; }
   }
 
+  // --- CRUD E-MAILS ---
   async function carregarEmailsFrequentes() {
     try {
       const { data, error } = await db.from('emails_frequentes').select('id, nome, email').order('nome');
       if (error) throw error;
-      renderChipsEmails(data || []);
+      listaEmailsSalvos = data || [];
+      renderChipsEmails(listaEmailsSalvos);
     } catch (erro) { console.error('Erro e-mails:', erro); }
   }
   function renderChipsEmails(lista) {
@@ -631,37 +590,108 @@
     container.innerHTML = lista.map(item => `<span class="chip"><span class="chip-nome" onclick="usarEmailFrequente('${item.email}')" title="${item.email}">${item.nome || item.email}</span><button type="button" onclick="excluirEmailFrequente(${item.id})">✕</button></span>`).join('');
   }
   function usarEmailFrequente(email) {
-    const campo = document.getElementById('novosConvidados');
-    const atuais = campo.value.split(',').map(e => e.trim()).filter(Boolean);
-    if (!atuais.includes(email)) atuais.push(email);
-    campo.value = atuais.join(', ');
+    const campo = document.getElementById('novosConvidados'); const atuais = campo.value.split(',').map(e => e.trim()).filter(Boolean);
+    if (!atuais.includes(email)) atuais.push(email); campo.value = atuais.join(', ');
   }
   async function excluirEmailFrequente(id) {
     if (!confirm('Remover este e-mail?')) return;
-    const { error } = await db.from('emails_frequentes').delete().eq('id', id);
-    if (!error) await carregarEmailsFrequentes();
+    await db.from('emails_frequentes').delete().eq('id', id); await carregarEmailsFrequentes();
   }
   function abrirModalEmails() { document.getElementById('modalEmails').classList.add('aberto'); renderListaEmailsModal(); }
-  function fecharModalEmails() { document.getElementById('modalEmails').classList.remove('aberto'); }
-  async function renderListaEmailsModal() {
-    const container = document.getElementById('listaEmailsModal');
-    const { data } = await db.from('emails_frequentes').select('id, nome, email').order('nome');
-    if (!data || data.length === 0) { container.innerHTML = '<span class="empty-hint">Nenhum salvo.</span>'; return; }
-    container.innerHTML = data.map(item => `<div class="lista-item-simples"><span><b>${item.nome || item.email}</b> — ${item.email}</span><button type="button" class="nota-mini-del" onclick="excluirEmailFrequenteModal(${item.id})">🗑️</button></div>`).join('');
+  function fecharModalEmails() { 
+      document.getElementById('modalEmails').classList.remove('aberto'); 
+      idEmailEmEdicao = null; document.getElementById('btnSalvarEmailModal').innerText = '➕ Adicionar';
+      document.getElementById('modalEmailNome').value = ''; document.getElementById('modalEmailEndereco').value = '';
   }
-  async function adicionarEmailModal() {
+  function renderListaEmailsModal() {
+    const container = document.getElementById('listaEmailsModal');
+    if (listaEmailsSalvos.length === 0) { container.innerHTML = '<span class="empty-hint">Nenhum salvo.</span>'; return; }
+    container.innerHTML = listaEmailsSalvos.map(item => `
+      <div class="lista-item-simples">
+        <span style="flex:1;"><b>${item.nome || item.email}</b> — ${item.email}</span>
+        <div style="display:flex; gap:4px;">
+          <button type="button" class="nota-btn-icon btn-edit-icon" onclick="prepararEdicaoEmail(${item.id})" title="Editar">✏️</button>
+          <button type="button" class="nota-btn-icon btn-del-icon" onclick="excluirEmailFrequenteModal(${item.id})" title="Remover">🗑️</button>
+        </div>
+      </div>`).join('');
+  }
+  function prepararEdicaoEmail(id) {
+      const item = listaEmailsSalvos.find(e => e.id === id); if(!item) return;
+      idEmailEmEdicao = id;
+      document.getElementById('modalEmailNome').value = item.nome; document.getElementById('modalEmailEndereco').value = item.email;
+      document.getElementById('btnSalvarEmailModal').innerText = '🔄 Atualizar';
+  }
+  async function salvarEmailModal() {
     const nome = document.getElementById('modalEmailNome').value.trim(); const email = document.getElementById('modalEmailEndereco').value.trim();
     if (!email) return alert('Digite o e-mail.');
-    await db.from('emails_frequentes').insert([{ nome: nome || email, email }]);
+    
+    if (idEmailEmEdicao) {
+        await db.from('emails_frequentes').update({ nome: nome || email, email }).eq('id', idEmailEmEdicao);
+        idEmailEmEdicao = null; document.getElementById('btnSalvarEmailModal').innerText = '➕ Adicionar';
+    } else {
+        await db.from('emails_frequentes').insert([{ nome: nome || email, email }]);
+    }
     document.getElementById('modalEmailNome').value = ''; document.getElementById('modalEmailEndereco').value = '';
-    await renderListaEmailsModal(); await carregarEmailsFrequentes();
+    await carregarEmailsFrequentes(); renderListaEmailsModal();
   }
   async function excluirEmailFrequenteModal(id) {
     if (!confirm('Remover e-mail?')) return;
     await db.from('emails_frequentes').delete().eq('id', id);
-    await renderListaEmailsModal(); await carregarEmailsFrequentes();
+    await carregarEmailsFrequentes(); renderListaEmailsModal();
   }
 
+  // --- CRUD ENDEREÇOS SALVOS ---
+  async function carregarEnderecosSalvos() {
+      try {
+          const { data, error } = await db.from('enderecos_salvos').select('*').order('nome');
+          if (error) throw error;
+          listaEnderecosSalvos = data || [];
+      } catch (erro) { console.error('Erro endereços:', erro); }
+  }
+  function abrirModalEnderecos() { document.getElementById('modalEnderecos').classList.add('aberto'); renderListaEnderecosModal(); }
+  function fecharModalEnderecos() { 
+      document.getElementById('modalEnderecos').classList.remove('aberto'); 
+      idEnderecoEmEdicao = null; document.getElementById('btnSalvarEnderecoModal').innerText = '➕ Adicionar';
+      document.getElementById('modalEnderecoNome').value = ''; document.getElementById('modalEnderecoTexto').value = '';
+  }
+  function renderListaEnderecosModal() {
+      const container = document.getElementById('listaEnderecosModal');
+      if (listaEnderecosSalvos.length === 0) { container.innerHTML = '<span class="empty-hint">Nenhum endereço salvo.</span>'; return; }
+      container.innerHTML = listaEnderecosSalvos.map(item => `
+      <div class="lista-item-simples">
+        <span style="flex:1;"><b>${item.nome}</b><br><span style="font-size:10px; color:#666;">${item.endereco}</span></span>
+        <div style="display:flex; gap:4px;">
+          <button type="button" class="nota-btn-icon btn-edit-icon" onclick="prepararEdicaoEndereco(${item.id})" title="Editar">✏️</button>
+          <button type="button" class="nota-btn-icon btn-del-icon" onclick="excluirEnderecoModal(${item.id})" title="Remover">🗑️</button>
+        </div>
+      </div>`).join('');
+  }
+  function prepararEdicaoEndereco(id) {
+      const item = listaEnderecosSalvos.find(e => e.id === id); if(!item) return;
+      idEnderecoEmEdicao = id;
+      document.getElementById('modalEnderecoNome').value = item.nome; document.getElementById('modalEnderecoTexto').value = item.endereco;
+      document.getElementById('btnSalvarEnderecoModal').innerText = '🔄 Atualizar';
+  }
+  async function salvarEnderecoModal() {
+      const nome = document.getElementById('modalEnderecoNome').value.trim(); const endereco = document.getElementById('modalEnderecoTexto').value.trim();
+      if (!nome || !endereco) return alert('Preencha o nome curto e o endereço completo.');
+      
+      if (idEnderecoEmEdicao) {
+          await db.from('enderecos_salvos').update({ nome, endereco }).eq('id', idEnderecoEmEdicao);
+          idEnderecoEmEdicao = null; document.getElementById('btnSalvarEnderecoModal').innerText = '➕ Adicionar';
+      } else {
+          await db.from('enderecos_salvos').insert([{ nome, endereco }]);
+      }
+      document.getElementById('modalEnderecoNome').value = ''; document.getElementById('modalEnderecoTexto').value = '';
+      await carregarEnderecosSalvos(); renderListaEnderecosModal();
+  }
+  async function excluirEnderecoModal(id) {
+      if (!confirm('Remover endereço?')) return;
+      await db.from('enderecos_salvos').delete().eq('id', id);
+      await carregarEnderecosSalvos(); renderListaEnderecosModal();
+  }
+
+  // --- CRUD ANOTAÇÕES ---
   async function carregarAnotacoes() {
     try {
       const { data, error } = await db.from('anotacoes').select('id, titulo, descricao, concluida, criado_em, prioridade, criador');
@@ -677,37 +707,28 @@
 
   function renderAnotacoes(listaCompleta) {
     const container = document.getElementById('listaAnotacoesSidebar');
-    if (!listaCompleta || listaCompleta.length === 0) {
-      container.innerHTML = '<span class="empty-hint">Nenhuma anotação salva ainda.</span>'; return;
-    }
+    if (!listaCompleta || listaCompleta.length === 0) { container.innerHTML = '<span class="empty-hint">Nenhuma anotação salva ainda.</span>'; return; }
     const listaVisivel = listaCompleta.slice(0, limitadorAnotacoes);
     let html = listaVisivel.map(nota => {
-      const prioClass = `prio-${nota.prioridade || 'Normal'}`;
-      const nomeCriador = nota.criador || 'Equipe';
-      const dataCriacao = new Date(nota.criado_em).toLocaleDateString('pt-BR');
+      const prioClass = `prio-${nota.prioridade || 'Normal'}`; const nomeCriador = nota.criador || 'Equipe'; const dataCriacao = new Date(nota.criado_em).toLocaleDateString('pt-BR');
       return `
       <div class="nota-mini${nota.concluida ? ' feita' : ''}">
-        <button type="button" class="btn-check-emoji" onclick="alternarAnotacaoConcluida(${nota.id}, ${!nota.concluida})" title="${nota.concluida ? 'Reabrir' : 'Concluir'}">
-            ${nota.concluida ? '✅' : '⬜'}
-        </button>
+        <button type="button" class="btn-check-emoji" onclick="alternarAnotacaoConcluida(${nota.id}, ${!nota.concluida})" title="${nota.concluida ? 'Reabrir' : 'Concluir'}">${nota.concluida ? '✅' : '⬜'}</button>
         <div class="nota-mini-texto">
           <span class="badge-prioridade ${prioClass}">${nota.prioridade || 'Normal'}</span>
           <div class="nota-mini-titulo">${escaparHtml(nota.titulo)}</div>
           ${nota.descricao ? `<div class="nota-mini-desc">${escaparHtml(nota.descricao)}</div>` : ''}
           <div style="font-size:9px; color:#888; margin-top:3px; font-weight: 500;">👤 ${nomeCriador} • 🕒 ${dataCriacao}</div>
         </div>
-        <div class="acoes-nota-rapida">
+        <div class="acoes-nota-rapida" style="flex-wrap:wrap; justify-content:flex-end;">
           <button type="button" class="nota-btn-icon btn-lupa-icon" onclick="verDetalheAnotacao(${nota.id})" title="Ver Anotação">🔍</button>
+          <button type="button" class="nota-btn-icon btn-edit-icon" onclick="prepararEdicaoAnotacao(${nota.id})" title="Editar Anotação">✏️</button>
           <button type="button" class="nota-btn-icon btn-del-icon" onclick="excluirAnotacao(${nota.id})" title="Excluir">🗑️</button>
         </div>
-      </div>
-    `}).join('');
+      </div>`}).join('');
 
-    if (listaCompleta.length > limitadorAnotacoes) {
-        html += `<button class="btn-ver-mais" onclick="limitadorAnotacoes = 999; renderAnotacoes(listaAnotacoesGlobal)">Ver mais (${listaCompleta.length - limitadorAnotacoes}) 🔽</button>`;
-    } else if (limitadorAnotacoes > 10 && listaCompleta.length > 10) {
-        html += `<button class="btn-ver-mais" onclick="limitadorAnotacoes = 10; renderAnotacoes(listaAnotacoesGlobal)" style="color:#64748b;">Recolher 🔼</button>`;
-    }
+    if (listaCompleta.length > limitadorAnotacoes) { html += `<button class="btn-ver-mais" onclick="limitadorAnotacoes = 999; renderAnotacoes(listaAnotacoesGlobal)">Ver mais (${listaCompleta.length - limitadorAnotacoes}) 🔽</button>`; } 
+    else if (limitadorAnotacoes > 10 && listaCompleta.length > 10) { html += `<button class="btn-ver-mais" onclick="limitadorAnotacoes = 10; renderAnotacoes(listaAnotacoesGlobal)" style="color:#64748b;">Recolher 🔼</button>`; }
     container.innerHTML = html;
   }
   
@@ -715,14 +736,12 @@
 
   function verDetalheAnotacao(id) {
     const nota = listaAnotacoesGlobal.find(n => n.id === id); if (!nota) return;
-    const prioClass = `prio-${nota.prioridade || 'Normal'}`;
-    const dataCriacao = new Date(nota.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(nota.criado_em).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-    const nomeCriador = nota.criador || 'Equipe';
+    const prioClass = `prio-${nota.prioridade || 'Normal'}`; const dataCriacao = new Date(nota.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(nota.criado_em).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
     document.getElementById('conteudoDetalheAnotacao').innerHTML = `
       <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
         <span class="badge-prioridade ${prioClass}" style="font-size: 11px; padding: 3px 6px;">Prioridade: ${nota.prioridade || 'Normal'}</span>
         <div style="text-align: right; font-size: 11px; color: var(--text-secondary);">
-            <div style="font-weight: bold; color: #333;">👤 ${nomeCriador}</div><div>🗓️ ${dataCriacao}</div>
+            <div style="font-weight: bold; color: #333;">👤 ${nota.criador || 'Equipe'}</div><div>🗓️ ${dataCriacao}</div>
         </div>
       </div>
       <h4 style="margin-top: 0; font-size: 16px; color: var(--blue); margin-bottom: 8px;">${escaparHtml(nota.titulo)}</h4>
@@ -731,15 +750,46 @@
     document.getElementById('modalDetalheAnotacao').classList.add('aberto');
   }
   function fecharModalDetalheAnotacao() { document.getElementById('modalDetalheAnotacao').classList.remove('aberto'); }
+  
   async function alternarAnotacaoConcluida(id, concluida) { await db.from('anotacoes').update({ concluida }).eq('id', id); await carregarAnotacoes(); }
+  
+  function prepararEdicaoAnotacao(id) {
+      const nota = listaAnotacoesGlobal.find(n => n.id === id); if (!nota) return;
+      idNotaEmEdicao = id;
+      document.getElementById('novaNotaTitulo').value = nota.titulo;
+      document.getElementById('novaNotaDescricao').value = nota.descricao || '';
+      document.getElementById('novaNotaPrioridade').value = nota.prioridade || 'Normal';
+      
+      document.getElementById('tituloCardNota').innerText = '✏️ Editando Anotação';
+      document.getElementById('btnSalvarNota').innerText = '🔄 Atualizar anotação';
+      document.getElementById('btnCancelarNota').style.display = 'inline-block';
+      
+      document.getElementById('secaoAnotacoes').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function cancelarEdicaoNota() {
+      idNotaEmEdicao = null;
+      document.getElementById('tituloCardNota').innerText = 'Anotações rápidas';
+      document.getElementById('btnSalvarNota').innerText = 'Salvar anotação';
+      document.getElementById('btnCancelarNota').style.display = 'none';
+      document.getElementById('novaNotaTitulo').value = ''; document.getElementById('novaNotaDescricao').value = ''; document.getElementById('novaNotaPrioridade').value = 'Normal';
+  }
+
   async function salvarAnotacao() {
     const titulo = document.getElementById('novaNotaTitulo').value.trim(); const descricao = document.getElementById('novaNotaDescricao').value.trim(); const prioridade = document.getElementById('novaNotaPrioridade').value;
     if (!titulo) return alert('Digite um título para a anotação.');
     const autorLogado = localStorage.getItem('usuarioLogado') || 'Equipe';
-    await db.from('anotacoes').insert([{ titulo, descricao, prioridade, criador: autorLogado }]);
-    document.getElementById('novaNotaTitulo').value = ''; document.getElementById('novaNotaDescricao').value = ''; document.getElementById('novaNotaPrioridade').value = 'Normal';
+    
+    if (idNotaEmEdicao) {
+        await db.from('anotacoes').update({ titulo, descricao, prioridade }).eq('id', idNotaEmEdicao);
+        cancelarEdicaoNota();
+    } else {
+        await db.from('anotacoes').insert([{ titulo, descricao, prioridade, criador: autorLogado }]);
+        document.getElementById('novaNotaTitulo').value = ''; document.getElementById('novaNotaDescricao').value = ''; document.getElementById('novaNotaPrioridade').value = 'Normal';
+    }
     await carregarAnotacoes();
   }
+
   async function excluirAnotacao(id) {
     if (!confirm('Excluir esta anotação?')) return;
     await db.from('anotacoes').delete().eq('id', id); await carregarAnotacoes();
@@ -754,60 +804,29 @@
   function irParaHoje(idCampo) { document.getElementById(idCampo).value = dataDeHojeISO(); }
   function irParaAmanha(idCampo) { document.getElementById(idCampo).value = dataDeAmanhaISO(); }
 
-  // --- CRIAR / EDITAR EVENTO NO GOOGLE COM POP-UP / FEEDBACK ---
+  // --- GOOGLE AGENDA ---
   async function criarOuEditarEventoNoGoogle() {
-    const tipo = document.getElementById('novoTipoEvento').value;
-    const tituloRaw = document.getElementById('novoTitulo').value;
-    const data = document.getElementById('novaData').value;
-    const hora = document.getElementById('novaHora').value;
-    
-    const localBruto = document.getElementById('novoLocal').value.trim();
-    const complemento = document.getElementById('novoComplemento').value.trim();
-    const localFinal = complemento ? `${localBruto} - ${complemento}` : localBruto;
-    
-    const descricao = document.getElementById('novaDescricao').value;
-    const convidados = document.getElementById('novosConvidados').value;
-    const lembrete = document.getElementById('novoLembrete').value;
-    const status = document.getElementById('mensagemStatus');
-
+    const tipo = document.getElementById('novoTipoEvento').value; const tituloRaw = document.getElementById('novoTitulo').value; const data = document.getElementById('novaData').value; const hora = document.getElementById('novaHora').value;
+    const localBruto = document.getElementById('novoLocal').value.trim(); const complemento = document.getElementById('novoComplemento').value.trim(); const localFinal = complemento ? `${localBruto} - ${complemento}` : localBruto;
+    const descricao = document.getElementById('novaDescricao').value; const convidados = document.getElementById('novosConvidados').value; const lembrete = document.getElementById('novoLembrete').value; const status = document.getElementById('mensagemStatus');
     if (!tituloRaw || !data || !hora) return alert("Por favor, preencha o título, a data e a hora!");
-
     const tituloFinal = tipo ? `${tipo}: ${tituloRaw}` : tituloRaw; 
-
-    status.style.display = 'block'; status.className = 'status-loading'; 
-    status.innerText = idEventoEmEdicao ? 'Atualizando na Agenda... ⏳' : 'Salvando no Google Agenda... ⏳';
+    status.style.display = 'block'; status.className = 'status-loading'; status.innerText = idEventoEmEdicao ? 'Atualizando na Agenda... ⏳' : 'Salvando no Google Agenda... ⏳';
 
     try {
-      const acaoScript = idEventoEmEdicao ? 'editar' : 'criar';
-      const idAppend = idEventoEmEdicao ? `&id=${encodeURIComponent(idEventoEmEdicao)}` : '';
+      const acaoScript = idEventoEmEdicao ? 'editar' : 'criar'; const idAppend = idEventoEmEdicao ? `&id=${encodeURIComponent(idEventoEmEdicao)}` : '';
       const urlCompleta = `${URL_DO_SCRIPT}?acao=${acaoScript}&titulo=${encodeURIComponent(tituloFinal)}&data=${data}&hora=${hora}&local=${encodeURIComponent(localFinal)}&descricao=${encodeURIComponent(descricao)}&convidados=${encodeURIComponent(convidados)}&lembrete=${encodeURIComponent(lembrete)}${idAppend}`;
-      
-      const resposta = await fetch(urlCompleta);
-      const resultado = await resposta.json();
-
+      const resposta = await fetch(urlCompleta); const resultado = await resposta.json();
       if (resultado.status === 'sucesso') {
-        status.className = 'status-ok'; 
-        status.innerText = idEventoEmEdicao ? '✅ Evento atualizado com sucesso!' : '✅ Evento criado na agenda com sucesso!';
-        
-        // POPUP VISÍVEL PARA CELULAR E DESKTOP GARANTINDO O RETORNO
+        status.className = 'status-ok'; status.innerText = idEventoEmEdicao ? '✅ Evento atualizado!' : '✅ Evento criado!';
         alert(idEventoEmEdicao ? '🔄 Evento atualizado com sucesso na agenda!' : '🎉 Evento criado com sucesso na agenda do Google!');
-
-        if(convidados && resultado.debug) { console.log("Google API Feedback:", resultado.debug); }
-        
-        cancelarEdicao(); 
-        setTimeout(() => { status.style.display = 'none'; }, 4000);
+        cancelarEdicao(); setTimeout(() => { status.style.display = 'none'; }, 4000);
       } else { alert("Erro ao salvar: " + resultado.mensagem); status.style.display = 'none'; }
-    } catch (erro) { alert("Erro de conexão com o script."); status.style.display = 'none'; }
+    } catch (erro) { alert("Erro de conexão."); status.style.display = 'none'; }
   }
 
   // --- AUTOCOMPLETE INTELIGENTE ---
   const inputLocal = document.getElementById('novoLocal'); const boxSugestoes = document.getElementById('sugestoesLocal'); let debounceTimer;
-  const locaisVIP = [
-      { nome: "Prefeitura", endereco: "Prefeitura de São Leopoldo - Avenida Dom João Becker, 754, Centro, São Leopoldo, RS, Brasil" },
-      { nome: "Cecrei", endereco: "Cecrei - São Leopoldo, R. Regina Mundi, 333 - Cristo Rei, São Leopoldo, RS, 93020-280, Brasil" },
-      { nome: "Câmara", endereco: "Câmara Municipal - Rua Independência, 66, Centro, São Leopoldo, RS, Brasil" },
-      { nome: "Camara", endereco: "Câmara Municipal - Rua Independência, 66, Centro, São Leopoldo, RS, Brasil" }
-  ];
   function removerAcentos(str) { return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 
   inputLocal.addEventListener('input', () => {
@@ -822,27 +841,21 @@
   async function buscarEnderecos(termo) {
     numeroDigitadoAtual = extrairNumeroDigitado(termo);
     const termoLimpo = removerAcentos(termo).toLowerCase();
-
-    const locaisCustomMatch = locaisVIP.filter(l => removerAcentos(l.nome).toLowerCase().includes(termoLimpo) || termoLimpo.includes(removerAcentos(l.nome).toLowerCase()));
+    const locaisCustomMatch = listaEnderecosSalvos.filter(l => removerAcentos(l.nome).toLowerCase().includes(termoLimpo) || termoLimpo.includes(removerAcentos(l.nome).toLowerCase()));
 
     try {
       const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&accept-language=pt-BR&addressdetails=1&q=${encodeURIComponent(termoLimpo + ', São Leopoldo, RS')}`;
       const res = await fetch(url); const dadosNominatim = await res.json(); 
       mostrarSugestoes(dadosNominatim, locaisCustomMatch);
-    } catch (erro) { 
-        mostrarSugestoes([], locaisCustomMatch); 
-    }
+    } catch (erro) { mostrarSugestoes([], locaisCustomMatch); }
   }
   
   function montarEnderecoLimpo(item) {
-    const a = item.address || {}; const partes = [];
-    const rua = a.road || a.pedestrian || a.footway || ''; const numero = a.house_number || numeroDigitadoAtual || '';
+    const a = item.address || {}; const partes = []; const rua = a.road || a.pedestrian || a.footway || ''; const numero = a.house_number || numeroDigitadoAtual || '';
     if (rua) partes.push(numero ? `${rua}, ${numero}` : rua);
     const bairro = a.suburb || a.neighbourhood || a.quarter || ''; if (bairro) partes.push(bairro);
     const cidade = a.city || a.town || a.village || a.municipality || ''; if (cidade) partes.push(cidade);
-    partes.push('Brasil');
-    if (partes.length <= 1) return (item.display_name || '').replace(/,?\s*\d{5}-?\d{3}\s*,/i, ',');
-    return partes.join(', ');
+    partes.push('Brasil'); if (partes.length <= 1) return (item.display_name || '').replace(/,?\s*\d{5}-?\d{3}\s*,/i, ','); return partes.join(', ');
   }
   
   function mostrarSugestoes(listaNominatim, listaCustom) {
@@ -857,26 +870,19 @@
         });
     }
     if (listaNominatim && listaNominatim.length > 0) {
-        html += listaNominatim.map(item => {
-          const endFormat = montarEnderecoLimpo(item);
-          return `<div class="suggestion-item" data-endereco="${endFormat}">${endFormat}</div>`;
-        }).join('');
+        html += listaNominatim.map(item => { const endFormat = montarEnderecoLimpo(item); return `<div class="suggestion-item" data-endereco="${endFormat}">${endFormat}</div>`; }).join('');
     }
     if (html === '') { boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = ''; return; }
-    
-    boxSugestoes.innerHTML = html;
-    boxSugestoes.style.display = 'block';
-    
+    boxSugestoes.innerHTML = html; boxSugestoes.style.display = 'block';
     boxSugestoes.querySelectorAll('.suggestion-item').forEach((el) => {
       el.addEventListener('click', function() { inputLocal.value = this.getAttribute('data-endereco'); boxSugestoes.style.display = 'none'; boxSugestoes.innerHTML = ''; });
     });
   }
   document.addEventListener('click', (e) => { if (!e.target.closest('#novoLocal') && !e.target.closest('#sugestoesLocal')) boxSugestoes.style.display = 'none'; });
 
-// --- FUNÇÃO PARA LER E FORMATAR A AGENDA (COM LIMPEZA DE TAGS HTML) ---
+// --- LER E FORMATAR A AGENDA (COM LIMPEZA DE TAGS) ---
   async function buscarAgenda() {
-    const inputData = document.getElementById('dataBusca').value;
-    if (!inputData) return alert('Por favor, selecione uma data!');
+    const inputData = document.getElementById('dataBusca').value; if (!inputData) return alert('Por favor, selecione uma data!');
     const textArea = document.getElementById('resultadoAgenda'); textArea.value = 'Buscando eventos... ⏳';
     const pD = inputData.split('-'); const dO = new Date(pD[0], pD[1] - 1, pD[2]);
     const dS = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
@@ -891,7 +897,6 @@
         eventos.forEach(ev => {
           const local = ev.local ? ` — ${ev.local}` : ''; let descF = '';
           if (ev.descricao) { 
-              // 🧹 LIMPEZA DE HTML: Remove qualquer tag como <ul>, <li>, <br>, etc., deixando só o texto puro
               let textoLimpo = ev.descricao.replace(/<[^>]*>?/gm, ''); 
               let desc = textoLimpo.replace(/\n/g, ' ').trim(); 
               if (desc.length > 100) desc = desc.substring(0, 100) + '...'; 
