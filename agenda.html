@@ -454,7 +454,7 @@
 <script>
   // O NOVO LINK DO VEREADOR 100% LIMPO
   const URL_DO_SCRIPT = 'https://script.google.com/macros/s/AKfycbwIVv0CF4jzmov65IfY-DqSJJwSlsA9Tw9ZgaxQcFfrdi0cZc5NMl9XgrnwBgYlN_B7KQ/exec';
-  const TOKEN_AGENDA = 'cDUCNcHp7ud9caZDBXXFliIgHXVBtdmJcCvH3Dtp6qs';
+  let TOKEN_AGENDA = ''; // preenchido em tempo de execução via inicializarSupabase()
 
   let db;
   let listaAnotacoesGlobal = []; 
@@ -472,6 +472,8 @@
       const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
       const config = await res.json();
       db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
+      TOKEN_AGENDA = config.tokenAgenda || '';
+      if (!TOKEN_AGENDA) console.error('TOKEN_AGENDA não veio do config — a agenda vai falhar até isso ser corrigido.');
       await carregarEmailsFrequentes();
       await carregarEnderecosSalvos();
       await carregarAnotacoes();
