@@ -17,6 +17,7 @@
     <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -61,6 +62,13 @@
                 <label for="senha">Senha</label>
                 <input type="password" id="senha" placeholder="******" required>
             </div>
+            <div class="form-group" style="display:flex; justify-content:center;">
+                <div class="cf-turnstile"
+                     data-sitekey="SEU_SITE_KEY_AQUI"
+                     data-callback="onCaptchaOk"
+                     data-expired-callback="onCaptchaExpirado"
+                     data-error-callback="onCaptchaExpirado"></div>
+            </div>
             <button type="submit" id="btnAcessar" class="btn-login" disabled>Conectando ao sistema...</button>
             <button type="button" id="btnInstalarApp" class="btn-instalar">📲 Instalar Aplicativo</button>
             <div class="error" id="erro"></div>
@@ -84,6 +92,30 @@
             'Débora': 'debora@gabinete.interno'
         };
 
+        let configPronta = false;
+        let captchaToken = '';
+
+        function atualizarBotao() {
+            const btn = document.getElementById('btnAcessar');
+            if (configPronta && captchaToken) {
+                btn.disabled = false;
+                btn.textContent = 'Acessar Sistema';
+            } else if (configPronta && !captchaToken) {
+                btn.disabled = true;
+                btn.textContent = 'Confirme que você não é um robô';
+            }
+        }
+
+        function onCaptchaOk(token) {
+            captchaToken = token;
+            atualizarBotao();
+        }
+
+        function onCaptchaExpirado() {
+            captchaToken = '';
+            atualizarBotao();
+        }
+
         async function inicializarSistema() {
             try {
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
@@ -99,9 +131,8 @@
                 
                 await carregarAcessosDoBanco();
                 
-                const btn = document.getElementById('btnAcessar');
-                btn.textContent = 'Acessar Sistema';
-                btn.disabled = false;
+                configPronta = true;
+                atualizarBotao();
             } catch (err) {
                 document.getElementById('erro').textContent = 'Erro de comunicação com o servidor. Verifique sua internet.';
                 document.getElementById('erro').style.display = 'block';
@@ -188,13 +219,31 @@
             
             erroEl.style.display = 'none'; 
             if (!usuario) { erroEl.textContent = 'Selecione seu nome na lista.'; erroEl.style.display = 'block'; return; }
+            if (!captchaToken) { erroEl.textContent = 'Confirme que você não é um robô.'; erroEl.style.display = 'block'; return; }
             
-            btn.textContent = 'Autenticando...'; btn.disabled = true;
+            btn.textContent = 'Verificando...'; btn.disabled = true;
 
             try {
+                // Valida o captcha no servidor antes de tentar autenticar
+                const resCaptcha = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'verificar-captcha', captchaToken })
+                });
+                const captchaResult = await resCaptcha.json();
+                if (!captchaResult.success) {
+                    erroEl.textContent = 'Verificação de robô falhou. Tente novamente.'; erroEl.style.display = 'block';
+                    if (window.turnstile) turnstile.reset();
+                    captchaToken = '';
+                    return;
+                }
+
+                btn.textContent = 'Autenticando...';
                 const { data, error } = await db.auth.signInWithPassword({ email: emailsSinteticos[usuario], password: senha });
                 if (error) {
                     erroEl.textContent = 'Senha incorreta. Tente novamente.'; erroEl.style.display = 'block';
+                    if (window.turnstile) turnstile.reset();
+                    captchaToken = '';
                 } else {
                     localStorage.setItem('usuarioLogado', usuario);
                     localStorage.setItem('ultimoUsuarioLogadoLocal', usuario);
@@ -213,7 +262,7 @@
             } catch (error) {
                 erroEl.textContent = 'Falha crítica no sistema de login.'; erroEl.style.display = 'block';
             } finally {
-                btn.textContent = 'Acessar Sistema'; btn.disabled = false;
+                atualizarBotao();
             }
         });
 
