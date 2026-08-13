@@ -9,7 +9,6 @@
     <meta name="theme-color" content="#185199">
     <link rel="apple-touch-icon" href="https://i.imgur.com/coryuD6.png">
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
-    <!-- Adicionada Biblioteca para baixar PDF direto com links -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -249,18 +248,21 @@
             <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#555;">Secretaria Destino:</label>
-                    <input type="text" id="wordSecretaria" value="Secretaria Municipal de Mobilidade e Obras - SEMOB" style="text-align: left; font-size: 14px;">
+                    <input type="text" id="wordSecretaria" value="Secretaria Municipal de Mobilidade e Obras - SEMOB" style="text-align: left; font-size: 14px; width: 100%;">
                 </div>
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#555;">Nome do Secretário(a):</label>
-                    <input type="text" id="wordSecretario" value="Rogel da Silva Corrêa" style="text-align: left; font-size: 14px;">
+                    <input type="text" id="wordSecretario" value="Rogel da Silva Corrêa" style="text-align: left; font-size: 14px; width: 100%;">
                 </div>
-                <div>
-                    <label style="font-size:12px; font-weight:bold; color:#555;">Assinado por:</label>
-                    <select id="assinaturaOficio" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;">
-                        <option value="Luana">Luana Costa Dias (Chefe de Gabinete)</option>
-                        <option value="Daniel">Daniel Daudt Schaefer (Líder do governo/Vereador do PL)</option>
-                    </select>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Assinado por (Nome):</label>
+                        <input type="text" id="assinaturaOficio" value="Luana Costa Dias" list="listaNomesOficio" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Cargo(s): <small style="font-weight:normal;">(Use | p/ pular linha)</small></label>
+                        <input type="text" id="assinaturaCargo" value="Chefe de Gabinete" list="listaCargosOficio" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;">
+                    </div>
                 </div>
             </div>
             
@@ -300,23 +302,26 @@
     </div>
 
     <div class="modal-overlay" id="modalWordSelecionados">
-        <div class="modal-box" style="max-width: 450px; text-align: left; padding: 20px;">
+        <div class="modal-box" style="max-width: 650px; text-align: left; padding: 20px;">
             <h3 style="text-align:center; color:#185199; margin-bottom: 20px;">📄 Gerar Ofício (Cards Selecionados)</h3>
-            <div style="display:grid; grid-template-columns: 1fr; gap:15px; margin-bottom:15px;">
+            <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#555;">Secretaria Destino:</label>
-                    <input type="text" id="wordSecSel" value="Secretaria Municipal de Mobilidade e Obras - SEMOB" style="text-align: left; font-size: 14px;">
+                    <input type="text" id="wordSecSel" value="Secretaria Municipal de Mobilidade e Obras - SEMOB" style="text-align: left; font-size: 14px; width: 100%;">
                 </div>
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#555;">Nome do Secretário(a):</label>
-                    <input type="text" id="wordRespSel" value="Rogel da Silva Corrêa" style="text-align: left; font-size: 14px;">
+                    <input type="text" id="wordRespSel" value="Rogel da Silva Corrêa" style="text-align: left; font-size: 14px; width: 100%;">
                 </div>
-                <div>
-                    <label style="font-size:12px; font-weight:bold; color:#555;">Assinado por:</label>
-                    <select id="assinaturaOficioSel" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;">
-                        <option value="Luana">Luana Costa Dias (Chefe de Gabinete)</option>
-                        <option value="Daniel">Daniel Daudt Schaefer (Líder do governo/Vereador do PL)</option>
-                    </select>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Assinado por (Nome):</label>
+                        <input type="text" id="assinaturaOficioSel" value="Luana Costa Dias" list="listaNomesOficio" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Cargo(s): <small style="font-weight:normal;">(Use | p/ pular linha)</small></label>
+                        <input type="text" id="assinaturaCargoSel" value="Chefe de Gabinete" list="listaCargosOficio" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;">
+                    </div>
                 </div>
             </div>
             
@@ -338,6 +343,16 @@
             </div>
         </div>
     </div>
+
+    <!-- Datalists para facilitar preenchimento mas manter como texto livre -->
+    <datalist id="listaNomesOficio">
+        <option value="Luana Costa Dias"></option>
+        <option value="Daniel Daudt Schaefer"></option>
+    </datalist>
+    <datalist id="listaCargosOficio">
+        <option value="Chefe de Gabinete"></option>
+        <option value="Líder do governo | Vereador do PL"></option>
+    </datalist>
 
     <div class="modal-overlay" id="modalSenhaSegura">
         <div class="modal-box">
@@ -415,6 +430,22 @@
             localStorage.removeItem('usuarioLogado');
             localStorage.removeItem('authToken');
             window.location.href = 'index.html';
+        });
+
+        // Fechar menus usando tecla ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' || e.keyCode === 27) {
+                const modais = ['modalQuick', 'modalWord', 'modalWordSelecionados', 'modalSenhaSegura', 'modalCadastros', 'modalDescOverlay'];
+                modais.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && el.classList.contains('ativo')) {
+                        el.classList.remove('ativo');
+                    }
+                });
+                
+                // Cancela também o modo de seleção de cards se estiver ativo
+                if (modoSelecao) toggleSelecao();
+            }
         });
 
         let debounceTimer;
@@ -1031,10 +1062,17 @@
                 const sNum = DOMPurify.sanitize(demanda.numero || '');
                 const sBairro = DOMPurify.sanitize(demanda.bairro || '');
                 const sProt = DOMPurify.sanitize(demanda.protocolo || '');
-                const sPdp = DOMPurify.sanitize(demanda.pdp || '');
                 const sExp = DOMPurify.sanitize(demanda.expediente || '');
                 const donoOrdem = demanda.responsavel_ordem ? DOMPurify.sanitize(demanda.responsavel_ordem) : 'Não definido';
                 const cuindoTxt = responsaveis.length > 0 ? DOMPurify.sanitize(responsaveis.join(', ')) : 'Nenhum';
+                
+                // Tratar a formatação do Doc Interno (ex: PDP - NUMERO)
+                let sDocInterno = '';
+                if (demanda.doc_tipo || demanda.doc_numero) {
+                    let tipoAb = demanda.doc_tipo || 'Doc';
+                    if (tipoAb.toLowerCase() === 'pdp' || tipoAb.toLowerCase().includes('providência')) tipoAb = 'PDP';
+                    sDocInterno = DOMPurify.sanitize(`${tipoAb} - ${demanda.doc_numero || 'S/N'}`);
+                }
                 
                 const sPrioridade = demanda.prioridade || 'Normal';
                 let badgePrioridade = '';
@@ -1145,7 +1183,7 @@
                                 <div class="info" style="margin-top: 5px;">✍️ Resp. Ordem: <b>${donoOrdem}</b></div>
                                 <div class="info">👥 Cuidando: <b>${cuindoTxt}</b></div>
                                 ${sProt ? `<div class="info" style="color:#0984e3; font-weight:bold;">🔢 156: ${sProt}</div>` : ''}
-                                ${sPdp ? `<div class="info" style="color:#f39c12; font-weight:bold;">📋 PDP: ${sPdp}</div>` : ''}
+                                ${sDocInterno ? `<div class="info" style="color:#f39c12; font-weight:bold;">📋 Doc: ${sDocInterno}</div>` : ''}
                                 ${sExp || demanda.link_legis ? `<div class="info" style="color:#d35400; font-weight:bold;">📄 Expediente: ${sExp || 'Gerado'}</div>` : ''}
                                 ${tempoCard}
                                 ${atualizacaoCard}
@@ -1299,10 +1337,14 @@
 
             const secNome = document.getElementById('wordSecretaria').value.trim() || 'Secretaria Destino';
             const secResp = document.getElementById('wordSecretario').value.trim() || 'Secretário(a)';
-            const assinatura = document.getElementById('assinaturaOficio').value;
+            
+            // Novos campos livres de assinatura
+            const assinatura = document.getElementById('assinaturaOficio').value.trim() || 'Assinatura';
+            const cargoRaw = document.getElementById('assinaturaCargo').value.trim();
+            const cargosHTML = cargoRaw.split('|').map(c => `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">${c.trim()}</p>`).join('');
+            
             const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
             
-            // Puxa o valor do novo dropdown de links
             const tipoLink = document.getElementById('tipoLinkWord').value;
 
             let trsHTML = '';
@@ -1337,15 +1379,10 @@
                 }
             });
 
-            let rodapeHTML = '';
-            if (assinatura === 'Luana') {
-                rodapeHTML = `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Luana Costa Dias</p>
-                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Chefe de Gabinete</p>`;
-            } else {
-                rodapeHTML = `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Daniel Daudt Schaefer</p>
-                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Líder do governo</p>
-                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Vereador do PL</p>`;
-            }
+            let rodapeHTML = `
+                <p style="text-align: center; margin: 0; font-family: Arial, sans-serif; font-weight: bold;">${assinatura}</p>
+                ${cargosHTML}
+            `;
 
             const htmlString = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
@@ -1416,10 +1453,13 @@
             if (selecionadosWord.size === 0) return alert("Nenhuma demanda selecionada!");
             const secNome = document.getElementById('wordSecSel').value.trim() || 'Secretaria Destino';
             const secResp = document.getElementById('wordRespSel').value.trim() || 'Secretário(a)';
-            const assinatura = document.getElementById('assinaturaOficioSel').value;
-            const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
             
-            // Puxa o valor do dropdown de links
+            // Novos campos livres de assinatura
+            const assinatura = document.getElementById('assinaturaOficioSel').value.trim() || 'Assinatura';
+            const cargoRaw = document.getElementById('assinaturaCargoSel').value.trim();
+            const cargosHTML = cargoRaw.split('|').map(c => `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">${c.trim()}</p>`).join('');
+
+            const dataHoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
             const tipoLink = document.getElementById('tipoLinkWordSel').value;
             
             let trsHTML = '';
@@ -1454,15 +1494,10 @@
                 }
             });
 
-            let rodapeHTML = '';
-            if (assinatura === 'Luana') {
-                rodapeHTML = `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Luana Costa Dias</p>
-                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Chefe de Gabinete</p>`;
-            } else {
-                rodapeHTML = `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Daniel Daudt Schaefer</p>
-                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Líder do governo</p>
-                              <p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">Vereador do PL</p>`;
-            }
+            let rodapeHTML = `
+                <p style="text-align: center; margin: 0; font-family: Arial, sans-serif; font-weight: bold;">${assinatura}</p>
+                ${cargosHTML}
+            `;
 
             const htmlString = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
