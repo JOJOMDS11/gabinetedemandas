@@ -89,6 +89,15 @@
         #barraSelecao { display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#185199; color:white; padding:15px; border-radius:12px; gap:10px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:9999; align-items:center; width: 95%; max-width: 600px; flex-wrap: wrap; justify-content: center; }
         .select-periodo { padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 11px; font-weight: bold; color: #185199; background: #e2e8f0; outline: none; cursor: pointer; transition: 0.2s; }
         .select-periodo:hover { background: #cbd5e1; }
+
+        /* Estilos do Sistema de Abas (Tabs) */
+        .tabs-header { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 15px; overflow-x: auto; gap: 5px; padding-bottom: 2px; }
+        .tab-btn { padding: 8px 12px; cursor: pointer; background: transparent; border: none; font-weight: bold; color: #64748b; font-size: 13px; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: 0.2s; }
+        .tab-btn:hover { color: #185199; }
+        .tab-btn.ativo { color: #185199; border-bottom-color: #185199; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.ativo { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -124,11 +133,11 @@
                 </div>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
-    <button class="btn-nova" style="background-color: #f39c12; color: white;" onclick="abrirModalWord()">📄 Gerar Ofício</button>
-    <button class="btn-nova" style="background-color: #3b82f6; color: white;" onclick="window.location.href='relatorios.html'">📊 Relatórios BI</button>
-    <button class="btn-nova" style="background-color: #8e44ad; color: white;" onclick="window.location.href='agenda.html'">🗓️ Agenda</button>
-    <button class="btn-nova" onclick="window.location.href='nova-demanda.html'">+ Nova Demanda</button>
-</div>
+                <button class="btn-nova" style="background-color: #f39c12; color: white;" onclick="abrirModalWord()">📄 Gerar Ofício</button>
+                <button class="btn-nova" style="background-color: #3b82f6; color: white;" onclick="window.location.href='relatorios.html'">📊 Relatórios BI</button>
+                <button class="btn-nova" style="background-color: #8e44ad; color: white;" onclick="window.location.href='agenda.html'">🗓️ Agenda</button>
+                <button class="btn-nova" onclick="window.location.href='nova-demanda.html'">+ Nova Demanda</button>
+            </div>
         </div>
 
         <div class="filtros-avancados">
@@ -240,10 +249,11 @@
         </div>
     </div>
 
+    <!-- Modal Gerar Ofício Principal -->
     <div class="modal-overlay" id="modalWord">
         <div class="modal-box" style="max-width: 650px; text-align: left; padding: 20px;">
             <h3 style="text-align:center; color:#185199; margin-bottom: 5px;">📄 Gerar Ofício</h3>
-            <p style="text-align:center; color:#666; font-size:12px; margin-bottom: 20px;">O sistema listará abaixo as demandas do seu banco de dados (excluindo as finalizadas e sem identificador).</p>
+            <p style="text-align:center; color:#666; font-size:12px; margin-bottom: 20px;">O sistema listará abaixo as demandas (excluindo as finalizadas e sem identificador).</p>
             
             <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
                 <div>
@@ -257,11 +267,11 @@
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div>
                         <label style="font-size:12px; font-weight:bold; color:#555;">Assinado por (Nome):</label>
-                        <input type="text" id="assinaturaOficio" value="Luana Costa Dias" list="listaNomesOficio" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;">
+                        <select id="assinaturaOficio" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;"></select>
                     </div>
                     <div>
-                        <label style="font-size:12px; font-weight:bold; color:#555;">Cargo(s): <small style="font-weight:normal;">(Use | p/ pular linha)</small></label>
-                        <input type="text" id="assinaturaCargo" value="Chefe de Gabinete" list="listaCargosOficio" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;">
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Cargo(s): <small style="font-weight:normal;">(Usa | p/ pular linha)</small></label>
+                        <select id="assinaturaCargo" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;"></select>
                     </div>
                 </div>
             </div>
@@ -301,6 +311,7 @@
         </div>
     </div>
 
+    <!-- Modal Gerar Ofício Selecionados -->
     <div class="modal-overlay" id="modalWordSelecionados">
         <div class="modal-box" style="max-width: 650px; text-align: left; padding: 20px;">
             <h3 style="text-align:center; color:#185199; margin-bottom: 20px;">📄 Gerar Ofício (Cards Selecionados)</h3>
@@ -316,11 +327,11 @@
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div>
                         <label style="font-size:12px; font-weight:bold; color:#555;">Assinado por (Nome):</label>
-                        <input type="text" id="assinaturaOficioSel" value="Luana Costa Dias" list="listaNomesOficio" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;">
+                        <select id="assinaturaOficioSel" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;"></select>
                     </div>
                     <div>
-                        <label style="font-size:12px; font-weight:bold; color:#555;">Cargo(s): <small style="font-weight:normal;">(Use | p/ pular linha)</small></label>
-                        <input type="text" id="assinaturaCargoSel" value="Chefe de Gabinete" list="listaCargosOficio" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;">
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Cargo(s): <small style="font-weight:normal;">(Usa | p/ pular linha)</small></label>
+                        <select id="assinaturaCargoSel" style="padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width: 100%;"></select>
                     </div>
                 </div>
             </div>
@@ -344,16 +355,7 @@
         </div>
     </div>
 
-    <!-- Datalists para facilitar preenchimento mas manter como texto livre -->
-    <datalist id="listaNomesOficio">
-        <option value="Luana Costa Dias"></option>
-        <option value="Daniel Daudt Schaefer"></option>
-    </datalist>
-    <datalist id="listaCargosOficio">
-        <option value="Chefe de Gabinete"></option>
-        <option value="Líder do governo | Vereador do PL"></option>
-    </datalist>
-
+    <!-- Modal Exclusão -->
     <div class="modal-overlay" id="modalSenhaSegura">
         <div class="modal-box">
             <h3>🔐 Exclusão de Registro</h3>
@@ -367,30 +369,61 @@
         </div>
     </div>
 
+    <!-- Novo Modal de Cadastros c/ Abas -->
     <div class="modal-overlay" id="modalCadastros">
-        <div class="modal-box" style="max-width: 480px; text-align: left;">
-            <h3 style="text-align:center; color:#185199;">⚙️ Gerenciar Cadastros</h3>
+        <div class="modal-box" style="max-width: 500px; text-align: left; padding: 20px;">
+            <h3 style="text-align:center; color:#185199; margin-bottom: 20px;">⚙️ Gerenciar Cadastros</h3>
             
-            <h4 style="font-size: 14px; margin-top: 15px; margin-bottom: 10px; color: #555;">🏢 Secretarias</h4>
-            <div style="display:flex; gap:8px; margin-bottom:10px;">
-                <input type="text" id="inputNovaSecretaria" placeholder="Nome da nova secretaria..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
-                <button onclick="adicionarSecretaria()" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
+            <div class="tabs-header">
+                <button class="tab-btn ativo" onclick="abrirAbaCadastro('tabSecretarias', this)">🏢 Secretarias</button>
+                <button class="tab-btn" onclick="abrirAbaCadastro('tabBairros', this)">📍 Bairros</button>
+                <button class="tab-btn" onclick="abrirAbaCadastro('tabAssinaturas', this)">✍️ Assinantes</button>
+                <button class="tab-btn" onclick="abrirAbaCadastro('tabCargos', this)">💼 Cargos</button>
             </div>
-            <div id="listaSecretariasModal" style="max-height: 150px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-bottom:20px; border: 1px solid #eee; padding: 5px; border-radius: 4px;"></div>
 
-            <h4 style="font-size: 14px; margin-bottom: 10px; color: #555;">📍 Bairros</h4>
-            <div style="display:flex; gap:8px; margin-bottom:10px;">
-                <input type="text" id="inputNovoBairro" placeholder="Nome do novo bairro..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
-                <button onclick="adicionarBairro()" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
+            <!-- Aba Secretarias -->
+            <div id="tabSecretarias" class="tab-content ativo">
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <input type="text" id="inputNovaSecretaria" placeholder="Nova secretaria..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:13px; margin:0;">
+                    <button onclick="adicionarSecretaria()" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
+                </div>
+                <div id="listaSecretariasModal" style="max-height: 180px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; border: 1px solid #eee; padding: 5px; border-radius: 4px; background:#fafafa;"></div>
             </div>
-            <div id="listaBairrosModal" style="max-height: 150px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-bottom:15px; border: 1px solid #eee; padding: 5px; border-radius: 4px;"></div>
 
-            <div class="modal-botoes">
+            <!-- Aba Bairros -->
+            <div id="tabBairros" class="tab-content">
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <input type="text" id="inputNovoBairro" placeholder="Novo bairro..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:13px; margin:0;">
+                    <button onclick="adicionarBairro()" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
+                </div>
+                <div id="listaBairrosModal" style="max-height: 180px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; border: 1px solid #eee; padding: 5px; border-radius: 4px; background:#fafafa;"></div>
+            </div>
+
+            <!-- Aba Assinaturas (Nomes) -->
+            <div id="tabAssinaturas" class="tab-content">
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <input type="text" id="inputNovaAssinatura" placeholder="Nome para assinatura..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:13px; margin:0;">
+                    <button onclick="adicionarAssinatura()" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
+                </div>
+                <div id="listaAssinaturasModal" style="max-height: 180px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; border: 1px solid #eee; padding: 5px; border-radius: 4px; background:#fafafa;"></div>
+            </div>
+
+            <!-- Aba Cargos -->
+            <div id="tabCargos" class="tab-content">
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <input type="text" id="inputNovoCargo" placeholder="Título do Cargo (Use | pular linha)..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:13px; margin:0;">
+                    <button onclick="adicionarCargo()" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">➕</button>
+                </div>
+                <div id="listaCargosModal" style="max-height: 180px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; border: 1px solid #eee; padding: 5px; border-radius: 4px; background:#fafafa;"></div>
+            </div>
+
+            <div class="modal-botoes" style="margin-top: 20px;">
                 <button style="background:#185199; color:white; flex:1; padding:10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="fecharGerenciadorCadastros()">Fechar</button>
             </div>
         </div>
     </div>
 
+    <!-- Modal Descrição Completa -->
     <div class="modal-overlay" id="modalDescOverlay">
         <div class="modal-desc-box">
             <h3>Detalhes da Demanda <button type="button" onclick="fecharModalDescricao()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#c0392b;" title="Fechar">✕</button></h3>
@@ -405,6 +438,9 @@
         let listaGlobalFiltrada = []; 
         let usuarioLogado = localStorage.getItem('usuarioLogado');
         let authToken = localStorage.getItem('authToken'); 
+        
+        let listaAssinaturasCarregada = [];
+        let listaCargosCarregada = [];
         
         if (!usuarioLogado) window.location.href = 'index.html';
         document.getElementById('nomeUsuario').textContent = usuarioLogado; 
@@ -529,6 +565,7 @@
                 await carregarBairros();
                 await carregarDemandas();
                 await carregarListaSecretariasMenuQuick();
+                await carregarListasAssinaturasECargos();
 
                 db.channel('dashboard-live')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, async (payload) => {
@@ -592,6 +629,33 @@
                     sel.innerHTML = '<option value="">Opcional: Selecione a Sec.</option>';
                 }
             } catch (e) { }
+        }
+
+        async function carregarListasAssinaturasECargos() {
+            try {
+                const reqAssin = await db.from('assinaturas').select('nome').order('nome');
+                if (!reqAssin.error && reqAssin.data) {
+                    listaAssinaturasCarregada = reqAssin.data.map(r => r.nome);
+                }
+                
+                const reqCargos = await db.from('cargos').select('nome').order('nome');
+                if (!reqCargos.error && reqCargos.data) {
+                    listaCargosCarregada = reqCargos.data.map(r => r.nome);
+                }
+                
+                popularSelectsOficio();
+            } catch(e) {}
+        }
+
+        function popularSelectsOficio() {
+            const selectsNomes = [document.getElementById('assinaturaOficio'), document.getElementById('assinaturaOficioSel')];
+            const selectsCargos = [document.getElementById('assinaturaCargo'), document.getElementById('assinaturaCargoSel')];
+            
+            const nomesHtml = listaAssinaturasCarregada.map(n => `<option value="${DOMPurify.sanitize(n)}">${DOMPurify.sanitize(n)}</option>`).join('');
+            const cargosHtml = listaCargosCarregada.map(c => `<option value="${DOMPurify.sanitize(c)}">${DOMPurify.sanitize(c)}</option>`).join('');
+            
+            selectsNomes.forEach(s => { if(s) s.innerHTML = nomesHtml; });
+            selectsCargos.forEach(s => { if(s) s.innerHTML = cargosHtml; });
         }
 
         function isVideo(url) { if (!url) return false; return /\.(mp4|webm|mov|ogg)$/i.test(url); }
@@ -738,16 +802,28 @@
             btn.textContent = 'Salvar Rápida';
         }
 
+        /* ---------------- LOGICA DE TABS NO GERENCIADOR ---------------- */
+        window.abrirAbaCadastro = function(idAba, btnElement) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('ativo'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('ativo'));
+            
+            btnElement.classList.add('ativo');
+            document.getElementById(idAba).classList.add('ativo');
+        }
+
         window.abrirGerenciadorCadastros = async function() { 
             document.getElementById('modalCadastros').classList.add('ativo'); 
             await renderizarListaSecretariasModal();
             await renderizarListaBairrosModal();
+            await renderizarListaAssinaturasModal();
+            await renderizarListaCargosModal();
         }
         
         window.fecharGerenciadorCadastros = function() { 
             document.getElementById('modalCadastros').classList.remove('ativo'); 
         }
 
+        /* ----- SECRETARIAS ----- */
         async function renderizarListaSecretariasModal() {
             const lista = document.getElementById('listaSecretariasModal');
             lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
@@ -755,7 +831,7 @@
             const secretarias = data || [];
             if (secretarias.length === 0) { lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhuma secretaria cadastrada.</p>'; return; }
             lista.innerHTML = secretarias.map(s => `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:6px 10px; border-radius:4px; border:1px solid #e2e8f0;">
                     <span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(s.nome)}</span>
                     <button onclick="excluirSecretaria(${s.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button>
                 </div>
@@ -766,33 +842,20 @@
             const input = document.getElementById('inputNovaSecretaria');
             const nome = input.value.trim();
             if (!nome) return alert('Digite o nome!');
-            
             const { error } = await db.from('secretarias').insert([{ nome }]);
-            if (error) {
-                alert('Erro do Banco: ' + error.message);
-                console.error(error);
-                return;
-            }
-            
-            input.value = ''; 
-            await renderizarListaSecretariasModal();
+            if (error) { alert('Erro do Banco: ' + error.message); return; }
+            input.value = ''; await renderizarListaSecretariasModal();
         }
 
         window.excluirSecretaria = async function(id, btn) {
             if (!confirm('Remover esta secretaria da lista?')) return;
             btn.disabled = true;
-            
             const { error } = await db.from('secretarias').delete().eq('id', id);
-            if (error) {
-                alert('Erro do Banco: ' + error.message);
-                console.error(error);
-                btn.disabled = false;
-                return;
-            }
-            
+            if (error) { alert('Erro do Banco: ' + error.message); btn.disabled = false; return; }
             await renderizarListaSecretariasModal();
         }
 
+        /* ----- BAIRROS ----- */
         async function renderizarListaBairrosModal() {
             const lista = document.getElementById('listaBairrosModal');
             lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
@@ -800,7 +863,7 @@
             const bairros = data || [];
             if (bairros.length === 0) { lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhum bairro cadastrado.</p>'; return; }
             lista.innerHTML = bairros.map(b => `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:#f7f7f7; padding:6px 10px; border-radius:4px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:6px 10px; border-radius:4px; border:1px solid #e2e8f0;">
                     <span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(b.nome)}</span>
                     <button onclick="excluirBairro(${b.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button>
                 </div>
@@ -811,33 +874,90 @@
             const input = document.getElementById('inputNovoBairro');
             const nome = input.value.trim().toUpperCase();
             if (!nome) return alert('Digite o nome do bairro!');
-            
             const { error } = await db.from('bairros').insert([{ nome }]);
-            if (error) {
-                alert('Erro do Banco: ' + error.message);
-                console.error(error);
-                return;
-            }
-            
-            input.value = ''; 
-            await renderizarListaBairrosModal();
+            if (error) { alert('Erro do Banco: ' + error.message); return; }
+            input.value = ''; await renderizarListaBairrosModal();
         }
 
         window.excluirBairro = async function(id, btn) {
             if (!confirm('Remover este bairro da lista?')) return;
             btn.disabled = true;
-            
             const { error } = await db.from('bairros').delete().eq('id', id);
-            if (error) {
-                alert('Erro do Banco: ' + error.message);
-                console.error(error);
-                btn.disabled = false;
-                return;
-            }
-            
+            if (error) { alert('Erro do Banco: ' + error.message); btn.disabled = false; return; }
             await renderizarListaBairrosModal();
         }
 
+        /* ----- ASSINATURAS ----- */
+        async function renderizarListaAssinaturasModal() {
+            const lista = document.getElementById('listaAssinaturasModal');
+            lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
+            const { data, error } = await db.from('assinaturas').select('id, nome').order('nome');
+            const assinantes = data || [];
+            if (assinantes.length === 0) { lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhum assinante cadastrado.</p>'; return; }
+            lista.innerHTML = assinantes.map(a => `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:6px 10px; border-radius:4px; border:1px solid #e2e8f0;">
+                    <span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(a.nome)}</span>
+                    <button onclick="excluirAssinatura(${a.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        window.adicionarAssinatura = async function() {
+            const input = document.getElementById('inputNovaAssinatura');
+            const nome = input.value.trim();
+            if (!nome) return alert('Digite o nome!');
+            const { error } = await db.from('assinaturas').insert([{ nome }]);
+            if (error) { alert('Erro do Banco: ' + error.message); return; }
+            input.value = ''; 
+            await renderizarListaAssinaturasModal();
+            await carregarListasAssinaturasECargos(); // Atualiza os forms de ofício na memória
+        }
+
+        window.excluirAssinatura = async function(id, btn) {
+            if (!confirm('Remover esta assinatura da lista?')) return;
+            btn.disabled = true;
+            const { error } = await db.from('assinaturas').delete().eq('id', id);
+            if (error) { alert('Erro do Banco: ' + error.message); btn.disabled = false; return; }
+            await renderizarListaAssinaturasModal();
+            await carregarListasAssinaturasECargos();
+        }
+
+        /* ----- CARGOS ----- */
+        async function renderizarListaCargosModal() {
+            const lista = document.getElementById('listaCargosModal');
+            lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Carregando...</p>';
+            const { data, error } = await db.from('cargos').select('id, nome').order('nome');
+            const cargos = data || [];
+            if (cargos.length === 0) { lista.innerHTML = '<p style="color:#999; text-align:center; font-size:13px;">Nenhum cargo cadastrado.</p>'; return; }
+            lista.innerHTML = cargos.map(c => `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:6px 10px; border-radius:4px; border:1px solid #e2e8f0;">
+                    <span style="font-size:12px; font-weight:bold;">${DOMPurify.sanitize(c.nome)}</span>
+                    <button onclick="excluirCargo(${c.id}, this)" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        window.adicionarCargo = async function() {
+            const input = document.getElementById('inputNovoCargo');
+            const nome = input.value.trim();
+            if (!nome) return alert('Digite o título do cargo!');
+            const { error } = await db.from('cargos').insert([{ nome }]);
+            if (error) { alert('Erro do Banco: ' + error.message); return; }
+            input.value = ''; 
+            await renderizarListaCargosModal();
+            await carregarListasAssinaturasECargos();
+        }
+
+        window.excluirCargo = async function(id, btn) {
+            if (!confirm('Remover este cargo da lista?')) return;
+            btn.disabled = true;
+            const { error } = await db.from('cargos').delete().eq('id', id);
+            if (error) { alert('Erro do Banco: ' + error.message); btn.disabled = false; return; }
+            await renderizarListaCargosModal();
+            await carregarListasAssinaturasECargos();
+        }
+
+        /* ---------------- LOGICA DE FILTROS ---------------- */
         window.filtrar = function(status) {
             filtroAtual = status; paginaAtual = 1;
             localStorage.setItem('filtro_preferido_' + usuarioLogado, status);
@@ -1312,7 +1432,9 @@
             
             container.innerHTML = demandasParaWord.map(d => {
                 const exp = DOMPurify.sanitize(d.expediente || 'S/Exp');
-                const pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : 'S/PDP');
+                let tipoAb = d.doc_tipo || 'Doc';
+                if (tipoAb.toLowerCase() === 'pdp' || tipoAb.toLowerCase().includes('providência')) tipoAb = 'PDP';
+                const pdp = DOMPurify.sanitize(d.doc_numero ? (tipoAb + ' - ' + d.doc_numero) : 'S/PDP');
                 const prot = DOMPurify.sanitize(d.protocolo ? '156: ' + d.protocolo : '');
                 const assunto = DOMPurify.sanitize(d.assunto || '');
                 const statusTag = d.status || '';
@@ -1338,7 +1460,6 @@
             const secNome = document.getElementById('wordSecretaria').value.trim() || 'Secretaria Destino';
             const secResp = document.getElementById('wordSecretario').value.trim() || 'Secretário(a)';
             
-            // Novos campos livres de assinatura
             const assinatura = document.getElementById('assinaturaOficio').value.trim() || 'Assinatura';
             const cargoRaw = document.getElementById('assinaturaCargo').value.trim();
             const cargosHTML = cargoRaw.split('|').map(c => `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">${c.trim()}</p>`).join('');
@@ -1352,7 +1473,11 @@
                 const d = todasDemandas.find(x => x.id === chk.value);
                 if (d) {
                     let exp = DOMPurify.sanitize(d.expediente || '');
-                    let pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
+                    
+                    let tipoAb = d.doc_tipo || 'Doc';
+                    if (tipoAb.toLowerCase() === 'pdp' || tipoAb.toLowerCase().includes('providência')) tipoAb = 'PDP';
+                    let pdp = DOMPurify.sanitize(d.doc_numero ? (tipoAb + ' - ' + d.doc_numero) : '');
+                    
                     const desc = DOMPurify.sanitize(d.descricao || d.assunto || '');
                     
                     let url = '';
@@ -1454,7 +1579,6 @@
             const secNome = document.getElementById('wordSecSel').value.trim() || 'Secretaria Destino';
             const secResp = document.getElementById('wordRespSel').value.trim() || 'Secretário(a)';
             
-            // Novos campos livres de assinatura
             const assinatura = document.getElementById('assinaturaOficioSel').value.trim() || 'Assinatura';
             const cargoRaw = document.getElementById('assinaturaCargoSel').value.trim();
             const cargosHTML = cargoRaw.split('|').map(c => `<p style="text-align: center; margin: 0; font-family: Arial, sans-serif;">${c.trim()}</p>`).join('');
@@ -1467,7 +1591,11 @@
                 const d = todasDemandas.find(x => x.id === id);
                 if (d) {
                     let exp = DOMPurify.sanitize(d.expediente || '');
-                    let pdp = DOMPurify.sanitize(d.doc_numero ? (d.doc_tipo + ' ' + d.doc_numero) : '');
+                    
+                    let tipoAb = d.doc_tipo || 'Doc';
+                    if (tipoAb.toLowerCase() === 'pdp' || tipoAb.toLowerCase().includes('providência')) tipoAb = 'PDP';
+                    let pdp = DOMPurify.sanitize(d.doc_numero ? (tipoAb + ' - ' + d.doc_numero) : '');
+                    
                     const desc = DOMPurify.sanitize(d.descricao || d.assunto || '');
                     
                     let url = '';
