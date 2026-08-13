@@ -116,13 +116,45 @@
             atualizarBotao();
         }
 
+        // --- SISTEMA DE BLOQUEIO LOCAL (UX) ---
+        function verificarBloqueio() {
+            const blockTime = localStorage.getItem('lockoutUntil');
+            if (blockTime) {
+                const agora = new Date().getTime();
+                if (agora < parseInt(blockTime)) {
+                    // Retorna os segundos restantes
+                    return Math.ceil((parseInt(blockTime) - agora) / 1000);
+                } else {
+                    // O tempo já passou, libera o acesso, mas mantém a contagem de erros para a próxima punição ser maior
+                    localStorage.removeItem('lockoutUntil');
+                }
+            }
+            return 0;
+        }
+
+        function registrarErro() {
+            let erros = parseInt(localStorage.getItem('loginFails') || '0');
+            erros++;
+            localStorage.setItem('loginFails', erros);
+            const agora = new Date().getTime();
+
+            if (erros === 5 || erros === 6) {
+                localStorage.setItem('lockoutUntil', agora + 60000); // 1 minuto
+                return 'Muitas tentativas! Aguarde 1 minuto.';
+            } else if (erros >= 7) {
+                localStorage.setItem('lockoutUntil', agora + 900000); // 15 minutos
+                return 'Muitas tentativas! Sistema bloqueado por 15 minutos.';
+            }
+            return `Senha incorreta. Tentativa ${erros} de 5 antes do bloqueio.`;
+        }
+        // ----------------------------------------
+
         async function inicializarSistema() {
             try {
                 const res = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config');
                 const config = await res.json();
                 db = supabase.createClient(config.supabaseUrl, config.supabaseKey);
                 
-                // Redireciona se já estiver logado
                 const { data: { session } } = await db.auth.getSession();
                 if (session && localStorage.getItem('usuarioLogado')) {
                     window.location.replace('dashboard.html');
@@ -136,7 +168,6 @@
             } catch (err) {
                 document.getElementById('erro').textContent = 'Erro de comunicação com o servidor. Verifique sua internet.';
                 document.getElementById('erro').style.display = 'block';
-                // Fallback caso o banco não responda
                 popularSelectComNomesBasicos();
             }
         }
@@ -151,7 +182,6 @@
                 let htmlAcessos = '';
                 
                 if (acessos && acessos.length > 0) {
-                    // Ordena a lista de nomes baseada no último acesso no banco
                     const nomesOrdenados = [];
                     const acessosMap = {};
                     
@@ -164,12 +194,10 @@
                         }
                     });
                     
-                    // Adiciona os nomes que nunca logaram no final
                     nomesParaProcessar.forEach(n => {
                         if (!nomesOrdenados.includes(n)) nomesOrdenados.push(n);
                     });
 
-                    // Popula o select e a lista visual
                     nomesOrdenados.forEach(nome => {
                         if (acessosMap[nome]) {
                             const dt = acessosMap[nome];
@@ -188,7 +216,6 @@
                     popularSelectComNomesBasicos();
                 }
 
-                // Seleciona o último usuário que logou nesta máquina especificamente
                 const ultimoUsuario = localStorage.getItem('ultimoUsuarioLogadoLocal');
                 if (ultimoUsuario) {
                     Array.from(select.options).forEach(opt => {
@@ -218,13 +245,21 @@
             const btn = document.getElementById('btnAcessar');
             
             erroEl.style.display = 'none'; 
+            
+            // VERIFICA SE ESTÁ BLOQUEADO ANTES DE CONTINUAR
+            const tempoRestante = verificarBloqueio();
+            if (tempoRestante > 0) {
+                erroEl.textContent = `Aguarde ${Math.ceil(tempoRestante/60)} minuto(s) antes de tentar novamente.`;
+                erroEl.style.display = 'block';
+                return;
+            }
+
             if (!usuario) { erroEl.textContent = 'Selecione seu nome na lista.'; erroEl.style.display = 'block'; return; }
             if (!captchaToken) { erroEl.textContent = 'Confirme que você não é um robô.'; erroEl.style.display = 'block'; return; }
             
             btn.textContent = 'Verificando...'; btn.disabled = true;
 
             try {
-                // Valida o captcha no servidor antes de tentar autenticar
                 const resCaptcha = await fetch('https://ypuniizmkadgoxhuzgxu.supabase.co/functions/v1/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -235,20 +270,28 @@
                     erroEl.textContent = 'Verificação de robô falhou. Tente novamente.'; erroEl.style.display = 'block';
                     if (window.turnstile) turnstile.reset();
                     captchaToken = '';
+                    atualizarBotao();
                     return;
                 }
 
                 btn.textContent = 'Autenticando...';
                 const { data, error } = await db.auth.signInWithPassword({ email: emailsSinteticos[usuario], password: senha });
+                
                 if (error) {
-                    erroEl.textContent = 'Senha incorreta. Tente novamente.'; erroEl.style.display = 'block';
+                    // REGISTRA O ERRO E PEGA A MENSAGEM DE PUNIÇÃO
+                    const msgErro = registrarErro();
+                    erroEl.textContent = msgErro; 
+                    erroEl.style.display = 'block';
                     if (window.turnstile) turnstile.reset();
                     captchaToken = '';
                 } else {
+                    // SUCESSO! LIMPA OS ERROS DO LOCALSTORAGE
+                    localStorage.removeItem('loginFails');
+                    localStorage.removeItem('lockoutUntil');
+
                     localStorage.setItem('usuarioLogado', usuario);
                     localStorage.setItem('ultimoUsuarioLogadoLocal', usuario);
                     
-                    // Registra no banco o momento do login
                     try {
                         const agora = new Date().toISOString();
                         await db.from('ultimo_acesso').upsert(
